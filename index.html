@@ -1,0 +1,1712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agri-Service</title>
+<style>
+  :root {
+    --red: #CC0033; --red-dark: #B4041E; --green: #22B439; --caution: #E8A317;
+    --ink: #2F2F2F; --muted: #989898; --line: #E5E5E5; --paper: #F7F7F7; --card: #fff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  }
+  header {
+    background: linear-gradient(135deg, var(--red), #8C0318);
+    color: #fff; padding: 18px 24px; display: flex; align-items: center; gap: 16px;
+  }
+  header h1 { font-size: 18px; margin: 0; letter-spacing: .5px; font-weight: 800; }
+  header .who { margin-left: auto; font-size: 13px; opacity: .9; }
+  main { max-width: 1200px; margin: 0 auto; padding: 24px; }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 20px; margin-bottom: 20px;
+  }
+  h2 { font-size: 13px; letter-spacing: 1.2px; text-transform: uppercase;
+       color: var(--muted); margin: 0 0 14px; }
+  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  input[type=email], input[type=password], input[type=text], input[type=tel] {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--line);
+    border-radius: 8px; font-size: 15px; margin-bottom: 12px; background: var(--paper);
+  }
+  button {
+    background: var(--red); color: #fff; border: 0; border-radius: 10px;
+    padding: 11px 18px; font-size: 15px; font-weight: 600; cursor: pointer;
+  }
+  button:disabled { background: var(--muted); cursor: not-allowed; }
+  button.ghost { background: transparent; color: var(--red); }
+  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line);
+           vertical-align: top; }
+  th { font-size: 11px; letter-spacing: .8px; text-transform: uppercase;
+       color: var(--muted); cursor: pointer; user-select: none; white-space: nowrap; }
+  tbody tr:hover { background: var(--paper); }
+  .badge { display: inline-block; padding: 3px 9px; border-radius: 999px;
+           font-size: 11px; font-weight: 700; letter-spacing: .4px; }
+  .b-current  { background: rgba(34,180,57,.14);  color: #178A2A; }
+  .b-expiring { background: rgba(232,163,23,.18); color: #8a5e00; }
+  .b-expired  { background: rgba(204,0,51,.12);   color: var(--red-dark); }
+  .b-none     { background: #eee; color: var(--muted); }
+  .drop {
+    border: 2px dashed var(--line); border-radius: 12px; padding: 28px;
+    text-align: center; color: var(--muted); background: var(--paper);
+  }
+  .drop.over { border-color: var(--red); color: var(--red); }
+  .note { font-size: 13px; color: var(--muted); }
+  .error { color: var(--red-dark); font-size: 14px; }
+  .ok { color: #178A2A; font-size: 14px; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+  .tabs button { background: var(--card); color: var(--ink); border: 1px solid var(--line); }
+  .tabs button.active { background: var(--red); color: #fff; border-color: var(--red); }
+  .stat { display: inline-block; margin-right: 22px; }
+  .stat b { display: block; font-size: 24px; }
+  .hidden { display: none !important; }
+  .search { padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px;
+            font-size: 14px; min-width: 240px; }
+  .role { border: 1px solid var(--line); border-radius: 12px; padding: 16px;
+          margin-bottom: 14px; background: var(--card); }
+  .role-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
+  .role-head b { font-size: 16px; }
+  .fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 0 14px; }
+  .fields .wide { grid-column: 1 / -1; }
+  .msg { font-size: 13px; }
+  .people { margin-top: 6px; }
+  .prow { display: grid; grid-template-columns: 1fr 1fr 150px auto; gap: 0 10px;
+          align-items: end; padding: 10px 0; border-top: 1px solid var(--line); }
+  .prow button { padding: 9px 14px; font-size: 14px; }
+  .prow input { margin-bottom: 0; }
+  .prow .wide { grid-column: 1 / -1; }
+  button.pdf { padding: 5px 12px; font-size: 13px; border: 1px solid var(--line);
+               background: var(--card); color: var(--red); }
+  button.pdf:hover { background: var(--paper); }
+  @media (max-width: 720px) { .prow { grid-template-columns: 1fr; } }
+
+  /* ---- the app, mirrored ---- */
+  header h1 { cursor: pointer; }
+  header button { background: rgba(255,255,255,.16); color: #fff;
+                  border: 1px solid rgba(255,255,255,.35); padding: 7px 14px;
+                  font-size: 14px; }
+  header button:hover { background: rgba(255,255,255,.26); }
+  header .pill { display: inline-block; background: rgba(255,255,255,.18);
+                 border-radius: 999px; padding: 2px 10px; font-size: 12px; }
+  a { color: var(--red); }
+  button.green { background: var(--green); }
+
+  .hero { background: linear-gradient(135deg, var(--red), #8C0318); color: #fff;
+          border-radius: 16px; padding: 26px 20px; margin-bottom: 20px; }
+  .hero h3 { margin: 0 0 6px; font-size: 26px; font-weight: 800; letter-spacing: .3px; }
+  .hero p { margin: 0; opacity: .92; }
+  .hero.green { background: linear-gradient(135deg, var(--green), #137026); }
+
+  .tiles { display: grid; gap: 14px;
+           grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+  .tile { background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+          padding: 18px; text-align: left; color: inherit; font: inherit; cursor: pointer;
+          display: flex; gap: 14px; align-items: flex-start; position: relative;
+          transition: transform .08s ease, box-shadow .12s ease; }
+  .tile:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,.08); }
+  .tile b { display: block; font-size: 16px; margin-bottom: 2px; line-height: 1.25; }
+  .tile > span:last-of-type { padding-right: 26px; }
+  .tile span span { display: block; font-size: 13px; color: var(--muted); }
+  .well { width: 46px; height: 46px; border-radius: 12px; flex: 0 0 46px;
+          display: flex; align-items: center; justify-content: center; }
+  .well.red { background: rgba(204,0,51,.12); color: var(--red); }
+  .well.green { background: rgba(34,180,57,.14); color: var(--green); }
+  .count { position: absolute; top: 12px; right: 12px; min-width: 24px; height: 24px;
+           border-radius: 999px; background: var(--red); color: #fff; font-size: 12px;
+           font-weight: 700; display: flex; align-items: center; justify-content: center;
+           padding: 0 7px; }
+
+  .back { background: none; color: var(--red); padding: 6px 0; font-size: 14px; }
+  .link-card { display: flex; gap: 14px; align-items: flex-start; padding: 16px;
+               background: var(--card); border: 1px solid var(--line);
+               border-left: 4px solid var(--green); border-radius: 16px;
+               margin-bottom: 12px; text-decoration: none; color: inherit; }
+  .link-card:hover { background: #fcfcfc; }
+  .link-card b { display: block; font-size: 16px; }
+  .link-card span span { display: block; font-size: 13px; color: var(--muted); }
+  .go { font-size: 14px; font-weight: 600; color: var(--green); margin-top: 6px; }
+
+  .task { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0;
+          border-bottom: 1px solid var(--line); }
+  .task:last-child { border-bottom: 0; }
+  .task input[type=checkbox] { width: 22px; height: 22px; margin: 2px 0 0;
+                               accent-color: var(--green); cursor: pointer; }
+  .task .done { text-decoration: line-through; color: var(--muted); }
+  .cadence { font-size: 11px; letter-spacing: .6px; text-transform: uppercase;
+             color: var(--muted); }
+
+  .cert { max-width: 460px; border-radius: 18px; overflow: hidden; margin-bottom: 20px;
+          border: 1px solid var(--line); background: var(--card);
+          box-shadow: 0 10px 26px rgba(0,0,0,.09); }
+  .cert .band { background: linear-gradient(135deg, var(--red), #8C0318); color: #fff;
+                text-align: center; padding: 16px; font-size: 12px; font-weight: 800;
+                letter-spacing: 1.6px; }
+  .cert .body { padding: 22px; text-align: center; }
+  .cert .name { font-size: 24px; font-weight: 800; margin: 6px 0 10px; }
+  .cert dl { display: grid; gap: 12px; margin: 18px 0 0; }
+  .cert dt { font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase;
+             color: var(--muted); }
+  .cert dd { margin: 2px 0 0; font-weight: 600; }
+
+  .ticket { border: 1px solid var(--line); border-radius: 14px; background: var(--card);
+            margin-bottom: 10px; }
+  .ticket > summary { padding: 14px 16px; cursor: pointer; list-style: none; }
+  .ticket > summary::-webkit-details-marker { display: none; }
+  .ticket > summary::after { content: "▾"; float: right; color: var(--red); }
+  .ticket[open] > summary::after { content: "▴"; }
+  .ticket .inner { padding: 0 16px 16px; border-top: 1px solid var(--line);
+                   margin-top: 4px; padding-top: 14px; }
+  .comment { padding: 10px 0; border-top: 1px solid var(--line); }
+  .b-open     { background: rgba(204,0,51,.12);   color: var(--red-dark); }
+  .b-answered { background: rgba(232,163,23,.18); color: #8a5e00; }
+  .b-closed   { background: rgba(34,180,57,.14);  color: #178A2A; }
+
+  .support-role { border: 1px solid var(--line); border-radius: 16px;
+                  background: var(--card); border-left: 4px solid var(--green);
+                  margin-bottom: 14px; }
+  .support-role .head { display: flex; gap: 14px; padding: 16px; align-items: flex-start; }
+  .support-role .head span span { display: block; font-size: 13px; color: var(--muted); }
+  .person { display: flex; gap: 12px; align-items: center; padding: 14px 16px;
+            border-top: 1px solid var(--line); flex-wrap: wrap; }
+  .avatar { width: 44px; height: 44px; border-radius: 999px; background: var(--green);
+            color: #fff; font-weight: 700; display: flex; align-items: center;
+            justify-content: center; flex: 0 0 44px; }
+  .avatar.empty { background: none; border: 2px dashed var(--line); color: var(--muted); }
+  .person .actions { margin-left: auto; display: flex; gap: 8px; }
+  .person .actions a { text-decoration: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1 id="wordmark">AGRI-SERVICE</h1>
+  <div class="who" id="who"></div>
+  <button id="adminBtn" class="hidden">Admin</button>
+  <button id="signOut" class="hidden">Sign out</button>
+</header>
+
+<main>
+
+  <!-- Sign in -->
+  <section class="card" id="auth">
+    <h2>Sign in</h2>
+    <p class="note">Use the same account you use in the app. What you can see and
+      change here is governed by the same rules — signing in from a browser
+      grants nothing extra.</p>
+    <div style="max-width:360px">
+      <label for="email">Work email</label>
+      <input id="email" type="email" autocomplete="username">
+      <label for="password">Password</label>
+      <input id="password" type="password" autocomplete="current-password">
+      <button id="signIn">Sign In</button>
+      <p id="authError" class="error"></p>
+    </div>
+  </section>
+
+  <!-- Home, mirroring the app -->
+  <div id="home" class="hidden">
+    <div class="hero">
+      <h3 id="greeting">Welcome back</h3>
+      <p id="homeLocation"></p>
+    </div>
+    <div class="tiles" id="tiles"></div>
+  </div>
+
+  <!-- One feature at a time -->
+  <div id="view" class="hidden"></div>
+
+  <!-- Admin -->
+  <div id="admin" class="hidden">
+
+    <button class="back" data-home>&larr; Back to the app</button>
+
+    <div class="tabs">
+      <button data-tab="certs" class="active">Forklift Certifications</button>
+      <button data-tab="plans">Lift Plans</button>
+      <button data-tab="people">People</button>
+      <button data-tab="support">Support Center</button>
+    </div>
+
+    <!-- Certifications -->
+    <section id="tab-certs">
+      <div class="card">
+        <h2>Import certifications</h2>
+        <div class="drop" id="drop">
+          Drop the <b>Forklift Certifications.csv</b> here, or
+          <label for="file" style="display:inline;color:var(--red);cursor:pointer;
+                 text-decoration:underline">choose a file</label>
+          <input id="file" type="file" accept=".csv,text/csv" class="hidden">
+        </div>
+        <p class="note" style="margin-top:12px">
+          People are matched on their work email, or their name when the email is
+          blank. Existing records are updated and new ones added — nobody is
+          removed, so importing a partial export can't quietly delete anyone.
+        </p>
+        <div id="importResult"></div>
+      </div>
+
+      <div class="card">
+        <h2>Certifications</h2>
+        <div class="row" style="margin-bottom:14px">
+          <div id="certStats"></div>
+          <input class="search" id="certSearch" placeholder="Search name or email…"
+                 style="margin-left:auto">
+        </div>
+        <div style="overflow-x:auto">
+          <table id="certTable">
+            <thead><tr>
+              <th data-sort="operator_name">Operator</th>
+              <th data-sort="email">Email</th>
+              <th data-sort="truck_classes">Classes</th>
+              <th data-sort="evaluation_date">Evaluated</th>
+              <th data-sort="evaluator_name">Evaluator</th>
+              <th data-sort="expiration_date">Expires</th>
+              <th data-sort="status">Status</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Lift plans -->
+    <section id="tab-plans" class="hidden">
+      <div class="card">
+        <h2>Lift plans</h2>
+        <div class="row" style="margin-bottom:14px">
+          <div id="planStats"></div>
+          <input class="search" id="planSearch" placeholder="Search job, site or name…"
+                 style="margin-left:auto">
+        </div>
+        <div style="overflow-x:auto">
+          <table id="planTable">
+            <thead><tr>
+              <th data-sort="submitted_at">Submitted</th>
+              <th data-sort="created_by_name">By</th>
+              <th data-sort="job_description">Job</th>
+              <th data-sort="location">Site</th>
+              <th data-sort="location_id">Shop</th>
+              <th data-sort="total_weight">Total lbs</th>
+              <th data-sort="percent_capacity">% cap</th>
+              <th data-sort="status">Status</th>
+              <th></th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- People -->
+    <section id="tab-people" class="hidden">
+      <div class="card">
+        <h2>People</h2>
+        <p class="note">Read-only. Roles and locations are changed in Supabase —
+          the app deliberately blocks both from the client so nobody can promote
+          themselves or move shops to route their own lift plans elsewhere.</p>
+        <div style="overflow-x:auto">
+          <table id="peopleTable">
+            <thead><tr>
+              <th data-sort="full_name">Name</th>
+              <th data-sort="role">Role</th>
+              <th data-sort="location_id">Location</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Support Center -->
+    <section id="tab-support" class="hidden">
+      <div class="card">
+        <h2>Support Center</h2>
+        <p class="note">These are the cards in the app's Support Center. A saved
+          change reaches a phone the next time someone opens that screen — no app
+          update needed. Leave the person blank for a role nobody covers yet and
+          the app shows "No one assigned yet" rather than a dead phone number.
+          A role can hold as many people as it needs — Sales has two.</p>
+        <div id="supportRoles"></div>
+        <p class="note">The icon is an SF Symbol name. If you type one this
+          version of iOS doesn't have, the app falls back to a life ring instead
+          of drawing nothing.</p>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+// The publishable key is a client key by design — row level security is what
+// protects the data, not this string. It is the same key the iOS app ships.
+const SUPABASE_URL = "https://gzmtxsgaulzkghaqyibt.supabase.co";
+const SUPABASE_KEY = "sb_publishable_Yvapp2YhfG8tTRKw4ihCCg_OjmKkvNQ";
+
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const $ = (id) => document.getElementById(id);
+let me = null, profile = null;
+let certs = [], plans = [], people = [], supportRoles = [], locations = {};
+let sharedTasks = [], personalTasks = [], hiddenTasks = [], completions = [];
+let tickets = [];
+
+// Admins approve lift plans for their own shop, so plenty of the page keys off
+// this. The Admin button does not — see isOwner.
+const isAdmin = () => profile && (profile.role === "admin" || profile.role === "owner");
+
+// The admin tables are the whole company's records: every certification, every
+// shop's plans, the support roles everyone sees. That's an owner's view, not a
+// shop admin's, so the button is theirs alone.
+//
+// This hides a door rather than locking one. What anybody can actually read or
+// change is decided by the database policies, which don't consult this.
+const isOwner = () => profile && profile.role === "owner";
+
+// ---------------------------------------------------------------- auth
+
+$("signIn").onclick = async () => {
+  $("authError").textContent = "";
+  const { error } = await db.auth.signInWithPassword({
+    email: $("email").value.trim(),
+    password: $("password").value
+  });
+  if (error) { $("authError").textContent = error.message; return; }
+  await start();
+};
+
+$("signOut").onclick = async () => { await db.auth.signOut(); location.reload(); };
+$("adminBtn").onclick = () => showAdmin();
+$("wordmark").onclick = () => { if (me) showHome(); };
+
+async function start() {
+  const { data: { user } } = await db.auth.getUser();
+  if (!user) return;
+  me = user;
+
+  $("auth").classList.add("hidden");
+  $("signOut").classList.remove("hidden");
+
+  await loadAll();
+
+  $("who").innerHTML =
+    `${esc((profile && profile.full_name) || user.email)}<br>` +
+    `<span class="pill">${esc(locations[profile && profile.location_id]
+      || "No location set")}</span>`;
+  $("adminBtn").classList.toggle("hidden", !isOwner());
+
+  showHome();
+}
+
+// ---------------------------------------------------------------- loading
+
+async function loadAll() {
+  const [locs, c, p, pe, sr, wt, pt, ht, tc, tk] = await Promise.all([
+    db.from("locations").select("id,name"),
+    db.from("forklift_certifications").select("*"),
+    db.from("lift_plans").select("*").order("submitted_at", { ascending: false }),
+    db.from("profiles").select("id,full_name,role,location_id"),
+    db.from("support_roles").select("*, support_people(*)").order("sort_order"),
+    db.from("weekly_tasks").select("*").eq("is_active", true).order("sort_order"),
+    db.from("personal_tasks").select("*").is("archived_at", null),
+    db.from("hidden_shared_tasks").select("task_id"),
+    db.from("task_completions").select("task_id,week_start")
+      .in("week_start", [periodKey("daily"), periodKey("weekly"), periodKey("monthly")]),
+    db.from("support_tickets").select("*, support_ticket_comments(*)")
+      .order("last_activity_at", { ascending: false })
+  ]);
+
+  locations = Object.fromEntries((locs.data || []).map(l => [l.id, l.name]));
+  certs = c.data || []; plans = p.data || []; people = pe.data || [];
+  supportRoles = sr.data || [];
+  sharedTasks = wt.data || []; personalTasks = pt.data || [];
+  hiddenTasks = (ht.data || []).map(r => r.task_id);
+  completions = tc.data || [];
+  tickets = tk.data || [];
+
+  // Only your own profile comes back for most people — that policy is the
+  // point — so the page reads it out of the list rather than asking twice.
+  profile = people.find(r => r.id === me.id) || null;
+}
+
+// ---------------------------------------------------------------- icons
+//
+// Line icons drawn from primitives rather than an icon font: this page is one
+// file people save to a desktop, and a missing font would leave holes.
+
+const ICONS = {
+  training: '<path d="M3 8 12 3l9 5-9 5-9-5Z"/><path d="M7 11v5c0 1 2.2 2.5 5 2.5s5-1.5 5-2.5v-5"/>',
+  reminders: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+  forklift: '<circle cx="7" cy="18" r="2"/><circle cx="15" cy="18" r="2"/><path d="M4 16V8h7v8"/><path d="M15 4v12M15 8h4"/>',
+  safety: '<path d="M12 3 20 6v6c0 4.5-3.5 7.5-8 9-4.5-1.5-8-4.5-8-9V6l8-3Z"/><path d="m9 12 2 2 4-4"/>',
+  rigging: '<path d="M12 3v6M9 6h6M12 9l-4 6h8l-4-6Z"/><path d="M5 19h14"/>',
+  support: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/><path d="m5.6 5.6 3.9 3.9M14.5 14.5l3.9 3.9M18.4 5.6l-3.9 3.9M9.5 14.5l-3.9 3.9"/>',
+  doc: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z"/><path d="M14 3v5h5"/>'
+};
+
+const icon = (name, size = 24) =>
+  `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+        stroke-linejoin="round">${ICONS[name] || ICONS.support}</svg>`;
+
+// ---------------------------------------------------------------- the app
+//
+// Same features, same order, same wording as HomeDestination.swift. The two
+// news feeds are left out: the app scrapes those pages, and a browser can't —
+// the sites don't allow it from another origin.
+
+const FEATURES = [
+  { id: "training",  title: "Training Center", sub: "Courses & requirements", tint: "red" },
+  { id: "reminders", title: "Reminders", sub: "Daily, weekly & monthly", tint: "green" },
+  { id: "forklift",  title: "Forklift Certification Center",
+    sub: "Course, test & records", tint: "green" },
+  { id: "safety",    title: "Safety Center", sub: "Reports & training", tint: "red" },
+  { id: "rigging",   title: "Crane and Rigging Center", sub: "Lift plans & approvals",
+    tint: "red" },
+  { id: "support",   title: "Support Center", sub: "IT help & requests", tint: "green" }
+];
+
+const TRAINING_LINKS = [
+  { title: "Course Catalog", url: "https://akendall72-tech.github.io/Catalog/" },
+  { title: "Open Seat Report", sub: "Request registration",
+    url: "https://akendall72-tech.github.io/Upcoming-training/" },
+  { title: "Training Completions",
+    url: "https://akendall72-tech.github.io/Training_Summary/" },
+  { title: "UKG ProLearning", sub: "Your assigned training",
+    url: "https://learning.ultipro.com/academy/AGRI-SERVICELLC/learner/course-experience/10856418/step/9716028/lecture" },
+  { title: "Technician Training Requirements", sub: "The 2026 AGCO training pathway",
+    url: "https://akendall72-tech.github.io/Training_Home/training-requirements.html" },
+  { title: "Institutional Syllabus", sub: "Expectations, shop safety, emergencies",
+    url: "https://akendall72-tech.github.io/Training_Home/syllabus.html" }
+];
+
+const FORKLIFT_LINKS = [
+  { title: "Forklift OLT Course", sub: "Work through the online forklift training course.",
+    url: "https://learning.ultipro.com/academy/AGRI-SERVICELLC/learner/course-experience/10856418/step/9716028/lecture" },
+  { title: "Forklift Driving Test", sub: "Complete the driving evaluation form.",
+    url: "https://agriservice.sharepoint.com/:l:/s/Aftersales/JABHDvYhCAUUTZJrl6f49bp7AVGuzxY_W5YRYQ7IJLgYz0c?nav=MDhjOTdkYzMtZDQ4OS00MjJiLWIwODgtYjgzY2FkYTQ0MDYw" },
+  { title: "Certification Report", sub: "Check who is certified and when it expires.",
+    url: "https://akendall72-tech.github.io/Forklift_Report/" }
+];
+
+const SAFETY_LINKS = [
+  { title: "Safety Report", sub: "Report an incident, near miss, or hazard.",
+    url: "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=82pjZGDa0ES1EhOSwxioxkNHkm4Go2RPtJFaiGf2dyZURVhQOU5XRzRQVUFSQkRBWkdaNzlDNjc0VS4u" },
+  // The app signs into GotSafety for you. A browser can't do that across
+  // origins, so this is the login page and the shared account gets typed.
+  { title: "Safety Training", sub: "GotSafety - sign in with the shared company account.",
+    url: "https://new.gotsafety.com/login" }
+];
+
+// ---------------------------------------------------------------- routing
+
+function showHome() {
+  $("admin").classList.add("hidden");
+  $("view").classList.add("hidden");
+  $("home").classList.remove("hidden");
+
+  const first = ((profile && profile.full_name) || "").split(" ")[0];
+  $("greeting").textContent = first ? `Welcome back, ${first}` : "Welcome back";
+  $("homeLocation").textContent =
+    (profile && locations[profile.location_id]) || "";
+
+  $("tiles").innerHTML = FEATURES.map(f => {
+    const n = tileCount(f.id);
+    return `<button class="tile" data-view="${f.id}">
+      <span class="well ${f.tint}">${icon(f.id)}</span>
+      <span><b>${esc(f.title)}</b><span>${esc(f.sub)}</span></span>
+      ${n ? `<span class="count">${n}</span>` : ""}
+    </button>`;
+  }).join("");
+}
+
+// The same two badges the app shows on its home screen.
+function tileCount(id) {
+  if (id === "reminders") return visibleTasks().filter(t => !t.done).length;
+  if (id === "rigging") {
+    return isAdmin()
+      ? plans.filter(p => p.status === "submitted" && p.created_by !== me.id).length
+      : plans.filter(p => p.status === "changes_requested").length;
+  }
+  return 0;
+}
+
+function showView(name) {
+  $("home").classList.add("hidden");
+  $("admin").classList.add("hidden");
+  const host = $("view");
+  host.classList.remove("hidden");
+  host.innerHTML = `<button class="back" data-home>&larr; Home</button>` + VIEWS[name]();
+  window.scrollTo(0, 0);
+}
+
+function showAdmin() {
+  $("home").classList.add("hidden");
+  $("view").classList.add("hidden");
+  $("admin").classList.remove("hidden");
+  renderCerts(); renderPlans(); renderPeople(); renderSupport();
+  window.scrollTo(0, 0);
+}
+
+document.addEventListener("click", (event) => {
+  const tile = event.target.closest("[data-view]");
+  if (tile) return showView(tile.dataset.view);
+  if (event.target.closest("[data-home]")) return showHome();
+});
+
+// ---------------------------------------------------------------- views
+
+const hero = (title, blurb, green) => `
+  <div class="hero${green ? " green" : ""}">
+    <h3>${esc(title)}</h3><p>${esc(blurb)}</p>
+  </div>`;
+
+const linkCard = (link) => `
+  <a class="link-card" href="${esc(link.url)}" target="_blank" rel="noopener">
+    <span class="well green">${icon("doc")}</span>
+    <span><b>${esc(link.title)}</b>
+      ${link.sub ? `<span>${esc(link.sub)}</span>` : ""}
+      <span class="go">Open &nearr;</span></span>
+  </a>`;
+
+const VIEWS = {
+  training: () =>
+    hero("Technician Training Center",
+         "Course catalog, schedules, certifications, and the AGCO requirements behind them.")
+    + TRAINING_LINKS.map(linkCard).join(""),
+
+  safety: () =>
+    hero("Safety Center", "Report what you see, and keep your safety training current.")
+    + SAFETY_LINKS.map(linkCard).join(""),
+
+  forklift: () =>
+    hero("Forklift Certification Center",
+         "Take the course, complete your driving evaluation, and check your certification.",
+         true)
+    + certificationCard() + FORKLIFT_LINKS.map(linkCard).join(""),
+
+  support: () =>
+    hero("Support Center",
+         "Something not working? Get it in front of the right people here.", true)
+    + ticketsSection() + supportCards(),
+
+  reminders: () => remindersView(),
+  rigging: () => riggingView()
+};
+
+// ---- my certification ----------------------------------------------------
+
+// Email first, because it's an identity rather than a spelling. Falls back to
+// the name, as the app does: an account set up by hand may not use the address
+// the CSV carries.
+function myCertification() {
+  const email = (me.email || "").toLowerCase();
+  const byEmail = certs.find(c => (c.email || "").toLowerCase() === email);
+  if (byEmail) return byEmail;
+
+  const mine = tokens((profile && profile.full_name) || "");
+  if (!mine.size) return null;
+
+  return certs.find(c => {
+    const theirs = tokens(c.operator_name || "");
+    if (!theirs.size) return false;
+    return [...theirs].every(w => mine.has(w)) || [...mine].every(w => theirs.has(w));
+  }) || null;
+}
+
+const tokens = (name) =>
+  new Set(name.toLowerCase().split(/[^a-z]+/).filter(w => w.length > 1));
+
+function certificationCard() {
+  const cert = myCertification();
+  if (!cert) {
+    return `<div class="card"><b>Not on the certification list</b>
+      <p class="note">You're matched on your work email first, then your name.
+      Check the training department has you under the address you sign in with.</p></div>`;
+  }
+
+  const [label, cls] = certStatus(cert);
+  const classes = (cert.truck_classes || []).join(", ");
+
+  return `<div class="cert">
+    <div class="band">CERTIFIED FORKLIFT OPERATOR</div>
+    <div class="body">
+      <div class="name">${esc(cert.operator_name)}</div>
+      <span class="badge ${cls}">${label}</span>
+      <dl>
+        ${classes ? `<div><dt>Truck classes authorised</dt>
+          <dd>${esc(classes)}</dd></div>` : ""}
+        <div><dt>Location</dt>
+          <dd>${esc((profile && locations[profile.location_id]) || "-")}</dd></div>
+        <div><dt>Valid through</dt><dd>${fmtDate(cert.expiration_date)}</dd></div>
+        ${cert.evaluation_date ? `<div><dt>Evaluated</dt>
+          <dd>${fmtDate(cert.evaluation_date)}${cert.evaluator_name
+            ? " by " + esc(cert.evaluator_name) : ""}</dd></div>` : ""}
+      </dl>
+      <p class="note" style="margin-top:16px">
+        Issued by the Agri-Service Training Department</p>
+    </div>
+  </div>`;
+}
+
+// ---- support -------------------------------------------------------------
+
+// ---- internal support requests -------------------------------------------
+
+const TICKET_BADGES = {
+  open: ["Open", "b-open"],
+  answered: ["Answered", "b-answered"],
+  closed: ["Closed", "b-closed"]
+};
+
+function ticketsSection() {
+  const open = tickets.filter(t => t.status !== "closed");
+
+  const rows = tickets.map(ticket => {
+    const [label, cls] = TICKET_BADGES[ticket.status] || ["-", "b-none"];
+    const crew = (ticket.support_ticket_comments || [])
+      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+    const machine = [ticket.brand, ticket.model, ticket.machine_type]
+      .map(v => (v || "").trim()).filter(Boolean).join(" · ");
+
+    const detail = (label, value) => (value || "").trim()
+      ? `<p style="margin:0 0 8px"><span class="cadence">${label}</span><br>${esc(value)}</p>`
+      : "";
+
+    return `<details class="ticket" data-ticket="${esc(ticket.id)}">
+      <summary>
+        <span class="badge ${cls}">${label}</span>
+        <b style="display:block;margin:6px 0 2px">${esc(firstLine(ticket.description))}</b>
+        <span class="note">${machine ? esc(machine) + " · " : ""}${
+          esc(ticket.created_by_name || "Someone")} · ${
+          crew.length} ${crew.length === 1 ? "reply" : "replies"}</span>
+      </summary>
+      <div class="inner">
+        ${detail("Machine type", ticket.machine_type)}
+        ${detail("Brand", ticket.brand)}
+        ${detail("Model", ticket.model)}
+        ${detail("Error codes", ticket.error_codes)}
+        <p style="margin:0 0 8px"><span class="cadence">Description</span><br>${
+          esc(ticket.description).replace(/\n/g, "<br>")}</p>
+
+        ${crew.map(c => `<div class="comment">
+          <b>${esc(c.created_by_name || "Someone")}</b>
+          <span class="note">· ${new Date(c.created_at).toLocaleString()}</span><br>
+          ${esc(c.body).replace(/\n/g, "<br>")}
+        </div>`).join("")}
+
+        <div style="margin-top:12px">
+          <label>Add a reply</label>
+          <textarea data-reply rows="3"></textarea>
+          <div class="row">
+            <button data-act="reply">Post reply</button>
+            ${(ticket.created_by === me.id || isAdmin())
+              ? `<button class="ghost" data-act="${
+                  ticket.status === "closed" ? "reopen" : "close"}">${
+                  ticket.status === "closed" ? "Reopen" : "Mark as closed"}</button>` : ""}
+            <span class="msg"></span>
+          </div>
+        </div>
+      </div>
+    </details>`;
+  }).join("") || `<p class="note">No requests yet.</p>`;
+
+  return `<div class="card" id="ticketsCard">
+    <h2>Internal support requests</h2>
+    <p class="note">Anyone can raise one and everyone can read them, so the next
+      person with the same fault finds the answer. ${open.length} open.</p>
+
+    <details class="ticket" id="newTicket" style="border-color:var(--red)">
+      <summary><b>Raise a new request</b></summary>
+      <div class="inner">
+        <div class="fields">
+          <div><label>Machine type</label>
+            <input type="text" data-new="machine_type" placeholder="Tractor, combine…"></div>
+          <div><label>Brand</label>
+            <input type="text" data-new="brand" placeholder="Fendt, Massey…"></div>
+          <div><label>Model</label>
+            <input type="text" data-new="model" placeholder="1050 Vario"></div>
+          <div><label>Error codes</label>
+            <input type="text" data-new="error_codes" placeholder="SPN 3216, FMI 4"></div>
+          <div class="wide"><label>Description</label>
+            <textarea data-new="description" rows="5"
+              placeholder="What have you tried, and what did it do?"></textarea></div>
+        </div>
+        <div class="row">
+          <button data-act="new-ticket">Send request</button>
+          <span class="msg"></span>
+        </div>
+      </div>
+    </details>
+
+    ${rows}
+  </div>`;
+}
+
+const firstLine = (text) => {
+  const line = String(text || "").trim().split("\n")[0];
+  return line.length > 90 ? line.slice(0, 90) + "…" : line;
+};
+
+$("view").addEventListener("click", async (event) => {
+  const button = event.target.closest("button[data-act]");
+  if (!button) return;
+
+  const act = button.dataset.act;
+  if (!["new-ticket", "reply", "close", "reopen"].includes(act)) return;
+
+  const box = button.closest(".ticket");
+  const say = (text, bad) => speak(box, text, bad);
+
+  if (act === "new-ticket") {
+    const get = (f) => box.querySelector(`[data-new="${f}"]`).value.trim();
+    if (!get("description")) return say("Say what's happening first.", true);
+
+    say("Sending…", false);
+    // created_by, the name and the shop are all filled in by the database.
+    const { error } = await db.from("support_tickets").insert({
+      machine_type: get("machine_type"), brand: get("brand"), model: get("model"),
+      error_codes: get("error_codes"), description: get("description")
+    });
+    if (error) return say(error.message, true);
+
+  } else if (act === "reply") {
+    const field = box.querySelector("[data-reply]");
+    if (!field.value.trim()) return say("Nothing to post.", true);
+
+    say("Posting…", false);
+    const { error } = await db.from("support_ticket_comments")
+      .insert({ ticket_id: box.dataset.ticket, body: field.value.trim() });
+    if (error) return say(error.message, true);
+
+  } else {
+    const { data, error } = await db.from("support_tickets")
+      .update({ status: act === "close" ? "closed" : "open" })
+      .eq("id", box.dataset.ticket).select();
+    if (error) return say(error.message, true);
+    if (!data || !data.length) return say("That isn't yours to change.", true);
+  }
+
+  await loadAll();
+  showView("support");
+});
+
+function supportCards() {
+  const cards = supportRoles.map(role => {
+    const crew = (role.support_people || [])
+      .sort((a, b) => (a.sort_order - b.sort_order) || a.name.localeCompare(b.name));
+
+    const rows = crew.length ? crew.map(person => `
+      <div class="person">
+        <span class="avatar">${esc(initials(person.name))}</span>
+        <span><b>${esc(person.name)}</b><br>
+          <span class="note">${esc(person.title || "")}</span><br>
+          ${esc(displayPhone(person.phone))}</span>
+        <span class="actions">
+          <a href="tel:+1${esc(person.phone)}"><button class="green">Call</button></a>
+          <a href="sms:+1${esc(person.phone)}"><button class="ghost">Text</button></a>
+        </span>
+      </div>`).join("") : `
+      <div class="person">
+        <span class="avatar empty">?</span>
+        <span><b>No one assigned yet</b><br>
+          <span class="note">The training department will add a name here.</span></span>
+      </div>`;
+
+    return `<div class="support-role">
+      <div class="head">
+        <span class="well green">${icon("support")}</span>
+        <span><b>${esc(role.title)}</b><br>
+          <span class="note">${esc(role.subtitle)}</span></span>
+      </div>
+      ${rows}
+    </div>`;
+  }).join("");
+
+  const body = "Describe the problem here:\n\n\n\n-\n"
+    + ((profile && profile.full_name) ? "From: " + profile.full_name + "\n" : "")
+    + ((profile && locations[profile.location_id])
+       ? "Location: " + locations[profile.location_id] + "\n" : "")
+    + "Sent from the Agri-Service web page";
+
+  return cards + `<a class="link-card"
+      href="mailto:IT@agri-service.com?body=${encodeURIComponent(body)}">
+    <span class="well green">${icon("doc")}</span>
+    <span><b>Submit an IT Ticket</b>
+      <span>Computer, phone, printer, or account trouble - email the IT team.</span>
+      <span class="go">Start a ticket &nearr;</span></span>
+  </a>`;
+}
+
+const initials = (name) =>
+  name.split(" ").filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase();
+
+const displayPhone = (p) => (p || "").length === 10
+  ? `(${p.slice(0, 3)}) ${p.slice(3, 6)}-${p.slice(6)}` : (p || "");
+
+// ---- reminders -----------------------------------------------------------
+//
+// Period keys mirror ReminderStore.swift: the column is called week_start, but
+// it means "the start of the period this tick belongs to", so a daily task
+// keys off today and a monthly one off the 1st.
+
+function dayKey(date) {
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+function periodKey(cadence) {
+  const now = new Date();
+  if (cadence === "daily") return dayKey(now);
+  if (cadence === "monthly") return dayKey(new Date(now.getFullYear(), now.getMonth(), 1));
+  // Weeks start on Monday, as they do in the app.
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+  return dayKey(monday);
+}
+
+function visibleTasks() {
+  const done = (id, cadence) =>
+    completions.some(c => c.task_id === id && c.week_start === periodKey(cadence));
+
+  const shared = sharedTasks
+    .filter(t => !hiddenTasks.includes(t.id))
+    .map(t => ({ id: t.id, kind: "weekly", title: t.title, detail: t.detail,
+                 cadence: t.cadence || "weekly",
+                 done: done(t.id, t.cadence || "weekly") }));
+
+  const personal = personalTasks
+    .map(t => ({ id: t.id, kind: "personal", title: t.title, detail: null,
+                 cadence: t.cadence || "weekly",
+                 done: done(t.id, t.cadence || "weekly") }));
+
+  return shared.concat(personal);
+}
+
+function remindersView() {
+  const items = visibleTasks();
+  const outstanding = items.filter(t => !t.done).length;
+
+  const list = items.map(t => `
+    <div class="task">
+      <input type="checkbox" data-task="${esc(t.id)}" data-kind="${t.kind}"
+             data-cadence="${t.cadence}" ${t.done ? "checked" : ""}>
+      <span>
+        <b class="${t.done ? "done" : ""}">${esc(t.title)}</b>
+        ${t.detail ? `<br><span class="note">${esc(t.detail)}</span>` : ""}
+        <br><span class="cadence">${esc(t.cadence)}${
+          t.kind === "personal" ? " · yours" : ""}</span>
+      </span>
+    </div>`).join("") || `<p class="note">Nothing on the list.</p>`;
+
+  const hidden = sharedTasks.filter(t => hiddenTasks.includes(t.id));
+
+  return hero("Reminders",
+      outstanding ? `${outstanding} still to do.` : "All caught up.")
+    + `<div class="card">${list}</div>`
+    + (hidden.length ? `<div class="card">
+        <h2>Hidden shared reminders</h2>
+        ${hidden.map(t => `<div class="task">
+          <span><b>${esc(t.title)}</b></span>
+          <button class="ghost" style="margin-left:auto"
+                  data-unhide="${esc(t.id)}">Show again</button>
+        </div>`).join("")}
+      </div>` : "");
+}
+
+$("view").addEventListener("change", async (event) => {
+  const box = event.target.closest("input[type=checkbox][data-task]");
+  if (!box) return;
+
+  const { task, kind, cadence } = box.dataset;
+  const key = periodKey(cadence);
+  box.disabled = true;
+
+  if (box.checked) {
+    const { error } = await db.from("task_completions")
+      .insert({ task_id: task, task_kind: kind, week_start: key });
+    if (error) { alert(error.message); box.checked = false; box.disabled = false; return; }
+    completions.push({ task_id: task, week_start: key });
+  } else {
+    const { error } = await db.from("task_completions")
+      .delete().eq("task_id", task).eq("week_start", key);
+    if (error) { alert(error.message); box.checked = true; box.disabled = false; return; }
+    completions = completions.filter(c =>
+      !(c.task_id === task && c.week_start === key));
+  }
+
+  showView("reminders");
+});
+
+$("view").addEventListener("click", async (event) => {
+  const unhide = event.target.closest("[data-unhide]");
+  if (!unhide) return;
+  const { error } = await db.from("hidden_shared_tasks")
+    .delete().eq("task_id", unhide.dataset.unhide);
+  if (error) return alert(error.message);
+  hiddenTasks = hiddenTasks.filter(id => id !== unhide.dataset.unhide);
+  showView("reminders");
+});
+
+// ---- crane and rigging ---------------------------------------------------
+
+function riggingView() {
+  const mine = plans.filter(p => p.created_by === me.id);
+  const others = plans.filter(p => p.created_by !== me.id);
+
+  const list = (rows, empty) => rows.length
+    ? rows.map(planRow).join("")
+    : `<p class="note">${empty}</p>`;
+
+  return hero("Crane and Rigging Center",
+      "Lift plans you've submitted, and the ones waiting on you.")
+    + (isAdmin() ? `<div class="card"><h2>Waiting on you</h2>
+        ${list(others.filter(p => p.status === "submitted"),
+               "Nothing to approve right now.")}</div>` : "")
+    + `<div class="card"><h2>Your plans</h2>
+        ${list(mine,
+          "You haven't submitted a lift plan yet. Plans are written in the app.")}</div>`
+    + (isAdmin() ? `<div class="card"><h2>Everything else at your shop</h2>
+        ${list(others.filter(p => p.status !== "submitted"),
+               "Nothing else here.")}</div>` : "");
+}
+
+function planRow(plan) {
+  const [label, cls] = planBadge(plan);
+  const reviewable = isAdmin() && plan.status === "submitted" && plan.created_by !== me.id;
+
+  return `<div class="task">
+    <span class="well ${plan.status === "approved" ? "green" : "red"}"
+          style="width:38px;height:38px;flex:0 0 38px">${icon("rigging", 20)}</span>
+    <span>
+      <b>${esc(plan.job_description || "Untitled lift")}</b><br>
+      <span class="note">${fmtDate((plan.lift_date || "").slice(0, 10))}
+        · ${esc(plan.location || "no site")}${plan.created_by === me.id
+          ? "" : " · " + esc(plan.created_by_name || "unknown")}</span>
+      <br><span class="badge ${cls}">${label}</span>
+      ${plan.review_note ? `<br><span class="note">Note: ${esc(plan.review_note)}</span>` : ""}
+    </span>
+    <span style="margin-left:auto;display:flex;gap:8px;align-items:center">
+      ${reviewable ? `<button class="green" data-approve="${esc(plan.id)}">Approve</button>
+         <button class="ghost" data-return="${esc(plan.id)}">Request changes</button>` : ""}
+      <button class="pdf" data-plan="${esc(plan.id)}">PDF</button>
+    </span>
+  </div>`;
+}
+
+function planBadge(plan) {
+  return { submitted: ["Awaiting approval", "b-expiring"],
+           changes_requested: ["Changes requested", "b-expired"],
+           approved: ["Approved", "b-current"] }[plan.status] || ["-", "b-none"];
+}
+
+$("view").addEventListener("click", async (event) => {
+  const approve = event.target.closest("[data-approve]");
+  const back = event.target.closest("[data-return]");
+  if (!approve && !back) return;
+
+  const id = approve ? approve.dataset.approve : back.dataset.return;
+  let payload = { status: "approved", review_note: null };
+
+  if (back) {
+    const note = prompt("What needs changing?");
+    if (note === null || !note.trim()) return;
+    payload = { status: "changes_requested", review_note: note.trim() };
+  }
+
+  // reviewed_by and reviewed_at are stamped by a database trigger, so the
+  // record can't claim someone else did the review.
+  const { data, error } = await db.from("lift_plans")
+    .update(payload).eq("id", id).select();
+
+  if (error) return alert(error.message);
+  if (!data || !data.length) return alert("Nothing changed - you can't review this plan.");
+
+  Object.assign(plans.find(p => p.id === id), data[0]);
+  showView("rigging");
+});
+
+// ---------------------------------------------------------------- status
+
+// Mirrors the app: a failed driving evaluation is not a certification, and the
+// expiry date decides the rest. Sixty days is enough notice to re-evaluate.
+function certStatus(row) {
+  if (row.passed_driving === false) return ["Not certified", "b-none"];
+  if (!row.expiration_date) return ["Not certified", "b-none"];
+  const days = Math.round((new Date(row.expiration_date) - new Date()) / 86400000);
+  if (days < 0) return ["Expired", "b-expired"];
+  if (days < 60) return [`Expiring · ${days}d`, "b-expiring"];
+  return ["Certified", "b-current"];
+}
+
+// ---------------------------------------------------------------- rendering
+
+function fmtDate(d) {
+  if (!d) return "—";
+  return new Date(d + "T00:00:00").toLocaleDateString(undefined,
+    { year: "numeric", month: "short", day: "numeric" });
+}
+
+function renderCerts() {
+  const q = $("certSearch").value.trim().toLowerCase();
+  const rows = certs.filter(r => !q ||
+    (r.operator_name || "").toLowerCase().includes(q) ||
+    (r.email || "").toLowerCase().includes(q));
+
+  const counts = { current: 0, expiring: 0, expired: 0, none: 0 };
+  certs.forEach(r => {
+    const cls = certStatus(r)[1];
+    counts[cls === "b-current" ? "current" : cls === "b-expiring" ? "expiring"
+      : cls === "b-expired" ? "expired" : "none"]++;
+  });
+  $("certStats").innerHTML =
+    `<span class="stat"><b>${certs.length}</b>total</span>` +
+    `<span class="stat"><b style="color:#178A2A">${counts.current}</b>certified</span>` +
+    `<span class="stat"><b style="color:#8a5e00">${counts.expiring}</b>expiring</span>` +
+    `<span class="stat"><b style="color:var(--red-dark)">${counts.expired}</b>expired</span>`;
+
+  $("certTable").querySelector("tbody").innerHTML = rows.map(r => {
+    const [label, cls] = certStatus(r);
+    return `<tr>
+      <td><b>${esc(r.operator_name)}</b></td>
+      <td>${esc(r.email || "—")}</td>
+      <td>${esc((r.truck_classes || []).join(", ") || "—")}</td>
+      <td>${fmtDate(r.evaluation_date)}</td>
+      <td>${esc(r.evaluator_name || "—")}</td>
+      <td>${fmtDate(r.expiration_date)}</td>
+      <td><span class="badge ${cls}">${label}</span></td>
+    </tr>`;
+  }).join("") || `<tr><td colspan="7" class="note">No certifications yet — import a CSV above.</td></tr>`;
+}
+
+function renderPlans() {
+  const q = $("planSearch").value.trim().toLowerCase();
+  const rows = plans.filter(r => !q ||
+    (r.job_description || "").toLowerCase().includes(q) ||
+    (r.location || "").toLowerCase().includes(q) ||
+    (r.created_by_name || "").toLowerCase().includes(q));
+
+  const pending = plans.filter(p => p.status === "submitted").length;
+  $("planStats").innerHTML =
+    `<span class="stat"><b>${plans.length}</b>total</span>` +
+    `<span class="stat"><b style="color:var(--red)">${pending}</b>awaiting approval</span>`;
+
+  const badge = { submitted: ["Awaiting", "b-expiring"],
+                  changes_requested: ["Changes requested", "b-expired"],
+                  approved: ["Approved", "b-current"] };
+
+  $("planTable").querySelector("tbody").innerHTML = rows.map(r => {
+    const [label, cls] = badge[r.status] || ["—", "b-none"];
+    const pct = r.percent_capacity == null ? "—" : Math.round(r.percent_capacity) + "%";
+    return `<tr>
+      <td>${r.submitted_at ? new Date(r.submitted_at).toLocaleDateString() : "—"}</td>
+      <td>${esc(r.created_by_name || "—")}</td>
+      <td><b>${esc(r.job_description || "Untitled lift")}</b></td>
+      <td>${esc(r.location || "—")}</td>
+      <td>${esc(locations[r.location_id] || "—")}</td>
+      <td>${r.total_weight == null ? "—" : Number(r.total_weight).toLocaleString()}</td>
+      <td>${pct}</td>
+      <td><span class="badge ${cls}">${label}</span></td>
+      <td><button class="ghost pdf" data-plan="${esc(r.id)}">PDF</button></td>
+    </tr>`;
+  }).join("") || `<tr><td colspan="9" class="note">No lift plans yet.</td></tr>`;
+}
+
+document.addEventListener("click", (event) => {
+  const button = event.target.closest("button.pdf");
+  if (!button) return;
+  const plan = plans.find(p => p.id === button.dataset.plan);
+  if (plan) downloadPlanPDF(plan);
+});
+
+function renderPeople() {
+  $("peopleTable").querySelector("tbody").innerHTML = people.map(r => `<tr>
+      <td><b>${esc(r.full_name || "—")}</b></td>
+      <td>${esc(r.role)}</td>
+      <td>${esc(locations[r.location_id] || "—")}</td>
+    </tr>`).join("") || `<tr><td colspan="3" class="note">Nothing visible to you.</td></tr>`;
+}
+
+// ---------------------------------------------------------------- support
+
+function renderSupport() {
+  const box = $("supportRoles");
+
+  if (!supportRoles.length) {
+    box.innerHTML = `<p class="error">No support roles found. Run migration
+      0013_support_roles.sql in the SQL editor, then reload this page.</p>`;
+    return;
+  }
+
+  const field = (label, name, value, opts = {}) => `
+    <div class="${opts.wide ? "wide" : ""}">
+      <label>${label}</label>
+      <input type="${opts.type || "text"}" data-f="${name}"
+             value="${esc(value ?? "")}" placeholder="${esc(opts.placeholder || "")}">
+    </div>`;
+
+  // A blank row at the end of every role is the "add someone" affordance:
+  // fill it in, press Add, and it becomes a person. No separate mode.
+  const personRow = (roleId, person) => `
+    <div class="prow" data-person="${esc(person ? person.id : "")}">
+      <div>
+        <label>Name</label>
+        <input type="text" data-f="name" value="${esc(person ? person.name : "")}"
+               placeholder="${person ? "" : "Add someone"}">
+      </div>
+      <div>
+        <label>Job title</label>
+        <input type="text" data-f="title" value="${esc(person ? person.title : "")}">
+      </div>
+      <div>
+        <label>Mobile</label>
+        <input type="tel" data-f="phone" value="${esc(person ? person.phone : "")}"
+               placeholder="208 555 0100">
+      </div>
+      <div class="row">
+        <button data-act="${person ? "save-person" : "add-person"}"
+                data-role="${esc(roleId)}">${person ? "Save" : "Add"}</button>
+        ${person ? `<button class="ghost" data-act="remove-person">Remove</button>` : ""}
+      </div>
+      <div class="wide"><span class="msg"></span></div>
+    </div>`;
+
+  box.innerHTML = supportRoles.map(r => {
+    const crew = (r.support_people || [])
+      .sort((a, b) => (a.sort_order - b.sort_order) || a.name.localeCompare(b.name));
+
+    return `
+    <div class="role" data-id="${esc(r.id)}">
+      <div class="role-head">
+        <b>${esc(r.title)}</b>
+        <span class="note">${esc(r.id)} · ${crew.length}
+          ${crew.length === 1 ? "person" : "people"}${r.updated_at
+          ? " · updated " + new Date(r.updated_at).toLocaleDateString() : ""}</span>
+      </div>
+      <div class="fields">
+        ${field("Card title", "title", r.title)}
+        ${field("Icon (SF Symbol)", "symbol", r.symbol)}
+        ${field("Blurb", "subtitle", r.subtitle, { wide: true })}
+      </div>
+      <div class="row" style="margin-top:6px">
+        <button data-act="save">Save card</button>
+        <span class="msg"></span>
+      </div>
+      <div class="people">
+        ${crew.map(person => personRow(r.id, person)).join("")}
+        ${personRow(r.id, null)}
+      </div>
+    </div>`;
+  }).join("");
+}
+
+// ---------------------------------------------------------------- people
+
+// Anything typed — spaces, dashes, brackets, a leading 1 — becomes ten digits,
+// so the app can build a tel: link straight from the column.
+function normalisePhone(value) {
+  return value.replace(/\D/g, "").replace(/^1(?=\d{10}$)/, "");
+}
+
+function readPerson(row) {
+  return {
+    name: row.querySelector('[data-f="name"]').value.trim(),
+    title: row.querySelector('[data-f="title"]').value.trim(),
+    phone: normalisePhone(row.querySelector('[data-f="phone"]').value)
+  };
+}
+
+function speak(element, text, bad) {
+  const msg = element.querySelector(".msg");
+  msg.textContent = text;
+  msg.className = "msg " + (bad ? "error" : "ok");
+}
+
+// Shared by adding and saving: a person needs a name and a number that dials.
+function validPerson(row) {
+  const person = readPerson(row);
+  if (!person.name) { speak(row, "This person needs a name.", true); return null; }
+  if (person.phone.length !== 10) {
+    speak(row, "A mobile needs 10 digits.", true); return null;
+  }
+  return person;
+}
+
+async function addPerson(row, roleId) {
+  const person = validPerson(row);
+  if (!person) return;
+
+  speak(row, "Adding…", false);
+  const existing = (supportRoles.find(r => r.id === roleId).support_people || []).length;
+  const { data, error } = await db.from("support_people")
+    .insert({ role_id: roleId, ...person, title: person.title || null,
+              sort_order: (existing + 1) * 10 })
+    .select();
+
+  if (error) return speak(row, error.message, true);
+  if (!data || !data.length) {
+    return speak(row, "Nothing was added — this account isn't an admin.", true);
+  }
+  await loadAll();
+  renderSupport();
+}
+
+async function savePerson(row) {
+  const person = validPerson(row);
+  if (!person) return;
+
+  speak(row, "Saving…", false);
+  const { data, error } = await db.from("support_people")
+    .update({ ...person, title: person.title || null })
+    .eq("id", row.dataset.person).select();
+
+  if (error) return speak(row, error.message, true);
+  if (!data || !data.length) {
+    return speak(row, "Nothing changed — this account isn't an admin.", true);
+  }
+  speak(row, "Saved.", false);
+  const crew = supportRoles.find(r =>
+    (r.support_people || []).some(p => p.id === row.dataset.person)).support_people;
+  Object.assign(crew.find(p => p.id === row.dataset.person), data[0]);
+}
+
+async function removePerson(row) {
+  const person = readPerson(row);
+  if (!confirm(`Remove ${person.name || "this person"} from the app?`)) return;
+
+  speak(row, "Removing…", false);
+  const { error } = await db.from("support_people")
+    .delete().eq("id", row.dataset.person);
+
+  if (error) return speak(row, error.message, true);
+  await loadAll();
+  renderSupport();
+}
+
+async function saveRole(card) {
+  const id = card.dataset.id;
+  const msg = card.querySelector(".msg");
+  const get = (f) => card.querySelector(`[data-f="${f}"]`).value.trim();
+
+  const say = (text, bad) => {
+    msg.textContent = text;
+    msg.className = "msg " + (bad ? "error" : "ok");
+  };
+
+  if (!get("title")) return say("The card needs a title.", true);
+
+  const payload = {
+    title: get("title"),
+    subtitle: get("subtitle"),
+    symbol: get("symbol") || "lifepreserver.fill"
+  };
+
+  say("Saving…", false);
+  const { data, error } = await db.from("support_roles")
+    .update(payload).eq("id", id).select();
+
+  if (error) return say(error.message, true);
+  // An update the policy refused affects no rows and reports no error, which
+  // would otherwise look exactly like success.
+  if (!data || !data.length) {
+    return say("Nothing changed — this account isn't an admin.", true);
+  }
+
+  // The update doesn't return the embedded people, so keep the ones we have.
+  const role = supportRoles.find(r => r.id === id);
+  Object.assign(role, data[0], { support_people: role.support_people });
+  say("Saved.", false);
+}
+
+// ---------------------------------------------------------------- lift plan PDF
+
+// Mirrors LiftPlanPDF.swift in the app, so a plan printed from a desk and one
+// printed from a phone are the same document. US Letter at 72dpi, which is
+// what jsPDF's "pt" unit measures in.
+//
+// Labels are duplicated from the app rather than stored in the database: the
+// database keeps raw values on purpose, so the wording can be corrected without
+// rewriting old records.
+
+const CRANE_TYPES = {
+  bridge: "Bridge crane - single trolley",
+  truck: "Service truck crane"
+};
+
+const WEIGHT_METHODS = {
+  nameplate: "Equipment / nameplate data",
+  specSheet: "Manufacturer spec sheet",
+  calculation: "Engineering calculation",
+  scale: "Certified scale weight",
+  billOfLading: "Bill of lading / shipping docs",
+  estimated: "Estimated by rigger"
+};
+
+const INSPECTION_ITEMS = [
+  ["slings", "Slings/chains free of cuts, fraying, kinks or corrosion"],
+  ["hooks", "Hooks free of cracks or deformation; safety latches work"],
+  ["shackles", "Shackles - correct pin, no wear, hand-tight plus a turn"],
+  ["hardwareMarked", "Rigging hardware rated capacity marked and legible"],
+  ["wireRope", "Wire rope free of broken wires, birdcaging, corrosion"],
+  ["belowHookTagged", "Below-the-hook device inspected and tagged current"],
+  ["limitSwitches", "Crane hoist limit switches / brakes tested"],
+  ["outriggers", "Outriggers fully deployed and cribbed (truck crane)"]
+];
+
+const STATUS_LABELS = {
+  submitted: "Awaiting approval",
+  changes_requested: "Changes requested",
+  approved: "Approved"
+};
+
+function downloadPlanPDF(plan) {
+  const PAGE_W = 612, PAGE_H = 792, MARGIN = 44;
+  const WIDTH = PAGE_W - MARGIN * 2;
+
+  const doc = new jspdf.jsPDF({ unit: "pt", format: "letter" });
+  let y = MARGIN;
+
+  // Every writer below asks for room first, so nothing straddles a page break.
+  const ensure = (needed) => {
+    if (y + needed > PAGE_H - MARGIN - 20) { doc.addPage(); y = MARGIN; }
+  };
+
+  const text = (str, x, top, { size = 11, style = "normal", grey, width } = {}) => {
+    doc.setFont("helvetica", style);
+    doc.setFontSize(size);
+    doc.setTextColor(grey == null ? 0 : grey);
+    const lines = width ? doc.splitTextToSize(String(str), width) : [String(str)];
+    // jsPDF positions text on the baseline; everything here is measured from
+    // the top of the line, so shift down by roughly the ascender.
+    doc.text(lines, x, top + size * 0.85);
+    return lines.length * size * 1.25;
+  };
+
+  const clean = (v) => String(v ?? "").trim();
+  const or = (v) => clean(v) || "-";
+
+  const title = (str) => {
+    ensure(30);
+    doc.setFillColor(204, 0, 51);
+    doc.rect(MARGIN, y, WIDTH, 24, "F");
+    text(str, MARGIN + 6, y + 4, { size: 15, style: "bold", grey: 255 });
+    y += 28;
+  };
+
+  const caption = (str) => {
+    ensure(14);
+    text(str, MARGIN, y, { size: 9, grey: 90 });
+    y += 14;
+  };
+
+  const section = (str) => {
+    ensure(28);
+    y += 8;
+    doc.setFillColor(237, 237, 237);
+    doc.rect(MARGIN, y, WIDTH, 16, "F");
+    text(str.toUpperCase(), MARGIN + 5, y + 2, { size: 11, style: "bold" });
+    y += 21;
+  };
+
+  // An empty field is left out rather than printed as a dash: a plan is easier
+  // to read when what's on it was actually filled in.
+  const field = (label, value) => {
+    const body = clean(value);
+    if (!body) return;
+    doc.setFontSize(11);
+    const lines = doc.splitTextToSize(body, WIDTH);
+    ensure(lines.length * 14 + 14);
+    text(label, MARGIN, y, { size: 8, style: "bold", grey: 128 });
+    y += 10;
+    y += text(body, MARGIN, y, { width: WIDTH });
+  };
+
+  const pair = (l1, v1, l2, v2) => {
+    const half = (WIDTH - 12) / 2;
+    ensure(30);
+    text(l1, MARGIN, y, { size: 8, style: "bold", grey: 128 });
+    text(l2, MARGIN + half + 12, y, { size: 8, style: "bold", grey: 128 });
+    y += 10;
+    text(or(v1), MARGIN, y, { width: half });
+    text(or(v2), MARGIN + half + 12, y, { width: half });
+    y += 18;
+  };
+
+  const check = (label, on) => {
+    ensure(15);
+    // "[x]" rather than a ballot-box character: jsPDF's built-in fonts are
+    // Latin-1 only and would drop it silently.
+    text(on ? "[x]" : "[ ]", MARGIN, y, { style: "bold" });
+    text(label, MARGIN + 22, y, { grey: on ? 0 : 90, width: WIDTH - 22 });
+    y += 15;
+  };
+
+  const COLUMNS = [130, 80, 70, 80, 40, 80];
+
+  const riggingRow = (values, header) => {
+    ensure(16);
+    let x = MARGIN;
+    values.forEach((value, i) => {
+      text(or(value), x, y, header
+        ? { size: 8, style: "bold", grey: 128 }
+        : { size: 10 });
+      x += COLUMNS[i];
+    });
+    y += header ? 12 : 14;
+  };
+
+  const date = (value) => value
+    ? new Date(String(value).length <= 10 ? value + "T00:00:00" : value)
+        .toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
+    : "-";
+
+  // ---- the document -------------------------------------------------------
+
+  title("CRANE LIFT / RIGGING PLAN");
+  caption("Bridge Crane (Single Trolley) & Service Truck Crane Lifts");
+
+  const status = [`Status: ${STATUS_LABELS[plan.status] || plan.status}`];
+  if (plan.created_by_name) status.push(`Submitted by ${plan.created_by_name}`);
+  if (plan.reviewed_at) status.push(`Reviewed ${date(plan.reviewed_at)}`);
+  caption(status.join("    -    "));
+  y += 8;
+
+  section("Job Information");
+  pair("Date", date(plan.lift_date), "Location / Facility", plan.location);
+  field("Job / Task Description", plan.job_description);
+  pair("Rigger-in-Charge", plan.rigger_in_charge, "Signal Person", plan.signal_person);
+
+  section("Crane Type, Configuration & Capacity");
+  pair("Crane Type", CRANE_TYPES[plan.crane_type] || "-",
+       "Rated Capacity", plan.rated_capacity);
+  if (plan.crane_type === "truck") {
+    field("Truck Crane Details", plan.truck_details);
+    field("Working Radius / Boom Angle", plan.working_radius);
+  }
+  field("Crane Capacity at This Radius / Config", plan.capacity_at_config);
+  check("Centre of gravity confirmed", plan.center_of_gravity_confirmed);
+  check("Lift is within the crane's rated capacity", plan.within_rated_capacity);
+  check("Load chart consulted / capacity plate verified", plan.load_chart_consulted);
+
+  section("Load Weight");
+  field("Load Description", plan.load_description);
+  pair("Load Weight (lbs)", plan.load_weight == null ? "" : Math.round(plan.load_weight),
+       "Total Weight (lbs)", plan.total_weight == null ? "" : Math.round(plan.total_weight));
+  field("How Was Weight Determined?",
+        (plan.weight_methods || []).map(m => WEIGHT_METHODS[m] || m).join(", "));
+  field("Source / Reference", plan.weight_source);
+  if (plan.percent_capacity != null) {
+    field("% of Crane Capacity Used", Math.round(plan.percent_capacity) + "%" +
+      (plan.percent_capacity > 100 ? "  - EXCEEDS RATED CAPACITY" : ""));
+  }
+
+  const rigging = (plan.rigging || []).filter(r =>
+    [r.item, r.type, r.size, r.wll, r.qty, r.angle].some(v => clean(v)));
+  if (rigging.length) {
+    section("Rigging - Size & Type");
+    riggingRow(["Component", "Type", "Size", "Rated WLL", "Qty", "Angle"], true);
+    rigging.forEach(r => riggingRow([r.item, r.type, r.size, r.wll, r.qty, r.angle]));
+  }
+  field("Below-the-Hook Lifting Device", plan.below_hook_device);
+  field("Hitch Type & Sling Angle", plan.hitch_type);
+
+  section("Pre-Lift Inspection Checklist");
+  INSPECTION_ITEMS.forEach(([key, label]) =>
+    check(label, (plan.inspection || {})[key] === true));
+
+  section("Hazards & Lift Path");
+  field("Hazards Identified", plan.hazards);
+  field("Lift Path / Sketch", plan.lift_path);
+
+  text(`Generated from the Agri-Service web page - ${new Date().toLocaleDateString()}`,
+       MARGIN, PAGE_H - MARGIN, { size: 9, grey: 128 });
+
+  // Named so a folder of these sorts by date and stays unambiguous when two
+  // people lifted on the same day.
+  const stamp = (plan.lift_date || plan.submitted_at || "").slice(0, 10);
+  const who = clean(plan.created_by_name).replace(/[^\w -]/g, "");
+  doc.save(["Lift Plan", stamp, who].filter(Boolean).join(" - ") + ".pdf");
+}
+
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"]/g, c =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+}
+
+// ---------------------------------------------------------------- CSV import
+
+// A small RFC-4180 parser: fields may be quoted, quotes are doubled to escape,
+// and quoted fields may contain commas and newlines. The Truck Type column is
+// a quoted JSON array, so none of that is optional.
+function parseCSV(text) {
+  const rows = [];
+  let row = [], field = "", quoted = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (quoted) {
+      if (ch === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++; }
+        else quoted = false;
+      } else field += ch;
+    } else if (ch === '"') quoted = true;
+    else if (ch === ",") { row.push(field); field = ""; }
+    else if (ch === "\n") { row.push(field); rows.push(row); row = []; field = ""; }
+    else if (ch !== "\r") field += ch;
+  }
+  if (field.length || row.length) { row.push(field); rows.push(row); }
+  return rows.filter(r => r.some(v => v.trim() !== ""));
+}
+
+// The export writes dates as M/D/YY, which Date() reads inconsistently across
+// browsers, so it's converted explicitly.
+function toISODate(value) {
+  const v = (value || "").trim();
+  if (!v) return null;
+  const m = v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  if (!m) return null;
+  let [, mm, dd, yy] = m;
+  yy = yy.length === 2 ? String(2000 + Number(yy)) : yy;
+  return `${yy}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
+}
+
+function toBool(v) {
+  const s = (v || "").trim().toLowerCase();
+  if (["true", "yes", "y", "1"].includes(s)) return true;
+  if (["false", "no", "n", "0"].includes(s)) return false;
+  return null;
+}
+
+function toClasses(v) {
+  const s = (v || "").trim();
+  if (!s) return [];
+  try {
+    const parsed = JSON.parse(s);
+    if (Array.isArray(parsed)) return parsed.map(String);
+  } catch (_) { /* fall through to a plain list */ }
+  return s.split(/[;,]/).map(x => x.trim()).filter(Boolean);
+}
+
+async function importCSV(text) {
+  const rows = parseCSV(text);
+  if (rows.length < 2) {
+    $("importResult").innerHTML = `<p class="error">That file has no data rows.</p>`;
+    return;
+  }
+
+  const header = rows[0].map(h => h.trim().toLowerCase());
+  const col = (name) => header.indexOf(name.toLowerCase());
+  const need = ["operator name", "expiration date"];
+  const missing = need.filter(n => col(n) === -1);
+  if (missing.length) {
+    $("importResult").innerHTML =
+      `<p class="error">This doesn't look like the certification export — missing: ${missing.join(", ")}.</p>`;
+    return;
+  }
+
+  const records = rows.slice(1).map(r => ({
+    operator_name:     (r[col("Operator Name")] || "").trim(),
+    email:             (r[col("Email")] || "").trim() || null,
+    evaluation_date:   toISODate(r[col("Evaluation Date")]),
+    evaluator_name:    (r[col("Evaluator Name")] || "").trim() || null,
+    expiration_date:   toISODate(r[col("Expiration Date")]),
+    truck_classes:     toClasses(r[col("Truck Type Authorized")]),
+    passed_driving:    toBool(r[col("Successful Completion of Driving Evaluation")]),
+    inspection:        toBool(r[col("Inspection")]),
+    use_of_controls:   toBool(r[col("Use of Controls")]),
+    maneuvering:       toBool(r[col("Maneuvering Skills")]),
+    driving_with_load: toBool(r[col("Driving with Load")]),
+    modified_by:       (r[col("Modified By")] || "").trim() || null
+  })).filter(r => r.operator_name);
+
+  // Upsert on match_key so re-importing updates rather than duplicating, and
+  // a partial export can't remove anyone.
+  const { error } = await db
+    .from("forklift_certifications")
+    .upsert(records, { onConflict: "match_key" });
+
+  if (error) {
+    $("importResult").innerHTML =
+      `<p class="error">Import failed: ${esc(error.message)}</p>
+       <p class="note">Only administrators can import. Check you're signed in as one.</p>`;
+    return;
+  }
+
+  const before = certs.length;
+  await loadAll();
+  const added = certs.length - before;
+  $("importResult").innerHTML =
+    `<p class="ok">Imported ${records.length} record${records.length === 1 ? "" : "s"} —
+     ${added} new, ${records.length - added} updated.</p>`;
+}
+
+// ---------------------------------------------------------------- wiring
+
+const drop = $("drop");
+["dragenter", "dragover"].forEach(e =>
+  drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.add("over"); }));
+["dragleave", "drop"].forEach(e =>
+  drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", ev => {
+  const file = ev.dataTransfer.files[0];
+  if (file) file.text().then(importCSV);
+});
+$("file").addEventListener("change", ev => {
+  const file = ev.target.files[0];
+  if (file) file.text().then(importCSV);
+});
+
+$("certSearch").addEventListener("input", renderCerts);
+$("planSearch").addEventListener("input", renderPlans);
+
+document.querySelectorAll(".tabs button[data-tab]").forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll(".tabs button[data-tab]").forEach(b =>
+      b.classList.toggle("active", b === btn));
+    ["certs", "plans", "people", "support"].forEach(name =>
+      $("tab-" + name).classList.toggle("hidden", name !== btn.dataset.tab));
+  };
+});
+
+$("supportRoles").addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-act]");
+  if (!button) return;
+
+  switch (button.dataset.act) {
+    case "save":          return saveRole(button.closest(".role"));
+    case "add-person":    return addPerson(button.closest(".prow"), button.dataset.role);
+    case "save-person":   return savePerson(button.closest(".prow"));
+    case "remove-person": return removePerson(button.closest(".prow"));
+  }
+});
+
+// Column sorting, shared by all three tables.
+document.querySelectorAll("th[data-sort]").forEach(th => {
+  th.onclick = () => {
+    const key = th.dataset.sort;
+    const table = th.closest("table").id;
+    const list = table === "certTable" ? certs : table === "planTable" ? plans : people;
+    const dir = th.dataset.dir === "asc" ? -1 : 1;
+    th.dataset.dir = dir === 1 ? "asc" : "desc";
+    list.sort((a, b) => {
+      const x = key === "status" ? certStatus(a)[0] : a[key];
+      const y = key === "status" ? certStatus(b)[0] : b[key];
+      return String(x ?? "").localeCompare(String(y ?? ""), undefined, { numeric: true }) * dir;
+    });
+    renderCerts(); renderPlans(); renderPeople();
+  };
+});
+
+// Pick up an existing session so a refresh doesn't mean signing in again.
+db.auth.getSession().then(({ data }) => { if (data.session) start(); });
+</script>
+</body>
+</html>
