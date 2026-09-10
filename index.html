@@ -167,9 +167,24 @@
   .b-answered { background: rgba(232,163,23,.18); color: #8a5e00; }
   .b-closed   { background: rgba(34,180,57,.14);  color: #178A2A; }
 
-  .support-role { border: 1px solid var(--line); border-radius: 16px;
-                  background: var(--card); border-left: 4px solid var(--green);
-                  margin-bottom: 14px; }
+  .support-role { border: 1px solid rgba(34,180,57,.18); border-radius: 16px;
+                  background: var(--card); border-left: 5px solid var(--green);
+                  margin-bottom: 14px; box-shadow: 0 6px 16px rgba(0,0,0,.05); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .chip { border-radius: 999px; padding: 7px 13px; font-size: 14px; font-weight: 600;
+          border: 1px solid var(--line); background: var(--card); color: var(--ink);
+          cursor: pointer; }
+  .chip.on { background: var(--red); border-color: var(--red); color: #fff; }
+  .group-title { font-size: 11px; letter-spacing: 1.4px; text-transform: uppercase;
+                 color: var(--muted); font-weight: 700; margin: 26px 0 10px 4px; }
+  .accent-red { border-left-color: var(--red); border-color: rgba(204,0,51,.18);
+                border-left-width: 5px; }
+  .accent-red .go, .accent-red b + span + .go { color: var(--red); }
+  .accent-ink { border-left-color: var(--ink); border-color: rgba(47,47,47,.16);
+                border-left-width: 5px; }
+  .accent-ink .go { color: var(--ink); }
+  .well.ink { background: rgba(47,47,47,.10); color: var(--ink); }
+  .well.redtint { background: rgba(204,0,51,.12); color: var(--red); }
   .support-role .head { display: flex; gap: 14px; padding: 16px; align-items: flex-start; }
   .support-role .head span span { display: block; font-size: 13px; color: var(--muted); }
   .person { display: flex; gap: 12px; align-items: center; padding: 14px 16px;
@@ -356,7 +371,7 @@ const $ = (id) => document.getElementById(id);
 let me = null, profile = null;
 let certs = [], plans = [], people = [], supportRoles = [], locations = {};
 let sharedTasks = [], personalTasks = [], hiddenTasks = [], completions = [];
-let tickets = [];
+let tickets = [], workGroups = [];
 
 // Admins approve lift plans for their own shop, so plenty of the page keys off
 // this. The Admin button does not — see isOwner.
@@ -408,11 +423,11 @@ async function start() {
 // ---------------------------------------------------------------- loading
 
 async function loadAll() {
-  const [locs, c, p, pe, sr, wt, pt, ht, tc, tk] = await Promise.all([
+  const [locs, c, p, pe, sr, wt, pt, ht, tc, tk, gr] = await Promise.all([
     db.from("locations").select("id,name"),
     db.from("forklift_certifications").select("*"),
     db.from("lift_plans").select("*").order("submitted_at", { ascending: false }),
-    db.from("profiles").select("id,full_name,role,location_id"),
+    db.from("profiles").select("id,full_name,role,location_id,groups"),
     db.from("support_roles").select("*, support_people(*)").order("sort_order"),
     db.from("weekly_tasks").select("*").eq("is_active", true).order("sort_order"),
     db.from("personal_tasks").select("*").is("archived_at", null),
@@ -420,7 +435,8 @@ async function loadAll() {
     db.from("task_completions").select("task_id,week_start")
       .in("week_start", [periodKey("daily"), periodKey("weekly"), periodKey("monthly")]),
     db.from("support_tickets").select("*, support_ticket_comments(*)")
-      .order("last_activity_at", { ascending: false })
+      .order("last_activity_at", { ascending: false }),
+    db.from("groups").select("*").order("sort_order")
   ]);
 
   locations = Object.fromEntries((locs.data || []).map(l => [l.id, l.name]));
@@ -430,6 +446,7 @@ async function loadAll() {
   hiddenTasks = (ht.data || []).map(r => r.task_id);
   completions = tc.data || [];
   tickets = tk.data || [];
+  workGroups = gr.data || [];
 
   // Only your own profile comes back for most people — that policy is the
   // point — so the page reads it out of the list rather than asking twice.
@@ -660,6 +677,36 @@ function certificationCard() {
 
 // ---- internal support requests -------------------------------------------
 
+// Groups are the person's own to change, so the same chips appear on the
+// request form and on your own profile.
+const chips = (selected, attr) => `<div class="chips">` +
+  workGroups.map(g => `<button type="button" class="chip${
+    selected.includes(g.id) ? " on" : ""}" data-chip="${esc(attr)}"
+    data-id="${esc(g.id)}">${esc(g.name)}</button>`).join("") + `</div>`;
+
+const groupNames = (ids) => (ids || [])
+  .map(id => (workGroups.find(g => g.id === id) || {}).name || id)
+  .join(", ");
+
+// Chips toggle in place; nothing is saved until the surrounding button is used,
+// except on the profile row, which saves as you tap.
+$("view").addEventListener("click", async (event) => {
+  const chip = event.target.closest("button[data-chip]");
+  if (!chip) return;
+  chip.classList.toggle("on");
+
+  if (chip.dataset.chip === "mine") {
+    const picked = [...chip.parentElement.querySelectorAll(".chip.on")]
+      .map(c => c.dataset.id);
+    const { error } = await db.from("profiles")
+      .update({ groups: picked }).eq("id", me.id);
+    if (error) return alert(error.message);
+    profile.groups = picked;
+    await loadAll();
+    showView("support");
+  }
+});
+
 const TICKET_BADGES = {
   open: ["Open", "b-open"],
   answered: ["Answered", "b-answered"],
@@ -687,10 +734,14 @@ function ticketsSection() {
         <b style="display:block;margin:6px 0 2px">${esc(firstLine(ticket.description))}</b>
         <span class="note">${machine ? esc(machine) + " · " : ""}${
           esc(ticket.created_by_name || "Someone")} · ${
-          crew.length} ${crew.length === 1 ? "reply" : "replies"}</span>
+          crew.length} ${crew.length === 1 ? "reply" : "replies"}${
+          (ticket.groups || []).length ? " · " + esc(groupNames(ticket.groups)) : ""}</span>
       </summary>
       <div class="inner">
-        ${detail("Machine type", ticket.machine_type)}
+        ${(ticket.groups || []).length
+          ? `<p class="note" style="margin:0 0 10px">For ${
+              esc(groupNames(ticket.groups))}</p>` : ""}
+        ${detail("Machine or system", ticket.machine_type)}
         ${detail("Brand", ticket.brand)}
         ${detail("Model", ticket.model)}
         ${detail("Error codes", ticket.error_codes)}
@@ -719,17 +770,26 @@ function ticketsSection() {
     </details>`;
   }).join("") || `<p class="note">No requests yet.</p>`;
 
-  return `<div class="card" id="ticketsCard">
+  return `<div class="group-title">Ask the company</div>
+  <div class="card" id="ticketsCard">
     <h2>Internal support requests</h2>
-    <p class="note">Anyone can raise one and everyone can read them, so the next
-      person with the same fault finds the answer. ${open.length} open.</p>
+    <p class="note">A request reaches only the groups it's aimed at. ${
+      open.length} open.</p>
+
+    <label>Your groups</label>
+    ${chips(profile.groups || [], "mine")}
+    <p class="note" style="margin-top:-4px">Requests aimed at these reach you.
+      Tap to change — this saves straight away.</p>
 
     <details class="ticket" id="newTicket" style="border-color:var(--red)">
       <summary><b>Raise a new request</b></summary>
       <div class="inner">
+        <label>Who should see this</label>
+        ${chips([], "new")}
         <div class="fields">
-          <div><label>Machine type</label>
-            <input type="text" data-new="machine_type" placeholder="Tractor, combine…"></div>
+          <div><label>Machine or system</label>
+            <input type="text" data-new="machine_type"
+                   placeholder="Tractor, combine, display…"></div>
           <div><label>Brand</label>
             <input type="text" data-new="brand" placeholder="Fendt, Massey…"></div>
           <div><label>Model</label>
@@ -768,13 +828,20 @@ $("view").addEventListener("click", async (event) => {
 
   if (act === "new-ticket") {
     const get = (f) => box.querySelector(`[data-new="${f}"]`).value.trim();
+    const picked = [...box.querySelectorAll('[data-chip="new"].on')]
+      .map(c => c.dataset.id);
+
     if (!get("description")) return say("Say what's happening first.", true);
+    // A request with no group would go to everybody, which is the thing groups
+    // are meant to stop.
+    if (!picked.length) return say("Pick at least one group.", true);
 
     say("Sending…", false);
     // created_by, the name and the shop are all filled in by the database.
     const { error } = await db.from("support_tickets").insert({
       machine_type: get("machine_type"), brand: get("brand"), model: get("model"),
-      error_codes: get("error_codes"), description: get("description")
+      error_codes: get("error_codes"), description: get("description"),
+      groups: picked
     });
     if (error) return say(error.message, true);
 
@@ -837,9 +904,11 @@ function supportCards() {
        ? "Location: " + locations[profile.location_id] + "\n" : "")
     + "Sent from the Agri-Service web page";
 
-  return cards + `<a class="link-card"
+  return `<div class="group-title">Who to call</div>` + cards
+    + `<div class="group-title">Systems &amp; reference</div>`
+    + `<a class="link-card accent-ink"
       href="mailto:IT@agri-service.com?body=${encodeURIComponent(body)}">
-    <span class="well green">${icon("doc")}</span>
+    <span class="well ink">${icon("doc")}</span>
     <span><b>Submit an IT Ticket</b>
       <span>Computer, phone, printer, or account trouble - email the IT team.</span>
       <span class="go">Start a ticket &nearr;</span></span>
