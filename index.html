@@ -285,8 +285,10 @@
         </div>
         <p class="note" style="margin-top:12px">
           People are matched on their work email, or their name when the email is
-          blank. Existing records are updated and new ones added — nobody is
-          removed, so importing a partial export can't quietly delete anyone.
+          blank. Somebody can appear more than once — a re-evaluation adds a
+          record rather than replacing one — and the app's certification card
+          shows their most recent. <b>An import replaces the whole table</b>, so
+          upload the complete export each time rather than a partial one.
         </p>
         <div id="importResult"></div>
       </div>
@@ -347,7 +349,13 @@
     <section id="tab-people" class="hidden">
       <div class="card">
         <h2>People</h2>
-        <p class="note">Read-only. Roles and locations are changed in Supabase —
+        <div class="row" style="margin-bottom:12px">
+          <div id="peopleStats"></div>
+          <input class="search" id="peopleSearch" placeholder="Search a name…"
+                 style="margin-left:auto">
+        </div>
+        <p class="note">Read-only. As an admin you see your own shop's people;
+          as an owner, everyone. Roles and locations are changed in Supabase —
           the app deliberately blocks both from the client so nobody can promote
           themselves or move shops to route their own lift plans elsewhere.</p>
         <div style="overflow-x:auto">
@@ -356,6 +364,7 @@
               <th data-sort="full_name">Name</th>
               <th data-sort="role">Role</th>
               <th data-sort="location_id">Location</th>
+              <th>Groups</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -1316,11 +1325,34 @@ document.addEventListener("click", (event) => {
 });
 
 function renderPeople() {
-  $("peopleTable").querySelector("tbody").innerHTML = people.map(r => `<tr>
-      <td><b>${esc(r.full_name || "—")}</b></td>
+  const q = ($("peopleSearch") ? $("peopleSearch").value : "").trim().toLowerCase();
+  const rows = people.filter(r => !q ||
+    (r.full_name || "").toLowerCase().includes(q));
+
+  const byRole = { owner: 0, admin: 0, employee: 0 };
+  people.forEach(r => { byRole[r.role] = (byRole[r.role] || 0) + 1; });
+
+  const withoutLocation = people.filter(r => !r.location_id).length;
+
+  if ($("peopleStats")) {
+    $("peopleStats").innerHTML =
+      `<span class="stat"><b>${people.length}</b>accounts</span>` +
+      `<span class="stat"><b>${byRole.admin + byRole.owner}</b>admins</span>` +
+      (withoutLocation
+        ? `<span class="stat"><b style="color:var(--red)">${withoutLocation}</b>no shop set</span>`
+        : "");
+  }
+
+  $("peopleTable").querySelector("tbody").innerHTML = rows.map(r => `<tr>
+      <td><b>${esc(r.full_name || "—")}</b>${r.id === me.id
+        ? ` <span class="note">· you</span>` : ""}</td>
       <td>${esc(r.role)}</td>
-      <td>${esc(locations[r.location_id] || "—")}</td>
-    </tr>`).join("") || `<tr><td colspan="3" class="note">Nothing visible to you.</td></tr>`;
+      <td>${r.location_id ? esc(locations[r.location_id] || r.location_id)
+        : `<span class="error">not set</span>`}</td>
+      <td>${esc(groupNames(r.groups)) || "—"}</td>
+    </tr>`).join("")
+    || `<tr><td colspan="4" class="note">Nothing visible to you. If this is only
+        your own row, run migration 0021 in the SQL editor.</td></tr>`;
 }
 
 // ---------------------------------------------------------------- support
@@ -2190,11 +2222,28 @@ async function importCSV(text) {
     modified_by:       (r[col("Modified By")] || "").trim() || null
   })).filter(r => r.operator_name);
 
-  // Upsert on match_key so re-importing updates rather than duplicating, and
-  // a partial export can't remove anyone.
+  // A full replace, not an upsert.
+  //
+  // Upserting needed one row per person to conflict on, and that assumption was
+  // wrong: people get re-evaluated, so the export carries their old record and
+  // their new one. Migration 0020 dropped that uniqueness, which also means
+  // there is no longer anything for onConflict to match — the upsert would now
+  // fail outright. The export is the whole record, so the table is rebuilt from
+  // it. Upload the complete export, not a partial one.
+  const wipe = await db
+    .from("forklift_certifications")
+    .delete().neq("operator_name", "\u0000");
+
+  if (wipe.error) {
+    $("importResult").innerHTML =
+      `<p class="error">Import failed: ${esc(wipe.error.message)}</p>
+       <p class="note">Only administrators can import. Check you're signed in as one.</p>`;
+    return;
+  }
+
   const { error } = await db
     .from("forklift_certifications")
-    .upsert(records, { onConflict: "match_key" });
+    .insert(records);
 
   if (error) {
     $("importResult").innerHTML =
@@ -2203,12 +2252,16 @@ async function importCSV(text) {
     return;
   }
 
-  const before = certs.length;
   await loadAll();
-  const added = certs.length - before;
+  renderCerts();
+
+  // Rows and people are different numbers now that one person can hold several
+  // records, so say both.
+  const people = new Set(records.map(r =>
+    (r.email || r.operator_name || "").trim().toLowerCase())).size;
   $("importResult").innerHTML =
-    `<p class="ok">Imported ${records.length} record${records.length === 1 ? "" : "s"} —
-     ${added} new, ${records.length - added} updated.</p>`;
+    `<p class="ok">Imported ${records.length} record${records.length === 1 ? "" : "s"}
+     for ${people} ${people === 1 ? "person" : "people"}.</p>`;
 }
 
 // ---------------------------------------------------------------- wiring
@@ -2229,6 +2282,7 @@ $("file").addEventListener("change", ev => {
 
 $("certSearch").addEventListener("input", renderCerts);
 $("planSearch").addEventListener("input", renderPlans);
+$("peopleSearch").addEventListener("input", renderPeople);
 
 document.querySelectorAll(".tabs button[data-tab]").forEach(btn => {
   btn.onclick = () => {
