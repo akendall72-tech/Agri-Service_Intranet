@@ -1479,6 +1479,14 @@ $("admin").addEventListener("click", async (event) => {
 
   if (!get("title")) return speak(box, "A banner needs a title.", true);
 
+  // A link that isn't a web address is refused by Safari on the phone, which
+  // takes the app down with it. The database refuses it too — this is just the
+  // friendlier of the two messages.
+  const link = get("link_url");
+  if (link && !/^https?:\/\//i.test(link)) {
+    return speak(box, "A link has to start with https:// — or leave it empty.", true);
+  }
+
   speak(box, "Saving…", false);
   const { data, error } = await db.from("announcements").update({
     title: get("title"),
@@ -2004,15 +2012,10 @@ async function importPayroll(file) {
 
   say(`Importing ${periods.length} pay periods…`, "note");
 
-  // Replace rather than merge: the spreadsheet is the record, and a half
-  // merged calendar is worse than a stale one.
-  const wipe = await db.from("payroll_periods").delete().neq("number", -1);
-  if (wipe.error) return say(esc(wipe.error.message), "error");
-  await db.from("payroll_holidays").delete().neq("sort_order", -1);
-
-  const { error } = await db.from("payroll_periods").insert(periods);
+  // Both tables move inside one database transaction, so a bad row leaves the
+  // old calendar standing rather than emptying it.
+  const { error } = await db.rpc("replace_payroll", { periods, holidays: list });
   if (error) return say(esc(error.message), "error");
-  if (list.length) await db.from("payroll_holidays").insert(list);
 
   await loadAll();
   renderPayroll();
@@ -2077,10 +2080,8 @@ async function importDirectory(file) {
 
   say(`Importing ${entries.length} rows…`, "note");
 
-  const wipe = await db.from("directory_entries").delete().neq("sort_order", -1);
-  if (wipe.error) return say(esc(wipe.error.message), "error");
-
-  const { error } = await db.from("directory_entries").insert(entries);
+  // One transaction, so a bad row leaves the old directory standing.
+  const { error } = await db.rpc("replace_directory", { entries });
   if (error) return say(esc(error.message), "error");
 
   await loadAll();
@@ -2222,28 +2223,11 @@ async function importCSV(text) {
     modified_by:       (r[col("Modified By")] || "").trim() || null
   })).filter(r => r.operator_name);
 
-  // A full replace, not an upsert.
-  //
-  // Upserting needed one row per person to conflict on, and that assumption was
-  // wrong: people get re-evaluated, so the export carries their old record and
-  // their new one. Migration 0020 dropped that uniqueness, which also means
-  // there is no longer anything for onConflict to match — the upsert would now
-  // fail outright. The export is the whole record, so the table is rebuilt from
-  // it. Upload the complete export, not a partial one.
-  const wipe = await db
-    .from("forklift_certifications")
-    .delete().neq("operator_name", "\u0000");
-
-  if (wipe.error) {
-    $("importResult").innerHTML =
-      `<p class="error">Import failed: ${esc(wipe.error.message)}</p>
-       <p class="note">Only administrators can import. Check you're signed in as one.</p>`;
-    return;
-  }
-
-  const { error } = await db
-    .from("forklift_certifications")
-    .insert(records);
+  // One call that empties the table and refills it inside a single database
+  // transaction. A delete followed by an insert meant one bad date could leave
+  // the table empty, with no backup on the free plan to restore from. See
+  // migration 0022.
+  const { error } = await db.rpc("replace_forklift_certifications", { records });
 
   if (error) {
     $("importResult").innerHTML =
