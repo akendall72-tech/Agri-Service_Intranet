@@ -28,10 +28,13 @@
   h2 { font-size: 13px; letter-spacing: 1.2px; text-transform: uppercase;
        color: var(--muted); margin: 0 0 14px; }
   label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
-  input[type=email], input[type=password], input[type=text], input[type=tel] {
+  input[type=email], input[type=password], input[type=text], input[type=tel],
+  select, textarea {
     width: 100%; padding: 10px 12px; border: 1px solid var(--line);
     border-radius: 8px; font-size: 15px; margin-bottom: 12px; background: var(--paper);
+    font-family: inherit; color: inherit;
   }
+  textarea { resize: vertical; }
   button {
     background: var(--red); color: #fff; border: 0; border-radius: 10px;
     padding: 11px 18px; font-size: 15px; font-weight: 600; cursor: pointer;
@@ -103,6 +106,14 @@
   .hero p { margin: 0; opacity: .92; }
   .hero.green { background: linear-gradient(135deg, var(--green), #137026); }
 
+  .banners { display: grid; gap: 14px; margin-bottom: 20px;
+             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .webbanner { background: var(--card); border: 1px solid var(--line);
+               border-radius: 16px; overflow: hidden; padding-bottom: 14px; }
+  .webbanner img { width: 100%; aspect-ratio: 3 / 1; object-fit: cover;
+                   display: block; margin-bottom: 10px; }
+  .webbanner b { display: block; padding: 0 14px 4px; }
+  .webbanner span { display: block; padding: 0 14px; }
   .tiles { display: grid; gap: 14px;
            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
   .tile { background: var(--card); border: 1px solid var(--line); border-radius: 16px;
@@ -170,6 +181,16 @@
   .support-role { border: 1px solid rgba(34,180,57,.18); border-radius: 16px;
                   background: var(--card); border-left: 5px solid var(--green);
                   margin-bottom: 14px; box-shadow: 0 6px 16px rgba(0,0,0,.05); }
+  .banner { border: 1px solid var(--line); border-radius: 14px; padding: 16px;
+            margin-bottom: 14px; background: var(--card); }
+  .banner img { width: 100%; max-width: 420px; aspect-ratio: 3 / 1;
+                object-fit: cover; border-radius: 10px; display: block;
+                margin-bottom: 12px; border: 1px solid var(--line); }
+  .banner .empty { width: 100%; max-width: 420px; aspect-ratio: 3 / 1;
+                   border: 2px dashed var(--line); border-radius: 10px;
+                   display: flex; align-items: center; justify-content: center;
+                   color: var(--muted); margin-bottom: 12px; font-size: 14px; }
+  .banner.off { opacity: .55; }
   .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
   .chip { border-radius: 999px; padding: 7px 13px; font-size: 14px; font-weight: 600;
           border: 1px solid var(--line); background: var(--card); color: var(--ink);
@@ -230,6 +251,7 @@
       <h3 id="greeting">Welcome back</h3>
       <p id="homeLocation"></p>
     </div>
+    <div class="banners" id="banners"></div>
     <div class="tiles" id="tiles"></div>
   </div>
 
@@ -246,6 +268,7 @@
       <button data-tab="plans">Lift Plans</button>
       <button data-tab="people">People</button>
       <button data-tab="support">Support Center</button>
+      <button data-tab="banners">Announcements</button>
     </div>
 
     <!-- Certifications -->
@@ -354,6 +377,25 @@
       </div>
     </section>
 
+    <!-- Announcements -->
+    <section id="tab-banners" class="hidden">
+      <div class="card">
+        <h2>Announcement banners</h2>
+        <p class="note">These rotate across the top of the app's home screen and
+          open full size when tapped. Three is the number the carousel is built
+          around — more works, but people stop watching.</p>
+        <p class="note"><b>Image size: 1200 &times; 400 pixels</b> (a 3:1 strip),
+          JPEG or PNG, under 1&nbsp;MB. Anything else is scaled to fill that
+          shape, so a square image gets cropped top and bottom. Keep wording
+          away from the edges.</p>
+        <div id="bannerList"></div>
+        <div class="row" style="margin-top:10px">
+          <button data-act="new-banner">Add a banner</button>
+          <span class="msg" id="bannerMsg"></span>
+        </div>
+      </div>
+    </section>
+
   </div>
 </main>
 
@@ -371,7 +413,7 @@ const $ = (id) => document.getElementById(id);
 let me = null, profile = null;
 let certs = [], plans = [], people = [], supportRoles = [], locations = {};
 let sharedTasks = [], personalTasks = [], hiddenTasks = [], completions = [];
-let tickets = [], workGroups = [];
+let tickets = [], workGroups = [], announcements = [];
 
 // Admins approve lift plans for their own shop, so plenty of the page keys off
 // this. The Admin button does not — see isOwner.
@@ -423,7 +465,7 @@ async function start() {
 // ---------------------------------------------------------------- loading
 
 async function loadAll() {
-  const [locs, c, p, pe, sr, wt, pt, ht, tc, tk, gr] = await Promise.all([
+  const [locs, c, p, pe, sr, wt, pt, ht, tc, tk, gr, an] = await Promise.all([
     db.from("locations").select("id,name"),
     db.from("forklift_certifications").select("*"),
     db.from("lift_plans").select("*").order("submitted_at", { ascending: false }),
@@ -436,7 +478,8 @@ async function loadAll() {
       .in("week_start", [periodKey("daily"), periodKey("weekly"), periodKey("monthly")]),
     db.from("support_tickets").select("*, support_ticket_comments(*)")
       .order("last_activity_at", { ascending: false }),
-    db.from("groups").select("*").order("sort_order")
+    db.from("groups").select("*").order("sort_order"),
+    db.from("announcements").select("*").order("sort_order")
   ]);
 
   locations = Object.fromEntries((locs.data || []).map(l => [l.id, l.name]));
@@ -447,6 +490,8 @@ async function loadAll() {
   completions = tc.data || [];
   tickets = tk.data || [];
   workGroups = gr.data || [];
+  announcements = an.data || [];
+  await signBanners();
 
   // Only your own profile comes back for most people — that policy is the
   // point — so the page reads it out of the list rather than asking twice.
@@ -482,10 +527,10 @@ const icon = (name, size = 24) =>
 const FEATURES = [
   { id: "training",  title: "Training Center", sub: "Courses & requirements", tint: "red" },
   { id: "reminders", title: "Reminders", sub: "Daily, weekly & monthly", tint: "green" },
-  { id: "forklift",  title: "Forklift Certification Center",
+  { id: "forklift",  title: "Forklift Center",
     sub: "Course, test & records", tint: "green" },
   { id: "safety",    title: "Safety Center", sub: "Reports & training", tint: "red" },
-  { id: "rigging",   title: "Crane and Rigging Center", sub: "Lift plans & approvals",
+  { id: "rigging",   title: "Crane Center", sub: "Lift plans & approvals",
     tint: "red" },
   { id: "support",   title: "Support Center", sub: "IT help & requests", tint: "green" }
 ];
@@ -534,6 +579,14 @@ function showHome() {
   $("homeLocation").textContent =
     (profile && locations[profile.location_id]) || "";
 
+  const strip = announcements.filter(a => a.is_active);
+  $("banners").innerHTML = strip.map(a => `
+    <div class="webbanner">
+      ${a.url ? `<img src="${esc(a.url)}" alt="${esc(a.title)}">` : ""}
+      <b>${esc(a.title)}</b>
+      ${a.body ? `<span class="note">${esc(a.body)}</span>` : ""}
+    </div>`).join("");
+
   $("tiles").innerHTML = FEATURES.map(f => {
     const n = tileCount(f.id);
     return `<button class="tile" data-view="${f.id}">
@@ -568,7 +621,7 @@ function showAdmin() {
   $("home").classList.add("hidden");
   $("view").classList.add("hidden");
   $("admin").classList.remove("hidden");
-  renderCerts(); renderPlans(); renderPeople(); renderSupport();
+  renderCerts(); renderPlans(); renderPeople(); renderSupport(); renderBanners();
   window.scrollTo(0, 0);
 }
 
@@ -604,7 +657,7 @@ const VIEWS = {
     + SAFETY_LINKS.map(linkCard).join(""),
 
   forklift: () =>
-    hero("Forklift Certification Center",
+    hero("Forklift Center",
          "Take the course, complete your driving evaluation, and check your certification.",
          true)
     + certificationCard() + FORKLIFT_LINKS.map(linkCard).join(""),
@@ -1035,7 +1088,7 @@ function riggingView() {
     ? rows.map(planRow).join("")
     : `<p class="note">${empty}</p>`;
 
-  return hero("Crane and Rigging Center",
+  return hero("Crane Center",
       "Lift plans you've submitted, and the ones waiting on you.")
     + (isAdmin() ? `<div class="card"><h2>Waiting on you</h2>
         ${list(others.filter(p => p.status === "submitted"),
@@ -1205,6 +1258,145 @@ function renderPeople() {
 }
 
 // ---------------------------------------------------------------- support
+
+// ---------------------------------------------------------------- banners
+
+// The bucket is private, so an <img> needs a signed URL rather than a path.
+// An hour is longer than anyone keeps this tab open.
+async function signBanners() {
+  for (const banner of announcements) {
+    if (!banner.image_path) { banner.url = null; continue; }
+    const { data } = await db.storage.from("announcements")
+      .createSignedUrl(banner.image_path, 3600);
+    banner.url = data ? data.signedUrl : null;
+  }
+}
+
+function renderBanners() {
+  const box = $("bannerList");
+  if (!box) return;
+
+  box.innerHTML = announcements.map(b => `
+    <div class="banner${b.is_active ? "" : " off"}" data-banner="${esc(b.id)}">
+      ${b.url ? `<img src="${esc(b.url)}" alt="">`
+              : `<div class="empty">No image yet &middot; 1200 &times; 400</div>`}
+      <div class="fields">
+        <div class="wide"><label>Title</label>
+          <input type="text" data-b="title" value="${esc(b.title)}"></div>
+        <div class="wide"><label>Body (shown when someone taps the banner)</label>
+          <textarea data-b="body" rows="3">${esc(b.body || "")}</textarea></div>
+        <div class="wide"><label>Link (optional — opens instead of the text)</label>
+          <input type="text" data-b="link_url" value="${esc(b.link_url || "")}"
+                 placeholder="https://…"></div>
+        <div><label>Order</label>
+          <input type="text" data-b="sort_order" value="${esc(b.sort_order)}"></div>
+        <div><label>Showing</label>
+          <select data-b="is_active">
+            <option value="yes"${b.is_active ? " selected" : ""}>Yes</option>
+            <option value="no"${b.is_active ? "" : " selected"}>No</option>
+          </select></div>
+      </div>
+      <div class="row">
+        <button data-act="save-banner">Save</button>
+        <label class="chip" style="cursor:pointer">
+          ${b.image_path ? "Replace image" : "Upload image"}
+          <input type="file" accept="image/png,image/jpeg" class="hidden"
+                 data-act="upload-banner">
+        </label>
+        <button class="ghost" data-act="delete-banner">Delete</button>
+        <span class="msg"></span>
+      </div>
+    </div>`).join("") || `<p class="note">No banners yet.</p>`;
+}
+
+$("admin").addEventListener("change", async (event) => {
+  const input = event.target.closest('input[type=file][data-act="upload-banner"]');
+  if (!input) return;
+
+  const file = input.files[0];
+  if (!file) return;
+  const box = input.closest(".banner");
+  const banner = announcements.find(b => b.id === box.dataset.banner);
+
+  if (file.size > 2 * 1024 * 1024) {
+    return speak(box, "That file is over 2 MB. Save it smaller.", true);
+  }
+
+  speak(box, "Uploading…", false);
+
+  // Named after the row, so replacing an image doesn't leave the old one
+  // behind in the bucket, and a stale signed URL can't resurrect it.
+  const extension = file.type === "image/png" ? "png" : "jpg";
+  const path = `${banner.id}.${extension}`;
+
+  const { error: uploadError } = await db.storage.from("announcements")
+    .upload(path, file, { upsert: true, contentType: file.type });
+  if (uploadError) return speak(box, uploadError.message, true);
+
+  const { data, error } = await db.from("announcements")
+    .update({ image_path: path }).eq("id", banner.id).select();
+  if (error) return speak(box, error.message, true);
+  if (!data || !data.length) {
+    return speak(box, "Nothing changed — this account isn't an admin.", true);
+  }
+
+  await loadAll();
+  renderBanners();
+});
+
+$("admin").addEventListener("click", async (event) => {
+  const button = event.target.closest("button[data-act]");
+  if (!button) return;
+  const act = button.dataset.act;
+  if (!["new-banner", "save-banner", "delete-banner"].includes(act)) return;
+
+  if (act === "new-banner") {
+    const { error } = await db.from("announcements").insert({
+      title: "New announcement",
+      sort_order: (announcements.length + 1) * 10
+    });
+    if (error) {
+      $("bannerMsg").textContent = error.message;
+      $("bannerMsg").className = "msg error";
+      return;
+    }
+    await loadAll();
+    return renderBanners();
+  }
+
+  const box = button.closest(".banner");
+  const banner = announcements.find(b => b.id === box.dataset.banner);
+  const get = (f) => box.querySelector(`[data-b="${f}"]`).value.trim();
+
+  if (act === "delete-banner") {
+    if (!confirm(`Delete "${banner.title}"?`)) return;
+    if (banner.image_path) {
+      await db.storage.from("announcements").remove([banner.image_path]);
+    }
+    const { error } = await db.from("announcements").delete().eq("id", banner.id);
+    if (error) return speak(box, error.message, true);
+    await loadAll();
+    return renderBanners();
+  }
+
+  if (!get("title")) return speak(box, "A banner needs a title.", true);
+
+  speak(box, "Saving…", false);
+  const { data, error } = await db.from("announcements").update({
+    title: get("title"),
+    body: get("body") || null,
+    link_url: get("link_url") || null,
+    sort_order: parseInt(get("sort_order"), 10) || 0,
+    is_active: get("is_active") === "yes"
+  }).eq("id", banner.id).select();
+
+  if (error) return speak(box, error.message, true);
+  if (!data || !data.length) {
+    return speak(box, "Nothing changed — this account isn't an admin.", true);
+  }
+  Object.assign(banner, data[0]);
+  speak(box, "Saved.", false);
+});
 
 function renderSupport() {
   const box = $("supportRoles");
@@ -1740,7 +1932,7 @@ document.querySelectorAll(".tabs button[data-tab]").forEach(btn => {
   btn.onclick = () => {
     document.querySelectorAll(".tabs button[data-tab]").forEach(b =>
       b.classList.toggle("active", b === btn));
-    ["certs", "plans", "people", "support"].forEach(name =>
+    ["certs", "plans", "people", "support", "banners"].forEach(name =>
       $("tab-" + name).classList.toggle("hidden", name !== btn.dataset.tab));
   };
 });
