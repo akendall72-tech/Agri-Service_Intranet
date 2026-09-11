@@ -1247,10 +1247,24 @@ function renderCerts() {
     `<span class="stat"><b style="color:#8a5e00">${counts.expiring}</b>expiring</span>` +
     `<span class="stat"><b style="color:var(--red-dark)">${counts.expired}</b>expired</span>`;
 
+  // Which row the app would show for each person, so a superseded record is
+  // obviously superseded rather than looking like a second live certification.
+  const current = new Set();
+  const byPerson = {};
+  certs.forEach(r => {
+    const key = (r.email || r.operator_name || "").trim().toLowerCase();
+    const held = byPerson[key];
+    if (!held || (r.expiration_date || "") > (held.expiration_date || "")) {
+      byPerson[key] = r;
+    }
+  });
+  Object.values(byPerson).forEach(r => current.add(r));
+
   $("certTable").querySelector("tbody").innerHTML = rows.map(r => {
     const [label, cls] = certStatus(r);
-    return `<tr>
-      <td><b>${esc(r.operator_name)}</b></td>
+    return `<tr${current.has(r) ? "" : ' style="opacity:.55"'}>
+      <td><b>${esc(r.operator_name)}</b>${current.has(r) ? ""
+        : ` <span class="note">· superseded</span>`}</td>
       <td>${esc(r.email || "—")}</td>
       <td>${esc((r.truck_classes || []).join(", ") || "—")}</td>
       <td>${fmtDate(r.evaluation_date)}</td>
