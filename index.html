@@ -269,6 +269,8 @@
       <button data-tab="people">People</button>
       <button data-tab="support">Support Center</button>
       <button data-tab="banners">Announcements</button>
+      <button data-tab="payroll">Payroll</button>
+      <button data-tab="directory">Who Does What</button>
     </div>
 
     <!-- Certifications -->
@@ -396,11 +398,54 @@
       </div>
     </section>
 
+    <!-- Payroll -->
+    <section id="tab-payroll" class="hidden">
+      <div class="card">
+        <h2>Payroll calendar</h2>
+        <div class="drop" id="payrollDrop">
+          Drop <b>2026 Payroll Calendar.xlsx</b> here, or
+          <label for="payrollFile" style="display:inline;color:var(--red);
+                 cursor:pointer;text-decoration:underline">choose a file</label>
+          <input id="payrollFile" type="file" class="hidden"
+                 accept=".xlsx,.xls,.csv,text/csv">
+        </div>
+        <p class="note" style="margin-top:12px">Excel or CSV. The sheet needs a
+          row with <b>Payroll #</b>, <b>Pay Period Start</b>, <b>Pay Period End</b>,
+          <b>Paid Holiday</b> and <b>Payday</b> across it — the 2026 workbook
+          already does. An import replaces the whole calendar rather than merging,
+          so upload the full year each time.</p>
+        <div id="payrollResult"></div>
+        <div id="payrollSummary" style="margin-top:14px"></div>
+      </div>
+    </section>
+
+    <!-- Who does what -->
+    <section id="tab-directory" class="hidden">
+      <div class="card">
+        <h2>Who does what</h2>
+        <div class="drop" id="directoryDrop">
+          Drop <b>Agri-Service Directory(Who Does What).csv</b> here, or
+          <label for="directoryFile" style="display:inline;color:var(--red);
+                 cursor:pointer;text-decoration:underline">choose a file</label>
+          <input id="directoryFile" type="file" class="hidden"
+                 accept=".csv,.xlsx,.xls,text/csv">
+        </div>
+        <p class="note" style="margin-top:12px">Five columns in this order:
+          <b>Topic</b>, <b>Contact 1</b>, <b>Phone #</b>, <b>Contact 2</b>,
+          <b>Phone #</b>. A header row is skipped. Anything with an @ in the
+          contact column is treated as a mailbox and gets an email button in the
+          app instead of a call button. An import replaces the whole list.</p>
+        <div id="directoryResult"></div>
+        <div id="directorySummary" style="margin-top:14px"></div>
+      </div>
+    </section>
+
   </div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 // The publishable key is a client key by design — row level security is what
 // protects the data, not this string. It is the same key the iOS app ships.
@@ -414,6 +459,7 @@ let me = null, profile = null;
 let certs = [], plans = [], people = [], supportRoles = [], locations = {};
 let sharedTasks = [], personalTasks = [], hiddenTasks = [], completions = [];
 let tickets = [], workGroups = [], announcements = [];
+let payroll = [], holidays = [], directory = [];
 
 // Admins approve lift plans for their own shop, so plenty of the page keys off
 // this. The Admin button does not — see isOwner.
@@ -465,7 +511,8 @@ async function start() {
 // ---------------------------------------------------------------- loading
 
 async function loadAll() {
-  const [locs, c, p, pe, sr, wt, pt, ht, tc, tk, gr, an] = await Promise.all([
+  const [locs, c, p, pe, sr, wt, pt, ht, tc, tk, gr, an, pr, ph, dir] =
+    await Promise.all([
     db.from("locations").select("id,name"),
     db.from("forklift_certifications").select("*"),
     db.from("lift_plans").select("*").order("submitted_at", { ascending: false }),
@@ -479,7 +526,10 @@ async function loadAll() {
     db.from("support_tickets").select("*, support_ticket_comments(*)")
       .order("last_activity_at", { ascending: false }),
     db.from("groups").select("*").order("sort_order"),
-    db.from("announcements").select("*").order("sort_order")
+    db.from("announcements").select("*").order("sort_order"),
+    db.from("payroll_periods").select("*").order("payday"),
+    db.from("payroll_holidays").select("*").order("sort_order"),
+    db.from("directory_entries").select("*").order("sort_order")
   ]);
 
   locations = Object.fromEntries((locs.data || []).map(l => [l.id, l.name]));
@@ -491,6 +541,7 @@ async function loadAll() {
   tickets = tk.data || [];
   workGroups = gr.data || [];
   announcements = an.data || [];
+  payroll = pr.data || []; holidays = ph.data || []; directory = dir.data || [];
   await signBanners();
 
   // Only your own profile comes back for most people — that policy is the
@@ -622,6 +673,7 @@ function showAdmin() {
   $("view").classList.add("hidden");
   $("admin").classList.remove("hidden");
   renderCerts(); renderPlans(); renderPeople(); renderSupport(); renderBanners();
+  renderPayroll(); renderDirectory();
   window.scrollTo(0, 0);
 }
 
@@ -1797,6 +1849,242 @@ function downloadPlanPDF(plan) {
   doc.save(["Lift Plan", stamp, who].filter(Boolean).join(" - ") + ".pdf");
 }
 
+// ---------------------------------------------------------------- payroll & directory
+
+// Both files arrive as a spreadsheet. Reading them into rows-of-cells here
+// means the two importers below don't care which format was dropped.
+async function rowsFromFile(file) {
+  if (/\.csv$/i.test(file.name) || file.type === "text/csv") {
+    return parseCSV(await file.text());
+  }
+  const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" });
+  const sheet = workbook.Sheets[workbook.SheetNames[0]];
+  // raw:true keeps dates as Excel serial numbers, which excelDate below turns
+  // into real dates. Letting SheetJS format them gives locale-dependent text.
+  return XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true, defval: "" });
+}
+
+// Excel counts days from 1899-12-30 — the offset that absorbs its 1900
+// leap-year bug. Anything outside a sane range isn't a date.
+function excelDate(value) {
+  const serial = typeof value === "number" ? value : parseFloat(value);
+  if (!isFinite(serial) || serial < 30000 || serial > 60000) return null;
+  const ms = Date.UTC(1899, 11, 30) + Math.round(serial) * 86400000;
+  return new Date(ms).toISOString().slice(0, 10);
+}
+
+const cell = (row, index) => String((row && row[index]) ?? "").trim();
+
+async function importPayroll(file) {
+  const result = $("payrollResult");
+  const say = (html, cls) => { result.innerHTML = `<p class="${cls}">${html}</p>`; };
+
+  let rows;
+  try { rows = await rowsFromFile(file); }
+  catch (e) { return say(`Couldn't read that file: ${esc(e.message)}`, "error"); }
+
+  const headerIndex = rows.findIndex(r =>
+    (r || []).some(c => String(c).trim().toLowerCase() === "payroll #"));
+  if (headerIndex === -1) {
+    return say("No <b>Payroll #</b> header found in that sheet.", "error");
+  }
+
+  const header = rows[headerIndex].map(c => String(c).trim().toLowerCase());
+  const at = (name) => header.indexOf(name);
+  const columns = {
+    number: at("payroll #"),
+    start: at("pay period start"),
+    end: at("pay period end"),
+    holiday: at("paid holiday"),
+    payday: at("payday")
+  };
+
+  const periods = [];
+  for (let i = headerIndex + 1; i < rows.length; i++) {
+    const row = rows[i] || [];
+    const number = parseInt(cell(row, columns.number), 10);
+    if (!Number.isFinite(number)) break;   // the calendar has run out
+
+    const start = excelDate(row[columns.start]) || toISODate(cell(row, columns.start));
+    const end = excelDate(row[columns.end]) || toISODate(cell(row, columns.end));
+
+    let holidayCell = row[columns.holiday];
+    let payday = excelDate(row[columns.payday]) || toISODate(cell(row, columns.payday));
+    let holiday = String(holidayCell ?? "").trim();
+
+    // In the real workbook the Payday sometimes sits one column left, where
+    // Paid Holiday would be, because that cell was left empty. A date in the
+    // holiday column and nothing in the payday column means exactly that.
+    const holidayAsDate = excelDate(holidayCell);
+    if (!payday && holidayAsDate) { payday = holidayAsDate; holiday = ""; }
+    if (holidayAsDate) holiday = "";
+
+    periods.push({
+      year: parseInt((payday || end || start || "").slice(0, 4), 10) || new Date().getFullYear(),
+      number, period_start: start, period_end: end, payday,
+      holiday: holiday || null
+    });
+  }
+
+  if (!periods.length) return say("No pay periods found under that header.", "error");
+
+  // The paid-holidays block sits below the calendar on the same sheet.
+  const blockStart = rows.findIndex(r =>
+    (r || []).some(c => String(c).trim().toLowerCase() === "paid holidays"));
+  const list = [];
+  if (blockStart !== -1) {
+    for (let i = blockStart + 1; i < rows.length; i++) {
+      const row = rows[i] || [];
+      const name = row.map(c => String(c ?? "").trim()).find(v => /\d{1,2}\/\d{1,2}\/\d{4}/.test(v));
+      if (!name) {
+        // "*Observed" and the quarterly block mark the end of the holidays.
+        if (row.some(c => /observed|quarterly/i.test(String(c)))) break;
+        continue;
+      }
+      const hours = row.map(c => String(c ?? "").trim())
+        .find(v => /hrs$/i.test(v) || /^\d{1,2}$/.test(v)) || null;
+      list.push({ year: periods[0].year, name, hours, sort_order: (list.length + 1) * 10 });
+    }
+  }
+
+  // A payday normally lands within a few days of the period it pays for. One
+  // that doesn't is a typo in the workbook — the 2026 sheet has two — and
+  // showing a wrong date to the whole company is worse than saying so here.
+  const suspect = periods.filter(p => {
+    if (!p.payday || !p.period_end) return false;
+    const gap = (new Date(p.payday) - new Date(p.period_end)) / 86400000;
+    return gap < 0 || gap > 30;
+  });
+
+  say(`Importing ${periods.length} pay periods…`, "note");
+
+  // Replace rather than merge: the spreadsheet is the record, and a half
+  // merged calendar is worse than a stale one.
+  const wipe = await db.from("payroll_periods").delete().neq("number", -1);
+  if (wipe.error) return say(esc(wipe.error.message), "error");
+  await db.from("payroll_holidays").delete().neq("sort_order", -1);
+
+  const { error } = await db.from("payroll_periods").insert(periods);
+  if (error) return say(esc(error.message), "error");
+  if (list.length) await db.from("payroll_holidays").insert(list);
+
+  await loadAll();
+  renderPayroll();
+
+  say(`Imported ${periods.length} pay periods and ${list.length} paid holidays.`
+    + (suspect.length ? `</p><p class="error">Check these in the spreadsheet — the
+       payday doesn't line up with the period, which usually means the year is
+       wrong in that cell: ` + suspect.map(p =>
+         `#${p.number} pays ${p.payday}`).join(", ") : ""), "ok");
+}
+
+function renderPayroll() {
+  const box = $("payrollSummary");
+  if (!box) return;
+
+  if (!payroll.length) {
+    box.innerHTML = `<p class="note">Nothing imported yet.</p>`;
+    return;
+  }
+
+  const next = payroll.find(p => p.payday && p.payday >= new Date().toISOString().slice(0, 10));
+  box.innerHTML =
+    `<span class="stat"><b>${payroll.length}</b>pay periods</span>` +
+    `<span class="stat"><b>${holidays.length}</b>paid holidays</span>` +
+    (next ? `<span class="stat"><b style="color:var(--red)">${
+      fmtDate(next.payday)}</b>next payday</span>` : "") +
+    `<div style="overflow-x:auto;margin-top:12px"><table>
+      <thead><tr><th>#</th><th>Period</th><th>Payday</th><th>Holiday</th></tr></thead>
+      <tbody>${payroll.map(p => `<tr>
+        <td>${p.number}</td>
+        <td>${fmtDate(p.period_start)} – ${fmtDate(p.period_end)}</td>
+        <td><b>${fmtDate(p.payday)}</b></td>
+        <td>${esc(p.holiday || "—")}</td>
+      </tr>`).join("")}</tbody></table></div>`;
+}
+
+async function importDirectory(file) {
+  const result = $("directoryResult");
+  const say = (html, cls) => { result.innerHTML = `<p class="${cls}">${html}</p>`; };
+
+  let rows;
+  try { rows = await rowsFromFile(file); }
+  catch (e) { return say(`Couldn't read that file: ${esc(e.message)}`, "error"); }
+
+  // Columns are read by position, not by name: the sheet has two columns both
+  // called "Phone #", so names can't tell them apart.
+  const entries = rows
+    .filter((row, index) => {
+      if (!cell(row, 0)) return false;
+      return !(index === 0 && cell(row, 0).toLowerCase() === "topic");
+    })
+    .map((row, index) => ({
+      topic: cell(row, 0),
+      contact1: cell(row, 1) || null,
+      phone1: cell(row, 2) || null,
+      contact2: cell(row, 3) || null,
+      phone2: cell(row, 4) || null,
+      sort_order: (index + 1) * 10
+    }));
+
+  if (!entries.length) return say("No rows found in that file.", "error");
+
+  say(`Importing ${entries.length} rows…`, "note");
+
+  const wipe = await db.from("directory_entries").delete().neq("sort_order", -1);
+  if (wipe.error) return say(esc(wipe.error.message), "error");
+
+  const { error } = await db.from("directory_entries").insert(entries);
+  if (error) return say(esc(error.message), "error");
+
+  await loadAll();
+  renderDirectory();
+  say(`Imported ${entries.length} rows.`, "ok");
+}
+
+function renderDirectory() {
+  const box = $("directorySummary");
+  if (!box) return;
+
+  if (!directory.length) {
+    box.innerHTML = `<p class="note">Nothing imported yet.</p>`;
+    return;
+  }
+
+  box.innerHTML = `<span class="stat"><b>${directory.length}</b>topics</span>` +
+    `<div style="overflow-x:auto;margin-top:12px"><table>
+      <thead><tr><th>Topic</th><th>Contact 1</th><th>Phone</th>
+        <th>Contact 2</th><th>Phone</th></tr></thead>
+      <tbody>${directory.map(d => `<tr>
+        <td><b>${esc(d.topic)}</b></td>
+        <td>${esc(d.contact1 || "—")}</td>
+        <td>${esc(d.phone1 || "—")}</td>
+        <td>${esc(d.contact2 || "—")}</td>
+        <td>${esc(d.phone2 || "—")}</td>
+      </tr>`).join("")}</tbody></table></div>`;
+}
+
+// Drop zones, same behaviour as the certification import above.
+[["payrollDrop", "payrollFile", importPayroll],
+ ["directoryDrop", "directoryFile", importDirectory]].forEach(([zone, input, run]) => {
+  $(input).addEventListener("change", (e) => {
+    if (e.target.files[0]) run(e.target.files[0]);
+  });
+
+  ["dragenter", "dragover"].forEach(type =>
+    $(zone).addEventListener(type, (e) => {
+      e.preventDefault(); $(zone).classList.add("over");
+    }));
+
+  ["dragleave", "drop"].forEach(type =>
+    $(zone).addEventListener(type, () => $(zone).classList.remove("over")));
+
+  $(zone).addEventListener("drop", (e) => {
+    e.preventDefault();
+    if (e.dataTransfer.files[0]) run(e.dataTransfer.files[0]);
+  });
+});
+
 function esc(s) {
   return String(s ?? "").replace(/[&<>"]/g, c =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -1932,7 +2220,8 @@ document.querySelectorAll(".tabs button[data-tab]").forEach(btn => {
   btn.onclick = () => {
     document.querySelectorAll(".tabs button[data-tab]").forEach(b =>
       b.classList.toggle("active", b === btn));
-    ["certs", "plans", "people", "support", "banners"].forEach(name =>
+    ["certs", "plans", "people", "support", "banners", "payroll",
+      "directory"].forEach(name =>
       $("tab-" + name).classList.toggle("hidden", name !== btn.dataset.tab));
   };
 });
