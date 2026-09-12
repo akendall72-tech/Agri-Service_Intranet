@@ -272,6 +272,7 @@
       <button data-tab="payroll">Payroll</button>
       <button data-tab="directory">Who Does What</button>
       <button data-tab="logins">Shared Logins</button>
+      <button data-tab="reminders">Reminders</button>
     </div>
 
     <!-- Certifications -->
@@ -464,6 +465,25 @@
       </div>
     </section>
 
+    <!-- Shared reminders -->
+    <section id="tab-reminders" class="hidden">
+      <div class="card">
+        <h2>Shared reminders</h2>
+        <p class="note">The reminders every person gets. Changes reach phones the
+          next time someone opens Reminders — no app update. People's own
+          reminders aren't listed here and can't be changed from here.</p>
+        <p class="note"><b>Not showing</b> takes a reminder off every phone and
+          can be switched back. <b>Delete</b> is permanent, and anyone who had
+          hidden that reminder loses the setting. Prefer not showing for anything
+          that might come back, like a seasonal check.</p>
+        <div id="sharedReminderList"></div>
+        <div class="row" style="margin-top:10px">
+          <button data-act="add-shared-reminder">Add a reminder</button>
+          <span class="msg" id="sharedReminderMsg"></span>
+        </div>
+      </div>
+    </section>
+
   </div>
 </main>
 
@@ -484,6 +504,9 @@ let certs = [], plans = [], people = [], supportRoles = [], locations = {};
 let sharedTasks = [], personalTasks = [], hiddenTasks = [], completions = [];
 let tickets = [], workGroups = [], announcements = [];
 let payroll = [], holidays = [], directory = [], sharedLogins = [];
+// Every shared reminder, including ones switched off — sharedTasks above holds
+// only the showing ones, because that's all the Reminders view needs.
+let allSharedTasks = [];
 
 // Admins approve lift plans for their own shop, so plenty of the page keys off
 // this. The Admin button does not — see isOwner.
@@ -535,7 +558,7 @@ async function start() {
 // ---------------------------------------------------------------- loading
 
 async function loadAll() {
-  const [locs, c, p, pe, sr, wt, pt, ht, tc, tk, gr, an, pr, ph, dir, sl] =
+  const [locs, c, p, pe, sr, wt, pt, ht, tc, tk, gr, an, pr, ph, dir, sl, allWt] =
     await Promise.all([
     db.from("locations").select("id,name"),
     db.from("forklift_certifications").select("*"),
@@ -554,7 +577,8 @@ async function loadAll() {
     db.from("payroll_periods").select("*").order("payday"),
     db.from("payroll_holidays").select("*").order("sort_order"),
     db.from("directory_entries").select("*").order("sort_order"),
-    db.from("shared_logins").select("*").order("id")
+    db.from("shared_logins").select("*").order("id"),
+    db.from("weekly_tasks").select("*").order("sort_order")
   ]);
 
   locations = Object.fromEntries((locs.data || []).map(l => [l.id, l.name]));
@@ -568,6 +592,7 @@ async function loadAll() {
   announcements = an.data || [];
   payroll = pr.data || []; holidays = ph.data || []; directory = dir.data || [];
   sharedLogins = sl.data || [];
+  allSharedTasks = allWt.data || [];
   await signBanners();
 
   // Only your own profile comes back for most people — that policy is the
@@ -699,7 +724,7 @@ function showAdmin() {
   $("view").classList.add("hidden");
   $("admin").classList.remove("hidden");
   renderCerts(); renderPlans(); renderPeople(); renderSupport(); renderBanners();
-  renderPayroll(); renderDirectory(); renderLogins();
+  renderPayroll(); renderDirectory(); renderLogins(); renderSharedReminders();
   window.scrollTo(0, 0);
 }
 
@@ -1519,6 +1544,123 @@ $("admin").addEventListener("click", async (event) => {
   }
   Object.assign(banner, data[0]);
   speak(box, "Saved.", false);
+});
+
+// ---------------------------------------------------------------- shared reminders
+
+const CADENCES = [
+  ["daily", "Daily — resets every morning"],
+  ["weekly", "Weekly — resets Monday"],
+  ["monthly", "Monthly — resets on the 1st"]
+];
+
+function renderSharedReminders() {
+  const box = $("sharedReminderList");
+  if (!box) return;
+
+  if (!allSharedTasks.length) {
+    box.innerHTML = `<p class="note">No shared reminders yet.</p>`;
+    return;
+  }
+
+  box.innerHTML = allSharedTasks.map(r => `
+    <div class="role${r.is_active ? "" : " off"}" style="padding:16px${
+      r.is_active ? "" : ";opacity:.6"}" data-shared-reminder="${esc(r.id)}">
+      <div class="fields">
+        <div class="wide"><label>Reminder</label>
+          <input type="text" data-r="title" value="${esc(r.title)}"></div>
+        <div class="wide"><label>Detail (optional, shown under the title)</label>
+          <input type="text" data-r="detail" value="${esc(r.detail || "")}"></div>
+        <div><label>How often</label>
+          <select data-r="cadence">
+            ${CADENCES.map(([value, label]) => `<option value="${value}"${
+              (r.cadence || "weekly") === value ? " selected" : ""}>${label}</option>`).join("")}
+          </select></div>
+        <div><label>Order</label>
+          <input type="text" data-r="sort_order" value="${esc(r.sort_order)}"></div>
+        <div><label>Showing</label>
+          <select data-r="is_active">
+            <option value="yes"${r.is_active ? " selected" : ""}>Yes</option>
+            <option value="no"${r.is_active ? "" : " selected"}>No</option>
+          </select></div>
+      </div>
+      <div class="row">
+        <button data-act="save-shared-reminder">Save</button>
+        <button class="ghost" data-act="delete-shared-reminder">Delete</button>
+        <span class="msg"></span>
+      </div>
+    </div>`).join("");
+}
+
+$("admin").addEventListener("click", async (event) => {
+  const button = event.target.closest("button[data-act]");
+  if (!button) return;
+  const act = button.dataset.act;
+  if (!["add-shared-reminder", "save-shared-reminder",
+        "delete-shared-reminder"].includes(act)) return;
+
+  if (act === "add-shared-reminder") {
+    const { error } = await db.from("weekly_tasks").insert({
+      title: "New reminder",
+      cadence: "weekly",
+      is_active: false,
+      sort_order: (allSharedTasks.length + 1) * 10
+    });
+    if (error) {
+      $("sharedReminderMsg").textContent = error.message.includes("row-level")
+        ? "Only an owner can add shared reminders." : error.message;
+      $("sharedReminderMsg").className = "msg error";
+      return;
+    }
+    // Added switched off, so nobody's phone shows "New reminder" while it's
+    // still being written. Turn Showing to Yes once it reads right.
+    $("sharedReminderMsg").textContent =
+      "Added, not showing yet. Fill it in, set Showing to Yes, and save.";
+    $("sharedReminderMsg").className = "msg ok";
+    await loadAll();
+    return renderSharedReminders();
+  }
+
+  const box = button.closest("[data-shared-reminder]");
+  const id = box.dataset.sharedReminder;
+  const reminder = allSharedTasks.find(r => r.id === id);
+  const get = (f) => box.querySelector(`[data-r="${f}"]`).value.trim();
+
+  if (act === "delete-shared-reminder") {
+    if (!confirm(`Delete "${reminder.title}" from every phone? ` +
+                 `This can't be undone — "Showing: No" can.`)) return;
+    const { data, error } = await db.from("weekly_tasks")
+      .delete().eq("id", id).select();
+    if (error) return speak(box, error.message, true);
+    // A delete the policy refused matches no rows and reports no error.
+    if (!data || !data.length) {
+      return speak(box, "Nothing deleted — only an owner can remove these.", true);
+    }
+    await loadAll();
+    return renderSharedReminders();
+  }
+
+  if (!get("title")) return speak(box, "A reminder needs some words.", true);
+
+  speak(box, "Saving…", false);
+  const { data, error } = await db.from("weekly_tasks").update({
+    title: get("title"),
+    detail: get("detail") || null,
+    cadence: get("cadence"),
+    sort_order: parseInt(get("sort_order"), 10) || 0,
+    is_active: get("is_active") === "yes"
+  }).eq("id", id).select();
+
+  if (error) return speak(box, error.message, true);
+  if (!data || !data.length) {
+    return speak(box, "Nothing changed — only an owner can edit these.", true);
+  }
+
+  Object.assign(reminder, data[0]);
+  // Refresh the showing-only list too, so the Reminders view on this page and
+  // the tile's badge agree with what was just saved.
+  await loadAll();
+  renderSharedReminders();
 });
 
 // ---------------------------------------------------------------- shared logins
@@ -2360,7 +2502,7 @@ document.querySelectorAll(".tabs button[data-tab]").forEach(btn => {
     document.querySelectorAll(".tabs button[data-tab]").forEach(b =>
       b.classList.toggle("active", b === btn));
     ["certs", "plans", "people", "support", "banners", "payroll",
-      "directory", "logins"].forEach(name =>
+      "directory", "logins", "reminders"].forEach(name =>
       $("tab-" + name).classList.toggle("hidden", name !== btn.dataset.tab));
   };
 });
