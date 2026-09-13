@@ -4,256 +4,406 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Agri-Service</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
 <style>
+  /* ------------------------------------------------------------------ tokens
+     The old variable names (--red, --paper, --line…) are kept because the page's
+     scripts use them inline. */
   :root {
-    --red: #CC0033; --red-dark: #B4041E; --green: #22B439; --caution: #E8A317;
-    --ink: #2F2F2F; --muted: #989898; --line: #E5E5E5; --paper: #F7F7F7; --card: #fff;
+    --red: #CC0033; --red-dark: #A8002A; --red-soft: #FCEBEF;
+    --green: #1E8A3C; --green-soft: #E6F4EA;
+    --caution: #C27C0E; --caution-soft: #FDF3E1;
+    --ink: #1C1917; --ink-2: #44403C; --muted: #78716C;
+    --line: #E7E5E4; --line-strong: #D6D3D1;
+    --paper: #FAFAF9; --canvas: #F5F4F2; --card: #FFFFFF;
+    --radius: 12px; --radius-sm: 8px;
+    --shadow: 0 1px 2px rgba(28,25,23,.05);
+    --shadow-lg: 0 10px 30px rgba(28,25,23,.10);
+    --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   }
   * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
   body {
-    margin: 0; background: var(--paper); color: var(--ink);
-    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    margin: 0; background: var(--canvas); color: var(--ink);
+    font: 14.5px/1.55 var(--font); -webkit-font-smoothing: antialiased;
   }
-  header {
-    background: linear-gradient(135deg, var(--red), #8C0318);
-    color: #fff; padding: 18px 24px; display: flex; align-items: center; gap: 16px;
-  }
-  header h1 { font-size: 18px; margin: 0; letter-spacing: .5px; font-weight: 800; }
-  header .who { margin-left: auto; font-size: 13px; opacity: .9; }
-  main { max-width: 1200px; margin: 0 auto; padding: 24px; }
-  .card {
-    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
-    padding: 20px; margin-bottom: 20px;
-  }
-  h2 { font-size: 13px; letter-spacing: 1.2px; text-transform: uppercase;
-       color: var(--muted); margin: 0 0 14px; }
-  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
-  input[type=email], input[type=password], input[type=text], input[type=tel],
-  select, textarea {
-    width: 100%; padding: 10px 12px; border: 1px solid var(--line);
-    border-radius: 8px; font-size: 15px; margin-bottom: 12px; background: var(--paper);
-    font-family: inherit; color: inherit;
-  }
-  textarea { resize: vertical; }
-  button {
-    background: var(--red); color: #fff; border: 0; border-radius: 10px;
-    padding: 11px 18px; font-size: 15px; font-weight: 600; cursor: pointer;
-  }
-  button:disabled { background: var(--muted); cursor: not-allowed; }
-  button.ghost { background: transparent; color: var(--red); }
-  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-  table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line);
-           vertical-align: top; }
-  th { font-size: 11px; letter-spacing: .8px; text-transform: uppercase;
-       color: var(--muted); cursor: pointer; user-select: none; white-space: nowrap; }
-  tbody tr:hover { background: var(--paper); }
-  .badge { display: inline-block; padding: 3px 9px; border-radius: 999px;
-           font-size: 11px; font-weight: 700; letter-spacing: .4px; }
-  .b-current  { background: rgba(34,180,57,.14);  color: #178A2A; }
-  .b-expiring { background: rgba(232,163,23,.18); color: #8a5e00; }
-  .b-expired  { background: rgba(204,0,51,.12);   color: var(--red-dark); }
-  .b-none     { background: #eee; color: var(--muted); }
-  .drop {
-    border: 2px dashed var(--line); border-radius: 12px; padding: 28px;
-    text-align: center; color: var(--muted); background: var(--paper);
-  }
-  .drop.over { border-color: var(--red); color: var(--red); }
-  .note { font-size: 13px; color: var(--muted); }
-  .error { color: var(--red-dark); font-size: 14px; }
-  .ok { color: #178A2A; font-size: 14px; }
-  .tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
-  .tabs button { background: var(--card); color: var(--ink); border: 1px solid var(--line); }
-  .tabs button.active { background: var(--red); color: #fff; border-color: var(--red); }
-  .stat { display: inline-block; margin-right: 22px; }
-  .stat b { display: block; font-size: 24px; }
+  a { color: var(--red); text-decoration: none; }
+  a:hover { text-decoration: underline; }
   .hidden { display: none !important; }
-  .search { padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px;
-            font-size: 14px; min-width: 240px; }
-  .role { border: 1px solid var(--line); border-radius: 12px; padding: 16px;
-          margin-bottom: 14px; background: var(--card); }
-  .role-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
-  .role-head b { font-size: 16px; }
-  .fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-            gap: 0 14px; }
-  .fields .wide { grid-column: 1 / -1; }
+  b, strong { font-weight: 600; }
+
+  /* ------------------------------------------------------------------ sign in */
+  body.signed-in #auth { display: none !important; }
+  body:not(.signed-in) .shell { display: none; }
+  .auth-screen {
+    min-height: 100vh; display: grid; place-items: center; padding: 24px;
+    background:
+      radial-gradient(1200px 500px at 10% -10%, rgba(204,0,51,.10), transparent 60%),
+      radial-gradient(900px 500px at 110% 110%, rgba(30,138,60,.08), transparent 60%),
+      var(--canvas);
+  }
+  .auth-card {
+    width: 100%; max-width: 400px; background: var(--card); border: 1px solid var(--line);
+    border-radius: 16px; box-shadow: var(--shadow-lg); padding: 32px;
+  }
+  .auth-card .brand { margin-bottom: 22px; }
+  .auth-card h1 { font-size: 22px; margin: 0 0 6px; letter-spacing: -.01em; }
+  .auth-card .note { margin: 0 0 20px; }
+  .auth-card button { width: 100%; margin-top: 6px; height: 42px; }
+
+  /* ------------------------------------------------------------------ shell */
+  .shell { display: grid; grid-template-columns: 252px minmax(0, 1fr); grid-template-rows: 60px 1fr;
+           min-height: 100vh; }
+  .topbar {
+    grid-column: 1 / -1; position: sticky; top: 0; z-index: 30; height: 60px;
+    display: flex; align-items: center; gap: 14px; padding: 0 20px;
+    background: rgba(255,255,255,.92); backdrop-filter: saturate(160%) blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; }
+  .brand-mark { width: 32px; height: 32px; border-radius: 8px; background: var(--red);
+                display: grid; place-items: center; color: #fff; flex: 0 0 32px; }
+  .brand-name { font-weight: 800; letter-spacing: .06em; font-size: 15px; color: var(--ink); }
+  .brand-sub { font-size: 13px; color: var(--muted); padding-left: 10px;
+               border-left: 1px solid var(--line-strong); }
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .who { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .who-avatar { width: 34px; height: 34px; border-radius: 999px; background: var(--ink);
+                color: #fff; font-weight: 600; font-size: 13px; display: grid; place-items: center;
+                flex: 0 0 34px; }
+  .who-text { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; }
+  .who-text b { font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .who-text small { font-size: 12px; color: var(--muted); }
+  .menu-btn { display: none !important; }
+
+  .sidebar {
+    position: sticky; top: 60px; height: calc(100vh - 60px); overflow-y: auto;
+    background: var(--paper); border-right: 1px solid var(--line); padding: 14px 12px 24px;
+  }
+  .nav-group { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+               color: var(--muted); margin: 18px 10px 6px; }
+  .nav-group:first-child { margin-top: 4px; }
+  .sidebar button.nav-item, .sidebar .tabs button {
+    width: 100%; display: flex; align-items: center; justify-content: flex-start; gap: 10px; text-align: left;
+    background: transparent; color: var(--ink-2); border: 0; box-shadow: none;
+    padding: 8px 10px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 500;
+    height: auto; margin: 1px 0;
+  }
+  .sidebar button.nav-item svg, .sidebar .tabs button svg { color: var(--muted); flex: 0 0 18px; }
+  .sidebar button.nav-item:hover, .sidebar .tabs button:hover { background: #EFEDEA; color: var(--ink); }
+  .sidebar button.nav-item.active, .sidebar .tabs button.active {
+    background: var(--red-soft); color: var(--red-dark); font-weight: 600;
+  }
+  .sidebar button.nav-item.active svg, .sidebar .tabs button.active svg { color: var(--red); }
+  .nav-count { margin-left: auto; background: var(--red); color: #fff; font-size: 11px;
+               font-weight: 600; border-radius: 999px; padding: 0 7px; line-height: 18px; }
+
+  .content { min-width: 0; padding: 28px 36px 72px; }
+  .content > div, .content > section { max-width: 1120px; margin-left: auto; margin-right: auto; }
+  .scrim { display: none; }
+
+  @media (max-width: 960px) {
+    .shell { grid-template-columns: minmax(0, 1fr); }
+    .menu-btn { display: inline-grid !important; }
+    .sidebar { position: fixed; top: 60px; left: 0; bottom: 0; height: auto; width: 280px; z-index: 40;
+               transform: translateX(-100%); transition: transform .2s ease; }
+    body.nav-open .sidebar { transform: none; box-shadow: var(--shadow-lg); }
+    body.nav-open .scrim { display: block; position: fixed; inset: 60px 0 0 0; background: rgba(28,25,23,.3);
+                           z-index: 35; }
+    .content { padding: 20px 16px 56px; }
+    .brand-sub, .who-text { display: none; }
+  }
+
+  /* ------------------------------------------------------------------ type & page headers */
+  .page-head { margin: 0 0 22px; }
+  .eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+             color: var(--red); margin-bottom: 4px; }
+  .page-head h1 { font-size: 26px; line-height: 1.2; margin: 0; letter-spacing: -.015em; font-weight: 700; }
+  .page-head p { margin: 6px 0 0; color: var(--muted); font-size: 15px; max-width: 70ch; }
+  .crumbs { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted);
+            margin-bottom: 10px; }
+  .crumbs button { background: none; border: 0; box-shadow: none; padding: 0; height: auto;
+                   color: var(--muted); font-weight: 500; font-size: 13px; }
+  .crumbs button:hover { color: var(--red); background: none; }
+  .section-title, .group-title { font-size: 12px; font-weight: 600; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--muted); margin: 28px 2px 10px; }
+
+  /* ------------------------------------------------------------------ cards & text */
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+          padding: 22px 24px; margin-bottom: 18px; box-shadow: var(--shadow); }
+  .card h2, #admin h2 { font-size: 15.5px; font-weight: 600; color: var(--ink); margin: 0 0 12px;
+          letter-spacing: -.005em; text-transform: none; }
+  h2 { font-size: 15.5px; font-weight: 600; margin: 0 0 12px; }
+  label { display: block; font-size: 12.5px; font-weight: 500; color: var(--ink-2); margin-bottom: 5px; }
+  .note { font-size: 13.5px; color: var(--muted); }
+  p.note { margin: 0 0 12px; max-width: 80ch; }
+  .error { color: var(--red-dark); font-size: 13.5px; }
+  .ok { color: var(--green); font-size: 13.5px; }
   .msg { font-size: 13px; }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .stat { display: inline-flex; flex-direction: column; margin-right: 28px; font-size: 12.5px;
+          color: var(--muted); }
+  .stat b { font-size: 22px; color: var(--ink); line-height: 1.2; font-weight: 700; }
+
+  /* ------------------------------------------------------------------ controls */
+  input[type=email], input[type=password], input[type=text], input[type=tel], input:not([type]),
+  input[type=date], input[type=datetime-local], input[type=number], select, textarea {
+    width: 100%; padding: 9px 12px; border: 1px solid var(--line-strong); border-radius: var(--radius-sm);
+    font: inherit; font-size: 14.5px; color: var(--ink); background: #fff; margin-bottom: 12px;
+    transition: border-color .12s ease, box-shadow .12s ease;
+  }
+  textarea { resize: vertical; line-height: 1.5; }
+  input:focus, select:focus, textarea:focus {
+    outline: none; border-color: var(--red); box-shadow: 0 0 0 3px rgba(204,0,51,.12);
+  }
+  input.search { max-width: 280px; margin-bottom: 0 !important; padding-left: 34px !important;
+    background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%2378716C' stroke-width='2' stroke-linecap='round'><circle cx='7' cy='7' r='5'/><path d='m11 11 3 3'/></svg>") no-repeat 11px center; }
+  .check { display: flex; gap: 8px; align-items: center; font-size: 14px; color: var(--ink);
+           margin: 2px 0 14px; cursor: pointer; font-weight: 400; }
+  .check input { width: 17px; height: 17px; margin: 0; accent-color: var(--red); }
+
+  :where(button) {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    background: var(--red); color: #fff; border: 1px solid var(--red); border-radius: var(--radius-sm);
+    padding: 8px 15px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+    box-shadow: 0 1px 2px rgba(204,0,51,.25); transition: background .12s ease, border-color .12s ease;
+    white-space: nowrap;
+  }
+  :where(button):hover { background: var(--red-dark); border-color: var(--red-dark); }
+  :where(button):disabled { background: var(--line-strong); border-color: var(--line-strong); color: #fff;
+                    cursor: not-allowed; box-shadow: none; }
+  button.ghost, button.btn-secondary {
+    background: #fff; color: var(--ink-2); border-color: var(--line-strong); box-shadow: var(--shadow);
+  }
+  button.ghost:hover, button.btn-secondary:hover { background: var(--paper); border-color: var(--muted);
+                                                   color: var(--ink); }
+  button.green { background: var(--green); border-color: var(--green); box-shadow: none; }
+  button.green:hover { background: #17702F; border-color: #17702F; }
+  button.pdf { background: #fff; color: var(--ink-2); border: 1px solid var(--line-strong);
+               padding: 5px 11px; font-size: 13px; font-weight: 500; box-shadow: none; }
+  button.pdf:hover { background: var(--paper); color: var(--red); border-color: var(--muted); }
+  button.icon-btn { background: transparent; color: var(--ink-2); border: 0; box-shadow: none;
+                    width: 38px; height: 38px; padding: 0; }
+  button.icon-btn:hover { background: var(--canvas); color: var(--ink); }
+
+  /* ------------------------------------------------------------------ tables */
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th { font-size: 11.5px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+             color: var(--muted); background: var(--paper); white-space: nowrap; }
+  th[data-sort] { cursor: pointer; user-select: none; }
+  th[data-sort]:hover { color: var(--ink); }
+  tbody tr:hover { background: var(--paper); }
+  .card > div[style*="overflow-x"] { border: 1px solid var(--line); border-radius: var(--radius-sm); }
+  .card > div[style*="overflow-x"] table tr:last-child td { border-bottom: 0; }
+
+  /* ------------------------------------------------------------------ badges & chips */
+  .badge { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 999px;
+           font-size: 12px; font-weight: 600; white-space: nowrap; line-height: 1.5; }
+  .b-current, .b-closed { background: var(--green-soft); color: #17702F; }
+  .b-expiring, .b-answered { background: var(--caution-soft); color: #92590A; }
+  .b-expired, .b-open { background: var(--red-soft); color: var(--red-dark); }
+  .b-none { background: #F0EEEC; color: var(--muted); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  button.chip { border-radius: 999px; padding: 6px 13px; font-size: 13.5px; font-weight: 500;
+          border: 1px solid var(--line-strong); background: #fff; color: var(--ink-2); box-shadow: none; }
+  button.chip:hover { background: var(--paper); color: var(--ink); border-color: var(--muted); }
+  button.chip.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .pill { display: inline-block; background: #F0EEEC; border-radius: 999px; padding: 1px 9px;
+          font-size: 12px; color: var(--ink-2); }
+
+  /* ------------------------------------------------------------------ uploads */
+  .drop { border: 1.5px dashed var(--line-strong); border-radius: var(--radius); padding: 30px 20px;
+          text-align: center; color: var(--muted); background: var(--paper); font-size: 14px; }
+  .drop::before { content: ""; display: block; width: 36px; height: 36px; margin: 0 auto 10px;
+    background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='36' height='36' fill='none' stroke='%23A8A29E' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'><path d='M18 23V9m0 0-5 5m5-5 5 5'/><path d='M8 23v3a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3v-3'/></svg>") no-repeat center; }
+  .drop.over { border-color: var(--red); color: var(--red); background: var(--red-soft); }
+
+  /* ------------------------------------------------------------------ admin editors */
+  .role { border: 1px solid var(--line); border-radius: var(--radius); padding: 18px;
+          margin-bottom: 12px; background: #fff; }
+  .role-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
+  .role-head b { font-size: 15px; }
+  .fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 16px; }
+  .fields .wide { grid-column: 1 / -1; }
   .people { margin-top: 6px; }
   .prow { display: grid; grid-template-columns: 1fr 1fr 150px auto; gap: 0 10px;
-          align-items: end; padding: 10px 0; border-top: 1px solid var(--line); }
-  .prow button { padding: 9px 14px; font-size: 14px; }
+          align-items: end; padding: 12px 0; border-top: 1px solid var(--line); }
+  .prow button { padding: 8px 12px; }
   .prow input { margin-bottom: 0; }
   .prow .wide { grid-column: 1 / -1; }
-  button.pdf { padding: 5px 12px; font-size: 13px; border: 1px solid var(--line);
-               background: var(--card); color: var(--red); }
-  button.pdf:hover { background: var(--paper); }
   @media (max-width: 720px) { .prow { grid-template-columns: 1fr; } }
-
-  /* ---- the app, mirrored ---- */
-  header h1 { cursor: pointer; }
-  header button { background: rgba(255,255,255,.16); color: #fff;
-                  border: 1px solid rgba(255,255,255,.35); padding: 7px 14px;
-                  font-size: 14px; }
-  header button:hover { background: rgba(255,255,255,.26); }
-  header .pill { display: inline-block; background: rgba(255,255,255,.18);
-                 border-radius: 999px; padding: 2px 10px; font-size: 12px; }
-  a { color: var(--red); }
-  button.green { background: var(--green); }
-
-  .hero { background: linear-gradient(135deg, var(--red), #8C0318); color: #fff;
-          border-radius: 16px; padding: 26px 20px; margin-bottom: 20px; }
-  .hero h3 { margin: 0 0 6px; font-size: 26px; font-weight: 800; letter-spacing: .3px; }
-  .hero p { margin: 0; opacity: .92; }
-  .hero.green { background: linear-gradient(135deg, var(--green), #137026); }
-
-  .banners { display: grid; gap: 14px; margin-bottom: 20px;
-             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
-  .webbanner { background: var(--card); border: 1px solid var(--line);
-               border-radius: 16px; overflow: hidden; padding-bottom: 14px; }
-  .webbanner img { width: 100%; aspect-ratio: 3 / 1; object-fit: cover;
-                   display: block; margin-bottom: 10px; }
-  .webbanner b { display: block; padding: 0 14px 4px; }
-  .webbanner span { display: block; padding: 0 14px; }
-  .tiles { display: grid; gap: 14px;
-           grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
-  .tile { background: var(--card); border: 1px solid var(--line); border-radius: 16px;
-          padding: 18px; text-align: left; color: inherit; font: inherit; cursor: pointer;
-          display: flex; gap: 14px; align-items: flex-start; position: relative;
-          transition: transform .08s ease, box-shadow .12s ease; }
-  .tile:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,.08); }
-  .tile b { display: block; font-size: 16px; margin-bottom: 2px; line-height: 1.25; }
-  .tile > span:last-of-type { padding-right: 26px; }
-  .tile span span { display: block; font-size: 13px; color: var(--muted); }
-  .well { width: 46px; height: 46px; border-radius: 12px; flex: 0 0 46px;
-          display: flex; align-items: center; justify-content: center; }
-  .well.red { background: rgba(204,0,51,.12); color: var(--red); }
-  .well.green { background: rgba(34,180,57,.14); color: var(--green); }
-  .count { position: absolute; top: 12px; right: 12px; min-width: 24px; height: 24px;
-           border-radius: 999px; background: var(--red); color: #fff; font-size: 12px;
-           font-weight: 700; display: flex; align-items: center; justify-content: center;
-           padding: 0 7px; }
-
-  .back { background: none; color: var(--red); padding: 6px 0; font-size: 14px; }
-  .link-card { display: flex; gap: 14px; align-items: flex-start; padding: 16px;
-               background: var(--card); border: 1px solid var(--line);
-               border-left: 4px solid var(--green); border-radius: 16px;
-               margin-bottom: 12px; text-decoration: none; color: inherit; }
-  .link-card:hover { background: #fcfcfc; }
-  .link-card b { display: block; font-size: 16px; }
-  .link-card span span { display: block; font-size: 13px; color: var(--muted); }
-  .go { font-size: 14px; font-weight: 600; color: var(--green); margin-top: 6px; }
-
-  .task { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0;
-          border-bottom: 1px solid var(--line); }
-  .task:last-child { border-bottom: 0; }
-  .task input[type=checkbox] { width: 22px; height: 22px; margin: 2px 0 0;
-                               accent-color: var(--green); cursor: pointer; }
-  .task .done { text-decoration: line-through; color: var(--muted); }
-  .cadence { font-size: 11px; letter-spacing: .6px; text-transform: uppercase;
-             color: var(--muted); }
-
-  .cert { max-width: 460px; border-radius: 18px; overflow: hidden; margin-bottom: 20px;
-          border: 1px solid var(--line); background: var(--card);
-          box-shadow: 0 10px 26px rgba(0,0,0,.09); }
-  .cert .band { background: linear-gradient(135deg, var(--red), #8C0318); color: #fff;
-                text-align: center; padding: 16px; font-size: 12px; font-weight: 800;
-                letter-spacing: 1.6px; }
-  .cert .body { padding: 22px; text-align: center; }
-  .cert .name { font-size: 24px; font-weight: 800; margin: 6px 0 10px; }
-  .cert dl { display: grid; gap: 12px; margin: 18px 0 0; }
-  .cert dt { font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase;
-             color: var(--muted); }
-  .cert dd { margin: 2px 0 0; font-weight: 600; }
-
-  .ticket { border: 1px solid var(--line); border-radius: 14px; background: var(--card);
-            margin-bottom: 10px; }
-  .ticket > summary { padding: 14px 16px; cursor: pointer; list-style: none; }
-  .ticket > summary::-webkit-details-marker { display: none; }
-  .ticket > summary::after { content: "▾"; float: right; color: var(--red); }
-  .ticket[open] > summary::after { content: "▴"; }
-  .ticket .inner { padding: 0 16px 16px; border-top: 1px solid var(--line);
-                   margin-top: 4px; padding-top: 14px; }
-  .comment { padding: 10px 0; border-top: 1px solid var(--line); }
-  .b-open     { background: rgba(204,0,51,.12);   color: var(--red-dark); }
-  .b-answered { background: rgba(232,163,23,.18); color: #8a5e00; }
-  .b-closed   { background: rgba(34,180,57,.14);  color: #178A2A; }
-
-  .support-role { border: 1px solid rgba(34,180,57,.18); border-radius: 16px;
-                  background: var(--card); border-left: 5px solid var(--green);
-                  margin-bottom: 14px; box-shadow: 0 6px 16px rgba(0,0,0,.05); }
-  .banner { border: 1px solid var(--line); border-radius: 14px; padding: 16px;
-            margin-bottom: 14px; background: var(--card); }
-  .banner img { width: 100%; max-width: 420px; aspect-ratio: 3 / 1;
-                object-fit: cover; border-radius: 10px; display: block;
-                margin-bottom: 12px; border: 1px solid var(--line); }
-  .banner .empty { width: 100%; max-width: 420px; aspect-ratio: 3 / 1;
-                   border: 2px dashed var(--line); border-radius: 10px;
-                   display: flex; align-items: center; justify-content: center;
+  .banner { border: 1px solid var(--line); border-radius: var(--radius); padding: 18px;
+            margin-bottom: 12px; background: #fff; }
+  .banner img { width: 100%; max-width: 420px; aspect-ratio: 3 / 1; object-fit: cover;
+                border-radius: var(--radius-sm); display: block; margin-bottom: 12px; border: 1px solid var(--line); }
+  .banner .empty { width: 100%; max-width: 420px; aspect-ratio: 3 / 1; border: 1.5px dashed var(--line-strong);
+                   border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center;
                    color: var(--muted); margin-bottom: 12px; font-size: 14px; }
   .banner.off { opacity: .55; }
-  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-  .chip { border-radius: 999px; padding: 7px 13px; font-size: 14px; font-weight: 600;
-          border: 1px solid var(--line); background: var(--card); color: var(--ink);
-          cursor: pointer; }
-  .chip.on { background: var(--red); border-color: var(--red); color: #fff; }
-  .group-title { font-size: 11px; letter-spacing: 1.4px; text-transform: uppercase;
-                 color: var(--muted); font-weight: 700; margin: 26px 0 10px 4px; }
-  .accent-red { border-left-color: var(--red); border-color: rgba(204,0,51,.18);
-                border-left-width: 5px; }
-  .accent-red .go, .accent-red b + span + .go { color: var(--red); }
-  .accent-ink { border-left-color: var(--ink); border-color: rgba(47,47,47,.16);
-                border-left-width: 5px; }
+
+  /* ------------------------------------------------------------------ home */
+  .stat-cards { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+                margin-bottom: 8px; }
+  button.stat-card { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left;
+    background: var(--card); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 16px 18px; box-shadow: var(--shadow); font-weight: 400; white-space: normal; }
+  button.stat-card:hover { background: var(--card); border-color: var(--line-strong); box-shadow: var(--shadow-lg); }
+  .stat-card small { font-size: 12px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase;
+                     color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .stat-card small svg { color: var(--red); }
+  .stat-card strong { font-size: 22px; font-weight: 700; letter-spacing: -.01em; line-height: 1.3; }
+  .stat-card span { font-size: 13px; color: var(--muted); }
+
+  .banners { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .webbanner { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+               overflow: hidden; padding-bottom: 14px; box-shadow: var(--shadow); }
+  .webbanner img { width: 100%; aspect-ratio: 3 / 1; object-fit: cover; display: block; margin-bottom: 12px; }
+  .webbanner b { display: block; padding: 0 16px 2px; }
+  .webbanner b:first-child { padding-top: 14px; }
+  .webbanner span { display: block; padding: 0 16px; }
+
+  .tiles { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
+  button.tile { width: 100%; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 16px; text-align: left; color: inherit; font-weight: 400; display: flex; gap: 14px;
+    align-items: flex-start; justify-content: flex-start; position: relative; box-shadow: var(--shadow);
+    white-space: normal; transition: border-color .12s ease, box-shadow .12s ease, transform .12s ease; }
+  button.tile:hover { background: var(--card); border-color: var(--line-strong); box-shadow: var(--shadow-lg);
+                      transform: translateY(-1px); }
+  .tile b { display: block; font-size: 15px; margin-bottom: 1px; line-height: 1.3; }
+  .tile > span:nth-child(2) { padding-right: 30px; }
+  .tile span span { display: block; font-size: 13px; color: var(--muted); }
+  .well { width: 40px; height: 40px; border-radius: 10px; flex: 0 0 40px;
+          display: flex; align-items: center; justify-content: center; }
+  .well svg { width: 21px; height: 21px; }
+  .well.red, .well.redtint { background: var(--red-soft); color: var(--red); }
+  .well.green { background: var(--green-soft); color: var(--green); }
+  .well.ink { background: #F0EEEC; color: var(--ink); }
+  .count { position: absolute; top: 14px; right: 14px; min-width: 22px; height: 22px;
+           border-radius: 999px; background: var(--red); color: #fff; font-size: 12px;
+           font-weight: 600; display: flex; align-items: center; justify-content: center; padding: 0 7px; }
+
+  /* ------------------------------------------------------------------ centre content */
+  .link-card { display: flex; gap: 14px; align-items: center; padding: 14px 16px;
+               background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+               margin-bottom: 10px; color: inherit; box-shadow: var(--shadow); }
+  a.link-card:hover, button.link-card:hover { text-decoration: none; border-color: var(--line-strong);
+               box-shadow: var(--shadow-lg); background: var(--card); }
+  button.link-card { font-weight: 400; justify-content: flex-start; white-space: normal; }
+  .link-card > span:nth-child(2) { flex: 1; min-width: 0; }
+  .link-card b { display: block; font-size: 15px; }
+  .link-card span span { display: block; font-size: 13px; color: var(--muted); }
+  .link-card .go { font-size: 13px; font-weight: 600; color: var(--red); margin-top: 4px; }
+  .accent-red, .accent-ink { border-left: 3px solid var(--red); }
+  .accent-ink { border-left-color: var(--ink); }
   .accent-ink .go { color: var(--ink); }
-  .well.ink { background: rgba(47,47,47,.10); color: var(--ink); }
-  .well.redtint { background: rgba(204,0,51,.12); color: var(--red); }
-  .support-role .head { display: flex; gap: 14px; padding: 16px; align-items: flex-start; }
+
+  .task { display: flex; gap: 12px; align-items: flex-start; padding: 13px 2px;
+          border-bottom: 1px solid var(--line); }
+  .task:last-child { border-bottom: 0; }
+  .task input[type=checkbox] { width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--green);
+                               cursor: pointer; }
+  .task .done { text-decoration: line-through; color: var(--muted); }
+  .cadence { font-size: 11.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted);
+             font-weight: 500; }
+
+  .cert { max-width: 460px; border-radius: 16px; overflow: hidden; margin-bottom: 20px;
+          border: 1px solid var(--line); background: var(--card); box-shadow: var(--shadow-lg); }
+  .cert .band { background: linear-gradient(135deg, var(--red), #8C0318); color: #fff;
+                text-align: center; padding: 15px; font-size: 12px; font-weight: 700; letter-spacing: .14em; }
+  .cert .body { padding: 22px; text-align: center; }
+  .cert .name { font-size: 22px; font-weight: 700; margin: 4px 0 10px; }
+  .cert dl { display: grid; gap: 12px; margin: 18px 0 0; }
+  .cert dt { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .cert dd { margin: 2px 0 0; font-weight: 600; }
+
+  .ticket { border: 1px solid var(--line); border-radius: var(--radius); background: var(--card);
+            margin-bottom: 10px; box-shadow: var(--shadow); }
+  .ticket > summary { padding: 14px 44px 14px 16px; cursor: pointer; list-style: none; position: relative; }
+  .ticket > summary::-webkit-details-marker { display: none; }
+  .ticket > summary::after { content: ""; position: absolute; right: 18px; top: 20px; width: 8px; height: 8px;
+    border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg);
+    transition: transform .15s ease; }
+  .ticket[open] > summary::after { transform: rotate(-135deg); top: 24px; }
+  .ticket > summary:hover { background: var(--paper); border-radius: var(--radius); }
+  .ticket .inner { padding: 16px; border-top: 1px solid var(--line); }
+  .comment { padding: 10px 0; border-top: 1px solid var(--line); }
+
+  .support-role { border: 1px solid var(--line); border-radius: var(--radius); background: var(--card);
+                  margin-bottom: 12px; box-shadow: var(--shadow); overflow: hidden; }
+  .support-role .head { display: flex; gap: 14px; padding: 16px; align-items: center; background: var(--paper);
+                        border-bottom: 1px solid var(--line); }
   .support-role .head span span { display: block; font-size: 13px; color: var(--muted); }
   .person { display: flex; gap: 12px; align-items: center; padding: 14px 16px;
             border-top: 1px solid var(--line); flex-wrap: wrap; }
-  .avatar { width: 44px; height: 44px; border-radius: 999px; background: var(--green);
-            color: #fff; font-weight: 700; display: flex; align-items: center;
-            justify-content: center; flex: 0 0 44px; }
-  .avatar.empty { background: none; border: 2px dashed var(--line); color: var(--muted); }
+  .support-role .head + .person { border-top: 0; }
+  .avatar { width: 40px; height: 40px; border-radius: 999px; background: var(--green);
+            color: #fff; font-weight: 600; display: flex; align-items: center;
+            justify-content: center; flex: 0 0 40px; }
+  .avatar.empty { background: none; border: 1.5px dashed var(--line-strong); color: var(--muted); }
   .person .actions { margin-left: auto; display: flex; gap: 8px; }
   .person .actions a { text-decoration: none; }
 
-  input[type=datetime-local], input[type=date] {
-    width: 100%; padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px;
-    font-size: 15px; margin-bottom: 12px; background: var(--paper);
-    font-family: inherit; color: inherit;
-  }
-  .check { display: flex; gap: 8px; align-items: center; font-size: 14px;
-           color: var(--ink); margin: 2px 0 14px; cursor: pointer; }
-  .check input { width: 18px; height: 18px; margin: 0; accent-color: var(--red); }
-  /* Event kinds, the same five colours the app uses. */
-  .ev-company  { background: rgba(204,0,51,.12);  color: var(--red-dark); }
-  .ev-training { background: rgba(19,112,38,.14); color: #137026; }
-  .ev-customer { background: rgba(47,102,144,.14); color: #2F6690; }
-  .ev-safety   { background: rgba(232,163,23,.18); color: #8a5e00; }
-  .ev-holiday  { background: rgba(107,91,149,.15); color: #6B5B95; }
-  .evdot { width: 12px; height: 12px; border-radius: 999px; margin-top: 6px;
-           flex: 0 0 12px; }
+  /* ------------------------------------------------------------------ events & inspections */
+  .ev-company  { background: var(--red-soft); color: var(--red-dark); }
+  .ev-training { background: var(--green-soft); color: #137026; }
+  .ev-customer { background: #E4EEF6; color: #2F6690; }
+  .ev-safety   { background: var(--caution-soft); color: #92590A; }
+  .ev-holiday  { background: #EEEBF5; color: #6B5B95; }
+  .evdot { width: 10px; height: 10px; border-radius: 999px; margin-top: 7px; flex: 0 0 10px; }
   .evdot.ev-company { background: var(--red); } .evdot.ev-training { background: #137026; }
   .evdot.ev-customer { background: #2F6690; } .evdot.ev-safety { background: var(--caution); }
   .evdot.ev-holiday { background: #6B5B95; }
   .evcard > summary { display: flex; gap: 14px; align-items: flex-start; }
-  .evcard { border-left-width: 5px; }
+  .evcard { border-left-width: 4px; }
   .ev-company-edge { border-left-color: var(--red); }
   .ev-training-edge { border-left-color: #137026; }
   .ev-customer-edge { border-left-color: #2F6690; }
   .ev-safety-edge { border-left-color: var(--caution); }
   .ev-holiday-edge { border-left-color: #6B5B95; }
-  .evdate { width: 48px; flex: 0 0 48px; text-align: center; background: var(--paper);
-            border-radius: 10px; padding: 4px 0; line-height: 1.1; }
-  .evdate small { display: block; font-size: 10px; letter-spacing: .8px;
-                  text-transform: uppercase; color: var(--muted); }
-  .evdate b { font-size: 20px; }
-  .insp-photos { display:flex; flex-wrap:wrap; gap:8px; }
-  .insp-photo { display:flex; flex-direction:column; gap:4px; font-size:12px; color:var(--muted);
-                margin:0; }
-  .insp-photo img { width:110px; height:110px; object-fit:cover; border-radius:8px;
-                    background:var(--paper); border:1px solid var(--line); display:block; }
-  .insp-photo span { display:flex; gap:4px; align-items:center; }
+  .evdate { width: 50px; flex: 0 0 50px; text-align: center; background: var(--paper);
+            border: 1px solid var(--line); border-radius: 10px; padding: 5px 0; line-height: 1.1; }
+  .evdate small { display: block; font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
+                  color: var(--muted); }
+  .evdate b { font-size: 19px; }
+  .insp-photos { display: flex; flex-wrap: wrap; gap: 8px; }
+  .insp-photo { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted);
+                margin: 0; font-weight: 400; }
+  .insp-photo img { width: 110px; height: 110px; object-fit: cover; border-radius: var(--radius-sm);
+                    background: var(--paper); border: 1px solid var(--line); display: block; }
+  .insp-photo span { display: flex; gap: 4px; align-items: center; }
+  .ticket .inner h2 { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+
+  /* ------------------------------------------------------------------ directory & payroll */
+  .payday-card { background: linear-gradient(135deg, var(--red), #8C0318); color: #fff;
+                 border-radius: var(--radius); padding: 22px 24px; margin-bottom: 18px; box-shadow: var(--shadow-lg); }
+  .payday-card small { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; opacity: .85; }
+  .payday-card strong { display: block; font-size: 30px; letter-spacing: -.02em; margin: 2px 0; }
+  .payday-card span { opacity: .9; }
+  td a { font-weight: 500; }
+
+  @media (max-width: 600px) {
+    .topbar { gap: 8px; padding: 0 10px; }
+    .brand-name { font-size: 14px; white-space: nowrap; }
+    .brand-mark { width: 28px; height: 28px; flex-basis: 28px; }
+    .topbar-right { gap: 8px; }
+    #adminBtn { display: none !important; }   /* it's in the menu */
+    #signOut { padding: 6px 10px; font-size: 13px; }
+    .who-avatar { width: 30px; height: 30px; flex-basis: 30px; font-size: 12px; }
+    .stat-cards { grid-template-columns: 1fr 1fr; gap: 10px; }
+    button.stat-card { padding: 12px 14px; }
+    .stat-card strong { font-size: 17px; }
+    .stat-card span { font-size: 12px; }
+    .page-head h1 { font-size: 22px; }
+    .card { padding: 18px 16px; }
+  }
+  @media print {
+    .topbar, .sidebar, .crumbs { display: none !important; }
+    .shell { display: block; }
+    .content { padding: 0; }
+  }
 
   /* ---- Training Class Enrollment Report: its own green and gold, as the
      report has always looked. Everything is under .osr so nothing leaks. ---- */
@@ -348,38 +498,88 @@
 </head>
 <body>
 
-<header>
-  <h1 id="wordmark">AGRI-SERVICE</h1>
-  <div class="who" id="who"></div>
-  <button id="adminBtn" class="hidden">Admin</button>
-  <button id="signOut" class="hidden">Sign out</button>
-</header>
-
-<main>
-
-  <!-- Sign in -->
-  <section class="card" id="auth">
-    <h2>Sign in</h2>
-    <p class="note">Use the same account you use in the app. What you can see and
-      change here is governed by the same rules — signing in from a browser
-      grants nothing extra.</p>
-    <div style="max-width:360px">
-      <label for="email">Work email</label>
-      <input id="email" type="email" autocomplete="username">
-      <label for="password">Password</label>
-      <input id="password" type="password" autocomplete="current-password">
-      <button id="signIn">Sign In</button>
-      <p id="authError" class="error"></p>
+<!-- Sign in -->
+<section id="auth" class="auth-screen">
+  <div class="auth-card">
+    <div class="brand">
+      <span class="brand-mark"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m4 6 5 6-5 6M12 6l5 6-5 6"/></svg></span>
+      <span class="brand-name">AGRI-SERVICE</span>
     </div>
-  </section>
+    <h1>Sign in</h1>
+    <p class="note">Use the same account you use in the app. What you can see and
+      change here follows the same rules — signing in from a browser grants
+      nothing extra.</p>
+    <label for="email">Work email</label>
+    <input id="email" type="email" autocomplete="username">
+    <label for="password">Password</label>
+    <input id="password" type="password" autocomplete="current-password">
+    <button id="signIn">Sign in</button>
+    <p id="authError" class="error"></p>
+  </div>
+</section>
+
+<div class="shell">
+  <header class="topbar">
+    <button class="icon-btn menu-btn" id="menuBtn" aria-label="Open menu">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+    <div class="brand" id="wordmark" title="Home">
+      <span class="brand-mark"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m4 6 5 6-5 6M12 6l5 6-5 6"/></svg></span>
+      <span class="brand-name">AGRI-SERVICE</span>
+      <span class="brand-sub" id="brandSub">Team Portal</span>
+    </div>
+    <div class="topbar-right">
+      <button id="adminBtn" class="btn-secondary hidden">Admin</button>
+      <div class="who" id="who"></div>
+      <button id="signOut" class="ghost hidden">Sign out</button>
+    </div>
+  </header>
+
+  <aside class="sidebar" id="sidebar">
+    <nav id="appNav" aria-label="Main"></nav>
+
+    <nav id="adminNav" class="tabs hidden" aria-label="Admin">
+      <button class="nav-item" data-home><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5m6-6-6 6 6 6"/></svg><span>Back to the app</span></button>
+
+      <div class="nav-group">Records</div>
+      <button data-tab="certs" class="active"><i data-icon="forklift"></i><span>Forklift Certifications</span></button>
+      <button data-tab="plans"><i data-icon="rigging"></i><span>Lift Plans</span></button>
+      <button data-tab="inspections"><i data-icon="inspection"></i><span>Inspections</span></button>
+      <button data-tab="people"><i data-icon="people"></i><span>People</span></button>
+
+      <div class="nav-group">App content</div>
+      <button data-tab="banners"><i data-icon="megaphone"></i><span>Announcements</span></button>
+      <button data-tab="events"><i data-icon="events"></i><span>Events</span></button>
+      <button data-tab="reminders"><i data-icon="reminders"></i><span>Reminders</span></button>
+      <button data-tab="support"><i data-icon="support"></i><span>Support Center</span></button>
+      <button data-tab="logins"><i data-icon="key"></i><span>Shared Logins</span></button>
+
+      <div class="nav-group">Imports</div>
+      <button data-tab="payroll"><i data-icon="calendar"></i><span>Payroll</span></button>
+      <button data-tab="directory"><i data-icon="phone"></i><span>Who Does What</span></button>
+      <button data-tab="openseat"><i data-icon="training"></i><span>Open Seat Report</span></button>
+
+      <div class="nav-group">Setup</div>
+      <button data-tab="org"><i data-icon="building"></i><span>Groups &amp; Shops</span></button>
+    </nav>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+<main class="content">
 
   <!-- Home, mirroring the app -->
   <div id="home" class="hidden">
-    <div class="hero">
-      <h3 id="greeting">Welcome back</h3>
-      <p id="homeLocation"></p>
+    <div class="page-head">
+      <div class="eyebrow" id="homeLocation"></div>
+      <h1 id="greeting">Welcome back</h1>
+      <p id="homeDate"></p>
     </div>
-    <div class="banners" id="banners"></div>
+    <div class="stat-cards" id="homeStats"></div>
+    <div id="bannersWrap">
+      <div class="section-title">Announcements</div>
+      <div class="banners" id="banners"></div>
+    </div>
+    <div class="section-title">Centers</div>
     <div class="tiles" id="tiles"></div>
   </div>
 
@@ -389,22 +589,9 @@
   <!-- Admin -->
   <div id="admin" class="hidden">
 
-    <button class="back" data-home>&larr; Back to the app</button>
-
-    <div class="tabs">
-      <button data-tab="certs" class="active">Forklift Certifications</button>
-      <button data-tab="plans">Lift Plans</button>
-      <button data-tab="people">People</button>
-      <button data-tab="support">Support Center</button>
-      <button data-tab="banners">Announcements</button>
-      <button data-tab="payroll">Payroll</button>
-      <button data-tab="directory">Who Does What</button>
-      <button data-tab="logins">Shared Logins</button>
-      <button data-tab="reminders">Reminders</button>
-      <button data-tab="events">Events</button>
-      <button data-tab="org">Groups &amp; Shops</button>
-      <button data-tab="openseat">Open Seat Report</button>
-      <button data-tab="inspections">Inspections</button>
+    <div class="page-head">
+      <div class="eyebrow">Admin</div>
+      <h1 id="adminTitle">Forklift Certifications</h1>
     </div>
 
     <!-- Certifications -->
@@ -754,6 +941,7 @@
 
   </div>
 </main>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -806,7 +994,7 @@ $("signIn").onclick = async () => {
 };
 
 $("signOut").onclick = async () => { await db.auth.signOut(); location.reload(); };
-$("adminBtn").onclick = () => showAdmin();
+$("adminBtn").onclick = () => document.body.classList.contains("admin-mode") ? showHome() : showAdmin();
 $("wordmark").onclick = () => { if (me) showHome(); };
 
 async function start() {
@@ -814,15 +1002,16 @@ async function start() {
   if (!user) return;
   me = user;
 
-  $("auth").classList.add("hidden");
+  document.body.classList.add("signed-in");
   $("signOut").classList.remove("hidden");
 
   await loadAll();
 
+  const name = (profile && profile.full_name) || user.email;
   $("who").innerHTML =
-    `${esc((profile && profile.full_name) || user.email)}<br>` +
-    `<span class="pill">${esc(locations[profile && profile.location_id]
-      || "No location set")}</span>`;
+    `<span class="who-avatar">${esc(initials(name))}</span>` +
+    `<span class="who-text"><b>${esc(name)}</b><small>${esc(
+      locations[profile && profile.location_id] || "No location set")}</small></span>`;
   $("adminBtn").classList.toggle("hidden", !isOwner());
 
   showHome();
@@ -891,7 +1080,15 @@ const ICONS = {
   support: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/><path d="m5.6 5.6 3.9 3.9M14.5 14.5l3.9 3.9M18.4 5.6l-3.9 3.9M9.5 14.5l-3.9 3.9"/>',
   inspection: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h4"/><path d="M14 3v5h5v3"/><circle cx="16" cy="16" r="3"/><path d="m18.2 18.2 2.3 2.3"/>',
   events: '<path d="M3 8a2 2 0 0 0 2-2h14a2 2 0 0 0 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 0-2 2H5a2 2 0 0 0-2-2v-2a2 2 0 0 0 0-4Z"/><path d="M9 6v12"/>',
-  doc: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z"/><path d="M14 3v5h5"/>'
+  doc: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z"/><path d="M14 3v5h5"/>',
+  home: '<path d="m3 11 9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
+  calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  phone: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/>',
+  people: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5c2 .6 3.2 2.5 3.5 5.5"/>',
+  megaphone: '<path d="M3 10v4h4l7 5V5L7 10H3Z"/><path d="M18 8a5 5 0 0 1 0 8"/>',
+  key: '<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M16 7l3 3M14 9l2 2"/>',
+  building: '<path d="M4 21V5l8-3v19M12 8h8v13"/><path d="M8 8v.01M8 12v.01M8 16v.01M16 12v.01M16 16v.01"/><path d="M2 21h20"/>',
+  settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/>'
 };
 
 const icon = (name, size = 24) =>
@@ -956,11 +1153,15 @@ function showHome() {
   $("admin").classList.add("hidden");
   $("view").classList.add("hidden");
   $("home").classList.remove("hidden");
+  setMode("app", "home");
 
   const first = ((profile && profile.full_name) || "").split(" ")[0];
   $("greeting").textContent = first ? `Welcome back, ${first}` : "Welcome back";
   $("homeLocation").textContent =
     (profile && locations[profile.location_id]) || "";
+  $("homeDate").textContent = new Date().toLocaleDateString(undefined,
+    { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+  $("homeStats").innerHTML = homeStats();
 
   const strip = announcements.filter(a => a.is_active);
   $("banners").innerHTML = strip.map(a => `
@@ -969,6 +1170,7 @@ function showHome() {
       <b>${esc(a.title)}</b>
       ${a.body ? `<span class="note">${esc(a.body)}</span>` : ""}
     </div>`).join("");
+  $("bannersWrap").classList.toggle("hidden", !strip.length);
 
   $("tiles").innerHTML = FEATURES.map(f => {
     const n = tileCount(f.id);
@@ -978,6 +1180,7 @@ function showHome() {
       ${n ? `<span class="count">${n}</span>` : ""}
     </button>`;
   }).join("");
+  window.scrollTo(0, 0);
 }
 
 // The same two badges the app shows on its home screen.
@@ -996,7 +1199,9 @@ function showView(name) {
   $("admin").classList.add("hidden");
   const host = $("view");
   host.classList.remove("hidden");
-  host.innerHTML = `<button class="back" data-home>&larr; Home</button>` + VIEWS[name]();
+  setMode("app", name === "openseat" ? "training" : name);
+  host.innerHTML = `<nav class="crumbs"><button data-home>Home</button><span>/</span>
+    <span>${esc(pageTitle(name))}</span></nav>` + VIEWS[name]();
   window.scrollTo(0, 0);
 }
 
@@ -1004,6 +1209,9 @@ function showAdmin() {
   $("home").classList.add("hidden");
   $("view").classList.add("hidden");
   $("admin").classList.remove("hidden");
+  setMode("admin");
+  const activeTab = document.querySelector("#adminNav button.active");
+  if (activeTab) $("adminTitle").textContent = activeTab.textContent.trim();
   renderCerts(); renderPlans(); renderPeople(); renderSupport(); renderBanners();
   renderPayroll(); renderDirectory(); renderLogins(); renderSharedReminders();
   renderEvents(); renderOrg(); renderOsrImport(); renderOsrLive(); renderInspectionsAdmin();
@@ -1018,9 +1226,9 @@ document.addEventListener("click", (event) => {
 
 // ---------------------------------------------------------------- views
 
-const hero = (title, blurb, green) => `
-  <div class="hero${green ? " green" : ""}">
-    <h3>${esc(title)}</h3><p>${esc(blurb)}</p>
+const hero = (title, blurb) => `
+  <div class="page-head">
+    <h1>${esc(title)}</h1>${blurb ? `<p>${esc(blurb)}</p>` : ""}
   </div>`;
 
 const comingSoon = (message) => `
@@ -1070,6 +1278,8 @@ const VIEWS = {
   events: () => eventsView(),
 
   openseat: () => openSeatView(),
+  payroll: () => payrollView(),
+  directory: () => directoryView(),
   reminders: () => remindersView(),
   rigging: () => riggingView()
 };
@@ -3369,8 +3579,10 @@ function inspRecordHtml(record, editable) {
                  : `<p class="note">Not done yet. It's finished in the app, under "After class to do".</p>`}` : ""}
         ${editable ? `<div class="row">
           <button data-act="insp-save">Save changes</button>
-          <button class="ghost" data-act="insp-delete">Delete inspection</button>
-          <span class="msg"></span></div>` : ""}
+          <button class="pdf" data-insp-pdf="${esc(record.id)}">Download PDF</button>
+          <button class="ghost" data-act="insp-delete" style="margin-left:auto">Delete inspection</button>
+          <span class="msg"></span></div>`
+          : `<div class="row"><button class="pdf" data-insp-pdf="${esc(record.id)}">Download PDF</button></div>`}
       </div>
     </details>`;
 }
@@ -3718,6 +3930,338 @@ function inspectionView() {
       ${records.map(r => inspRecordHtml(r, false)).join("") || `<p class="note" style="margin-left:4px">None yet.</p>`}`;
   }).join("");
 }
+
+// ---------------------------------------------------------------- shell
+//
+// A top bar, a sidebar and one page at a time. The sidebar shows the app's
+// sections, or the admin sections when the admin area is open. Below 960px it
+// slides in from the left behind the menu button.
+
+const todayISO = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+
+// Pages the web page has that aren't Centers in the app's home grid.
+const COMPANY_PAGES = [
+  { id: "payroll", title: "Payroll", icon: "calendar" },
+  { id: "directory", title: "Who Does What", icon: "phone" }
+];
+
+const pageTitle = (id) => (FEATURES.find(f => f.id === id) || COMPANY_PAGES.find(p => p.id === id)
+  || { openseat: { title: "Open Seat Report" } }[id] || { title: "" }).title;
+
+function navButton(id, title, iconName, count, attr) {
+  return `<button class="nav-item" ${attr}="${esc(id)}" data-nav="${esc(id)}">
+    ${icon(iconName, 18)}<span>${esc(title)}</span>
+    ${count ? `<span class="nav-count">${count}</span>` : ""}</button>`;
+}
+
+function renderAppNav(active) {
+  $("appNav").innerHTML =
+    `<button class="nav-item" data-home data-nav="home">${icon("home", 18)}<span>Home</span></button>`
+    + `<div class="nav-group">Centers</div>`
+    + FEATURES.map(f => navButton(f.id, f.title, f.id, tileCount(f.id), "data-view")).join("")
+    + `<div class="nav-group">Company</div>`
+    + COMPANY_PAGES.map(p => navButton(p.id, p.title, p.icon, 0, "data-view")).join("")
+    + (isOwner() ? `<div class="nav-group">Manage</div>
+        <button class="nav-item" data-open-admin>${icon("settings", 18)}<span>Admin</span></button>` : "");
+  document.querySelectorAll("#appNav [data-nav]").forEach(b =>
+    b.classList.toggle("active", b.dataset.nav === active));
+}
+
+function setMode(mode, active) {
+  const admin = mode === "admin";
+  document.body.classList.toggle("admin-mode", admin);
+  $("appNav").classList.toggle("hidden", admin);
+  $("adminNav").classList.toggle("hidden", !admin);
+  $("brandSub").textContent = admin ? "Admin" : "Team Portal";
+  $("adminBtn").textContent = admin ? "Exit admin" : "Admin";
+  if (!admin) renderAppNav(active);
+  document.body.classList.remove("nav-open");
+}
+
+$("menuBtn").onclick = () => document.body.classList.toggle("nav-open");
+$("scrim").onclick = () => document.body.classList.remove("nav-open");
+
+document.addEventListener("click", (event) => {
+  if (event.target.closest("[data-open-admin]")) showAdmin();
+});
+
+// Icons in the admin sidebar are filled in once, from the same set as the rest.
+document.querySelectorAll("#adminNav i[data-icon]").forEach(el => {
+  el.outerHTML = icon(el.dataset.icon, 18);
+});
+
+// ---- home dashboard ----------------------------------------------------------
+
+function homeStats() {
+  const cards = [];
+  const today = todayISO();
+
+  const next = payroll.find(p => p.payday && p.payday >= today);
+  if (next) {
+    const days = Math.round((new Date(next.payday + "T00:00:00") - new Date(today + "T00:00:00")) / 86400000);
+    cards.push({ view: "payroll", icon: "calendar", label: "Next payday", value: fmtDate(next.payday),
+      sub: days === 0 ? "Today" : days === 1 ? "Tomorrow" : `In ${days} days` });
+  }
+
+  const todo = visibleTasks().filter(t => !t.done).length;
+  cards.push({ view: "reminders", icon: "reminders", label: "Reminders",
+    value: todo ? `${todo} to do` : "All done", sub: todo ? "Daily, weekly and monthly" : "Nothing left on the list" });
+
+  const upcoming = (companyEvents || []).filter(e => e.is_published && !eventIsPast(e))
+    .sort((a, b) => new Date(a.starts_at) - new Date(b.starts_at));
+  cards.push({ view: "events", icon: "events", label: "Upcoming events",
+    value: upcoming.length ? String(upcoming.length) : "None",
+    sub: upcoming.length ? `Next: ${upcoming[0].title}` : "Nothing on the calendar" });
+
+  const afterClass = inspections.filter(r => !r.post_submitted_at &&
+    (inspForms.find(f => f.id === r.form_id) || {}).has_after_class).length;
+  if (isAdmin() && tileCount("rigging")) {
+    cards.push({ view: "rigging", icon: "rigging", label: "Lift plans", value: `${tileCount("rigging")} waiting`,
+      sub: "Waiting on your approval" });
+  } else if (afterClass) {
+    cards.push({ view: "inspection", icon: "inspection", label: "Inspections", value: `${afterClass} to finish`,
+      sub: "After-class part still to do" });
+  } else {
+    const open = tickets.filter(t => t.status !== "closed").length;
+    cards.push({ view: "support", icon: "support", label: "Support requests",
+      value: open ? `${open} open` : "None open", sub: "Across your groups" });
+  }
+
+  return cards.map(c => `
+    <button class="stat-card" data-view="${esc(c.view)}">
+      <small>${icon(c.icon, 14)} ${esc(c.label)}</small>
+      <strong>${esc(c.value)}</strong>
+      <span>${esc(c.sub)}</span>
+    </button>`).join("");
+}
+
+// ---- payroll & directory ------------------------------------------------------
+
+function payrollView() {
+  const head = hero("Payroll Calendar", "Paydays, the periods they cover, and paid holidays.");
+  if (!payroll.length) return head + comingSoon("The payroll calendar hasn't been uploaded yet.");
+
+  const today = todayISO();
+  const upcoming = payroll.filter(p => p.payday && p.payday >= today);
+  const past = payroll.filter(p => !p.payday || p.payday < today);
+  const next = upcoming[0];
+  const days = next ? Math.round((new Date(next.payday + "T00:00:00") - new Date(today + "T00:00:00")) / 86400000) : 0;
+  const row = (p) => `<tr><td>${esc(p.number)}</td><td><b>${fmtDate(p.payday)}</b></td>
+    <td>${fmtDate(p.period_start)} – ${fmtDate(p.period_end)}</td><td>${esc(p.holiday || "")}</td></tr>`;
+  const table = (rows) => `<div style="overflow-x:auto"><table>
+    <thead><tr><th>#</th><th>Payday</th><th>Pay period</th><th>Paid holiday</th></tr></thead>
+    <tbody>${rows.map(row).join("")}</tbody></table></div>`;
+
+  return head
+    + (next ? `<div class="payday-card"><small>Next payday</small>
+        <strong>${new Date(next.payday + "T00:00:00").toLocaleDateString(undefined,
+          { weekday: "long", month: "long", day: "numeric" })}</strong>
+        <span>${days === 0 ? "Today" : days === 1 ? "Tomorrow" : `In ${days} days`} · covers
+          ${fmtDate(next.period_start)} – ${fmtDate(next.period_end)}</span></div>` : "")
+    + `<div class="card"><h2>Upcoming paydays</h2>${upcoming.length ? table(upcoming)
+        : `<p class="note">No more paydays on this calendar.</p>`}</div>`
+    + (holidays.length ? `<div class="card"><h2>Paid holidays</h2><div style="overflow-x:auto"><table>
+        <tbody>${holidays.map(h => `<tr><td>${esc(h.name)}</td>
+          <td style="text-align:right;color:var(--muted)">${esc(h.hours || "")}</td></tr>`).join("")}</tbody>
+        </table></div></div>` : "")
+    + (past.length ? `<details class="ticket"><summary><b>Past paydays</b>
+        <span class="note"> · ${past.length}</span></summary><div class="inner">${table(past.reverse())}</div></details>` : "");
+}
+
+function directoryView() {
+  const head = hero("Who Does What", "Who to call for what, company-wide.");
+  if (!directory.length) return head + comingSoon("The directory hasn't been uploaded yet.");
+
+  const contact = (name, phone) => {
+    const n = (name || "").trim(), p = (phone || "").trim();
+    if (!n && !p) return `<span class="note">—</span>`;
+    const email = n.includes("@") ? n : (p.includes("@") ? p : "");
+    const digits = p.replace(/\D/g, "");
+    return `<b>${esc(n)}</b>${email ? `<br><a href="mailto:${esc(email)}">Email</a>`
+      : digits ? `<br><a href="tel:${esc(digits)}">${esc(p)}</a>` : ""}`;
+  };
+
+  return head + `<div class="card">
+    <div class="row" style="margin-bottom:14px">
+      <input class="search" id="dirSearch" placeholder="Search a topic or name…">
+      <span class="note" id="dirCount">${directory.length} topics</span>
+    </div>
+    <div style="overflow-x:auto"><table id="dirTable">
+      <thead><tr><th>Topic</th><th>Contact</th><th>Also</th></tr></thead>
+      <tbody>${directory.map(d => `<tr data-dir="${esc(`${d.topic} ${d.contact1 || ""} ${d.contact2 || ""}`.toLowerCase())}">
+        <td><b>${esc(d.topic)}</b></td>
+        <td>${contact(d.contact1, d.phone1)}</td>
+        <td>${contact(d.contact2, d.phone2)}</td></tr>`).join("")}</tbody>
+    </table></div></div>`;
+}
+
+$("view").addEventListener("input", (event) => {
+  if (event.target.id !== "dirSearch") return;
+  const q = event.target.value.trim().toLowerCase();
+  let shown = 0;
+  document.querySelectorAll("#dirTable tbody tr").forEach(tr => {
+    const show = !q || tr.dataset.dir.includes(q);
+    tr.hidden = !show;
+    if (show) shown++;
+  });
+  $("dirCount").textContent = `${shown} of ${directory.length} topics`;
+});
+
+// ---- inspection PDF -----------------------------------------------------------
+//
+// The same layout as the app's export: before and after class side by side with
+// a changed condition in red, then the photos from each part.
+
+const pdfSafe = (s) => String(s ?? "").replace(/[‘’]/g, "'").replace(/[“”]/g, '"')
+  .replace(/[–—]/g, "-").replace(/…/g, "...").replace(/→/g, "->");
+
+async function inspPhotoData(path) {
+  if (!inspPhotoUrls[path]) {
+    const { data } = await db.storage.from("inspection-photos").createSignedUrl(path, 3600);
+    if (data && data.signedUrl) inspPhotoUrls[path] = data.signedUrl;
+  }
+  if (!inspPhotoUrls[path]) return null;
+  try {
+    const blob = await (await fetch(inspPhotoUrls[path])).blob();
+    const bitmap = await createImageBitmap(blob);
+    const scale = Math.min(1, 1200 / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    return { url: canvas.toDataURL("image/jpeg", 0.8), width: canvas.width, height: canvas.height };
+  } catch (e) {
+    return null;
+  }
+}
+
+async function downloadInspectionPDF(record, button) {
+  const original = button ? button.textContent : "";
+  if (button) { button.disabled = true; button.textContent = "Preparing…"; }
+
+  try {
+    const form = inspForms.find(f => f.id === record.form_id);
+    const twoPart = (form && form.has_after_class) || !!record.post_fields_snapshot;
+    const done = !!record.post_submitted_at;
+    const key = (f) => inspKey(f.id);
+
+    const questions = [...(record.fields_snapshot || [])];
+    (record.post_fields_snapshot || []).forEach(f => {
+      if (!questions.some(q => key(q) === key(f))) questions.push(f);
+    });
+
+    const photoPaths = (snapshot, answers) => (snapshot || []).filter(f => f.type === "photos")
+      .flatMap(f => (answers && Array.isArray(answers[key(f)])) ? answers[key(f)] : []);
+    const load = async (paths) => (await Promise.all(paths.map(inspPhotoData))).filter(Boolean);
+    const beforePhotos = await load(photoPaths(record.fields_snapshot, record.answers));
+    const afterPhotos = await load(photoPaths(record.post_fields_snapshot, record.post_answers));
+
+    const PAGE_W = 612, PAGE_H = 792, MARGIN = 44, WIDTH = PAGE_W - MARGIN * 2;
+    const doc = new jspdf.jsPDF({ unit: "pt", format: "letter" });
+    let y = MARGIN;
+    const ensure = (needed) => { if (y + needed > PAGE_H - MARGIN - 20) { doc.addPage(); y = MARGIN; } };
+    const write = (str, x, top, { size = 10.5, style = "normal", color = [0, 0, 0], width } = {}) => {
+      doc.setFont("helvetica", style); doc.setFontSize(size); doc.setTextColor(...color);
+      const lines = width ? doc.splitTextToSize(pdfSafe(str), width) : [pdfSafe(str)];
+      doc.text(lines, x, top + size * 0.85);
+      return lines.length * size * 1.25;
+    };
+    const measure = (str, width, size = 10.5, style = "normal") => {
+      doc.setFont("helvetica", style); doc.setFontSize(size);
+      return doc.splitTextToSize(pdfSafe(str), width).length * size * 1.25;
+    };
+    const when = (iso) => iso ? new Date(iso).toLocaleString("en-US",
+      { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" }) : "";
+
+    // Title band
+    doc.setFillColor(204, 0, 51); doc.rect(MARGIN, y, WIDTH, 24, "F");
+    write(((form && form.title) || "Inspection").toUpperCase(), MARGIN + 6, y + 5, { size: 14, style: "bold", color: [255, 255, 255] });
+    y += 30;
+    y += write(inspTitle(record), MARGIN, y, { size: 15, style: "bold", width: WIDTH }) + 2;
+    const caption = (s) => { if (!s) return; ensure(14); write(s, MARGIN, y, { size: 9, color: [90, 90, 90] }); y += 13; };
+    caption([locations[record.location_id], record.created_by_name && `Started by ${record.created_by_name}`]
+      .filter(Boolean).join("    ·    "));
+    if (twoPart) {
+      caption(`Before class: ${when(record.submitted_at)}${record.created_by_name ? " by " + record.created_by_name : ""}`);
+      caption(done ? `After class: ${when(record.post_submitted_at)}${record.post_by_name ? " by " + record.post_by_name : ""}`
+                   : "After class: not done yet");
+    } else {
+      caption(`Submitted: ${when(record.submitted_at)}`);
+    }
+    if (record.edited_by_name) caption(`Corrected on the admin page by ${record.edited_by_name}`);
+
+    const section = (title) => {
+      ensure(40); y += 8;
+      doc.setFillColor(237, 237, 237); doc.rect(MARGIN, y, WIDTH, 16, "F");
+      write(title.toUpperCase(), MARGIN + 5, y + 3, { size: 10.5, style: "bold" });
+      y += 21;
+    };
+
+    section("Answers");
+    const cols = twoPart ? [150, (WIDTH - 150) / 2, (WIDTH - 150) / 2] : [150, WIDTH - 150];
+    ensure(14);
+    (twoPart ? ["QUESTION", "BEFORE CLASS", "AFTER CLASS"] : ["QUESTION", "ANSWER"]).reduce((x, t, i) => {
+      write(t, x, y, { size: 7.5, style: "bold", color: [130, 130, 130] }); return x + cols[i];
+    }, MARGIN);
+    y += 12;
+
+    questions.forEach(field => {
+      const before = inspDisplay((record.answers || {})[key(field)], field.type) || "-";
+      const afterRaw = done ? inspDisplay((record.post_answers || {})[key(field)], field.type) : "";
+      const cells = twoPart ? [field.label, before, afterRaw || "-"] : [field.label, before];
+      const height = Math.max(13, ...cells.map((c, i) => measure(c, cols[i] - 8, i === 0 ? 9.5 : 10.5, i === 0 ? "bold" : "normal")));
+      ensure(height + 8);
+      doc.setDrawColor(225, 225, 225); doc.line(MARGIN, y, MARGIN + WIDTH, y);
+      y += 4;
+      const highlight = twoPart && done && !["date", "number", "photos"].includes(field.type)
+        && afterRaw && afterRaw !== before;
+      let x = MARGIN;
+      cells.forEach((c, i) => {
+        write(c, x, y, { size: i === 0 ? 9.5 : 10.5, style: i === 0 ? "bold" : "normal", width: cols[i] - 8,
+          color: i === 0 ? [80, 80, 80] : (i === 2 && highlight ? [204, 0, 51] : [0, 0, 0]) });
+        x += cols[i];
+      });
+      y += height + 4;
+    });
+
+    const grid = (photos) => {
+      const per = 3, gap = 10, cw = (WIDTH - gap * (per - 1)) / per, ch = cw * 0.75;
+      photos.forEach((p, i) => {
+        const col = i % per;
+        if (col === 0) { if (i > 0) y += ch + gap; ensure(ch + 4); }
+        const cx = MARGIN + col * (cw + gap);
+        doc.setFillColor(242, 242, 242); doc.rect(cx, y, cw, ch, "F");
+        const s = Math.min(cw / p.width, ch / p.height);
+        const w = p.width * s, h = p.height * s;
+        doc.addImage(p.url, "JPEG", cx + (cw - w) / 2, y + (ch - h) / 2, w, h);
+      });
+      if (photos.length) y += ch + gap;
+    };
+    const photoRowHeight = ((WIDTH - 20) / 3) * 0.75;
+    if (beforePhotos.length) { ensure(photoRowHeight + 40); section(twoPart ? "Photos - Before Class" : "Photos"); grid(beforePhotos); }
+    if (afterPhotos.length) { ensure(photoRowHeight + 40); section("Photos - After Class"); grid(afterPhotos); }
+
+    write(`Generated from the Agri-Service web page · ${new Date().toLocaleDateString("en-US",
+      { month: "short", day: "numeric", year: "numeric" })}`, MARGIN, PAGE_H - MARGIN, { size: 8, color: [130, 130, 130] });
+
+    const date = (record.submitted_at || "").slice(0, 10);
+    doc.save(pdfSafe(`${(form && form.title) || "Inspection"} ${inspTitle(record)} ${date}.pdf`)
+      .replace(/[\\/:*?"<>|]/g, "-"));
+  } finally {
+    if (button) { button.disabled = false; button.textContent = original; }
+  }
+}
+
+document.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-insp-pdf]");
+  if (!button) return;
+  event.preventDefault();
+  const record = inspections.find(r => r.id === button.dataset.inspPdf);
+  if (record) downloadInspectionPDF(record, button);
+});
 
 // ---------------------------------------------------------------- shared logins
 
@@ -4573,6 +5117,9 @@ document.querySelectorAll(".tabs button[data-tab]").forEach(btn => {
     ["certs", "plans", "people", "support", "banners", "payroll",
       "directory", "logins", "reminders", "events", "org", "openseat", "inspections"].forEach(name =>
       $("tab-" + name).classList.toggle("hidden", name !== btn.dataset.tab));
+    $("adminTitle").textContent = btn.textContent.trim();
+    document.body.classList.remove("nav-open");
+    window.scrollTo(0, 0);
   };
 });
 
