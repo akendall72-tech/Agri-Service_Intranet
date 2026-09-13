@@ -248,6 +248,13 @@
   .evdate small { display: block; font-size: 10px; letter-spacing: .8px;
                   text-transform: uppercase; color: var(--muted); }
   .evdate b { font-size: 20px; }
+  .insp-photos { display:flex; flex-wrap:wrap; gap:8px; }
+  .insp-photo { display:flex; flex-direction:column; gap:4px; font-size:12px; color:var(--muted);
+                margin:0; }
+  .insp-photo img { width:110px; height:110px; object-fit:cover; border-radius:8px;
+                    background:var(--paper); border:1px solid var(--line); display:block; }
+  .insp-photo span { display:flex; gap:4px; align-items:center; }
+
   /* ---- Training Class Enrollment Report: its own green and gold, as the
      report has always looked. Everything is under .osr so nothing leaks. ---- */
   .osr { --g9:#0f2b1f; --g8:#16382a; --g7:#1f4d38; --g6:#2c6b4d; --g5:#3d8a66;
@@ -397,6 +404,7 @@
       <button data-tab="events">Events</button>
       <button data-tab="org">Groups &amp; Shops</button>
       <button data-tab="openseat">Open Seat Report</button>
+      <button data-tab="inspections">Inspections</button>
     </div>
 
     <!-- Certifications -->
@@ -606,6 +614,11 @@
           <span class="msg" id="sharedReminderMsg"></span>
         </div>
       </div>
+    </section>
+
+    <!-- Inspections: forms, questions and submitted inspections, drawn by JS -->
+    <section id="tab-inspections" class="hidden">
+      <div id="inspAdmin"></div>
     </section>
 
     <!-- Open seat report -->
@@ -857,7 +870,7 @@ async function loadAll() {
   allSharedTasks = allWt.data || [];
   trainingReports = Object.fromEntries((trr.data || []).map(r => [r.id, r]));
   trainingReportsError = trr.error ? trr.error.message : null;
-  await Promise.all([signBanners(), loadEvents()]);
+  await Promise.all([signBanners(), loadEvents(), loadInspections()]);
 
   // Only your own profile comes back for most people — that policy is the
   // point — so the page reads it out of the list rather than asking twice.
@@ -993,7 +1006,7 @@ function showAdmin() {
   $("admin").classList.remove("hidden");
   renderCerts(); renderPlans(); renderPeople(); renderSupport(); renderBanners();
   renderPayroll(); renderDirectory(); renderLogins(); renderSharedReminders();
-  renderEvents(); renderOrg(); renderOsrImport(); renderOsrLive();
+  renderEvents(); renderOrg(); renderOsrImport(); renderOsrLive(); renderInspectionsAdmin();
   window.scrollTo(0, 0);
 }
 
@@ -1052,11 +1065,7 @@ const VIEWS = {
          "Something not working? Get it in front of the right people here.", true)
     + ticketsSection() + supportCards(),
 
-  // Empty for now, and it says so, matching the app.
-  inspection: () =>
-    hero("Inspection Center",
-         "Walk-arounds, equipment checks and the records that go with them.", true)
-    + comingSoon("Inspections will live here. Nothing has been added yet."),
+  inspection: () => inspectionView(),
 
   events: () => eventsView(),
 
@@ -3225,6 +3234,491 @@ function osrFilterAgco() {
 $("view").addEventListener("input", (e) => { if (e.target.id === "osrSearch") osrFilterAgco(); });
 $("view").addEventListener("change", (e) => { if (e.target.id === "osrFilter") osrFilterAgco(); });
 
+// ---------------------------------------------------------------- inspections
+//
+// Inspection forms are data (migration 0031): an owner changes the questions
+// here and phones pick them up without a new build. Every inspection keeps a
+// copy of the questions it was answered with, so editing or deleting one never
+// changes what an old inspection says. Answers are keyed by question id.
+
+let inspForms = [], inspections = [], inspError = null;
+let inspFormId = null, inspFilter = "all";
+const inspPhotoUrls = {};
+
+const INSP_TYPES = [
+  ["text", "Short text"], ["long_text", "Long text"], ["number", "Number"],
+  ["date", "Date"], ["choice", "Choice (pick one)"], ["yes_no", "Yes / No"], ["photos", "Photos"]
+];
+
+const inspKey = (id) => String(id).toLowerCase();
+
+function inspDisplay(value, type) {
+  if (value === undefined || value === null || value === "") return "";
+  if (Array.isArray(value)) return `${value.length} photo${value.length === 1 ? "" : "s"}`;
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (type === "date" && /^\d{4}-\d{2}-\d{2}$/.test(value)) return dateOnly(value).toLocaleDateString("en-US",
+    { month: "short", day: "numeric", year: "numeric" });
+  if (typeof value === "number") return value.toLocaleString("en-US");
+  return String(value);
+}
+
+// "Fendt · 724 Vario": the first two short answers, as the app titles them.
+function inspTitle(record) {
+  const parts = (record.fields_snapshot || [])
+    .filter(f => f.type === "text" || f.type === "choice")
+    .map(f => record.answers && record.answers[inspKey(f.id)])
+    .filter(v => typeof v === "string" && v.trim())
+    .slice(0, 2);
+  return parts.length ? parts.join(" · ") : "Inspection";
+}
+
+function inspPhotoPaths(record) {
+  const from = (snapshot, answers) => (snapshot || []).filter(f => f.type === "photos")
+    .flatMap(f => (answers && Array.isArray(answers[inspKey(f.id)])) ? answers[inspKey(f.id)] : []);
+  return [...from(record.fields_snapshot, record.answers), ...from(record.post_fields_snapshot, record.post_answers)];
+}
+
+const inspWhen = (iso) => iso ? new Date(iso).toLocaleString("en-US",
+  { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" }) : "";
+
+async function loadInspections() {
+  const [forms, records] = await Promise.all([
+    db.from("inspection_forms").select("*, inspection_fields(*)").order("sort_order"),
+    db.from("inspections").select("*").order("submitted_at", { ascending: false }).limit(500)
+  ]);
+  inspError = forms.error ? forms.error.message : records.error ? records.error.message : null;
+  inspForms = (forms.data || []).map(f => ({
+    ...f, inspection_fields: (f.inspection_fields || []).sort((a, b) => a.sort_order - b.sort_order)
+  }));
+  inspections = records.data || [];
+  if (!inspForms.some(f => f.id === inspFormId)) inspFormId = inspForms.length ? inspForms[0].id : null;
+}
+
+// One part of an inspection — before or after class — read-only or editable.
+function inspPartHtml(record, stage, editable) {
+  const snapshot = stage === "before" ? record.fields_snapshot : record.post_fields_snapshot;
+  const answers = (stage === "before" ? record.answers : record.post_answers) || {};
+  const form = inspForms.find(f => f.id === record.form_id);
+  if (!snapshot) return "";
+
+  const rows = snapshot.map(field => {
+    const id = inspKey(field.id);
+    const value = answers[id];
+    const name = `${stage}|${id}`;
+    let cell;
+
+    if (field.type === "photos") {
+      const paths = Array.isArray(value) ? value : [];
+      cell = paths.length ? `<div class="insp-photos">${paths.map(path => `
+        <label class="insp-photo">
+          <a data-photo-link="${esc(path)}" target="_blank" rel="noopener"><img data-photo="${esc(path)}" alt=""></a>
+          ${editable ? `<span><input type="checkbox" data-keep="${esc(name)}" value="${esc(path)}" checked> Keep</span>` : ""}
+        </label>`).join("")}</div>` : `<span class="note">No photos</span>`;
+    } else if (!editable) {
+      const shown = inspDisplay(value, field.type);
+      cell = shown ? `<span style="white-space:pre-wrap">${esc(shown)}</span>` : `<span class="note">—</span>`;
+    } else {
+      const current = value === undefined || value === null ? "" : value;
+      const attrs = `data-ans="${esc(name)}" data-type="${esc(field.type)}" style="margin:0"`;
+      const live = form && (form.inspection_fields || []).find(q => inspKey(q.id) === id);
+      if (field.type === "long_text") {
+        cell = `<textarea rows="3" ${attrs}>${esc(current)}</textarea>`;
+      } else if (field.type === "date") {
+        cell = `<input type="date" value="${esc(current)}" ${attrs}>`;
+      } else if (field.type === "yes_no") {
+        cell = `<select ${attrs}><option value="">—</option>
+          <option value="yes"${current === true ? " selected" : ""}>Yes</option>
+          <option value="no"${current === false ? " selected" : ""}>No</option></select>`;
+      } else if (field.type === "choice" && live && live.options && live.options.length) {
+        const options = live.options.includes(current) || current === "" ? live.options : [...live.options, current];
+        cell = `<select ${attrs}><option value="">—</option>${options.map(o =>
+          `<option${o === current ? " selected" : ""}>${esc(o)}</option>`).join("")}</select>`;
+      } else {
+        cell = `<input type="text" value="${esc(current)}" ${attrs}>`;
+      }
+    }
+    return `<tr><td style="width:34%"><b>${esc(field.label)}</b></td><td>${cell}</td></tr>`;
+  }).join("");
+
+  return `<table style="margin-bottom:10px"><tbody>${rows}</tbody></table>`;
+}
+
+function inspRecordHtml(record, editable) {
+  const form = inspForms.find(f => f.id === record.form_id);
+  const twoPart = form ? form.has_after_class : !!record.post_fields_snapshot;
+  const done = !!record.post_submitted_at;
+  const photos = inspPhotoPaths(record).length;
+  const shop = locations[record.location_id] || "";
+
+  return `
+    <details class="ticket" data-insp="${esc(record.id)}">
+      <summary>
+        <b>${esc(inspTitle(record))}</b>
+        ${twoPart ? (done ? `<span class="badge b-closed">Complete</span>`
+                          : `<span class="badge b-answered">After class to do</span>`) : ""}
+        <div class="note">${esc([inspWhen(record.submitted_at), record.created_by_name, shop].filter(Boolean).join(" · "))}
+          ${photos ? ` · ${photos} photo${photos === 1 ? "" : "s"}` : ""}
+          ${record.edited_by_name ? ` · edited by ${esc(record.edited_by_name)}` : ""}</div>
+      </summary>
+      <div class="inner">
+        <h2 style="margin:4px 0 8px">${twoPart ? "Before class" : "Answers"}</h2>
+        ${inspPartHtml(record, "before", editable)}
+        ${twoPart ? `<h2 style="margin:14px 0 4px">After class</h2>
+          ${done ? `<p class="note" style="margin-top:0">${esc([inspWhen(record.post_submitted_at), record.post_by_name].filter(Boolean).join(" · "))}</p>
+                   ${inspPartHtml(record, "after", editable)}`
+                 : `<p class="note">Not done yet. It's finished in the app, under "After class to do".</p>`}` : ""}
+        ${editable ? `<div class="row">
+          <button data-act="insp-save">Save changes</button>
+          <button class="ghost" data-act="insp-delete">Delete inspection</button>
+          <span class="msg"></span></div>` : ""}
+      </div>
+    </details>`;
+}
+
+// Private photos need signed links, fetched when an inspection is opened.
+async function inspLoadPhotos(scope) {
+  const images = [...scope.querySelectorAll("img[data-photo]")].filter(img => !img.src);
+  const missing = [...new Set(images.map(img => img.dataset.photo).filter(p => !inspPhotoUrls[p]))];
+  if (missing.length) {
+    const { data } = await db.storage.from("inspection-photos").createSignedUrls(missing, 3600);
+    (data || []).forEach(d => { if (d.signedUrl) inspPhotoUrls[d.path] = d.signedUrl; });
+  }
+  images.forEach(img => {
+    const url = inspPhotoUrls[img.dataset.photo];
+    if (!url) return;
+    img.src = url;
+    const link = img.closest("a");
+    if (link) link.href = url;
+  });
+}
+
+document.addEventListener("toggle", (event) => {
+  const box = event.target;
+  if (box.matches && box.matches("details[data-insp]") && box.open) inspLoadPhotos(box);
+}, true);
+
+function renderInspectionsAdmin() {
+  const box = $("inspAdmin");
+  if (!box) return;
+
+  if (inspError) {
+    box.innerHTML = `<div class="card"><p class="error">${/does not exist|schema cache/i.test(inspError)
+      ? "Run migration 0031_inspections.sql in the SQL editor, then reload this page."
+      : esc(inspError)}</p></div>`;
+    return;
+  }
+
+  const form = inspForms.find(f => f.id === inspFormId);
+  const records = inspections.filter(r => r.form_id === inspFormId)
+    .filter(r => inspFilter === "all" || (inspFilter === "todo") === !r.post_submitted_at);
+  const todo = inspections.filter(r => r.form_id === inspFormId && !r.post_submitted_at).length;
+
+  const questionRows = form ? (form.inspection_fields || []).map(q => `
+    <div class="role" style="padding:14px 16px${q.is_active ? "" : ";opacity:.6"}" data-question="${esc(q.id)}">
+      <div class="fields">
+        <div class="wide"><label>Question</label>
+          <input type="text" data-q="label" value="${esc(q.label)}"></div>
+        <div><label>Answer type</label>
+          <select data-q="field_type">${INSP_TYPES.map(([v, l]) =>
+            `<option value="${v}"${q.field_type === v ? " selected" : ""}>${l}</option>`).join("")}</select></div>
+        <div><label>Required</label>
+          <select data-q="is_required">
+            <option value="yes"${q.is_required ? " selected" : ""}>Yes</option>
+            <option value="no"${q.is_required ? "" : " selected"}>No</option></select></div>
+        ${form.has_after_class ? `<div><label>After class</label>
+          <select data-q="after_class">
+            <option value="ask"${q.after_class !== "carry" ? " selected" : ""}>Ask again</option>
+            <option value="carry"${q.after_class === "carry" ? " selected" : ""}>Carry over the before-class answer</option></select></div>` : ""}
+        <div><label>Order</label>
+          <input type="text" data-q="sort_order" value="${esc(q.sort_order)}"></div>
+        <div><label>Showing</label>
+          <select data-q="is_active">
+            <option value="yes"${q.is_active ? " selected" : ""}>Yes</option>
+            <option value="no"${q.is_active ? "" : " selected"}>No</option></select></div>
+        <div class="wide"><label>Hint under the question (optional)</label>
+          <input type="text" data-q="help_text" value="${esc(q.help_text || "")}"></div>
+        <div class="wide"${q.field_type === "choice" ? "" : " hidden"} data-q-options><label>Choices, one per line</label>
+          <textarea rows="4" data-q="options">${esc((q.options || []).join("\n"))}</textarea></div>
+      </div>
+      <div class="row">
+        <button data-act="insp-save-question">Save</button>
+        <button class="ghost" data-act="insp-delete-question">Delete</button>
+        <span class="msg"></span>
+      </div>
+    </div>`).join("") : "";
+
+  box.innerHTML = `
+    <div class="card">
+      <h2>Inspection forms</h2>
+      <div class="row" style="margin-bottom:14px">
+        <select id="inspFormPick" style="max-width:320px;margin:0">
+          ${inspForms.map(f => `<option value="${esc(f.id)}"${f.id === inspFormId ? " selected" : ""}>${esc(f.title)}${f.is_active ? "" : " (not showing)"}</option>`).join("")}
+        </select>
+        <input type="text" id="inspNewForm" placeholder="New form name" style="max-width:240px;margin:0">
+        <button class="pdf" data-act="insp-add-form">Add form</button>
+        <span class="msg"></span>
+      </div>
+      ${form ? `
+      <div class="role" style="padding:16px" data-form="${esc(form.id)}">
+        <div class="fields">
+          <div class="wide"><label>Title</label>
+            <input type="text" data-f="title" value="${esc(form.title)}"></div>
+          <div class="wide"><label>Description</label>
+            <input type="text" data-f="description" value="${esc(form.description || "")}"></div>
+          <div><label>Parts</label>
+            <select data-f="has_after_class">
+              <option value="yes"${form.has_after_class ? " selected" : ""}>Before class and after class</option>
+              <option value="no"${form.has_after_class ? "" : " selected"}>One part only</option></select></div>
+          <div><label>Showing in the app</label>
+            <select data-f="is_active">
+              <option value="yes"${form.is_active ? " selected" : ""}>Yes</option>
+              <option value="no"${form.is_active ? "" : " selected"}>No</option></select></div>
+        </div>
+        <div class="row">
+          <button data-act="insp-save-form">Save form</button>
+          <button class="ghost" data-act="insp-delete-form">Delete form</button>
+          <span class="msg"></span>
+        </div>
+      </div>` : `<p class="note">No forms yet. Add one above.</p>`}
+    </div>
+
+    ${form ? `
+    <div class="card">
+      <h2>Questions</h2>
+      <p class="note">Changes reach phones the next time someone opens the Inspection
+        Center. Past inspections keep the questions they were answered with, so
+        renaming, changing or deleting a question never alters an old record.
+        <b>Showing: No</b> stops asking it and can be undone.</p>
+      ${form.has_after_class ? `<p class="note"><b>After class</b>: "Ask again" repeats the
+        question after class, showing the before-class answer beside it.
+        "Carry over" copies the before-class answer, for things that don't change
+        during a class, like the make and model. Photos are always taken again.</p>` : ""}
+      ${questionRows || `<p class="note">No questions yet.</p>`}
+      <div class="row" style="margin-top:10px">
+        <button data-act="insp-add-question">Add a question</button>
+        <span class="msg" id="inspQuestionMsg"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Submitted inspections</h2>
+      <div class="chips">
+        <button class="chip${inspFilter === "all" ? " on" : ""}" data-insp-filter="all">All</button>
+        ${form.has_after_class ? `<button class="chip${inspFilter === "todo" ? " on" : ""}" data-insp-filter="todo">After class to do (${todo})</button>
+        <button class="chip${inspFilter === "done" ? " on" : ""}" data-insp-filter="done">Complete</button>` : ""}
+      </div>
+      <p class="note">Open one to see it, correct an answer, or remove a photo.
+        Photos can only be added from the app.</p>
+      ${records.map(r => inspRecordHtml(r, true)).join("") || `<p class="note">None yet.</p>`}
+    </div>` : ""}`;
+}
+
+$("admin").addEventListener("change", (event) => {
+  if (event.target.id === "inspFormPick") {
+    inspFormId = event.target.value;
+    inspFilter = "all";
+    return renderInspectionsAdmin();
+  }
+  if (event.target.matches('[data-q="field_type"]')) {
+    const box = event.target.closest("[data-question]");
+    box.querySelector("[data-q-options]").hidden = event.target.value !== "choice";
+  }
+});
+
+$("admin").addEventListener("click", async (event) => {
+  const filter = event.target.closest("[data-insp-filter]");
+  if (filter) { inspFilter = filter.dataset.inspFilter; return renderInspectionsAdmin(); }
+
+  const button = event.target.closest("button[data-act]");
+  if (!button || !button.dataset.act.startsWith("insp-")) return;
+  const act = button.dataset.act;
+  const refusal = (error) => /row-level/i.test(error.message)
+    ? (act.includes("question") || act.includes("form") ? "Only an owner can change the forms." : "Only an admin can change inspections.")
+    : error.message;
+  const redraw = async () => { await loadInspections(); renderInspectionsAdmin(); };
+
+  // ---- forms
+  if (act === "insp-add-form") {
+    const row = button.closest(".row");
+    const title = $("inspNewForm").value.trim();
+    if (!title) return speak(row, "Type the form's name first.", true);
+    const id = slugify(title, "_");
+    if (!id) return speak(row, "That name needs some letters or numbers.", true);
+    if (inspForms.some(f => f.id === id)) return speak(row, "There's already a form with that name.", true);
+    const { data, error } = await db.from("inspection_forms").insert({
+      id, title, has_after_class: false, is_active: false, sort_order: nextSortOrder(inspForms)
+    }).select();
+    if (error) return speak(row, refusal(error), true);
+    if (!data || !data.length) return speak(row, "Nothing added — only an owner can add forms.", true);
+    inspFormId = id;
+    await redraw();
+    return;
+  }
+
+  const formBox = button.closest("[data-form]");
+  if (act === "insp-save-form") {
+    const get = (f) => formBox.querySelector(`[data-f="${f}"]`).value.trim();
+    if (!get("title")) return speak(formBox, "The form needs a title.", true);
+    speak(formBox, "Saving…", false);
+    const { data, error } = await db.from("inspection_forms").update({
+      title: get("title"), description: get("description") || null,
+      has_after_class: get("has_after_class") === "yes", is_active: get("is_active") === "yes"
+    }).eq("id", formBox.dataset.form).select();
+    if (error) return speak(formBox, refusal(error), true);
+    if (!data || !data.length) return speak(formBox, "Nothing changed — only an owner can edit forms.", true);
+    await redraw();
+    return;
+  }
+
+  if (act === "insp-delete-form") {
+    const id = formBox.dataset.form;
+    const count = inspections.filter(r => r.form_id === id).length;
+    if (count) {
+      return speak(formBox, `${count} inspection${count === 1 ? " uses" : "s use"} this form, so it can't be deleted. Set Showing to No instead.`, true);
+    }
+    if (!confirm("Delete this form and all its questions?")) return;
+    const { data, error } = await db.from("inspection_forms").delete().eq("id", id).select();
+    if (error) return speak(formBox, refusal(error), true);
+    if (!data || !data.length) return speak(formBox, "Nothing deleted — only an owner can delete forms.", true);
+    inspFormId = null;
+    await redraw();
+    return;
+  }
+
+  // ---- questions
+  if (act === "insp-add-question") {
+    const form = inspForms.find(f => f.id === inspFormId);
+    const { error } = await db.from("inspection_fields").insert({
+      form_id: inspFormId, label: "New question", field_type: "text",
+      is_active: false, sort_order: nextSortOrder(form.inspection_fields || [])
+    });
+    if (error) { $("inspQuestionMsg").textContent = refusal(error); $("inspQuestionMsg").className = "msg error"; return; }
+    await redraw();
+    $("inspQuestionMsg").textContent = "Added at the bottom, not showing yet. Fill it in, set Showing to Yes, and save.";
+    $("inspQuestionMsg").className = "msg ok";
+    return;
+  }
+
+  const questionBox = button.closest("[data-question]");
+  if (act === "insp-save-question") {
+    const get = (f) => { const el = questionBox.querySelector(`[data-q="${f}"]`); return el ? el.value.trim() : null; };
+    if (!get("label")) return speak(questionBox, "The question needs some words.", true);
+    const options = get("options").split("\n").map(o => o.trim()).filter(Boolean);
+    if (get("field_type") === "choice" && options.length < 2) {
+      return speak(questionBox, "A choice question needs at least two choices, one per line.", true);
+    }
+    const update = {
+      label: get("label"), field_type: get("field_type"), options,
+      help_text: get("help_text") || null, is_required: get("is_required") === "yes",
+      sort_order: parseInt(get("sort_order"), 10) || 0, is_active: get("is_active") === "yes"
+    };
+    if (get("after_class") !== null) update.after_class = get("after_class");
+    speak(questionBox, "Saving…", false);
+    const { data, error } = await db.from("inspection_fields").update(update)
+      .eq("id", questionBox.dataset.question).select();
+    if (error) return speak(questionBox, refusal(error), true);
+    if (!data || !data.length) return speak(questionBox, "Nothing changed — only an owner can edit questions.", true);
+    await redraw();
+    return;
+  }
+
+  if (act === "insp-delete-question") {
+    if (!confirm("Delete this question? Past inspections keep their answers to it. " +
+                 "Setting Showing to No instead can be undone.")) return;
+    const { data, error } = await db.from("inspection_fields").delete()
+      .eq("id", questionBox.dataset.question).select();
+    if (error) return speak(questionBox, refusal(error), true);
+    if (!data || !data.length) return speak(questionBox, "Nothing deleted — only an owner can delete questions.", true);
+    await redraw();
+    return;
+  }
+
+  // ---- submitted inspections
+  const recordBox = button.closest("[data-insp]");
+  if (!recordBox) return;
+  const inner = recordBox.querySelector(".inner");
+  const record = inspections.find(r => r.id === recordBox.dataset.insp);
+
+  if (act === "insp-delete") {
+    if (!confirm(`Delete this inspection of ${inspTitle(record)}, photos and all? This can't be undone.`)) return;
+    const { data, error } = await db.from("inspections").delete().eq("id", record.id).select();
+    if (error) return speak(inner, refusal(error), true);
+    if (!data || !data.length) return speak(inner, "Nothing deleted — only an admin can delete inspections.", true);
+    const paths = inspPhotoPaths(record);
+    if (paths.length) await db.storage.from("inspection-photos").remove(paths);
+    await redraw();
+    return;
+  }
+
+  if (act === "insp-save") {
+    const removed = [];
+    const collect = (stage, snapshot, base) => {
+      const out = { ...(base || {}) };
+      inner.querySelectorAll(`[data-ans^="${stage}|"]`).forEach(el => {
+        const id = el.dataset.ans.split("|")[1];
+        const raw = el.value.trim();
+        if (raw === "") { delete out[id]; return; }
+        if (el.dataset.type === "number") {
+          const n = Number(raw.replace(/,/g, ""));
+          if (!Number.isFinite(n)) throw new Error(`"${raw}" isn't a number.`);
+          out[id] = n;
+        } else if (el.dataset.type === "yes_no") {
+          out[id] = raw === "yes";
+        } else {
+          out[id] = raw;
+        }
+      });
+      (snapshot || []).filter(f => f.type === "photos").forEach(f => {
+        const id = inspKey(f.id);
+        const before = Array.isArray(out[id]) ? out[id] : [];
+        const kept = [...inner.querySelectorAll(`[data-keep="${stage}|${id}"]`)].filter(c => c.checked).map(c => c.value);
+        before.filter(p => !kept.includes(p)).forEach(p => removed.push(p));
+        out[id] = kept;
+      });
+      return out;
+    };
+
+    let update;
+    try {
+      update = { answers: collect("before", record.fields_snapshot, record.answers) };
+      if (record.post_fields_snapshot) {
+        update.post_answers = collect("after", record.post_fields_snapshot, record.post_answers);
+      }
+    } catch (e) {
+      return speak(inner, e.message, true);
+    }
+
+    speak(inner, "Saving…", false);
+    const { data, error } = await db.from("inspections").update(update).eq("id", record.id).select();
+    if (error) return speak(inner, refusal(error), true);
+    if (!data || !data.length) return speak(inner, "Nothing changed — only an admin can edit inspections.", true);
+    if (removed.length) await db.storage.from("inspection-photos").remove(removed);
+    await redraw();
+    const again = document.querySelector(`#inspAdmin details[data-insp="${CSS.escape(record.id)}"]`);
+    if (again) { again.open = true; speak(again.querySelector(".inner"), "Saved.", false); }
+  }
+});
+
+// ---- the Inspection Center, for everyone ----------------------------------
+
+function inspectionView() {
+  const head = hero("Inspection Center",
+    "Walk-arounds, equipment checks and the records that go with them.", true);
+  if (inspError) return head + `<div class="card"><p class="error">Inspections couldn't be loaded.</p></div>`;
+  const forms = inspForms.filter(f => f.is_active);
+  if (!forms.length) return head + comingSoon("No inspections have been set up yet.");
+
+  return head + forms.map(form => {
+    const records = inspections.filter(r => r.form_id === form.id);
+    return `
+      <div class="group-title">${esc(form.title)}</div>
+      ${form.description ? `<p class="note" style="margin:0 4px 10px">${esc(form.description)}</p>` : ""}
+      <p class="note" style="margin:0 4px 12px">Inspections are filled in on the app${
+        form.has_after_class ? ", before class and again after it" : ""}.</p>
+      ${records.map(r => inspRecordHtml(r, false)).join("") || `<p class="note" style="margin-left:4px">None yet.</p>`}`;
+  }).join("");
+}
+
 // ---------------------------------------------------------------- shared logins
 
 function renderLogins() {
@@ -4077,7 +4571,7 @@ document.querySelectorAll(".tabs button[data-tab]").forEach(btn => {
     document.querySelectorAll(".tabs button[data-tab]").forEach(b =>
       b.classList.toggle("active", b === btn));
     ["certs", "plans", "people", "support", "banners", "payroll",
-      "directory", "logins", "reminders", "events", "org", "openseat"].forEach(name =>
+      "directory", "logins", "reminders", "events", "org", "openseat", "inspections"].forEach(name =>
       $("tab-" + name).classList.toggle("hidden", name !== btn.dataset.tab));
   };
 });
