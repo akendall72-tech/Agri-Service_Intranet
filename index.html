@@ -1175,15 +1175,16 @@ function supportCards() {
        ? "Location: " + locations[profile.location_id] + "\n" : "")
     + "Sent from the Agri-Service web page";
 
-  return `<div class="group-title">Who to call</div>` + cards
-    + `<div class="group-title">Systems &amp; reference</div>`
+  // IT first, straight after requests, matching the app.
+  return `<div class="group-title">IT help</div>`
     + `<a class="link-card accent-ink"
       href="mailto:IT@agri-service.com?body=${encodeURIComponent(body)}">
     <span class="well ink">${icon("doc")}</span>
     <span><b>Submit an IT Ticket</b>
       <span>Computer, phone, printer, or account trouble - email the IT team.</span>
       <span class="go">Start a ticket &nearr;</span></span>
-  </a>`;
+  </a>`
+    + `<div class="group-title">Who to call</div>` + cards;
 }
 
 const initials = (name) =>
