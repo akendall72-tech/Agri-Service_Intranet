@@ -306,6 +306,7 @@
       <button data-tab="logins">Shared Logins</button>
       <button data-tab="reminders">Reminders</button>
       <button data-tab="events">Events</button>
+      <button data-tab="org">Groups &amp; Shops</button>
     </div>
 
     <!-- Certifications -->
@@ -517,6 +518,44 @@
       </div>
     </section>
 
+    <!-- Groups & shops -->
+    <section id="tab-org" class="hidden">
+      <div class="card">
+        <h2>Groups</h2>
+        <p class="note">The departments people put themselves in, and that support
+          requests are aimed at. Renaming is safe — everyone in a group stays in
+          it. <b>Showing: No</b> stops people choosing it but leaves everyone
+          already in it where they are. <b>Delete</b> takes it out of everyone's
+          groups for good.</p>
+        <div id="groupList"></div>
+        <div class="row" style="margin-top:10px">
+          <input type="text" id="newGroupName" placeholder="New group name"
+                 style="max-width:280px;margin-bottom:0">
+          <button data-act="add-group">Add group</button>
+          <span class="msg"></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Shops</h2>
+        <p class="note">The locations people choose when they first sign in. A shop
+          decides which admin reviews someone's lift plans, and its time zone is
+          what the Events tab uses when it hosts something.</p>
+        <p class="note">A new shop shows up for people signing in for the first
+          time. Moving someone who already has a shop is still done in Supabase,
+          because the app locks it. A shop with people, lift plans or events
+          can't be deleted — set <b>Showing: No</b> if it closes.</p>
+        <div id="shopList"></div>
+        <div class="row" style="margin-top:10px">
+          <input type="text" id="newShopName" placeholder="New shop name"
+                 style="max-width:220px;margin-bottom:0">
+          <select id="newShopZone" style="max-width:240px;margin-bottom:0"></select>
+          <button data-act="add-shop">Add shop</button>
+          <span class="msg"></span>
+        </div>
+      </div>
+    </section>
+
     <!-- Events -->
     <section id="tab-events" class="hidden">
       <div class="card" id="eventEditor">
@@ -603,6 +642,9 @@ let payroll = [], holidays = [], directory = [], sharedLogins = [];
 let allSharedTasks = [];
 // Admins get drafts back as well; the Event Center view filters them out.
 let companyEvents = [], eventsError = null;
+// Every shop with all its columns, switched-off ones included. `locations`
+// above stays a plain id -> name lookup for showing names.
+let allLocations = [];
 
 // Admins approve lift plans for their own shop, so plenty of the page keys off
 // this. The Admin button does not — see isOwner.
@@ -656,7 +698,7 @@ async function start() {
 async function loadAll() {
   const [locs, c, p, pe, sr, wt, pt, ht, tc, tk, gr, an, pr, ph, dir, sl, allWt] =
     await Promise.all([
-    db.from("locations").select("id,name"),
+    db.from("locations").select("*").order("sort_order"),
     db.from("forklift_certifications").select("*"),
     db.from("lift_plans").select("*").order("submitted_at", { ascending: false }),
     db.from("profiles").select("id,full_name,role,location_id,groups"),
@@ -677,7 +719,8 @@ async function loadAll() {
     db.from("weekly_tasks").select("*").order("sort_order")
   ]);
 
-  locations = Object.fromEntries((locs.data || []).map(l => [l.id, l.name]));
+  allLocations = locs.data || [];
+  locations = Object.fromEntries(allLocations.map(l => [l.id, l.name]));
   certs = c.data || []; plans = p.data || []; people = pe.data || [];
   supportRoles = sr.data || [];
   sharedTasks = wt.data || []; personalTasks = pt.data || [];
@@ -825,7 +868,7 @@ function showAdmin() {
   $("admin").classList.remove("hidden");
   renderCerts(); renderPlans(); renderPeople(); renderSupport(); renderBanners();
   renderPayroll(); renderDirectory(); renderLogins(); renderSharedReminders();
-  renderEvents();
+  renderEvents(); renderOrg();
   window.scrollTo(0, 0);
 }
 
@@ -951,7 +994,8 @@ function certificationCard() {
 // Groups are the person's own to change, so the same chips appear on the
 // request form and on your own profile.
 const chips = (selected, attr) => `<div class="chips">` +
-  workGroups.map(g => `<button type="button" class="chip${
+  workGroups.filter(g => g.is_active !== false || selected.includes(g.id))
+    .map(g => `<button type="button" class="chip${
     selected.includes(g.id) ? " on" : ""}" data-chip="${esc(attr)}"
     data-id="${esc(g.id)}">${esc(g.name)}</button>`).join("") + `</div>`;
 
@@ -1803,7 +1847,8 @@ const EVENT_ZONES = [
 ];
 
 // Which clock each shop keeps, so picking the hosting shop sets the zone.
-// Ontario is in Oregon but runs on Mountain time.
+// Ontario is in Oregon but runs on Mountain time. Shops now carry their own
+// time zone (migration 0029); this is the fallback until that's been run.
 const SHOP_ZONES = {
   "moses-lake": "America/Los_Angeles", "pasco": "America/Los_Angeles",
   "walla-walla": "America/Los_Angeles", "pullman": "America/Los_Angeles",
@@ -1895,11 +1940,16 @@ function renderEvents() {
       `<option value="${v}">${l}</option>`).join("");
     editor.querySelector('[data-e="timezone"]').innerHTML = EVENT_ZONES.map(([v, l]) =>
       `<option value="${v}">${l}</option>`).join("");
-    editor.querySelector('[data-e="location_id"]').innerHTML =
-      `<option value="">Not at a shop</option>` +
-      Object.entries(locations).map(([id, name]) =>
-        `<option value="${esc(id)}">${esc(name)}</option>`).join("");
   }
+
+  // Refilled every time, so a shop added on the Groups & Shops tab is here
+  // without a reload. Switched-off shops are left out unless already chosen.
+  const shopSelect = editor.querySelector('[data-e="location_id"]');
+  const chosenShop = shopSelect.value;
+  shopSelect.innerHTML = `<option value="">Not at a shop</option>` +
+    allLocations.filter(l => l.is_active !== false || l.id === chosenShop)
+      .map(l => `<option value="${esc(l.id)}">${esc(l.name)}</option>`).join("");
+  shopSelect.value = chosenShop;
 
   const box = $("eventList");
   if (eventsError) {
@@ -2005,8 +2055,10 @@ $("admin").addEventListener("change", (event) => {
   if (field === "all_day") return setAllDay(event.target.checked);
 
   // Picking the shop sets its clock; it can still be changed afterwards.
-  if (field === "location_id" && SHOP_ZONES[event.target.value]) {
-    get("timezone").value = SHOP_ZONES[event.target.value];
+  const shop = allLocations.find(l => l.id === event.target.value);
+  const shopZone = shop && (shop.timezone || SHOP_ZONES[shop.id]);
+  if (field === "location_id" && shopZone) {
+    get("timezone").value = shopZone;
     if (!get("location_name").value.trim()) {
       get("location_name").value = `${locations[event.target.value]} shop`;
     }
@@ -2253,6 +2305,197 @@ $("view").addEventListener("click", (event) => {
   if (!button) return;
   const e = companyEvents.find(x => x.id === button.dataset.ics);
   if (e) downloadICS(e);
+});
+
+// ---------------------------------------------------------------- groups & shops
+//
+// Both lists are company-wide, so only an owner can change them (migration
+// 0029). A group or shop can be switched off, which takes it out of the lists
+// people pick from without touching anything already recorded against it, or
+// deleted, which is for mistakes and things that are truly gone.
+
+// "Service Writers" -> "service_writers" for a group, "Walla Walla" ->
+// "walla-walla" for a shop, matching the ids already in use. The id never
+// changes after it's made, so renaming later is safe.
+function slugify(text, separator) {
+  return text.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, separator)
+    .split(separator).filter(Boolean).join(separator);
+}
+
+const nextSortOrder = (rows) =>
+  rows.reduce((max, r) => Math.max(max, r.sort_order || 0), 0) + 10;
+
+const needsMigration = (error) =>
+  /is_active|timezone|delete_group|schema cache|does not exist/i.test(error.message)
+    ? "Run migration 0029_manage_groups_locations.sql in the SQL editor first, then reload this page."
+    : error.message.includes("row-level") ? "Only an owner can change these." : error.message;
+
+const showingSelect = (on) => `
+  <select data-o="is_active">
+    <option value="yes"${on ? " selected" : ""}>Yes</option>
+    <option value="no"${on ? "" : " selected"}>No — switched off</option>
+  </select>`;
+
+function renderOrg() {
+  const groupBox = $("groupList");
+  const shopBox = $("shopList");
+  if (!groupBox || !shopBox) return;
+
+  groupBox.innerHTML = workGroups.map(g => {
+    const on = g.is_active !== false;
+    const count = people.filter(p => (p.groups || []).includes(g.id)).length;
+    return `
+      <div class="role" style="padding:14px 16px${on ? "" : ";opacity:.6"}" data-group="${esc(g.id)}">
+        <div class="fields">
+          <div><label>Name</label>
+            <input type="text" data-o="name" value="${esc(g.name)}"></div>
+          <div><label>Order</label>
+            <input type="text" data-o="sort_order" value="${esc(g.sort_order)}"></div>
+          <div><label>Showing</label>${showingSelect(on)}</div>
+        </div>
+        <div class="row">
+          <button data-act="save-group">Save</button>
+          <button class="ghost" data-act="delete-group">Delete</button>
+          <span class="note">${count} ${count === 1 ? "person" : "people"} · id ${esc(g.id)}</span>
+          <span class="msg"></span>
+        </div>
+      </div>`;
+  }).join("") || `<p class="note">No groups yet.</p>`;
+
+  shopBox.innerHTML = allLocations.map(l => {
+    const on = l.is_active !== false;
+    const count = people.filter(p => p.location_id === l.id).length;
+    const zone = l.timezone || SHOP_ZONES[l.id] || "America/Boise";
+    return `
+      <div class="role" style="padding:14px 16px${on ? "" : ";opacity:.6"}" data-shop="${esc(l.id)}">
+        <div class="fields">
+          <div><label>Name</label>
+            <input type="text" data-o="name" value="${esc(l.name)}"></div>
+          <div><label>Time zone</label>
+            <select data-o="timezone">${EVENT_ZONES.map(([v, label]) =>
+              `<option value="${v}"${v === zone ? " selected" : ""}>${label}</option>`).join("")}
+            </select></div>
+          <div><label>Order</label>
+            <input type="text" data-o="sort_order" value="${esc(l.sort_order)}"></div>
+          <div><label>Showing</label>${showingSelect(on)}</div>
+        </div>
+        <div class="row">
+          <button data-act="save-shop">Save</button>
+          <button class="ghost" data-act="delete-shop">Delete</button>
+          <span class="note">${count} ${count === 1 ? "person" : "people"} · id ${esc(l.id)}</span>
+          <span class="msg"></span>
+        </div>
+      </div>`;
+  }).join("") || `<p class="note">No shops yet.</p>`;
+
+  const newZone = $("newShopZone");
+  if (!newZone.options.length) {
+    newZone.innerHTML = EVENT_ZONES.map(([v, label]) =>
+      `<option value="${v}">${label}</option>`).join("");
+  }
+}
+
+$("admin").addEventListener("click", async (event) => {
+  const button = event.target.closest("button[data-act]");
+  if (!button) return;
+  const act = button.dataset.act;
+  if (!["add-group", "save-group", "delete-group",
+        "add-shop", "save-shop", "delete-shop"].includes(act)) return;
+
+  // ---- adding
+  if (act === "add-group" || act === "add-shop") {
+    const isGroup = act === "add-group";
+    const box = button.closest(".row");
+    const nameInput = $(isGroup ? "newGroupName" : "newShopName");
+    const name = nameInput.value.trim();
+    if (!name) return speak(box, `Type the ${isGroup ? "group" : "shop"}'s name first.`, true);
+
+    const id = slugify(name, isGroup ? "_" : "-");
+    const existing = isGroup ? workGroups : allLocations;
+    if (!id) return speak(box, "That name needs some letters or numbers in it.", true);
+    if (existing.some(r => r.id === id)) {
+      return speak(box, `There's already one called that (id ${id}).`, true);
+    }
+
+    const row = { id, name, sort_order: nextSortOrder(existing), is_active: true };
+    if (!isGroup) row.timezone = $("newShopZone").value;
+
+    speak(box, "Adding…", false);
+    const { data, error } = await db.from(isGroup ? "groups" : "locations").insert(row).select();
+    if (error) return speak(box, needsMigration(error), true);
+    if (!data || !data.length) return speak(box, "Nothing added — only an owner can add these.", true);
+
+    nameInput.value = "";
+    await loadAll();
+    renderOrg();
+    return speak(box, isGroup
+      ? `Added ${name}. It's in the app's group lists next time they're opened.`
+      : `Added ${name}. New people can pick it when they first sign in.`, false);
+  }
+
+  const isGroup = act.endsWith("-group");
+  const box = button.closest(isGroup ? "[data-group]" : "[data-shop]");
+  const id = isGroup ? box.dataset.group : box.dataset.shop;
+  const table = isGroup ? "groups" : "locations";
+  const record = (isGroup ? workGroups : allLocations).find(r => r.id === id);
+  const get = (f) => box.querySelector(`[data-o="${f}"]`).value.trim();
+  const count = isGroup
+    ? people.filter(p => (p.groups || []).includes(id)).length
+    : people.filter(p => p.location_id === id).length;
+
+  // ---- deleting
+  if (act === "delete-group") {
+    if (!confirm(`Delete the ${record.name} group?\n\n` +
+        `${count} ${count === 1 ? "person is" : "people are"} taken out of it. ` +
+        `Requests already aimed at it stay as they are, and can still be seen ` +
+        `by whoever asked and by admins.\n\n` +
+        `To just stop people choosing it, set Showing to No instead.`)) return;
+    speak(box, "Deleting…", false);
+    const { error } = await db.rpc("delete_group", { target: id });
+    if (error) return speak(box, needsMigration(error), true);
+    await loadAll();
+    return renderOrg();
+  }
+
+  if (act === "delete-shop") {
+    if (!confirm(`Delete ${record.name}?\n\nThis only works for a shop nothing ` +
+        `belongs to yet — one added by mistake. For a shop that's closed, set ` +
+        `Showing to No instead.`)) return;
+    speak(box, "Deleting…", false);
+    const { data, error } = await db.from("locations").delete().eq("id", id).select();
+    if (error) {
+      return speak(box, error.code === "23503"
+        ? "People, lift plans or events belong to this shop, so it can't be deleted. Set Showing to No instead."
+        : needsMigration(error), true);
+    }
+    if (!data || !data.length) return speak(box, "Nothing deleted — only an owner can remove shops.", true);
+    await loadAll();
+    return renderOrg();
+  }
+
+  // ---- saving
+  if (!get("name")) return speak(box, "It needs a name.", true);
+
+  const update = {
+    name: get("name"),
+    sort_order: parseInt(get("sort_order"), 10) || 0,
+    is_active: get("is_active") === "yes"
+  };
+  if (!isGroup) update.timezone = get("timezone");
+
+  speak(box, "Saving…", false);
+  const { data, error } = await db.from(table).update(update).eq("id", id).select();
+  if (error) return speak(box, needsMigration(error), true);
+  if (!data || !data.length) return speak(box, "Nothing changed — only an owner can edit these.", true);
+
+  await loadAll();
+  renderOrg();
+  const again = (isGroup ? $("groupList") : $("shopList"))
+    .querySelector(`[data-${isGroup ? "group" : "shop"}="${CSS.escape(id)}"]`);
+  if (again) speak(again, isGroup
+    ? "Saved. Phones pick it up next time the group list is opened."
+    : "Saved. Phones pick it up next time the app is opened.", false);
 });
 
 // ---------------------------------------------------------------- shared logins
@@ -3094,7 +3337,7 @@ document.querySelectorAll(".tabs button[data-tab]").forEach(btn => {
     document.querySelectorAll(".tabs button[data-tab]").forEach(b =>
       b.classList.toggle("active", b === btn));
     ["certs", "plans", "people", "support", "banners", "payroll",
-      "directory", "logins", "reminders", "events"].forEach(name =>
+      "directory", "logins", "reminders", "events", "org"].forEach(name =>
       $("tab-" + name).classList.toggle("hidden", name !== btn.dataset.tab));
   };
 });
