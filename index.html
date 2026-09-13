@@ -248,6 +248,95 @@
   .evdate small { display: block; font-size: 10px; letter-spacing: .8px;
                   text-transform: uppercase; color: var(--muted); }
   .evdate b { font-size: 20px; }
+  /* ---- Training Class Enrollment Report: its own green and gold, as the
+     report has always looked. Everything is under .osr so nothing leaks. ---- */
+  .osr { --g9:#0f2b1f; --g8:#16382a; --g7:#1f4d38; --g6:#2c6b4d; --g5:#3d8a66;
+         --au:#c79a2b; --au4:#dcb84a; --au1:#faf3df; --line2:#e2e6e1; --mute2:#64716a;
+         color:#1f2a24; }
+  .osr-header { background:linear-gradient(135deg,var(--g9) 0%,var(--g7) 55%,var(--g6) 100%);
+    color:#fff; border-radius:16px; padding:28px 24px 50px; position:relative; overflow:hidden; }
+  .osr-header::after { content:""; position:absolute; right:-60px; top:-60px; width:220px; height:220px;
+    border-radius:50%; background:rgba(220,184,74,.12); }
+  .osr-eyebrow { text-transform:uppercase; letter-spacing:.12em; font-size:12px; color:var(--au4);
+    font-weight:700; margin-bottom:6px; }
+  .osr-header h3 { margin:0 0 6px; font-size:27px; font-weight:700; }
+  .osr-subhead { color:rgba(255,255,255,.75); font-size:13.5px; }
+  .osr-summary { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin:-30px 16px 0;
+    position:relative; z-index:1; }
+  .osr-summary div { background:#fff; border-radius:12px; padding:14px 16px; border-top:3px solid var(--au);
+    box-shadow:0 4px 18px rgba(15,43,31,.10); }
+  .osr-summary b { display:block; font-size:24px; color:var(--g8); }
+  .osr-summary span { font-size:12px; color:var(--mute2); text-transform:uppercase; letter-spacing:.05em; }
+  .osr-tabs { display:flex; flex-wrap:wrap; gap:4px; border-bottom:2px solid var(--line2); margin:22px 0 16px; }
+  .osr-tab, .osr-subtab { background:none; border:0; border-bottom:3px solid transparent; margin-bottom:-2px;
+    color:var(--mute2); font-weight:700; font-size:14.5px; padding:11px 16px; border-radius:0; }
+  .osr-tab span, .osr-subtab span { background:var(--line2); color:#1f2a24; font-size:11px; padding:1px 8px;
+    border-radius:20px; margin-left:4px; }
+  .osr-tab.on, .osr-subtab.on { color:var(--g8); border-bottom-color:var(--au); }
+  .osr-tab.on span, .osr-subtab.on span { background:var(--au1); color:var(--au); }
+  .osr-subtabs { display:flex; flex-wrap:wrap; gap:4px; border-bottom:2px solid var(--line2); margin-bottom:14px; }
+  .osr-subtab { font-size:14px; font-weight:600; padding:9px 14px; }
+  .osr-desc { color:var(--mute2); font-size:13.5px; margin-bottom:16px; }
+  .osr-card { background:#fff; border:1px solid var(--line2); border-radius:10px; margin-bottom:12px; overflow:hidden; }
+  .osr-card:hover { box-shadow:0 2px 10px rgba(15,43,31,.07); }
+  .osr-card-top { display:flex; align-items:stretch; }
+  .osr-head { flex:1; min-width:0; display:flex; justify-content:space-between; align-items:center; gap:20px;
+    padding:15px 18px; background:none; border:0; border-radius:0; text-align:left; color:inherit;
+    font:inherit; font-weight:400; cursor:pointer; }
+  .osr-title-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:6px; }
+  .osr-chev { color:var(--au); font-size:13px; transition:transform .18s ease; display:inline-block; }
+  .osr-head[aria-expanded="true"] .osr-chev { transform:rotate(90deg); }
+  .osr-title, .osr-class-title { font-weight:700; font-size:15.5px; color:var(--g8); }
+  .osr-class-title { font-size:14px; }
+  .osr-meta { display:flex; gap:14px; flex-wrap:wrap; font-size:12.5px; color:var(--mute2); }
+  .osr-seats { min-width:150px; text-align:right; flex-shrink:0; font-size:13px; }
+  .osr-bar { width:150px; height:6px; border-radius:4px; background:#e7ece8; overflow:hidden; margin:4px 0 4px auto; }
+  .osr-bar div { height:100%; background:linear-gradient(90deg,var(--g5),var(--au)); border-radius:4px; }
+  .osr-open { font-size:11.5px; color:var(--mute2); }
+  .osr-actions { flex-shrink:0; display:flex; flex-direction:column; }
+  .osr-email, .osr-request { flex:1; display:flex; align-items:center; justify-content:center; gap:6px;
+    padding:8px 16px; font-size:12.5px; font-weight:600; white-space:nowrap; text-decoration:none;
+    border:0; border-radius:0; cursor:pointer; }
+  .osr-email { background:var(--g7); color:#fff; }
+  .osr-email:hover { background:var(--g6); }
+  .osr-email.disabled { background:#c7cdc9; color:#8a938c; cursor:default; }
+  .osr-request { background:var(--au); color:var(--g9); }
+  .osr-request:hover { background:var(--au4); }
+  .osr-request.small { flex:none; display:inline-flex; padding:6px 12px; font-size:11.5px; border-radius:6px; }
+  .osr-body { background:#fbfbf9; border-top:1px solid var(--line2); padding:14px 18px 18px; overflow-x:auto; }
+  .osr-roster { font-size:13.5px; }
+  .osr-roster th, .osr-table th { cursor:default; }
+  .osr-roster td { border-bottom:1px solid #eef1ee; padding:8px 10px; }
+  .osr-roster a, .osr-table a { color:var(--g6); text-decoration:none; }
+  .osr-num { color:var(--mute2); width:28px; }
+  .osr-name { font-weight:600; }
+  .osr-empty { color:var(--mute2); font-size:13px; font-style:italic; margin:6px 0; }
+  .osr-badge { display:inline-block; font-size:11px; font-weight:700; padding:2px 9px; border-radius:20px;
+    text-transform:uppercase; letter-spacing:.03em; white-space:nowrap; }
+  .osr-badge.gold { background:var(--au1); color:var(--au); border:1px solid var(--au4); }
+  .osr-badge.green { background:#e9f2ec; color:var(--g6); border:1px solid var(--g5); }
+  .osr-badge.red { background:#fbeaea; color:#b3352c; border:1px solid #e08a83; }
+  .osr-scroll { overflow-x:auto; }
+  .osr-table { background:#fff; border-radius:10px; overflow:hidden; box-shadow:0 1px 4px rgba(15,43,31,.06); }
+  .osr-table thead th { background:var(--g8); color:#fff; font-size:11.5px; padding:10px 14px; }
+  .osr-table tbody td { padding:11px 14px; font-size:13.5px; }
+  .osr-table tbody tr:hover { background:#fbfbf9; }
+  .osr-sub { font-size:12px; color:var(--mute2); margin-top:3px; display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+  .osr-controls { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+  .osr-controls input { flex:1; min-width:220px; margin:0; background:#fff; }
+  .osr-controls select { width:auto; margin:0; background:#fff; }
+  .osr-program { display:inline-block; font-size:10.5px; font-weight:700; padding:2px 9px; border-radius:20px;
+    text-transform:uppercase; background:#eef1ee; color:var(--g7); border:1px solid var(--line2); }
+  .osr-program.alt { background:var(--au1); color:var(--au); border-color:var(--au4); }
+  @media (max-width:720px) {
+    .osr-summary { grid-template-columns:repeat(2,1fr); }
+    .osr-card-top { flex-direction:column; }
+    .osr-head { flex-direction:column; align-items:flex-start; }
+    .osr-seats { text-align:left; width:100%; }
+    .osr-bar { margin-left:0; }
+    .osr-actions { flex-direction:row; }
+    .osr-email, .osr-request { padding:10px; }
+  }
 </style>
 </head>
 <body>
@@ -307,6 +396,7 @@
       <button data-tab="reminders">Reminders</button>
       <button data-tab="events">Events</button>
       <button data-tab="org">Groups &amp; Shops</button>
+      <button data-tab="openseat">Open Seat Report</button>
     </div>
 
     <!-- Certifications -->
@@ -518,6 +608,38 @@
       </div>
     </section>
 
+    <!-- Open seat report -->
+    <section id="tab-openseat" class="hidden">
+      <div class="card">
+        <h2>Open seat report</h2>
+        <div class="drop" id="osrDrop">
+          Drop the report files here, or
+          <label for="osrFile" style="display:inline;color:var(--red);
+                 cursor:pointer;text-decoration:underline">choose files</label>
+          <input id="osrFile" type="file" class="hidden" multiple
+                 accept=".csv,.xlsx,.xls,text/csv">
+        </div>
+        <p class="note" style="margin-top:12px">Three files, all at once or one at a
+          time — each is recognised by its columns, so the names don't matter:</p>
+        <ul class="note" style="margin-top:0">
+          <li><b>Open Seat Report</b> CSV from UKG — the classes and their seats.</li>
+          <li><b>In-Class Event Report</b> CSV from UKG — who's enrolled. Published
+            together with the Open Seat Report, because each roster is matched to
+            its class.</li>
+          <li><b>AGCO open seat report</b> — the Technical Training Catalog workbook,
+            or a copy with just its Open Seat Report sheet. Can be updated on its own.</li>
+        </ul>
+        <p class="note">Nothing changes in the app until you press <b>Publish</b>.
+          Publishing replaces the previous copy. Classes that have finished drop off
+          the report on their own.</p>
+        <div id="osrResult"></div>
+      </div>
+      <div class="card">
+        <h2>Published now</h2>
+        <div id="osrLive"></div>
+      </div>
+    </section>
+
     <!-- Groups & shops -->
     <section id="tab-org" class="hidden">
       <div class="card">
@@ -696,7 +818,7 @@ async function start() {
 // ---------------------------------------------------------------- loading
 
 async function loadAll() {
-  const [locs, c, p, pe, sr, wt, pt, ht, tc, tk, gr, an, pr, ph, dir, sl, allWt] =
+  const [locs, c, p, pe, sr, wt, pt, ht, tc, tk, gr, an, pr, ph, dir, sl, allWt, trr] =
     await Promise.all([
     db.from("locations").select("*").order("sort_order"),
     db.from("forklift_certifications").select("*"),
@@ -716,7 +838,8 @@ async function loadAll() {
     db.from("payroll_holidays").select("*").order("sort_order"),
     db.from("directory_entries").select("*").order("sort_order"),
     db.from("shared_logins").select("*").order("id"),
-    db.from("weekly_tasks").select("*").order("sort_order")
+    db.from("weekly_tasks").select("*").order("sort_order"),
+    db.from("training_reports").select("*")
   ]);
 
   allLocations = locs.data || [];
@@ -732,6 +855,8 @@ async function loadAll() {
   payroll = pr.data || []; holidays = ph.data || []; directory = dir.data || [];
   sharedLogins = sl.data || [];
   allSharedTasks = allWt.data || [];
+  trainingReports = Object.fromEntries((trr.data || []).map(r => [r.id, r]));
+  trainingReportsError = trr.error ? trr.error.message : null;
   await Promise.all([signBanners(), loadEvents()]);
 
   // Only your own profile comes back for most people — that policy is the
@@ -782,8 +907,8 @@ const FEATURES = [
 
 const TRAINING_LINKS = [
   { title: "Course Catalog", url: "https://akendall72-tech.github.io/Catalog/" },
-  { title: "Open Seat Report", sub: "Request registration",
-    url: "https://akendall72-tech.github.io/Upcoming-training/" },
+  // Built from the uploads on the admin page's Open Seat Report tab.
+  { title: "Open Seat Report", sub: "Request registration", view: "openseat" },
   { title: "Training Completions",
     url: "https://akendall72-tech.github.io/Training_Summary/" },
   { title: "UKG ProLearning", sub: "Your assigned training",
@@ -868,7 +993,7 @@ function showAdmin() {
   $("admin").classList.remove("hidden");
   renderCerts(); renderPlans(); renderPeople(); renderSupport(); renderBanners();
   renderPayroll(); renderDirectory(); renderLogins(); renderSharedReminders();
-  renderEvents(); renderOrg();
+  renderEvents(); renderOrg(); renderOsrImport(); renderOsrLive();
   window.scrollTo(0, 0);
 }
 
@@ -891,7 +1016,14 @@ const comingSoon = (message) => `
     <span class="note">${esc(message)}</span>
   </div>`;
 
-const linkCard = (link) => `
+const linkCard = (link) => link.view ? `
+  <button type="button" class="link-card" data-view="${esc(link.view)}"
+          style="width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer">
+    <span class="well green">${icon("doc")}</span>
+    <span><b>${esc(link.title)}</b>
+      ${link.sub ? `<span>${esc(link.sub)}</span>` : ""}
+      <span class="go">Open &rarr;</span></span>
+  </button>` : `
   <a class="link-card" href="${esc(link.url)}" target="_blank" rel="noopener">
     <span class="well green">${icon("doc")}</span>
     <span><b>${esc(link.title)}</b>
@@ -928,6 +1060,7 @@ const VIEWS = {
 
   events: () => eventsView(),
 
+  openseat: () => openSeatView(),
   reminders: () => remindersView(),
   rigging: () => riggingView()
 };
@@ -2498,6 +2631,600 @@ $("admin").addEventListener("click", async (event) => {
     : "Saved. Phones pick it up next time the app is opened.", false);
 });
 
+// ---------------------------------------------------------------- open seat report
+//
+// The Training Class Enrollment Report, rebuilt from three uploads instead of
+// a separate website. The files are read here in the browser and the finished
+// report is saved as two documents (migration 0030):
+//
+//   internal — the UKG Open Seat Report + In-Class Event Report CSVs. Always
+//              published together, because each roster is matched to its
+//              class by title, city and start time.
+//   agco     — the "Open Seat Report" sheet of AGCO's Technical Training
+//              Catalog, or a workbook holding just that sheet.
+//
+// Files are recognised by their column headings, not their names, since the
+// UKG exports get a new random suffix every time.
+
+// Where "Request Registration" emails go.
+const REGISTRATION_EMAIL = "andrewkendall@agri-service.com";
+
+let trainingReports = {}, trainingReportsError = null;
+let osrPending = { openSeat: null, inClass: null, agco: null };
+
+const osrText = (v) => String(v ?? "").trim();
+
+// Dates arrive as "2026-11-17 08:00:00 MST", "10/19/2026", Excel serial
+// numbers, or — in the AGCO sheet — broken formulas. Anything that isn't
+// clearly a date becomes null and shows as "Date TBD".
+function osrDate(value) {
+  if (value === null || value === undefined || value === "") return null;
+  if (typeof value === "number") return excelDate(value);
+  const s = osrText(value);
+  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (m) return `${m[3]}-${m[1].padStart(2, "0")}-${m[2].padStart(2, "0")}`;
+  if (/^\d+(\.\d+)?$/.test(s)) return excelDate(parseFloat(s));
+  return null;
+}
+
+async function osrRowsFromFile(file) {
+  if (/\.csv$/i.test(file.name) || file.type === "text/csv") {
+    return parseCSV(await file.text());
+  }
+  // The full Technical Training Catalog is several megabytes and twenty tabs,
+  // so find the one sheet that matters before reading any cells.
+  const buffer = await file.arrayBuffer();
+  const names = XLSX.read(buffer, { type: "array", bookSheets: true }).SheetNames;
+  const name = names.find(n => /^open seat report$/i.test(n.trim())) || names[0];
+  const workbook = XLSX.read(buffer, { type: "array", sheets: [name] });
+  return XLSX.utils.sheet_to_json(workbook.Sheets[name], { header: 1, raw: true, defval: "" });
+}
+
+function osrHeaderIndex(rows, required) {
+  return rows.findIndex(r => required.every(name =>
+    (r || []).some(c => osrText(c).toLowerCase() === name)));
+}
+
+function osrRecords(rows, headerIndex) {
+  const header = rows[headerIndex].map(osrText);
+  return rows.slice(headerIndex + 1)
+    .filter(r => (r || []).some(c => osrText(c) !== ""))
+    .map(r => Object.fromEntries(header.map((h, i) => [h, r[i]])));
+}
+
+function osrExportDate(rows) {
+  const row = rows.find(r => /^export date:/i.test(osrText((r || [])[0])));
+  return row ? osrText(row[0]).replace(/^export date:\s*/i, "") : "";
+}
+
+// "Store - 13 - Pasco" -> number 13, name Pasco. This is the person's home
+// store, which is what Enrollment by Store groups on — not the class's city.
+function osrStore(raw) {
+  const m = osrText(raw).match(/^(?:store\s*-\s*)?(\d+)\s*-\s*(.+)$/i);
+  return m ? { number: m[1], name: m[2].trim() }
+           : { number: "", name: osrText(raw) || "Unknown" };
+}
+
+function osrParse(rows, fileName) {
+  // AGCO catalog sheet
+  if (osrHeaderIndex(rows, ["class id", "title", "status"]) !== -1) {
+    const sessions = [];
+    let program = "AGCO", catalogDate = "";
+    for (const row of rows) {
+      const first = osrText(row[0]);
+      const titleRow = first.match(/^(.*?)\s*open seat report\b(.*)$/i);
+      if (titleRow) {
+        // "Open Seat Report  8-27-26" starts the AGCO block; "Raven Open Seat
+        // Report  8-27-26" starts Raven's. Any other brand would work the same.
+        program = titleRow[1].trim() || "AGCO";
+        const date = titleRow[2].match(/(\d{1,2}-\d{1,2}-\d{2,4})\s*$/);
+        if (date && !catalogDate) catalogDate = date[1];
+        continue;
+      }
+      if (first.toLowerCase() === "class id") continue;
+      const title = osrText(row[2]);
+      if (!title) continue;
+
+      const status = osrText(row[7]);
+      const counts = status.match(/^(\d+)\s+of\s+(\d+)\s+enrolled/i);
+      const registered = counts ? Number(counts[1]) : null;
+      const capacity = counts ? Number(counts[2]) : null;
+      sessions.push({
+        program,
+        classId: osrText(row[0]),
+        title,
+        description: osrText(row[1]) || null,
+        facility: osrText(row[4]).replace(/\s*\([A-Za-z0-9_]+\)\s*$/, ""),
+        startDate: osrDate(row[5]),
+        endDate: osrDate(row[6]),
+        status,
+        registered,
+        capacity,
+        full: /^full$/i.test(status) || (counts !== null && registered >= capacity)
+      });
+    }
+    sessions.sort((a, b) => (a.startDate || "9999").localeCompare(b.startDate || "9999"));
+    return { kind: "agco", fileName, catalogDate, sessions };
+  }
+
+  // UKG Open Seat Report
+  let at = osrHeaderIndex(rows, ["event title", "available seats"]);
+  if (at !== -1) {
+    const classes = osrRecords(rows, at).map(r => ({
+      title: osrText(r["Event Title"]),
+      city: osrText(r["Event City"]),
+      status: osrText(r["Status"]),
+      startRaw: osrText(r["Event Start Date"]),
+      startDate: osrDate(r["Event Start Date"]),
+      endDate: osrDate(r["Event End Date"]),
+      registered: parseInt(r["Registered"], 10) || 0,
+      available: parseInt(r["Available Seats"], 10) || 0
+    })).filter(c => c.title);
+    return { kind: "openSeat", fileName, exported: osrExportDate(rows), classes };
+  }
+
+  // UKG In-Class Event Report
+  at = osrHeaderIndex(rows, ["firstname", "event title"]);
+  if (at !== -1) {
+    const enrollments = osrRecords(rows, at).map(r => ({
+      first: osrText(r["Firstname"]),
+      last: osrText(r["Lastname"]),
+      email: osrText(r["Email"]),
+      store: osrText(r["Store"]),
+      title: osrText(r["Event Title"]),
+      eventId: osrText(r["Event Id"]),
+      city: osrText(r["Event City"]),
+      startRaw: osrText(r["Event Start Date"]),
+      startDate: osrDate(r["Event Start Date"]),
+      instructors: osrText(r["Instructor Names"])
+    })).filter(e => e.title);
+    return { kind: "inClass", fileName, exported: osrExportDate(rows), enrollments };
+  }
+
+  return null;
+}
+
+function osrBuildInternal(openSeat, inClass) {
+  const warnings = [];
+  const key = (...parts) => parts.map(p => osrText(p).toLowerCase()).join("|");
+  const exact = new Map(), byDay = new Map();
+
+  const classes = openSeat.classes.map(c => {
+    const built = {
+      eventId: null, title: c.title, city: c.city, status: c.status,
+      startDate: c.startDate, endDate: c.endDate || c.startDate,
+      registered: c.registered, available: c.available,
+      instructors: "", roster: [], sortKey: `${c.startDate || "9999"} ${c.startRaw}`
+    };
+    exact.set(key(c.title, c.city, c.startRaw), built);
+    byDay.set(key(c.title, c.city, c.startDate), built);
+    return built;
+  });
+
+  const unmatched = new Set();
+  for (const e of inClass.enrollments) {
+    const cls = exact.get(key(e.title, e.city, e.startRaw)) || byDay.get(key(e.title, e.city, e.startDate));
+    if (!cls) { unmatched.add(`${e.title} (${e.city}, ${e.startDate || "no date"})`); continue; }
+    const store = osrStore(e.store);
+    cls.eventId = cls.eventId || e.eventId || null;
+    if (!cls.instructors && e.instructors) cls.instructors = e.instructors;
+    cls.roster.push({
+      name: `${e.first} ${e.last}`.trim(), first: e.first, last: e.last, email: e.email,
+      store: store.number ? `${store.number} - ${store.name}` : store.name,
+      storeNumber: store.number, storeName: store.name
+    });
+  }
+
+  for (const cls of classes) {
+    cls.roster.sort((a, b) => a.last.localeCompare(b.last) || a.first.localeCompare(b.first));
+    if (cls.roster.length !== cls.registered) {
+      warnings.push(`${cls.title} (${cls.city}) says ${cls.registered} registered, but the ` +
+        `In-Class Event Report lists ${cls.roster.length}.`);
+    }
+  }
+  if (unmatched.size) {
+    warnings.unshift(`People are enrolled in ${unmatched.size === 1 ? "a class" : "classes"} the Open ` +
+      `Seat Report doesn't have: ${[...unmatched].join("; ")}. They're left out — check both ` +
+      `files come from the same export.`);
+  }
+  if (openSeat.exported && inClass.exported && openSeat.exported !== inClass.exported) {
+    warnings.unshift(`The two files were exported on different days (${openSeat.exported} and ` +
+      `${inClass.exported}), so the rosters may not match the seat counts.`);
+  }
+
+  classes.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+  classes.forEach(c => delete c.sortKey);
+
+  return {
+    warnings,
+    data: {
+      version: 1,
+      openSeatExported: openSeat.exported,
+      inClassExported: inClass.exported,
+      classes
+    },
+    note: `Open Seat Report exported ${openSeat.exported || "?"} · ` +
+          `In-Class Event Report exported ${inClass.exported || "?"}`
+  };
+}
+
+async function osrAddFiles(files) {
+  const result = $("osrResult");
+  const problems = [];
+  result.innerHTML = `<p class="note">Reading ${files.length === 1 ? "the file" : files.length + " files"}…</p>`;
+
+  for (const file of files) {
+    try {
+      const parsed = osrParse(await osrRowsFromFile(file), file.name);
+      if (parsed) osrPending[parsed.kind] = parsed;
+      else problems.push(`<b>${esc(file.name)}</b> isn't one of the three reports — ` +
+        `no Open Seat Report, In-Class Event Report or catalog columns in it.`);
+    } catch (e) {
+      problems.push(`Couldn't read <b>${esc(file.name)}</b>: ${esc(e.message)}`);
+    }
+  }
+  renderOsrImport(problems);
+}
+
+function renderOsrImport(problems = []) {
+  const box = $("osrResult");
+  if (!box) return;
+  const { openSeat, inClass, agco } = osrPending;
+  const tick = (ok) => ok ? `<span class="ok">✓</span>` : `<span class="note">—</span>`;
+
+  const lines = [
+    [openSeat, "Open Seat Report", openSeat &&
+      `${openSeat.classes.length} classes · exported ${esc(openSeat.exported || "?")}`],
+    [inClass, "In-Class Event Report", inClass &&
+      `${inClass.enrollments.length} enrollments · exported ${esc(inClass.exported || "?")}`],
+    [agco, "AGCO Open Seat Report", agco &&
+      `${agco.sessions.length} sessions${agco.catalogDate ? " · as of " + esc(agco.catalogDate) : ""}`]
+  ];
+
+  const nothing = !openSeat && !inClass && !agco;
+  let warnings = [];
+  if (openSeat && inClass) warnings = osrBuildInternal(openSeat, inClass).warnings;
+  if (!!openSeat !== !!inClass) {
+    warnings.push(`Add the ${openSeat ? "In-Class Event Report" : "Open Seat Report"} too — ` +
+      `the classes and rosters are published together.`);
+  }
+  const canPublish = (openSeat && inClass) || agco;
+
+  box.innerHTML = (problems.length ? `<div class="error" style="margin:12px 0">${problems.join("<br>")}</div>` : "") +
+    (nothing ? "" : `
+    <table style="margin-top:14px"><tbody>
+      ${lines.map(([have, name, detail]) => `<tr>
+        <td style="width:24px">${tick(have)}</td>
+        <td><b>${name}</b><div class="note">${have ? `${detail} · ${esc(have.fileName)}` : "Not added"}</div></td>
+      </tr>`).join("")}
+    </tbody></table>
+    ${warnings.length ? `<div class="note" style="margin-top:10px;color:#8a5e00">
+      ${warnings.map(w => "⚠︎ " + esc(w)).join("<br>")}</div>` : ""}
+    <div class="row" style="margin-top:14px">
+      <button data-act="publish-osr"${canPublish ? "" : " disabled"}>Publish to the app</button>
+      <button class="ghost" data-act="clear-osr">Start over</button>
+      <span class="msg"></span>
+    </div>`);
+}
+
+function renderOsrLive() {
+  const box = $("osrLive");
+  if (!box) return;
+  if (trainingReportsError) {
+    box.innerHTML = `<p class="error">${/does not exist|schema cache/i.test(trainingReportsError)
+      ? "Run migration 0030_training_reports.sql in the SQL editor, then reload this page."
+      : esc(trainingReportsError)}</p>`;
+    return;
+  }
+  const when = (row) => row ? new Date(row.updated_at).toLocaleString("en-US",
+    { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "";
+  const internal = trainingReports.internal, agco = trainingReports.agco;
+  const enrolled = internal ? internal.data.classes.reduce((n, c) => n + c.roster.length, 0) : 0;
+
+  box.innerHTML = `
+    <table><tbody>
+      <tr><td><b>Classes &amp; rosters</b><div class="note">${internal
+        ? `${internal.data.classes.length} classes, ${enrolled} enrolled · ${esc(internal.source_note || "")} · published ${when(internal)}`
+        : "Nothing published yet"}</div></td></tr>
+      <tr><td><b>AGCO sessions</b><div class="note">${agco
+        ? `${agco.data.sessions.length} sessions · ${esc(agco.source_note || "")} · published ${when(agco)}`
+        : "Nothing published yet"}</div></td></tr>
+    </tbody></table>
+    ${internal || agco ? `<button class="pdf" style="margin-top:10px" data-view="openseat">See the report</button>` : ""}`;
+}
+
+$("admin").addEventListener("click", async (event) => {
+  const button = event.target.closest("button[data-act]");
+  if (!button || !["publish-osr", "clear-osr"].includes(button.dataset.act)) return;
+
+  if (button.dataset.act === "clear-osr") {
+    osrPending = { openSeat: null, inClass: null, agco: null };
+    $("osrFile").value = "";
+    return renderOsrImport();
+  }
+
+  const row = button.closest(".row");
+  const { openSeat, inClass, agco } = osrPending;
+  const writes = [];
+  if (openSeat && inClass) {
+    const built = osrBuildInternal(openSeat, inClass);
+    writes.push({ id: "internal", data: built.data, source_note: built.note });
+  }
+  if (agco) {
+    writes.push({ id: "agco", source_note: agco.catalogDate ? `Catalog as of ${agco.catalogDate}` : "",
+                  data: { version: 1, catalogDate: agco.catalogDate, sessions: agco.sessions } });
+  }
+  if (!writes.length) return;
+
+  speak(row, "Publishing…", false);
+  const { data, error } = await db.from("training_reports").upsert(writes).select("id");
+  if (error) {
+    return speak(row, /row-level/i.test(error.message) ? "Only an owner can publish the report."
+      : /does not exist|schema cache/i.test(error.message)
+        ? "Run migration 0030_training_reports.sql in the SQL editor first." : error.message, true);
+  }
+  if (!data || data.length !== writes.length) {
+    return speak(row, "Nothing was saved — only an owner can publish the report.", true);
+  }
+
+  osrPending = { openSeat: null, inClass: null, agco: null };
+  $("osrFile").value = "";
+  await loadAll();
+  renderOsrImport();
+  renderOsrLive();
+  $("osrResult").innerHTML = `<p class="ok">Published. Phones show it next time the report is opened.</p>`;
+});
+
+// ---- the report itself, for everyone ---------------------------------------
+
+let osrState = { tab: "classes", store: 0 };
+
+const osrToday = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+};
+const osrDay = (ymd) => dateOnly(ymd).toLocaleDateString("en-US",
+  { month: "short", day: "numeric", year: "numeric" });
+
+// Plain text with " - " for data attributes, prompts and email subjects;
+// the page itself uses an en dash.
+function osrRange(start, end, plain) {
+  if (!start) return "Date TBD";
+  if (!end || end === start) return osrDay(start);
+  return `${osrDay(start)}${plain ? " - " : " – "}${osrDay(end)}`;
+}
+
+function osrBadge(status) {
+  const cls = /^upcoming$/i.test(status) ? "gold" : /^completed$/i.test(status) ? "green" : "red";
+  return `<span class="osr-badge ${cls}">${esc(status || "—")}</span>`;
+}
+
+const osrRequestButton = (title, place, dates, small) => `
+  <button type="button" class="osr-request${small ? " small" : ""}" data-osr-request
+    data-title="${esc(title)}" data-city="${esc(place)}" data-dates="${esc(dates)}">
+    📝 ${small ? "Request" : "Request Registration"}</button>`;
+
+function openSeatView() {
+  const internal = trainingReports.internal && trainingReports.internal.data;
+  const agcoDoc = trainingReports.agco && trainingReports.agco.data;
+  const today = osrToday();
+
+  if (!internal && !agcoDoc) {
+    return hero("Open Seat Report", "Upcoming classes, who's enrolled, and open seats.", true) +
+      comingSoon("The training department hasn't published the report yet.");
+  }
+
+  // A snapshot goes stale as classes finish, so finished ones drop off here
+  // rather than waiting for the next upload.
+  const classes = internal ? internal.classes.filter(c => (c.endDate || c.startDate || "9999") >= today) : [];
+  const sessions = agcoDoc ? agcoDoc.sessions.filter(s => !s.startDate || (s.endDate || s.startDate) >= today) : [];
+
+  const stores = new Map();
+  classes.forEach(c => c.roster.forEach(p => {
+    const k = p.storeName || "Unknown";
+    if (!stores.has(k)) stores.set(k, { number: p.storeNumber, students: [] });
+    stores.get(k).students.push({ ...p, cls: c });
+  }));
+  const storeList = [...stores.entries()].sort((a, b) =>
+    (a[1].number || "99").localeCompare(b[1].number || "99", undefined, { numeric: true }) ||
+    a[0].localeCompare(b[0]));
+  if (osrState.store >= storeList.length) osrState.store = 0;
+
+  const registered = classes.reduce((n, c) => n + c.registered, 0);
+  const open = classes.reduce((n, c) => n + c.available, 0);
+  const tab = (id, label, count) => `<button type="button" class="osr-tab${osrState.tab === id ? " on" : ""}"
+    data-osr-tab="${id}">${label} <span>${count}</span></button>`;
+
+  const classCards = classes.map((c, i) => {
+    const cap = c.registered + c.available;
+    const pct = cap ? Math.round(100 * c.registered / cap) : 0;
+    const emails = c.roster.map(p => p.email).filter(Boolean);
+    const plain = osrRange(c.startDate, c.endDate, true);
+    const mail = `mailto:?bcc=${emails.join(",")}&subject=${encodeURIComponent(`${c.title} — ${plain}`)}`;
+    return `
+      <div class="osr-card">
+        <div class="osr-card-top">
+          <button type="button" class="osr-head" data-osr-toggle="${i}" aria-expanded="false">
+            <div class="osr-head-main">
+              <div class="osr-title-row"><span class="osr-chev">▸</span>
+                <span class="osr-title">${esc(c.title)}</span>${osrBadge(c.status)}</div>
+              <div class="osr-meta"><span>📅 ${osrRange(c.startDate, c.endDate)}</span>
+                <span>📍 ${esc(c.city)}</span>${c.instructors ? `<span>🎓 ${esc(c.instructors)}</span>` : ""}</div>
+            </div>
+            <div class="osr-seats">
+              <div><strong>${c.registered}</strong> / ${cap} enrolled</div>
+              <div class="osr-bar"><div style="width:${pct}%"></div></div>
+              <div class="osr-open">${c.available} seat${c.available === 1 ? "" : "s"} open</div>
+            </div>
+          </button>
+          <div class="osr-actions">
+            ${emails.length ? `<a class="osr-email" href="${esc(mail)}">📧 Email Class</a>`
+              : `<span class="osr-email disabled" title="No students enrolled">📧 Email Class</span>`}
+            ${osrRequestButton(c.title, c.city, plain)}
+          </div>
+        </div>
+        <div class="osr-body" id="osr-class-${i}" hidden>
+          ${c.roster.length ? `<table class="osr-roster"><thead><tr><th>#</th><th>Name</th>
+            <th>Store / Location</th><th>Email</th></tr></thead><tbody>
+            ${c.roster.map((p, n) => `<tr><td class="osr-num">${n + 1}</td><td class="osr-name">${esc(p.name)}</td>
+              <td>${esc(p.store)}</td><td><a href="mailto:${esc(p.email)}">${esc(p.email)}</a></td></tr>`).join("")}
+            </tbody></table>`
+          : `<p class="osr-empty">No one is currently enrolled in this session.</p>`}
+        </div>
+      </div>`;
+  }).join("") || `<p class="osr-empty">No upcoming classes.</p>`;
+
+  const storeTabs = storeList.map(([name, info], i) => `<button type="button"
+    class="osr-subtab${i === osrState.store ? " on" : ""}" data-osr-store="${i}">${esc(name)}
+    <span>${info.students.length}</span></button>`).join("");
+  const storePanel = storeList.length ? (() => {
+    const [name, info] = storeList[osrState.store];
+    const students = [...info.students].sort((a, b) => a.name.localeCompare(b.name));
+    return `<div class="osr-desc">${students.length} student${students.length === 1 ? "" : "s"} enrolled from ${esc(name)}</div>
+      <div class="osr-scroll"><table class="osr-table"><thead><tr><th>#</th><th>Student</th><th>Class Enrolled</th><th>Email</th></tr></thead><tbody>
+      ${students.map((s, n) => `<tr><td class="osr-num">${n + 1}</td><td class="osr-name">${esc(s.name)}</td>
+        <td><div class="osr-class-title">${esc(s.cls.title)}</div>
+          <div class="osr-sub">${osrRange(s.cls.startDate, s.cls.endDate)} · 📍 ${esc(s.cls.city)} · ${osrBadge(s.cls.status)}</div></td>
+        <td><a href="mailto:${esc(s.email)}">${esc(s.email)}</a></td></tr>`).join("")}
+      </tbody></table></div>`;
+  })() : `<p class="osr-empty">No one is enrolled in an upcoming class.</p>`;
+
+  const agcoRows = sessions.map(s => {
+    let badge, status;
+    if (s.full) { badge = `<span class="osr-badge red">Full</span>`; status = "full"; }
+    else if (s.capacity) {
+      const left = s.capacity - s.registered;
+      badge = `<span class="osr-badge ${left >= Math.max(1, Math.floor(s.capacity / 2)) ? "green" : "gold"}">` +
+        `${left} open (${s.registered}/${s.capacity})</span>`;
+      status = "open";
+    } else { badge = `<span class="osr-badge gold">${esc(s.status || "TBD")}</span>`; status = "open"; }
+    return `<tr data-osr-search="${esc(`${s.title} ${s.facility} ${s.program}`.toLowerCase())}" data-osr-status="${status}">
+      <td><span class="osr-program${s.program === "AGCO" ? "" : " alt"}">${esc(s.program)}</span></td>
+      <td><div class="osr-class-title">${esc(s.title)}</div>${s.description ? `<div class="osr-sub">📌 ${esc(s.description)}</div>` : ""}</td>
+      <td>${esc(s.facility)}</td>
+      <td>${osrRange(s.startDate, s.endDate)}</td>
+      <td>${badge}</td>
+      <td>${osrRequestButton(s.title, s.facility, osrRange(s.startDate, s.endDate, true), true)}</td></tr>`;
+  }).join("");
+  const agcoOpen = sessions.filter(s => !s.full).length;
+
+  return `
+  <div class="osr">
+    <div class="osr-header">
+      <div class="osr-eyebrow">AGRI-SERVICE, LLC · Training Department</div>
+      <h3>Training Class Enrollment Report</h3>
+      <div class="osr-subhead">${esc(internal ? `Open Seat Report exported ${internal.openSeatExported} · In-Class Event Report exported ${internal.inClassExported}` : "")}</div>
+    </div>
+    <div class="osr-summary">
+      <div><b>${classes.length}</b><span>Upcoming Classes</span></div>
+      <div><b>${registered}</b><span>Total Registered</span></div>
+      <div><b>${open}</b><span>Open Seats</span></div>
+      <div><b>${storeList.length}</b><span>Stores Represented</span></div>
+    </div>
+    <div class="osr-tabs">
+      ${tab("classes", "All Classes", classes.length)}
+      ${tab("stores", "Enrollment by Store", storeList.length)}
+      ${tab("agco", "AGCO Open Seat Report", sessions.length)}
+    </div>
+
+    <section${osrState.tab === "classes" ? "" : " hidden"} data-osr-panel="classes">
+      <div class="osr-desc">Click a class to view its enrolled roster. Use "Email Class" to message everyone
+        currently registered, or "Request Registration" to ask the training team to sign someone up.</div>
+      ${classCards}
+    </section>
+
+    <section${osrState.tab === "stores" ? "" : " hidden"} data-osr-panel="stores">
+      <div class="osr-desc">Select a store to see which employees from that location are registered for
+        training, and which class.</div>
+      <div class="osr-subtabs">${storeTabs}</div>
+      ${storePanel}
+    </section>
+
+    <section${osrState.tab === "agco" ? "" : " hidden"} data-osr-panel="agco">
+      ${agcoDoc ? `
+      <div class="osr-desc">Seat availability across AGCO Academy's national technical training catalog${
+        agcoDoc.catalogDate ? ` as of ${esc(agcoDoc.catalogDate)}` : ""} — ${sessions.length} sessions,
+        ${agcoOpen} with open seats. Use "Request" to ask the training team to sign someone up.</div>
+      <div class="osr-controls">
+        <input type="text" id="osrSearch" placeholder="Search by class title or location...">
+        <select id="osrFilter">
+          <option value="all">All classes</option>
+          <option value="open">Open seats only</option>
+          <option value="full">Full only</option>
+        </select>
+      </div>
+      <div class="osr-scroll"><table class="osr-table" id="osrAgcoTable">
+        <thead><tr><th>Program</th><th>Class</th><th>Location</th><th>Dates</th><th>Seats</th><th>Action</th></tr></thead>
+        <tbody>${agcoRows}</tbody></table></div>
+      <p class="osr-empty" id="osrAgcoEmpty"${sessions.length ? " hidden" : ""}>No classes match your search.</p>`
+      : `<p class="osr-empty">The AGCO catalog hasn't been published yet.</p>`}
+    </section>
+  </div>`;
+}
+
+$("view").addEventListener("click", (event) => {
+  const toggle = event.target.closest("[data-osr-toggle]");
+  if (toggle) {
+    const body = $("osr-class-" + toggle.dataset.osrToggle);
+    body.hidden = !body.hidden;
+    toggle.setAttribute("aria-expanded", String(!body.hidden));
+    return;
+  }
+
+  const tab = event.target.closest("[data-osr-tab]");
+  if (tab) {
+    osrState.tab = tab.dataset.osrTab;
+    document.querySelectorAll("[data-osr-tab]").forEach(b =>
+      b.classList.toggle("on", b === tab));
+    document.querySelectorAll("[data-osr-panel]").forEach(p =>
+      p.hidden = p.dataset.osrPanel !== osrState.tab);
+    return;
+  }
+
+  const store = event.target.closest("[data-osr-store]");
+  if (store) {
+    osrState.store = Number(store.dataset.osrStore);
+    // Redrawn where it is, rather than jumping back to the top.
+    const y = window.scrollY;
+    showView("openseat");
+    window.scrollTo(0, y);
+    return;
+  }
+
+  // Opens a draft in the person's own mail app. Nothing is sent until they
+  // press Send there.
+  const request = event.target.closest("[data-osr-request]");
+  if (request) {
+    const { title, city, dates } = request.dataset;
+    const name = window.prompt(`Who needs to be registered for "${title}" (${dates})?`);
+    if (!name || !name.trim()) return;
+    const subject = `Registration Request: ${title} — ${dates}`;
+    const body = `Please register the following person for this class:\n\nName: ${name.trim()}` +
+      `\n\nClass: ${title}\nLocation: ${city}\nDates: ${dates}`;
+    window.location.href = `mailto:${REGISTRATION_EMAIL}?subject=${encodeURIComponent(subject)}` +
+      `&body=${encodeURIComponent(body)}`;
+  }
+});
+
+function osrFilterAgco() {
+  const table = $("osrAgcoTable");
+  if (!table) return;
+  const q = $("osrSearch").value.trim().toLowerCase();
+  const status = $("osrFilter").value;
+  let shown = 0;
+  table.querySelectorAll("tbody tr").forEach(tr => {
+    const show = (!q || tr.dataset.osrSearch.includes(q)) &&
+      (status === "all" || tr.dataset.osrStatus === status);
+    tr.hidden = !show;
+    if (show) shown++;
+  });
+  $("osrAgcoEmpty").hidden = shown > 0;
+}
+$("view").addEventListener("input", (e) => { if (e.target.id === "osrSearch") osrFilterAgco(); });
+$("view").addEventListener("change", (e) => { if (e.target.id === "osrFilter") osrFilterAgco(); });
+
 // ---------------------------------------------------------------- shared logins
 
 function renderLogins() {
@@ -3175,6 +3902,19 @@ function renderDirectory() {
       </tr>`).join("")}</tbody></table></div>`;
 }
 
+// The open seat report takes several files at once.
+$("osrFile").addEventListener("change", (e) => {
+  if (e.target.files.length) osrAddFiles([...e.target.files]);
+});
+["dragenter", "dragover"].forEach(type =>
+  $("osrDrop").addEventListener(type, (e) => { e.preventDefault(); $("osrDrop").classList.add("over"); }));
+["dragleave", "drop"].forEach(type =>
+  $("osrDrop").addEventListener(type, () => $("osrDrop").classList.remove("over")));
+$("osrDrop").addEventListener("drop", (e) => {
+  e.preventDefault();
+  if (e.dataTransfer.files.length) osrAddFiles([...e.dataTransfer.files]);
+});
+
 // Drop zones, same behaviour as the certification import above.
 [["payrollDrop", "payrollFile", importPayroll],
  ["directoryDrop", "directoryFile", importDirectory]].forEach(([zone, input, run]) => {
@@ -3337,7 +4077,7 @@ document.querySelectorAll(".tabs button[data-tab]").forEach(btn => {
     document.querySelectorAll(".tabs button[data-tab]").forEach(b =>
       b.classList.toggle("active", b === btn));
     ["certs", "plans", "people", "support", "banners", "payroll",
-      "directory", "logins", "reminders", "events", "org"].forEach(name =>
+      "directory", "logins", "reminders", "events", "org", "openseat"].forEach(name =>
       $("tab-" + name).classList.toggle("hidden", name !== btn.dataset.tab));
   };
 });
