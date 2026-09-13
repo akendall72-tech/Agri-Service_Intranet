@@ -216,6 +216,38 @@
   .avatar.empty { background: none; border: 2px dashed var(--line); color: var(--muted); }
   .person .actions { margin-left: auto; display: flex; gap: 8px; }
   .person .actions a { text-decoration: none; }
+
+  input[type=datetime-local], input[type=date] {
+    width: 100%; padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px;
+    font-size: 15px; margin-bottom: 12px; background: var(--paper);
+    font-family: inherit; color: inherit;
+  }
+  .check { display: flex; gap: 8px; align-items: center; font-size: 14px;
+           color: var(--ink); margin: 2px 0 14px; cursor: pointer; }
+  .check input { width: 18px; height: 18px; margin: 0; accent-color: var(--red); }
+  /* Event kinds, the same five colours the app uses. */
+  .ev-company  { background: rgba(204,0,51,.12);  color: var(--red-dark); }
+  .ev-training { background: rgba(19,112,38,.14); color: #137026; }
+  .ev-customer { background: rgba(47,102,144,.14); color: #2F6690; }
+  .ev-safety   { background: rgba(232,163,23,.18); color: #8a5e00; }
+  .ev-holiday  { background: rgba(107,91,149,.15); color: #6B5B95; }
+  .evdot { width: 12px; height: 12px; border-radius: 999px; margin-top: 6px;
+           flex: 0 0 12px; }
+  .evdot.ev-company { background: var(--red); } .evdot.ev-training { background: #137026; }
+  .evdot.ev-customer { background: #2F6690; } .evdot.ev-safety { background: var(--caution); }
+  .evdot.ev-holiday { background: #6B5B95; }
+  .evcard > summary { display: flex; gap: 14px; align-items: flex-start; }
+  .evcard { border-left-width: 5px; }
+  .ev-company-edge { border-left-color: var(--red); }
+  .ev-training-edge { border-left-color: #137026; }
+  .ev-customer-edge { border-left-color: #2F6690; }
+  .ev-safety-edge { border-left-color: var(--caution); }
+  .ev-holiday-edge { border-left-color: #6B5B95; }
+  .evdate { width: 48px; flex: 0 0 48px; text-align: center; background: var(--paper);
+            border-radius: 10px; padding: 4px 0; line-height: 1.1; }
+  .evdate small { display: block; font-size: 10px; letter-spacing: .8px;
+                  text-transform: uppercase; color: var(--muted); }
+  .evdate b { font-size: 20px; }
 </style>
 </head>
 <body>
@@ -273,6 +305,7 @@
       <button data-tab="directory">Who Does What</button>
       <button data-tab="logins">Shared Logins</button>
       <button data-tab="reminders">Reminders</button>
+      <button data-tab="events">Events</button>
     </div>
 
     <!-- Certifications -->
@@ -484,6 +517,67 @@
       </div>
     </section>
 
+    <!-- Events -->
+    <section id="tab-events" class="hidden">
+      <div class="card" id="eventEditor">
+        <h2 id="eventEditorTitle">Add an event</h2>
+        <p class="note">Everything here shows in the Event Center on every phone,
+          where people can add it to their own calendar. Enter times as the
+          clock reads <b>where the event is held</b> — the app shows each person
+          the time in their own zone, so a Twin Falls 9:00 AM reads 8:00 AM on a
+          phone in Pasco.</p>
+        <div class="fields">
+          <div class="wide"><label>Event name</label>
+            <input type="text" data-e="title" maxlength="120"
+                   placeholder="Fendt 1000 Vario service school"></div>
+          <div><label>Kind</label><select data-e="category"></select></div>
+          <div><label>Hosting shop (optional)</label>
+            <select data-e="location_id"></select></div>
+          <div><label>Venue's time zone</label><select data-e="timezone"></select></div>
+          <div><label>Showing in the app</label>
+            <select data-e="is_published">
+              <option value="yes">Yes</option>
+              <option value="no">No — keep as a draft</option>
+            </select></div>
+          <div class="wide"><label class="check">
+            <input type="checkbox" data-e="all_day"> All day, or several whole days
+          </label></div>
+          <div><label>Starts</label><input type="datetime-local" data-e="start"></div>
+          <div><label>Ends</label><input type="datetime-local" data-e="end"></div>
+          <div><label>Place</label>
+            <input type="text" data-e="location_name"
+                   placeholder="Twin Falls shop, training room"></div>
+          <div><label>Address (for directions)</label>
+            <input type="text" data-e="address"
+                   placeholder="Street, city, state"></div>
+          <div class="wide"><label>Details</label>
+            <textarea data-e="details" rows="4"
+                      placeholder="What it is, who should come, what to bring"></textarea></div>
+          <div><label>Contact (optional)</label>
+            <input type="text" data-e="contact" placeholder="Name, phone or email"></div>
+          <div><label>Link (optional)</label>
+            <input type="text" data-e="link_url" placeholder="https://"></div>
+        </div>
+        <div class="row">
+          <button data-act="save-event">Add event</button>
+          <button class="ghost hidden" data-act="cancel-event">Cancel</button>
+          <span class="msg"></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Events</h2>
+        <div class="chips">
+          <button class="chip on" data-event-filter="upcoming">Upcoming</button>
+          <button class="chip" data-event-filter="past">Past</button>
+        </div>
+        <p class="note">Drafts are faded and only admins see them. <b>Copy</b>
+          starts a new event with the same details — handy for something that
+          runs every quarter.</p>
+        <div id="eventList"></div>
+      </div>
+    </section>
+
   </div>
 </main>
 
@@ -507,6 +601,8 @@ let payroll = [], holidays = [], directory = [], sharedLogins = [];
 // Every shared reminder, including ones switched off — sharedTasks above holds
 // only the showing ones, because that's all the Reminders view needs.
 let allSharedTasks = [];
+// Admins get drafts back as well; the Event Center view filters them out.
+let companyEvents = [], eventsError = null;
 
 // Admins approve lift plans for their own shop, so plenty of the page keys off
 // this. The Admin button does not — see isOwner.
@@ -593,7 +689,7 @@ async function loadAll() {
   payroll = pr.data || []; holidays = ph.data || []; directory = dir.data || [];
   sharedLogins = sl.data || [];
   allSharedTasks = allWt.data || [];
-  await signBanners();
+  await Promise.all([signBanners(), loadEvents()]);
 
   // Only your own profile comes back for most people — that policy is the
   // point — so the page reads it out of the list rather than asking twice.
@@ -612,6 +708,8 @@ const ICONS = {
   safety: '<path d="M12 3 20 6v6c0 4.5-3.5 7.5-8 9-4.5-1.5-8-4.5-8-9V6l8-3Z"/><path d="m9 12 2 2 4-4"/>',
   rigging: '<path d="M12 3v6M9 6h6M12 9l-4 6h8l-4-6Z"/><path d="M5 19h14"/>',
   support: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/><path d="m5.6 5.6 3.9 3.9M14.5 14.5l3.9 3.9M18.4 5.6l-3.9 3.9M9.5 14.5l-3.9 3.9"/>',
+  inspection: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h4"/><path d="M14 3v5h5v3"/><circle cx="16" cy="16" r="3"/><path d="m18.2 18.2 2.3 2.3"/>',
+  events: '<path d="M3 8a2 2 0 0 0 2-2h14a2 2 0 0 0 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 0-2 2H5a2 2 0 0 0-2-2v-2a2 2 0 0 0 0-4Z"/><path d="M9 6v12"/>',
   doc: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z"/><path d="M14 3v5h5"/>'
 };
 
@@ -634,7 +732,9 @@ const FEATURES = [
   { id: "safety",    title: "Safety Center", sub: "Reports & training", tint: "red" },
   { id: "rigging",   title: "Crane Center", sub: "Lift plans & approvals",
     tint: "red" },
-  { id: "support",   title: "Support Center", sub: "IT help & requests", tint: "green" }
+  { id: "support",   title: "Support Center", sub: "IT help & requests", tint: "green" },
+  { id: "inspection", title: "Inspection Center", sub: "Checks & walk-arounds", tint: "green" },
+  { id: "events",    title: "Event Center", sub: "What's coming up", tint: "red" }
 ];
 
 const TRAINING_LINKS = [
@@ -725,6 +825,7 @@ function showAdmin() {
   $("admin").classList.remove("hidden");
   renderCerts(); renderPlans(); renderPeople(); renderSupport(); renderBanners();
   renderPayroll(); renderDirectory(); renderLogins(); renderSharedReminders();
+  renderEvents();
   window.scrollTo(0, 0);
 }
 
@@ -739,6 +840,12 @@ document.addEventListener("click", (event) => {
 const hero = (title, blurb, green) => `
   <div class="hero${green ? " green" : ""}">
     <h3>${esc(title)}</h3><p>${esc(blurb)}</p>
+  </div>`;
+
+const comingSoon = (message) => `
+  <div class="card" style="text-align:center;border-style:dashed;padding:34px 24px">
+    <b style="font-size:20px;display:block;margin-bottom:6px">Coming soon</b>
+    <span class="note">${esc(message)}</span>
   </div>`;
 
 const linkCard = (link) => `
@@ -769,6 +876,14 @@ const VIEWS = {
     hero("Support Center",
          "Something not working? Get it in front of the right people here.", true)
     + ticketsSection() + supportCards(),
+
+  // Empty for now, and it says so, matching the app.
+  inspection: () =>
+    hero("Inspection Center",
+         "Walk-arounds, equipment checks and the records that go with them.", true)
+    + comingSoon("Inspections will live here. Nothing has been added yet."),
+
+  events: () => eventsView(),
 
   reminders: () => remindersView(),
   rigging: () => riggingView()
@@ -1663,6 +1778,482 @@ $("admin").addEventListener("click", async (event) => {
   renderSharedReminders();
 });
 
+// ---------------------------------------------------------------- events
+//
+// Every event records the moment it starts and the time zone of its venue,
+// because the company straddles Mountain and Pacific — and not along state
+// lines. The form is filled in as the venue's wall clock ("8:00 AM in Twin
+// Falls"), and converted here to the instant the database stores, whatever
+// zone this computer happens to be in. See migration 0028.
+
+const EVENT_CATEGORIES = [
+  ["company", "Company"],
+  ["training", "Training"],
+  ["customer", "Customer"],
+  ["safety", "Safety"],
+  ["holiday", "Holiday"]
+];
+
+const EVENT_ZONES = [
+  ["America/Boise", "Mountain (Idaho, Ontario)"],
+  ["America/Los_Angeles", "Pacific (Washington)"],
+  ["America/Chicago", "Central"],
+  ["America/New_York", "Eastern"]
+];
+
+// Which clock each shop keeps, so picking the hosting shop sets the zone.
+// Ontario is in Oregon but runs on Mountain time.
+const SHOP_ZONES = {
+  "moses-lake": "America/Los_Angeles", "pasco": "America/Los_Angeles",
+  "walla-walla": "America/Los_Angeles", "pullman": "America/Los_Angeles",
+  "marsing": "America/Boise", "twin-falls": "America/Boise",
+  "heyburn": "America/Boise", "blackfoot": "America/Boise",
+  "sugar-city": "America/Boise", "ontario": "America/Boise"
+};
+
+const pad2 = (n) => String(n).padStart(2, "0");
+
+// How far `zone` is ahead of UTC at a given instant, in minutes.
+function zoneOffset(ms, zone) {
+  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US", {
+    timeZone: zone, hourCycle: "h23", year: "numeric", month: "2-digit",
+    day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit"
+  }).formatToParts(new Date(ms)).map(p => [p.type, p.value]));
+  const asUTC = Date.UTC(+parts.year, +parts.month - 1, +parts.day,
+                         +parts.hour, +parts.minute, +parts.second);
+  return Math.round((asUTC - ms) / 60000);
+}
+
+// "2026-09-15T08:00" on the venue's clock -> ISO instant. Two passes, so a
+// time on the day the clocks change still lands on the right hour.
+function wallToISO(wall, zone) {
+  const [date, time = "00:00"] = wall.split("T");
+  const [y, m, d] = date.split("-").map(Number);
+  const [hh, mm] = time.split(":").map(Number);
+  const guess = Date.UTC(y, m - 1, d, hh, mm);
+  let ms = guess - zoneOffset(guess, zone) * 60000;
+  ms = guess - zoneOffset(ms, zone) * 60000;
+  return new Date(ms).toISOString();
+}
+
+// ISO instant -> "2026-09-15T08:00" on the venue's clock.
+function isoToWall(iso, zone) {
+  const ms = new Date(iso).getTime();
+  const t = new Date(ms + zoneOffset(ms, zone) * 60000);
+  return `${t.getUTCFullYear()}-${pad2(t.getUTCMonth() + 1)}-${pad2(t.getUTCDate())}` +
+         `T${pad2(t.getUTCHours())}:${pad2(t.getUTCMinutes())}`;
+}
+
+const eventEnd = (e) => e.ends_at ||
+  (e.all_day ? e.starts_at : new Date(new Date(e.starts_at).getTime() + 3600000).toISOString());
+
+// Over once the day it ends on is over, so this morning's meeting is still
+// "upcoming" this afternoon — the same rule the app uses.
+function eventIsPast(e) {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  if (e.all_day) {
+    const last = isoToWall(eventEnd(e), e.timezone).slice(0, 10);
+    return last < `${today.getFullYear()}-${pad2(today.getMonth() + 1)}-${pad2(today.getDate())}`;
+  }
+  return new Date(eventEnd(e)) < today;
+}
+
+// A venue date ("2026-09-15") as a local Date at noon, only for formatting —
+// noon keeps it on the same day whatever zone this computer is in.
+const dateOnly = (ymd) => new Date(`${ymd}T12:00:00`);
+
+// "Tue, Sep 15 · 8:00 AM – 4:30 PM MDT", on the venue's clock.
+function eventWhen(e) {
+  const zone = e.timezone || "America/Boise";
+  if (e.all_day) {
+    const first = isoToWall(e.starts_at, zone).slice(0, 10);
+    const last = isoToWall(eventEnd(e), zone).slice(0, 10);
+    const fmt = (ymd) => dateOnly(ymd).toLocaleDateString("en-US",
+      { weekday: "short", month: "short", day: "numeric" });
+    return first === last ? `${fmt(first)} · All day` : `${fmt(first)} – ${fmt(last)} · All day`;
+  }
+  const day = new Date(e.starts_at).toLocaleDateString("en-US",
+    { timeZone: zone, weekday: "short", month: "short", day: "numeric" });
+  const time = (iso, withZone) => new Date(iso).toLocaleTimeString("en-US",
+    { timeZone: zone, hour: "numeric", minute: "2-digit",
+      ...(withZone ? { timeZoneName: "short" } : {}) });
+  return `${day} · ${time(e.starts_at)} – ${time(eventEnd(e), true)}`;
+}
+
+let editingEventId = null;
+let eventFilter = "upcoming";
+
+function renderEvents() {
+  const editor = $("eventEditor");
+  if (!editor) return;
+
+  // Fill the fixed choices once; the form keeps its values between renders.
+  const cat = editor.querySelector('[data-e="category"]');
+  if (!cat.options.length) {
+    cat.innerHTML = EVENT_CATEGORIES.map(([v, l]) =>
+      `<option value="${v}">${l}</option>`).join("");
+    editor.querySelector('[data-e="timezone"]').innerHTML = EVENT_ZONES.map(([v, l]) =>
+      `<option value="${v}">${l}</option>`).join("");
+    editor.querySelector('[data-e="location_id"]').innerHTML =
+      `<option value="">Not at a shop</option>` +
+      Object.entries(locations).map(([id, name]) =>
+        `<option value="${esc(id)}">${esc(name)}</option>`).join("");
+  }
+
+  const box = $("eventList");
+  if (eventsError) {
+    box.innerHTML = `<p class="error">Events couldn't be loaded (${esc(eventsError)}).
+      If that says the table doesn't exist, run migration 0028_events.sql in the
+      SQL editor, then reload this page.</p>`;
+    return;
+  }
+
+  document.querySelectorAll("[data-event-filter]").forEach(b =>
+    b.classList.toggle("on", b.dataset.eventFilter === eventFilter));
+
+  const list = companyEvents
+    .filter(e => (eventFilter === "past") === eventIsPast(e))
+    .sort((a, b) => (eventFilter === "past" ? -1 : 1) *
+      (new Date(a.starts_at) - new Date(b.starts_at)));
+
+  if (!list.length) {
+    box.innerHTML = `<p class="note">${eventFilter === "past"
+      ? "Nothing in the past yet." : "Nothing coming up. Add one above."}</p>`;
+    return;
+  }
+
+  box.innerHTML = list.map(e => `
+    <div class="role" style="padding:14px 16px${e.is_published ? "" : ";opacity:.65"}"
+         data-event="${esc(e.id)}">
+      <div class="row" style="align-items:flex-start">
+        <span class="evdot ev-${esc(e.category)}"></span>
+        <div style="flex:1;min-width:220px">
+          <b style="font-size:16px">${esc(e.title)}</b>
+          ${e.is_published ? "" : ` <span class="badge b-none">Draft — not showing</span>`}
+          <div class="note">${esc(eventWhen(e))}</div>
+          ${e.location_name || e.address ? `<div class="note">${esc(
+            [e.location_name, e.address].filter(Boolean).join(" · "))}</div>` : ""}
+        </div>
+        <div class="row" style="gap:6px">
+          <button class="pdf" data-act="edit-event">Edit</button>
+          <button class="pdf" data-act="copy-event" title="Start a new event with these details">Copy</button>
+          <button class="pdf" data-act="delete-event">Delete</button>
+        </div>
+      </div>
+      <span class="msg"></span>
+    </div>`).join("");
+}
+
+// Timed events edit as date and time; all-day ones as dates only. Switching
+// carries the date across rather than letting the browser blank the field.
+function setAllDay(allDay) {
+  const editor = $("eventEditor");
+  editor.querySelector('[data-e="all_day"]').checked = allDay;
+  ["start", "end"].forEach(f => {
+    const input = editor.querySelector(`[data-e="${f}"]`);
+    const was = input.value;
+    const type = allDay ? "date" : "datetime-local";
+    if (input.type === type) return;
+    input.type = type;
+    if (!was) return;
+    input.value = allDay ? was.slice(0, 10)
+                         : `${was}T${f === "start" ? "08:00" : "17:00"}`;
+  });
+}
+
+function fillEventForm(e, { copy = false } = {}) {
+  const editor = $("eventEditor");
+  const set = (f, v) => { editor.querySelector(`[data-e="${f}"]`).value = v ?? ""; };
+
+  editingEventId = e && !copy ? e.id : null;
+  const zone = (e && e.timezone) || "America/Boise";
+
+  set("title", e ? e.title + (copy ? " (copy)" : "") : "");
+  set("category", (e && e.category) || "company");
+  set("location_id", (e && e.location_id) || "");
+  set("timezone", zone);
+  set("location_name", e && e.location_name);
+  set("address", e && e.address);
+  set("details", e && e.details);
+  set("contact", e && e.contact);
+  set("link_url", e && e.link_url);
+  set("is_published", !e || e.is_published ? "yes" : "no");
+
+  setAllDay(!!(e && e.all_day));
+  const cut = (iso) => {
+    const wall = isoToWall(iso, zone);
+    return e.all_day ? wall.slice(0, 10) : wall;
+  };
+  set("start", e ? cut(e.starts_at) : "");
+  set("end", e && e.ends_at ? cut(e.ends_at) : "");
+
+  $("eventEditorTitle").textContent = editingEventId ? "Edit event" : "Add an event";
+  editor.querySelector('[data-act="save-event"]').textContent =
+    editingEventId ? "Save changes" : "Add event";
+  editor.querySelector('[data-act="cancel-event"]').classList.toggle(
+    "hidden", !e);
+  speak(editor, "", false);
+}
+
+$("admin").addEventListener("change", (event) => {
+  const editor = $("eventEditor");
+  if (!editor || !editor.contains(event.target)) return;
+  const field = event.target.dataset.e;
+  const get = (f) => editor.querySelector(`[data-e="${f}"]`);
+
+  if (field === "all_day") return setAllDay(event.target.checked);
+
+  // Picking the shop sets its clock; it can still be changed afterwards.
+  if (field === "location_id" && SHOP_ZONES[event.target.value]) {
+    get("timezone").value = SHOP_ZONES[event.target.value];
+    if (!get("location_name").value.trim()) {
+      get("location_name").value = `${locations[event.target.value]} shop`;
+    }
+  }
+
+  // A start after the end is always a slip, so the end follows it: an hour
+  // later for a meeting, the same day for an all-day event.
+  if (field === "start" && event.target.value) {
+    const end = get("end");
+    if (!end.value || end.value < event.target.value) {
+      if (get("all_day").checked) {
+        end.value = event.target.value;
+      } else {
+        const t = new Date(`${event.target.value}:00Z`).getTime() + 3600000;
+        end.value = new Date(t).toISOString().slice(0, 16);
+      }
+    }
+  }
+});
+
+$("admin").addEventListener("click", async (event) => {
+  const filter = event.target.closest("[data-event-filter]");
+  if (filter) {
+    eventFilter = filter.dataset.eventFilter;
+    return renderEvents();
+  }
+
+  const button = event.target.closest("button[data-act]");
+  if (!button) return;
+  const act = button.dataset.act;
+  if (!["save-event", "cancel-event", "edit-event", "copy-event",
+        "delete-event"].includes(act)) return;
+
+  if (act === "cancel-event") return fillEventForm(null);
+
+  if (act === "edit-event" || act === "copy-event") {
+    const e = companyEvents.find(x => x.id === button.closest("[data-event]").dataset.event);
+    fillEventForm(e, { copy: act === "copy-event" });
+    $("eventEditor").scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
+
+  if (act === "delete-event") {
+    const row = button.closest("[data-event]");
+    const e = companyEvents.find(x => x.id === row.dataset.event);
+    if (!confirm(`Delete "${e.title}"? It comes off everyone's Event Center. ` +
+                 `Anyone who already added it to their own calendar keeps their copy.`)) return;
+    const { data, error } = await db.from("events").delete().eq("id", e.id).select();
+    if (error) return speak(row, error.message, true);
+    // A delete the policy refused matches no rows and reports no error.
+    if (!data || !data.length) {
+      return speak(row, "Nothing deleted — only an admin can remove events.", true);
+    }
+    if (editingEventId === e.id) fillEventForm(null);
+    await loadEvents();
+    return renderEvents();
+  }
+
+  // save-event
+  const editor = $("eventEditor");
+  const get = (f) => editor.querySelector(`[data-e="${f}"]`).value.trim();
+  const allDay = editor.querySelector('[data-e="all_day"]').checked;
+  const zone = get("timezone");
+
+  if (!get("title")) return speak(editor, "The event needs a name.", true);
+  if (!get("start")) return speak(editor, "When does it start?", true);
+
+  const startsAt = wallToISO(get("start"), zone);
+  const endsAt = get("end") ? wallToISO(get("end"), zone) : null;
+  if (endsAt && endsAt < startsAt) {
+    return speak(editor, "It ends before it starts — check the dates.", true);
+  }
+
+  // The app only opens web addresses, and the database refuses anything else.
+  let link = get("link_url");
+  if (link && !/^https?:\/\//i.test(link)) {
+    if (/^[\w-]+(\.[\w-]+)+/.test(link)) link = "https://" + link;
+    else return speak(editor, "The link has to be a web address, starting https://", true);
+  }
+
+  const row = {
+    title: get("title"),
+    category: get("category"),
+    starts_at: startsAt,
+    ends_at: endsAt,
+    all_day: allDay,
+    timezone: zone,
+    location_id: get("location_id") || null,
+    location_name: get("location_name") || null,
+    address: get("address") || null,
+    details: get("details") || null,
+    contact: get("contact") || null,
+    link_url: link || null,
+    is_published: get("is_published") === "yes"
+  };
+
+  speak(editor, "Saving…", false);
+  const query = editingEventId
+    ? db.from("events").update(row).eq("id", editingEventId).select()
+    : db.from("events").insert(row).select();
+  const { data, error } = await query;
+
+  if (error) {
+    return speak(editor, error.message.includes("row-level")
+      ? "Only an admin can add or change events." : error.message, true);
+  }
+  if (!data || !data.length) {
+    return speak(editor, "Nothing changed — only an admin can edit events.", true);
+  }
+
+  const added = !editingEventId;
+  await loadEvents();
+  fillEventForm(null);
+  eventFilter = eventIsPast(data[0]) ? "past" : "upcoming";
+  renderEvents();
+  speak(editor, row.is_published
+    ? `${added ? "Added" : "Saved"}. Phones show it next time the Event Center is opened.`
+    : `${added ? "Added" : "Saved"} as a draft — nobody sees it until Showing is Yes.`, false);
+});
+
+async function loadEvents() {
+  const { data, error } = await db.from("events").select("*").order("starts_at");
+  eventsError = error ? error.message : null;
+  companyEvents = data || [];
+}
+
+// ---- the Event Center, for everyone ----------------------------------------
+
+function eventsView() {
+  const upcoming = companyEvents
+    .filter(e => e.is_published && !eventIsPast(e))
+    .sort((a, b) => new Date(a.starts_at) - new Date(b.starts_at));
+
+  const head = hero("Event Center",
+    "What's coming up across the company, and how to take part.");
+
+  if (eventsError) {
+    return head + `<div class="card"><p class="error">Events couldn't be loaded.
+      Try again in a minute.</p></div>`;
+  }
+  if (!upcoming.length) {
+    return head + `<div class="card" style="text-align:center;border-style:dashed;padding:34px 24px">
+      <b style="font-size:20px;display:block;margin-bottom:6px">Nothing coming up</b>
+      <span class="note">New events show up here as soon as they're posted.</span></div>`;
+  }
+
+  let month = "";
+  return head + upcoming.map(e => {
+    const zone = e.timezone || "America/Boise";
+    const ymd = isoToWall(e.starts_at, zone).slice(0, 10);
+    const d = dateOnly(ymd);
+    const label = d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+    const divider = label !== month ? `<div class="group-title">${esc(label)}</div>` : "";
+    month = label;
+
+    const where = [e.location_name, e.address].filter(Boolean).join(" · ");
+    const maps = e.address || e.location_name;
+    return divider + `
+      <details class="ticket evcard ev-${esc(e.category)}-edge">
+        <summary>
+          <span class="evdate"><small>${esc(d.toLocaleDateString("en-US", { weekday: "short" }))}</small>
+            <b>${d.getDate()}</b></span>
+          <span style="flex:1">
+            <b style="font-size:16px;display:block">${esc(e.title)}</b>
+            <span class="note">${esc(eventWhen(e))}</span>
+            ${where ? `<span class="note" style="display:block">${esc(where)}</span>` : ""}
+          </span>
+        </summary>
+        <div class="inner">
+          <span class="badge ev-${esc(e.category)}">${esc(
+            (EVENT_CATEGORIES.find(c => c[0] === e.category) || ["", "Company"])[1])}</span>
+          ${e.details ? `<p style="white-space:pre-wrap">${esc(e.details)}</p>` : ""}
+          ${e.contact ? `<p class="note">Contact: ${esc(e.contact)}</p>` : ""}
+          <div class="row" style="margin-top:12px">
+            <button data-ics="${esc(e.id)}">Add to my calendar</button>
+            ${maps ? `<a href="https://maps.google.com/?q=${encodeURIComponent(maps)}"
+                         target="_blank" rel="noopener">Directions &nearr;</a>` : ""}
+            ${e.link_url && /^https?:\/\//i.test(e.link_url)
+              ? `<a href="${esc(e.link_url)}" target="_blank" rel="noopener">More information &nearr;</a>` : ""}
+          </div>
+          <p class="note" style="margin-top:8px">Downloads a calendar file. Open it and
+            Outlook adds the event to your calendar.</p>
+        </div>
+      </details>`;
+  }).join("");
+}
+
+// iCalendar text: backslashes, commas, semicolons and newlines are escaped,
+// and long lines are folded, as the format requires.
+function icsText(value) {
+  return String(value).replace(/\\/g, "\\\\").replace(/;/g, "\\;")
+    .replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
+}
+
+function icsFold(line) {
+  const out = [];
+  while (line.length > 72) { out.push(line.slice(0, 72)); line = " " + line.slice(72); }
+  out.push(line);
+  return out.join("\r\n");
+}
+
+function downloadICS(e) {
+  const zone = e.timezone || "America/Boise";
+  const stamp = (iso) => new Date(iso).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  const lines = [
+    "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Agri-Service//Event Center//EN",
+    "METHOD:PUBLISH", "BEGIN:VEVENT",
+    `UID:${e.id}@agri-service-app`,
+    `DTSTAMP:${stamp(new Date().toISOString())}`
+  ];
+
+  if (e.all_day) {
+    // All-day ends are exclusive in iCalendar: the day after the last day.
+    const first = isoToWall(e.starts_at, zone).slice(0, 10);
+    const last = dateOnly(isoToWall(eventEnd(e), zone).slice(0, 10));
+    last.setDate(last.getDate() + 1);
+    const after = `${last.getFullYear()}${pad2(last.getMonth() + 1)}${pad2(last.getDate())}`;
+    lines.push(`DTSTART;VALUE=DATE:${first.replace(/-/g, "")}`, `DTEND;VALUE=DATE:${after}`);
+  } else {
+    lines.push(`DTSTART:${stamp(e.starts_at)}`, `DTEND:${stamp(eventEnd(e))}`);
+  }
+
+  lines.push(`SUMMARY:${icsText(e.title)}`);
+  const where = [e.location_name, e.address].filter(Boolean).join(", ");
+  if (where) lines.push(`LOCATION:${icsText(where)}`);
+  const notes = [e.details, e.contact && `Contact: ${e.contact}`, e.link_url,
+                 "From the Agri-Service app"].filter(Boolean).join("\n\n");
+  lines.push(`DESCRIPTION:${icsText(notes)}`);
+  if (e.link_url && /^https?:\/\//i.test(e.link_url)) lines.push(`URL:${e.link_url}`);
+  lines.push("END:VEVENT", "END:VCALENDAR");
+
+  const blob = new Blob([lines.map(icsFold).join("\r\n") + "\r\n"],
+                        { type: "text/calendar;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = (e.title.replace(/[^\w -]+/g, "").trim() || "event") + ".ics";
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+
+$("view").addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-ics]");
+  if (!button) return;
+  const e = companyEvents.find(x => x.id === button.dataset.ics);
+  if (e) downloadICS(e);
+});
+
 // ---------------------------------------------------------------- shared logins
 
 function renderLogins() {
@@ -2502,7 +3093,7 @@ document.querySelectorAll(".tabs button[data-tab]").forEach(btn => {
     document.querySelectorAll(".tabs button[data-tab]").forEach(b =>
       b.classList.toggle("active", b === btn));
     ["certs", "plans", "people", "support", "banners", "payroll",
-      "directory", "logins", "reminders"].forEach(name =>
+      "directory", "logins", "reminders", "events"].forEach(name =>
       $("tab-" + name).classList.toggle("hidden", name !== btn.dataset.tab));
   };
 });
