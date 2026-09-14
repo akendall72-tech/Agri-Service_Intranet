@@ -405,6 +405,52 @@
     .content { padding: 0; }
   }
 
+  /* ---- Course Catalog: the green, amber and red of the catalog website it
+     replaced. Everything is under .cat so nothing leaks. ---- */
+  .cat { --cg9:#123524; --cg8:#1a4a30; --cg7:#215e3c; --cg6:#2c7a4b; --camber:#d98829; --cred:#a6192e;
+         --cbg:#f6f5f1; --cink:#1c231d; --cink6:#4b564d; --cink4:#7a857b; --cborder:#e2e1da; color:var(--cink); }
+  .cat-header { background:linear-gradient(135deg,var(--cg9),var(--cg7)); color:#fff; border-top:4px solid var(--cred);
+                border-radius:14px; padding:30px 26px 26px; margin-bottom:18px; }
+  .cat-eyebrow { text-transform:uppercase; letter-spacing:.14em; font-size:12px; font-weight:700; color:var(--camber); margin:0 0 8px; }
+  .cat-header h3 { font-size:clamp(24px,3.4vw,32px); margin:0 0 8px; font-weight:800; letter-spacing:-.01em; }
+  .cat-header p:last-child { margin:0; color:#dfe9e1; font-size:15px; max-width:640px; }
+  .cat-controls { position:sticky; top:60px; z-index:5; background:var(--canvas); padding:10px 0 12px;
+                  border-bottom:1px solid var(--cborder); margin-bottom:8px; }
+  .cat-search-row { display:flex; gap:10px; align-items:center; }
+  .cat-search-row input { flex:1; margin:0; padding:11px 16px; border-radius:10px; border-color:var(--cborder); font-size:15px; }
+  .cat-search-row input:focus { border-color:var(--cg6); box-shadow:0 0 0 3px rgba(44,122,75,.15); }
+  .cat-count { font-size:13px; color:var(--cink4); white-space:nowrap; }
+  .cat-filter { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:10px; }
+  .cat-filter > span { font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--cink4); margin-right:4px; }
+  button.cat-chip { border-radius:999px; padding:6px 14px; font-size:13.5px; font-weight:600; background:#fff;
+                    color:var(--cg8); border:1px solid var(--cborder); box-shadow:none; }
+  button.cat-chip:hover { background:#fff; border-color:var(--cg6); color:var(--cg8); }
+  button.cat-chip.on, button.cat-chip.on:hover { background:var(--cg7); border-color:var(--cg7); color:#fff; }
+  .cat-heading { font-size:12px; text-transform:uppercase; letter-spacing:.1em; font-weight:800; color:var(--cg8);
+                 margin:28px 0 12px; padding-bottom:8px; border-bottom:2px solid var(--cg7); }
+  .cat-stack { display:flex; flex-direction:column; gap:8px; }
+  details.cat-course { background:#fff; border:1px solid var(--cborder); border-left:3px solid var(--cg6); border-radius:10px;
+                       box-shadow:0 1px 3px rgba(18,53,36,.08), 0 1px 2px rgba(18,53,36,.06); overflow:hidden; }
+  details.cat-course summary { list-style:none; cursor:pointer; padding:14px 18px; display:flex; align-items:center;
+                               justify-content:space-between; gap:12px; }
+  details.cat-course summary::-webkit-details-marker { display:none; }
+  .cat-summary { display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; min-width:0; }
+  .cat-title { font-size:15.5px; font-weight:700; color:var(--cg9); }
+  .cat-subtitle { font-size:12.5px; color:var(--cink4); font-weight:500; }
+  .cat-chevron { flex-shrink:0; width:18px; height:18px; color:var(--cink4); transition:transform .15s ease; }
+  details[open] .cat-chevron { transform:rotate(180deg); }
+  .cat-body { padding:14px 18px 18px; border-top:1px solid var(--cborder); }
+  .cat-meta { display:flex; flex-wrap:wrap; gap:8px 16px; font-size:12.5px; color:var(--cink4); font-weight:600; margin-bottom:10px; }
+  .cat-desc { font-size:13.5px; color:var(--cink6); margin:0 0 12px; }
+  .cat-label { font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--cink4); font-weight:700; margin:0 0 6px; }
+  .cat-tags { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
+  .cat-tags span { font-size:11.5px; background:#eef4ef; color:var(--cg8); border:1px solid #dbe8dd; padding:3px 9px; border-radius:6px; }
+  .cat-prereqs { margin:0; padding-left:18px; font-size:12.5px; color:var(--cink6); }
+  .cat-empty { text-align:center; padding:50px 20px; color:var(--cink4); }
+  .cat-foot { margin-top:28px; font-size:13px; color:var(--cink4); }
+  .cat-foot a { color:var(--cg7); }
+  @media (max-width:960px) { .cat-controls { top:60px; } }
+
   /* ---- Training Class Enrollment Report: its own green and gold, as the
      report has always looked. Everything is under .osr so nothing leaks. ---- */
   .osr { --g9:#0f2b1f; --g8:#16382a; --g7:#1f4d38; --g6:#2c6b4d; --g5:#3d8a66;
@@ -550,6 +596,7 @@
       <div class="nav-group">App content</div>
       <button data-tab="banners"><i data-icon="megaphone"></i><span>Announcements</span></button>
       <button data-tab="events"><i data-icon="events"></i><span>Events</span></button>
+      <button data-tab="courses"><i data-icon="training"></i><span>Course Catalog</span></button>
       <button data-tab="reminders"><i data-icon="reminders"></i><span>Reminders</span></button>
       <button data-tab="support"><i data-icon="support"></i><span>Support Center</span></button>
       <button data-tab="logins"><i data-icon="key"></i><span>Shared Logins</span></button>
@@ -781,6 +828,64 @@
           type it, and everyone in the company knows both already. What this
           gets you is being able to rotate one in a minute.</p>
         <div id="loginList"></div>
+      </div>
+    </section>
+
+    <!-- Course catalog -->
+    <section id="tab-courses" class="hidden">
+      <div class="card" id="courseEditor">
+        <h2 id="courseEditorTitle">Add a course</h2>
+        <p class="note">Courses show in the Course Catalog in the app and on this page.
+          They're grouped under their category, and categories run in the order of
+          their first course, so <b>Order</b> arranges both — use tens (10, 20, 30)
+          to leave room to slot one in later.</p>
+        <div class="fields">
+          <div class="wide"><label>Course title</label>
+            <input type="text" data-c="title" placeholder="Fendt Track Level 4 Foundations"></div>
+          <div class="wide"><label>Subtitle (optional)</label>
+            <input type="text" data-c="subtitle" placeholder="900/1100 Series VMT Track Tractors"></div>
+          <div><label>Category</label>
+            <input type="text" data-c="category" list="courseCategories" placeholder="Fendt Equipment">
+            <datalist id="courseCategories"></datalist></div>
+          <div><label>Level (optional)</label>
+            <input type="text" data-c="level" placeholder="Level 4"></div>
+          <div><label>Credits (optional)</label>
+            <input type="text" data-c="credits" placeholder="24 Credits"></div>
+          <div><label>Length (optional)</label>
+            <input type="text" data-c="duration" placeholder="3 Days"></div>
+          <div class="wide"><label>Who it's for — tap all that apply</label>
+            <div class="chips" id="courseAudienceChoices" style="margin-bottom:8px"></div>
+            <div class="row" style="margin-bottom:12px">
+              <input type="text" data-c="new_audience" placeholder="Someone else, e.g. Sales" style="max-width:260px;margin:0">
+              <button type="button" class="pdf" data-act="add-audience">Add</button>
+            </div></div>
+          <div class="wide"><label>Description</label>
+            <textarea data-c="description" rows="5"></textarea></div>
+          <div><label>Key topics — one per line</label>
+            <textarea data-c="topics" rows="5"></textarea></div>
+          <div><label>Prerequisites — one per line, blank for none</label>
+            <textarea data-c="prerequisites" rows="5"></textarea></div>
+          <div><label>Order</label>
+            <input type="text" data-c="sort_order"></div>
+          <div><label>Showing in the catalog</label>
+            <select data-c="is_active">
+              <option value="yes">Yes</option>
+              <option value="no">No — hidden</option>
+            </select></div>
+        </div>
+        <div class="row">
+          <button data-act="save-course">Add course</button>
+          <button class="ghost hidden" data-act="cancel-course">Cancel</button>
+          <span class="msg"></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Courses</h2>
+        <div id="courseStats" style="margin-bottom:6px"></div>
+        <p class="note"><b>Copy</b> starts a new course with the same details. A course
+          set to not showing stays here, faded, and can be switched back on.</p>
+        <div id="courseList"></div>
       </div>
     </section>
 
@@ -1059,7 +1164,7 @@ async function loadAll() {
   allSharedTasks = allWt.data || [];
   trainingReports = Object.fromEntries((trr.data || []).map(r => [r.id, r]));
   trainingReportsError = trr.error ? trr.error.message : null;
-  await Promise.all([signBanners(), loadEvents(), loadInspections()]);
+  await Promise.all([signBanners(), loadEvents(), loadInspections(), loadCourses()]);
 
   // Only your own profile comes back for most people — that policy is the
   // point — so the page reads it out of the list rather than asking twice.
@@ -1116,7 +1221,8 @@ const FEATURES = [
 ];
 
 const TRAINING_LINKS = [
-  { title: "Course Catalog", url: "https://akendall72-tech.github.io/Catalog/" },
+  // Edited on the admin page's Course Catalog tab.
+  { title: "Course Catalog", sub: "Agri-Service courses", view: "catalog" },
   // Built from the uploads on the admin page's Open Seat Report tab.
   { title: "Open Seat Report", sub: "Request registration", view: "openseat" },
   { title: "Training Completions",
@@ -1199,7 +1305,7 @@ function showView(name) {
   $("admin").classList.add("hidden");
   const host = $("view");
   host.classList.remove("hidden");
-  setMode("app", name === "openseat" ? "training" : name);
+  setMode("app", ["openseat", "catalog"].includes(name) ? "training" : name);
   host.innerHTML = `<nav class="crumbs"><button data-home>Home</button><span>/</span>
     <span>${esc(pageTitle(name))}</span></nav>` + VIEWS[name]();
   window.scrollTo(0, 0);
@@ -1215,6 +1321,7 @@ function showAdmin() {
   renderCerts(); renderPlans(); renderPeople(); renderSupport(); renderBanners();
   renderPayroll(); renderDirectory(); renderLogins(); renderSharedReminders();
   renderEvents(); renderOrg(); renderOsrImport(); renderOsrLive(); renderInspectionsAdmin();
+  renderCoursesAdmin();
   window.scrollTo(0, 0);
 }
 
@@ -1278,6 +1385,7 @@ const VIEWS = {
   events: () => eventsView(),
 
   openseat: () => openSeatView(),
+  catalog: () => catalogView(),
   payroll: () => payrollView(),
   directory: () => directoryView(),
   reminders: () => remindersView(),
@@ -3949,7 +4057,7 @@ const COMPANY_PAGES = [
 ];
 
 const pageTitle = (id) => (FEATURES.find(f => f.id === id) || COMPANY_PAGES.find(p => p.id === id)
-  || { openseat: { title: "Open Seat Report" } }[id] || { title: "" }).title;
+  || { openseat: { title: "Open Seat Report" }, catalog: { title: "Course Catalog" } }[id] || { title: "" }).title;
 
 function navButton(id, title, iconName, count, attr) {
   return `<button class="nav-item" ${attr}="${esc(id)}" data-nav="${esc(id)}">
@@ -4261,6 +4369,310 @@ document.addEventListener("click", (event) => {
   event.preventDefault();
   const record = inspections.find(r => r.id === button.dataset.inspPdf);
   if (record) downloadInspectionPDF(record, button);
+});
+
+// ---------------------------------------------------------------- course catalog
+//
+// Agri-Service's own courses (migration 0032), edited here and shown in the
+// app and on this page. Courses sit under their category; categories run in
+// the order of each one's first course, so the Order field arranges both.
+
+let allCourses = [], coursesError = null;
+let editingCourseId = null;
+let catalogState = { search: "", audience: null };
+
+// Always offered as choices, even before any course uses them.
+const DEFAULT_AUDIENCES = ["Service Technicians", "Parts Associates"];
+
+async function loadCourses() {
+  const { data, error } = await db.from("courses").select("*").order("sort_order");
+  coursesError = error ? error.message : null;
+  allCourses = data || [];
+}
+
+const lines = (text) => String(text || "").split("\n").map(s => s.trim()).filter(Boolean);
+
+function courseAudiences(courses) {
+  const counts = {};
+  courses.forEach(c => (c.audiences || []).forEach(a => { counts[a] = (counts[a] || 0) + 1; }));
+  return Object.keys(counts).sort((a, b) => counts[b] - counts[a] || a.localeCompare(b));
+}
+
+function groupCourses(courses) {
+  const order = [], by = {};
+  [...courses].sort((a, b) => a.sort_order - b.sort_order).forEach(c => {
+    const cat = c.category || "General";
+    if (!by[cat]) { by[cat] = []; order.push(cat); }
+    by[cat].push(c);
+  });
+  return order.map(cat => [cat, by[cat]]);
+}
+
+// ---- the catalog, for everyone ------------------------------------------------
+
+const CAT_CHEVRON = `<svg class="cat-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 7.5 10 12.5 15 7.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+function catalogCourseHtml(c) {
+  const meta = [
+    c.level && `<span>${esc(c.level)}</span>`,
+    c.credits && `<span>🎓 ${esc(c.credits)}</span>`,
+    c.duration && `<span>🕑 ${esc(c.duration)}</span>`,
+    (c.audiences || []).length && `<span>👥 ${esc(c.audiences.join(", "))}</span>`
+  ].filter(Boolean).join("");
+  const prereqs = (c.prerequisites || []).length
+    ? `<ul class="cat-prereqs">${c.prerequisites.map(p => `<li>${esc(p)}</li>`).join("")}</ul>`
+    : `<p class="cat-desc" style="margin:0">None</p>`;
+  return `
+    <details class="cat-course">
+      <summary>
+        <span class="cat-summary"><span class="cat-title">${esc(c.title)}</span>
+          ${c.subtitle ? `<span class="cat-subtitle">${esc(c.subtitle)}</span>` : ""}</span>
+        ${CAT_CHEVRON}
+      </summary>
+      <div class="cat-body">
+        ${meta ? `<div class="cat-meta">${meta}</div>` : ""}
+        ${c.description ? `<p class="cat-desc">${esc(c.description)}</p>` : ""}
+        ${(c.topics || []).length ? `<p class="cat-label">Key Topics</p>
+          <div class="cat-tags">${c.topics.map(t => `<span>${esc(t)}</span>`).join("")}</div>` : ""}
+        <p class="cat-label">Prerequisites</p>
+        ${prereqs}
+      </div>
+    </details>`;
+}
+
+function renderCatalogList() {
+  const box = $("catList");
+  if (!box) return;
+  const live = allCourses.filter(c => c.is_active);
+  const q = catalogState.search.trim().toLowerCase();
+  const shown = live.filter(c => !catalogState.audience || (c.audiences || []).includes(catalogState.audience))
+    .filter(c => !q || [c.title, c.subtitle, c.level, c.category, c.credits, c.duration, c.description,
+      ...(c.audiences || []), ...(c.topics || []), ...(c.prerequisites || [])]
+      .filter(Boolean).join(" ").toLowerCase().includes(q));
+  $("catCount").textContent = `${shown.length} of ${live.length} courses`;
+  box.innerHTML = shown.length
+    ? groupCourses(shown).map(([cat, list]) => `<h2 class="cat-heading">${esc(cat)}</h2>
+        <div class="cat-stack">${list.map(catalogCourseHtml).join("")}</div>`).join("")
+    : `<p class="cat-empty">No courses match your search.</p>`;
+}
+
+function catalogView() {
+  if (coursesError) {
+    return hero("Course Catalog", "") + `<div class="card"><p class="error">${
+      /does not exist|schema cache/i.test(coursesError)
+        ? "The catalog isn't set up yet." : "The catalog couldn't be loaded."}</p></div>`;
+  }
+  const live = allCourses.filter(c => c.is_active);
+  const audiences = courseAudiences(live);
+  if (catalogState.audience && !audiences.includes(catalogState.audience)) catalogState.audience = null;
+  setTimeout(renderCatalogList);
+
+  return `
+  <div class="cat">
+    <header class="cat-header">
+      <p class="cat-eyebrow">Agri-Service Technical Training Program</p>
+      <h3>Agri-Service Training Catalog</h3>
+      <p>A reference of Agri-Service technician, parts, and safety training courses.</p>
+    </header>
+    <div class="cat-controls">
+      <div class="cat-search-row">
+        <input type="text" id="catSearch" placeholder="Search courses, equipment, or topics…"
+               value="${esc(catalogState.search)}" autocomplete="off">
+        <span class="cat-count" id="catCount"></span>
+      </div>
+      ${audiences.length > 1 ? `<div class="cat-filter"><span>Who it's for</span>
+        <button type="button" class="cat-chip${catalogState.audience ? "" : " on"}" data-cat-audience="">Everyone</button>
+        ${audiences.map(a => `<button type="button" class="cat-chip${catalogState.audience === a ? " on" : ""}"
+          data-cat-audience="${esc(a)}">${esc(a)}</button>`).join("")}</div>` : ""}
+    </div>
+    <div id="catList"></div>
+    <p class="cat-foot">Questions: <a href="mailto:andrewkendall@agri-service.com">andrewkendall@agri-service.com</a></p>
+  </div>`;
+}
+
+$("view").addEventListener("input", (event) => {
+  if (event.target.id !== "catSearch") return;
+  catalogState.search = event.target.value;
+  renderCatalogList();
+});
+
+$("view").addEventListener("click", (event) => {
+  const chip = event.target.closest("[data-cat-audience]");
+  if (!chip) return;
+  catalogState.audience = chip.dataset.catAudience || null;
+  document.querySelectorAll("[data-cat-audience]").forEach(b =>
+    b.classList.toggle("on", (b.dataset.catAudience || null) === catalogState.audience));
+  renderCatalogList();
+});
+
+// ---- admin ------------------------------------------------------------------------
+
+function renderCoursesAdmin() {
+  const editor = $("courseEditor");
+  if (!editor) return;
+  const list = $("courseList");
+
+  if (coursesError) {
+    list.innerHTML = `<p class="error">${/does not exist|schema cache/i.test(coursesError)
+      ? "Run migration 0032_course_catalog.sql in the SQL editor, then reload this page."
+      : esc(coursesError)}</p>`;
+    return;
+  }
+
+  // A fresh form starts at the end of the list.
+  const order = editor.querySelector('[data-c="sort_order"]');
+  if (!editingCourseId && !order.value) {
+    order.value = allCourses.reduce((m, c) => Math.max(m, c.sort_order || 0), 0) + 10;
+  }
+
+  // Categories people have used, offered while typing.
+  $("courseCategories").innerHTML = [...new Set(allCourses.map(c => c.category).filter(Boolean))]
+    .map(c => `<option value="${esc(c)}">`).join("");
+  renderAudienceChoices();
+
+  const live = allCourses.filter(c => c.is_active).length;
+  $("courseStats").innerHTML = `<span class="stat"><b>${allCourses.length}</b>courses</span>` +
+    `<span class="stat"><b>${live}</b>showing</span>` +
+    `<span class="stat"><b>${new Set(allCourses.map(c => c.category)).size}</b>categories</span>`;
+
+  list.innerHTML = allCourses.length ? groupCourses(allCourses).map(([cat, courses]) => `
+    <div class="section-title" style="margin-top:18px">${esc(cat)}</div>
+    ${courses.map(c => `
+      <div class="role" style="padding:12px 16px${c.is_active ? "" : ";opacity:.6"}" data-course="${esc(c.id)}">
+        <div class="row" style="align-items:flex-start">
+          <div style="flex:1;min-width:220px">
+            <b>${esc(c.title)}</b>${c.is_active ? "" : ` <span class="badge b-none">Not showing</span>`}
+            <div class="note">${esc([c.subtitle, c.level, c.credits, c.duration].filter(Boolean).join(" · "))}</div>
+            <div class="note">👥 ${esc((c.audiences || []).join(", ") || "No audience set")} · order ${esc(c.sort_order)}</div>
+          </div>
+          <div class="row" style="gap:6px">
+            <button class="pdf" data-act="edit-course">Edit</button>
+            <button class="pdf" data-act="copy-course">Copy</button>
+            <button class="pdf" data-act="delete-course">Delete</button>
+          </div>
+        </div>
+        <span class="msg"></span>
+      </div>`).join("")}`).join("") : `<p class="note">No courses yet. Add one above.</p>`;
+}
+
+function renderAudienceChoices(selected) {
+  const box = $("courseAudienceChoices");
+  const current = selected || [...box.querySelectorAll("button.on")].map(b => b.dataset.audience);
+  const all = [...new Set([...DEFAULT_AUDIENCES, ...courseAudiences(allCourses), ...current])];
+  box.innerHTML = all.map(a => `<button type="button" class="chip${current.includes(a) ? " on" : ""}"
+    data-audience="${esc(a)}">${esc(a)}</button>`).join("");
+}
+
+function fillCourseForm(course, { copy = false } = {}) {
+  const editor = $("courseEditor");
+  const set = (f, v) => { editor.querySelector(`[data-c="${f}"]`).value = v ?? ""; };
+  editingCourseId = course && !copy ? course.id : null;
+
+  set("title", course ? course.title + (copy ? " (copy)" : "") : "");
+  set("subtitle", course && course.subtitle);
+  set("category", course && course.category);
+  set("level", course && course.level);
+  set("credits", course && course.credits);
+  set("duration", course && course.duration);
+  set("description", course && course.description);
+  set("topics", course ? (course.topics || []).join("\n") : "");
+  set("prerequisites", course ? (course.prerequisites || []).join("\n") : "");
+  set("sort_order", course ? course.sort_order + (copy ? 1 : 0)
+    : allCourses.reduce((m, c) => Math.max(m, c.sort_order || 0), 0) + 10);
+  set("is_active", !course || course.is_active ? "yes" : "no");
+  set("new_audience", "");
+  renderAudienceChoices(course ? [...(course.audiences || [])] : []);
+
+  $("courseEditorTitle").textContent = editingCourseId ? "Edit course" : "Add a course";
+  editor.querySelector('[data-act="save-course"]').textContent = editingCourseId ? "Save changes" : "Add course";
+  editor.querySelector('[data-act="cancel-course"]').classList.toggle("hidden", !course);
+  speak(editor, "", false);
+}
+
+$("admin").addEventListener("click", async (event) => {
+  const audienceChip = event.target.closest("#courseAudienceChoices button[data-audience]");
+  if (audienceChip) { audienceChip.classList.toggle("on"); return; }
+
+  const button = event.target.closest("button[data-act]");
+  if (!button) return;
+  const act = button.dataset.act;
+  if (!["add-audience", "save-course", "cancel-course", "edit-course", "copy-course", "delete-course"].includes(act)) return;
+  const editor = $("courseEditor");
+
+  if (act === "add-audience") {
+    const input = editor.querySelector('[data-c="new_audience"]');
+    const name = input.value.trim();
+    if (!name) return;
+    const current = [...editor.querySelectorAll("#courseAudienceChoices button.on")].map(b => b.dataset.audience);
+    renderAudienceChoices([...new Set([...current, name])]);
+    input.value = "";
+    return;
+  }
+
+  if (act === "cancel-course") return fillCourseForm(null);
+
+  if (act === "edit-course" || act === "copy-course") {
+    const course = allCourses.find(c => c.id === button.closest("[data-course]").dataset.course);
+    fillCourseForm(course, { copy: act === "copy-course" });
+    editor.scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
+
+  if (act === "delete-course") {
+    const row = button.closest("[data-course]");
+    const course = allCourses.find(c => c.id === row.dataset.course);
+    if (!confirm(`Delete "${course.title}" from the catalog? This can't be undone. ` +
+                 `To take it out of the catalog for now, edit it and set Showing to No.`)) return;
+    const { data, error } = await db.from("courses").delete().eq("id", course.id).select();
+    if (error) return speak(row, error.message, true);
+    if (!data || !data.length) return speak(row, "Nothing deleted — only an owner can remove courses.", true);
+    if (editingCourseId === course.id) fillCourseForm(null);
+    await loadCourses();
+    return renderCoursesAdmin();
+  }
+
+  // save-course
+  const get = (f) => editor.querySelector(`[data-c="${f}"]`).value.trim();
+  if (!get("title")) return speak(editor, "The course needs a title.", true);
+  if (!get("category")) return speak(editor, "Pick or type a category.", true);
+
+  const pending = get("new_audience");
+  const audiences = [...editor.querySelectorAll("#courseAudienceChoices button.on")].map(b => b.dataset.audience);
+  if (pending && !audiences.includes(pending)) audiences.push(pending);
+
+  const row = {
+    title: get("title"),
+    subtitle: get("subtitle") || null,
+    category: get("category"),
+    level: get("level") || null,
+    credits: get("credits") || null,
+    duration: get("duration") || null,
+    audiences,
+    description: get("description") || null,
+    topics: lines(get("topics")),
+    prerequisites: lines(get("prerequisites")),
+    sort_order: parseInt(get("sort_order"), 10) || 0,
+    is_active: get("is_active") === "yes"
+  };
+
+  speak(editor, "Saving…", false);
+  const query = editingCourseId
+    ? db.from("courses").update(row).eq("id", editingCourseId).select()
+    : db.from("courses").insert(row).select();
+  const { data, error } = await query;
+  if (error) {
+    return speak(editor, /row-level/i.test(error.message) ? "Only an owner can change the catalog."
+      : /does not exist|schema cache/i.test(error.message)
+        ? "Run migration 0032_course_catalog.sql in the SQL editor first." : error.message, true);
+  }
+  if (!data || !data.length) return speak(editor, "Nothing changed — only an owner can edit courses.", true);
+
+  const added = !editingCourseId;
+  await loadCourses();
+  fillCourseForm(null);
+  renderCoursesAdmin();
+  speak(editor, `${added ? "Added" : "Saved"}${row.is_active ? ". Phones show it next time the catalog is opened."
+    : " — not showing in the catalog until Showing is Yes."}`, false);
 });
 
 // ---------------------------------------------------------------- shared logins
@@ -5115,7 +5527,7 @@ document.querySelectorAll(".tabs button[data-tab]").forEach(btn => {
     document.querySelectorAll(".tabs button[data-tab]").forEach(b =>
       b.classList.toggle("active", b === btn));
     ["certs", "plans", "people", "support", "banners", "payroll",
-      "directory", "logins", "reminders", "events", "org", "openseat", "inspections"].forEach(name =>
+      "directory", "logins", "reminders", "events", "org", "openseat", "inspections", "courses"].forEach(name =>
       $("tab-" + name).classList.toggle("hidden", name !== btn.dataset.tab));
     $("adminTitle").textContent = btn.textContent.trim();
     document.body.classList.remove("nav-open");
