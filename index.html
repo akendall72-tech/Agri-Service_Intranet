@@ -1074,9 +1074,20 @@
 </main>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!--
+  Each library carries its fingerprint (integrity), so the browser refuses to
+  run it if a CDN ever serves anything other than the exact file checked here.
+  SheetJS is kept in this repo: versions after 0.18.5 fix two security flaws
+  and aren't published to the public CDNs.
+-->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"
+        integrity="sha384-0w2KAL2YHP6wKOkUDzkCDGgVvfmHnj02DHeQ6XcHOgTfFsGyonKOpShMH1x6nk9o"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+        integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA=="
+        crossorigin="anonymous"></script>
+<script src="vendor/xlsx-0.20.3.full.min.js"
+        integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT"></script>
 <script>
 // The publishable key is a client key by design — row level security is what
 // protects the data, not this string. It is the same key the iOS app ships.
@@ -3951,7 +3962,7 @@ $("admin").addEventListener("click", async (event) => {
   if (act === "insp-save-question") {
     const get = (f) => { const el = questionBox.querySelector(`[data-q="${f}"]`); return el ? el.value.trim() : null; };
     if (!get("label")) return speak(questionBox, "The question needs some words.", true);
-    const options = get("options").split("\n").map(o => o.trim()).filter(Boolean);
+    const options = uniqueText(get("options").split("\n").map(o => o.trim()).filter(Boolean));
     if (get("field_type") === "choice" && options.length < 2) {
       return speak(questionBox, "A choice question needs at least two choices, one per line.", true);
     }
@@ -4418,7 +4429,8 @@ async function loadCourses() {
   allCourses = data || [];
 }
 
-const lines = (text) => String(text || "").split("\n").map(s => s.trim()).filter(Boolean);
+// One entry per line, blanks and repeats dropped (a repeat shows twice in the app).
+const lines = (text) => uniqueText(String(text || "").split("\n").map(s => s.trim()).filter(Boolean));
 
 function courseAudiences(courses) {
   const counts = {};
@@ -4666,7 +4678,7 @@ $("admin").addEventListener("click", async (event) => {
 
   const pending = get("new_audience");
   const audiences = [...editor.querySelectorAll("#courseAudienceChoices button.on")].map(b => b.dataset.audience);
-  if (pending && !audiences.includes(pending)) audiences.push(pending);
+  if (pending && !audiences.some(a => a.toLowerCase() === pending.toLowerCase())) audiences.push(pending);
 
   const row = {
     title: get("title"),
@@ -5721,6 +5733,17 @@ $("osrDrop").addEventListener("drop", (e) => {
     if (e.dataTransfer.files[0]) run(e.dataTransfer.files[0]);
   });
 });
+
+// Keeps the first of any entries that differ only by capitals.
+function uniqueText(list) {
+  const seen = new Set();
+  return list.filter(item => {
+    const key = item.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
 
 function esc(s) {
   return String(s ?? "").replace(/[&<>"]/g, c =>
