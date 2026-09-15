@@ -1961,7 +1961,8 @@ function planRow(plan) {
       <span class="note">${fmtDate((plan.lift_date || "").slice(0, 10))}
         · ${esc(plan.location || "no site")}${plan.created_by === me.id
           ? "" : " · " + esc(plan.created_by_name || "unknown")}</span>
-      <br><span class="badge ${cls}">${label}</span>
+      <br><span class="badge ${cls}">${label}</span>${(plan.photo_paths || []).length
+        ? ` <span class="note">· ${plan.photo_paths.length} photo${plan.photo_paths.length === 1 ? "" : "s"} in the PDF</span>` : ""}
       ${plan.review_note ? `<br><span class="note">Note: ${esc(plan.review_note)}</span>` : ""}
     </span>
     <span style="margin-left:auto;display:flex;gap:8px;align-items:center">
@@ -2104,11 +2105,20 @@ function renderPlans() {
   }).join("") || `<tr><td colspan="9" class="note">No lift plans yet.</td></tr>`;
 }
 
-document.addEventListener("click", (event) => {
-  const button = event.target.closest("button.pdf");
+document.addEventListener("click", async (event) => {
+  const button = event.target.closest("button.pdf[data-plan]");
   if (!button) return;
   const plan = plans.find(p => p.id === button.dataset.plan);
-  if (plan) downloadPlanPDF(plan);
+  if (!plan || button.disabled) return;
+  const original = button.textContent;
+  button.disabled = true;
+  button.textContent = "Preparing…";
+  try {
+    await downloadPlanPDF(plan);
+  } finally {
+    button.disabled = false;
+    button.textContent = original;
+  }
 });
 
 function renderPeople() {
@@ -4354,13 +4364,19 @@ const pdfSafe = (s) => String(s ?? "").replace(/[‘’]/g, "'").replace(/[“�
   .replace(/[–—]/g, "-").replace(/…/g, "...").replace(/→/g, "->");
 
 async function inspPhotoData(path) {
-  if (!inspPhotoUrls[path]) {
-    const { data } = await db.storage.from("inspection-photos").createSignedUrl(path, 3600);
-    if (data && data.signedUrl) inspPhotoUrls[path] = data.signedUrl;
+  return storagePhotoData("inspection-photos", path, inspPhotoUrls);
+}
+
+// A stored photo shrunk to 1200 pixels, as a JPEG data URL a PDF can take.
+// `urls` remembers signed links so the same photo isn't signed twice.
+async function storagePhotoData(bucket, path, urls = {}) {
+  if (!urls[path]) {
+    const { data } = await db.storage.from(bucket).createSignedUrl(path, 3600);
+    if (data && data.signedUrl) urls[path] = data.signedUrl;
   }
-  if (!inspPhotoUrls[path]) return null;
+  if (!urls[path]) return null;
   try {
-    const blob = await (await fetch(inspPhotoUrls[path])).blob();
+    const blob = await (await fetch(urls[path])).blob();
     const bitmap = await createImageBitmap(blob);
     const scale = Math.min(1, 1200 / Math.max(bitmap.width, bitmap.height));
     const canvas = document.createElement("canvas");
@@ -5411,7 +5427,12 @@ const STATUS_LABELS = {
   approved: "Approved"
 };
 
-function downloadPlanPDF(plan) {
+async function downloadPlanPDF(plan) {
+  // The picture of the lift, fetched first. One that can't be fetched is left
+  // out rather than holding up the export.
+  const photos = (await Promise.all((plan.photo_paths || [])
+    .map(path => storagePhotoData("lift-plan-photos", path)))).filter(Boolean);
+
   const PAGE_W = 612, PAGE_H = 792, MARGIN = 44;
   const WIDTH = PAGE_W - MARGIN * 2;
 
@@ -5559,6 +5580,7 @@ function downloadPlanPDF(plan) {
     riggingRow(["Component", "Type", "Size", "Rated WLL", "Qty", "Angle"], true);
     rigging.forEach(r => riggingRow([r.item, r.type, r.size, r.wll, r.qty, r.angle]));
   }
+  // Taken off the form in September 2026; older plans that filled them in still show them.
   field("Below-the-Hook Lifting Device", plan.below_hook_device);
   field("Hitch Type & Sling Angle", plan.hitch_type);
 
@@ -5569,6 +5591,22 @@ function downloadPlanPDF(plan) {
   section("Hazards & Lift Path");
   field("Hazards Identified", plan.hazards);
   field("Lift Path / Sketch", plan.lift_path);
+
+  if (photos.length) {
+    const cw = (WIDTH - 10) / 2, ch = cw * 0.75;
+    ensure(ch + 34);                       // the heading stays with the first row
+    section("Picture of Lift");
+    photos.forEach((p, i) => {
+      if (i % 2 === 0) { if (i > 0) y += ch + 10; ensure(ch + 4); }
+      const cx = MARGIN + (i % 2) * (cw + 10);
+      doc.setFillColor(242, 242, 242);
+      doc.rect(cx, y, cw, ch, "F");
+      const scale = Math.min(cw / p.width, ch / p.height);
+      const w = p.width * scale, h = p.height * scale;
+      doc.addImage(p.url, "JPEG", cx + (cw - w) / 2, y + (ch - h) / 2, w, h);
+    });
+    y += ch + 10;
+  }
 
   text(`Generated from the Agri-Service web page - ${new Date().toLocaleDateString()}`,
        MARGIN, PAGE_H - MARGIN, { size: 9, grey: 128 });
