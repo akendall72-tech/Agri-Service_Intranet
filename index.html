@@ -298,6 +298,21 @@
   .link-card .go { font-size: 13px; font-weight: 600; color: var(--red); margin-top: 4px; }
   .accent-red, .accent-ink { border-left: 3px solid var(--red); }
   .accent-ink { border-left-color: var(--ink); }
+
+  /* ------------------------------------------------------------------ articles */
+  .article-card .kick { font-size: 11px; font-weight: 700; letter-spacing: .08em;
+                        text-transform: uppercase; color: var(--red); margin-bottom: 2px; }
+  .article-card .kick.green { color: var(--green); }
+  .article-frame { width: 100%; border: 1px solid var(--line); border-radius: var(--radius);
+                   background: #FBF9F7; display: block; min-height: 300px; }
+  .article-tools { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; margin-top: 6px;
+                   border: 1px solid var(--line); border-bottom: 0; background: #F6F4F2;
+                   border-radius: var(--radius) var(--radius) 0 0; position: sticky; top: 64px; z-index: 2; }
+  .article-tools button { padding: 6px 10px; min-height: 0; font-size: 13px; }
+  .article-tools .sep { width: 1px; background: var(--line); margin: 2px 4px; }
+  .article-tools + .article-frame, .article-tools + textarea { border-radius: 0 0 var(--radius) var(--radius); }
+  #articleEditorFrame { height: min(78vh, 900px); }
+  #articleHtml { width: 100%; height: min(78vh, 900px); font: 12.5px/1.5 ui-monospace, Menlo, monospace; }
   .accent-ink .go { color: var(--ink); }
 
   .task { display: flex; gap: 12px; align-items: flex-start; padding: 13px 2px;
@@ -597,6 +612,7 @@
       <button data-tab="banners"><i data-icon="megaphone"></i><span>Announcements</span></button>
       <button data-tab="events"><i data-icon="events"></i><span>Events</span></button>
       <button data-tab="courses"><i data-icon="training"></i><span>Course Catalog</span></button>
+      <button data-tab="articles"><i data-icon="doc"></i><span>Training Articles</span></button>
       <button data-tab="sds"><i data-icon="safety"></i><span>Safety Data Sheets</span></button>
       <button data-tab="reminders"><i data-icon="reminders"></i><span>Reminders</span></button>
       <button data-tab="support"><i data-icon="support"></i><span>Support Center</span></button>
@@ -854,6 +870,75 @@
           <input class="search" id="sdsSearch" placeholder="Search sheets…" style="margin-left:auto">
         </div>
         <div id="sdsList"></div>
+      </div>
+    </section>
+
+    <!-- Training articles -->
+    <section id="tab-articles" class="hidden">
+      <div class="card">
+        <h2>Training articles</h2>
+        <p class="note">The articles under <b>Read up</b> in the Training Center, in the app and on
+          this page. Phones pick up a change the next time the Training Center is opened with signal.</p>
+        <div id="articleList"></div>
+        <div class="row" style="margin-top:12px">
+          <button data-act="new-article">New article</button>
+        </div>
+      </div>
+
+      <div class="card hidden" id="articleEditor">
+        <h2 id="articleEditorTitle">Edit article</h2>
+        <div class="fields">
+          <div><label>Line above the title</label>
+            <input type="text" data-a="kicker" placeholder="AGCO Training Pathway · 2026"></div>
+          <div><label>Colour</label>
+            <select data-a="accent">
+              <option value="red">Red</option>
+              <option value="green">Green</option>
+            </select></div>
+          <div class="wide"><label>Title</label>
+            <input type="text" data-a="title"></div>
+          <div class="wide"><label>Summary on the Training Center card</label>
+            <textarea data-a="summary" rows="2"></textarea></div>
+          <div><label>Order</label>
+            <input type="text" data-a="sort_order"></div>
+          <div><label>Showing in the Training Center</label>
+            <select data-a="is_active">
+              <option value="yes">Yes</option>
+              <option value="no">No — hidden</option>
+            </select></div>
+        </div>
+
+        <label style="margin-top:6px">The article</label>
+        <p class="note" style="margin:0 0 4px">Click into the page below and type — it's laid out the way
+          phones show it. Select words to make them bold or a link. <b>HTML</b> shows the page's code, for
+          changes the buttons can't make, like the level cards.</p>
+        <div class="article-tools" id="articleTools">
+          <button type="button" class="pdf" data-fmt="h2" title="Section heading">Heading</button>
+          <button type="button" class="pdf" data-fmt="h3" title="Smaller heading">Subheading</button>
+          <button type="button" class="pdf" data-fmt="p" title="Normal text">Text</button>
+          <span class="sep"></span>
+          <button type="button" class="pdf" data-fmt="bold" title="Bold"><b>B</b></button>
+          <button type="button" class="pdf" data-fmt="italic" title="Italic"><i>I</i></button>
+          <button type="button" class="pdf" data-fmt="insertUnorderedList">• List</button>
+          <button type="button" class="pdf" data-fmt="insertOrderedList">1. List</button>
+          <button type="button" class="pdf" data-fmt="link">Link</button>
+          <button type="button" class="pdf" data-fmt="unlink">Remove link</button>
+          <span class="sep"></span>
+          <button type="button" class="pdf" data-fmt="undo">Undo</button>
+          <button type="button" class="pdf" data-fmt="redo">Redo</button>
+          <span class="sep"></span>
+          <button type="button" class="pdf" data-fmt="html" id="articleHtmlToggle">HTML</button>
+        </div>
+        <iframe id="articleEditorFrame" class="article-frame" sandbox="allow-same-origin"
+                title="Article editor"></iframe>
+        <textarea id="articleHtml" class="hidden" spellcheck="false"></textarea>
+
+        <div class="row" style="margin-top:12px">
+          <button data-act="save-article">Save article</button>
+          <button class="ghost" data-act="cancel-article">Cancel</button>
+          <button class="ghost" data-act="delete-article">Delete</button>
+          <span class="msg"></span>
+        </div>
       </div>
     </section>
 
@@ -1201,7 +1286,8 @@ async function loadAll() {
   allSharedTasks = allWt.data || [];
   trainingReports = Object.fromEntries((trr.data || []).map(r => [r.id, r]));
   trainingReportsError = trr.error ? trr.error.message : null;
-  await Promise.all([signBanners(), loadEvents(), loadInspections(), loadCourses(), loadSds()]);
+  await Promise.all([signBanners(), loadEvents(), loadInspections(), loadCourses(), loadSds(),
+    loadArticles()]);
 
   // Only your own profile comes back for most people — that policy is the
   // point — so the page reads it out of the list rather than asking twice.
@@ -1266,10 +1352,7 @@ const TRAINING_LINKS = [
     url: "https://akendall72-tech.github.io/Training_Summary/" },
   { title: "UKG ProLearning", sub: "Your assigned training",
     url: "https://learning.ultipro.com/academy/AGRI-SERVICELLC/learner/training/my-training/overview" },
-  { title: "Technician Training Requirements", sub: "The 2026 AGCO training pathway",
-    url: "https://akendall72-tech.github.io/Training_Home/training-requirements.html" },
-  { title: "Institutional Syllabus", sub: "Expectations, shop safety, emergencies",
-    url: "https://akendall72-tech.github.io/Training_Home/syllabus.html" }
+  // The articles follow, from the admin page's Training Articles tab.
 ];
 
 const FORKLIFT_LINKS = [
@@ -1342,7 +1425,7 @@ function showView(name) {
   $("admin").classList.add("hidden");
   const host = $("view");
   host.classList.remove("hidden");
-  setMode("app", ["openseat", "catalog"].includes(name) ? "training" : name);
+  setMode("app", ["openseat", "catalog", "article"].includes(name) ? "training" : name);
   host.innerHTML = `<nav class="crumbs"><button data-home>Home</button><span>/</span>
     <span>${esc(pageTitle(name))}</span></nav>` + VIEWS[name]();
   window.scrollTo(0, 0);
@@ -1358,12 +1441,13 @@ function showAdmin() {
   renderCerts(); renderPlans(); renderPeople(); renderSupport(); renderBanners();
   renderPayroll(); renderDirectory(); renderLogins(); renderSharedReminders();
   renderEvents(); renderOrg(); renderOsrImport(); renderOsrLive(); renderInspectionsAdmin();
-  renderCoursesAdmin(); renderSdsAdmin(); renderSdsPending();
+  renderCoursesAdmin(); renderSdsAdmin(); renderSdsPending(); renderArticlesAdmin();
   window.scrollTo(0, 0);
 }
 
 document.addEventListener("click", (event) => {
   const tile = event.target.closest("[data-view]");
+  if (tile && tile.dataset.article) openArticleId = tile.dataset.article;
   if (tile) return showView(tile.dataset.view);
   if (event.target.closest("[data-home]")) return showHome();
 });
@@ -1400,7 +1484,9 @@ const VIEWS = {
   training: () =>
     hero("Training Center",
          "Course catalog, schedules, certifications, and the AGCO requirements behind them.")
-    + TRAINING_LINKS.map(linkCard).join(""),
+    + TRAINING_LINKS.map(linkCard).join("") + articleCards(),
+
+  article: () => articleView(),
 
   safety: () => {
     setTimeout(renderSdsView);
@@ -4096,7 +4182,9 @@ const COMPANY_PAGES = [
 ];
 
 const pageTitle = (id) => (FEATURES.find(f => f.id === id) || COMPANY_PAGES.find(p => p.id === id)
-  || { openseat: { title: "Open Seat Report" }, catalog: { title: "Course Catalog" } }[id] || { title: "" }).title;
+  || { openseat: { title: "Open Seat Report" }, catalog: { title: "Course Catalog" },
+       article: { title: (trainingArticles.find(a => a.id === openArticleId) || {}).title || "Article" } }[id]
+  || { title: "" }).title;
 
 function navButton(id, title, iconName, count, attr) {
   return `<button class="nav-item" ${attr}="${esc(id)}" data-nav="${esc(id)}">
@@ -5734,6 +5822,363 @@ $("osrDrop").addEventListener("drop", (e) => {
   });
 });
 
+// ---------------------------------------------------------------- training articles
+//
+// The Training Center's articles (migration 0036). Each is stored as HTML and
+// laid out by articles/article-styles.css — the same stylesheet the app ships —
+// so what's edited here looks the way phones show it.
+//
+// An article is always shown inside a sandboxed frame that can't run scripts,
+// and what's saved is cleaned to a list of allowed tags first, so a page can
+// only ever be text and layout, wherever it's shown.
+
+let trainingArticles = [];
+let articlesError = null;
+let openArticleId = null;
+let editingArticleId = null;      // null while writing a new one
+let articleHtmlMode = false;
+let articleDirty = false;
+
+async function loadArticles() {
+  const { data, error } = await db.from("training_articles").select("*").order("sort_order");
+  articlesError = error ? error.message : null;
+  trainingArticles = data || [];
+}
+
+const ARTICLE_TAGS = new Set(["p", "h2", "h3", "h4", "ul", "ol", "li", "strong", "b", "em", "i",
+  "u", "a", "br", "hr", "div", "span", "section", "article", "blockquote", "small", "sup", "sub",
+  "table", "thead", "tbody", "tr", "th", "td", "details", "summary", "img",
+  "svg", "path", "circle", "rect", "line", "polyline", "polygon", "g"]);
+// Removed with everything inside them, rather than just unwrapped.
+const ARTICLE_DROP = new Set(["script", "style", "iframe", "object", "embed", "link", "meta",
+  "base", "form", "input", "button", "textarea", "select", "template", "noscript", "frame",
+  "frameset", "audio", "video", "canvas", "math", "foreignobject"]);
+const ARTICLE_ATTRS = new Set(["class", "href", "title", "aria-label", "colspan", "rowspan",
+  "style", "open", "src", "alt", "width", "height", "viewbox", "fill", "stroke", "stroke-width",
+  "stroke-linecap", "stroke-linejoin", "d", "cx", "cy", "r", "x", "y", "x1", "y1", "x2", "y2",
+  "rx", "ry", "points", "transform"]);
+
+// Keeps only the tags and attributes an article needs. Parsed with DOMParser,
+// which never runs scripts or loads images, so nothing in the text can act
+// while it's being checked.
+function cleanArticleHtml(html) {
+  const doc = new DOMParser().parseFromString(`<body>${html}</body>`, "text/html");
+  const walk = (node) => {
+    [...node.childNodes].forEach(child => {
+      if (child.nodeType === Node.COMMENT_NODE) return child.remove();
+      if (child.nodeType !== Node.ELEMENT_NODE) return;
+      const tag = child.localName.toLowerCase();
+      if (ARTICLE_DROP.has(tag)) return child.remove();
+      walk(child);
+      if (!ARTICLE_TAGS.has(tag)) return child.replaceWith(...child.childNodes);
+      [...child.attributes].forEach(attr => {
+        const name = attr.name.toLowerCase();
+        const value = attr.value.trim();
+        const ok = ARTICLE_ATTRS.has(name)
+          && !(name === "href" && !/^(https?:|mailto:|tel:|#)/i.test(value))
+          && !(name === "src" && !/^(https:|data:image\/(png|jpe?g|gif|webp);base64,)/i.test(value))
+          && !(name === "style" && /url\s*\(|expression|javascript:|@import|behavior/i.test(value));
+        if (!ok) child.removeAttribute(attr.name);
+      });
+      if (tag === "img" && !child.hasAttribute("src")) return child.remove();
+      if (tag === "a" && child.hasAttribute("href")) {
+        child.setAttribute("target", "_blank");
+        child.setAttribute("rel", "noopener noreferrer");
+      }
+    });
+  };
+  walk(doc.body);
+  return doc.body.innerHTML.trim();
+}
+
+// The page shown in a frame: the stylesheet, the title block and the article.
+// editable puts the article (not the title block) into editing mode.
+function articleDocument(article, { editable = false } = {}) {
+  const green = article.accent === "green";
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline'; img-src https: data:">
+<link rel="stylesheet" href="articles/article-styles.css">
+<style>body{padding-bottom:28px} main[contenteditable]{outline:none;min-height:240px}
+main[contenteditable]:empty::before{content:"Start typing the article…";color:#aaa}</style>
+</head><body>
+<div class="container"><article class="article-hero">
+  <span class="kicker${green ? " green" : ""}">${esc(article.kicker)}</span>
+  <h1>${esc(article.title)}</h1>
+  <div class="byline"><span class="avatar"${green ? ' style="background:var(--green-dark)"' : ""}>AS</span>
+    <span>Agri-Service Training Department</span></div>
+</article></div>
+<main class="container"${editable ? ' contenteditable="true"' : ""}>${cleanArticleHtml(article.body || "")}</main>
+</body></html>`;
+}
+
+// ---- reading (the Training Center on this page) -----------------------------------
+
+function articleCards() {
+  const live = trainingArticles.filter(a => a.is_active);
+  if (!live.length) return "";
+  return `<div class="section-title" style="margin-top:22px">Read up</div>` + live.map(a => `
+    <button type="button" class="link-card article-card" data-view="article" data-article="${esc(a.id)}"
+            style="width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer">
+      <span class="well ${a.accent === "green" ? "green" : "red"}">${icon("doc")}</span>
+      <span><span class="kick${a.accent === "green" ? " green" : ""}">${esc(a.kicker)}</span>
+        <b>${esc(a.title)}</b>
+        ${a.summary ? `<span>${esc(a.summary)}</span>` : ""}
+        <span class="go">Read the article &rarr;</span></span>
+    </button>`).join("");
+}
+
+function articleView() {
+  const article = trainingArticles.find(a => a.id === openArticleId);
+  if (!article) return `<p class="note">That article isn't available.</p>`;
+  setTimeout(() => {
+    const frame = $("articleReadFrame");
+    if (!frame) return;
+    frame.onload = () => fitArticleFrame(frame);
+    frame.srcdoc = articleDocument(article);
+  });
+  return `<iframe id="articleReadFrame" class="article-frame" title="${esc(article.title)}"
+    sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>`;
+}
+
+// A reading frame is as tall as its page, so the page scrolls rather than the
+// frame. Measured from the body: a decorative shape in the stylesheet is sized
+// from the frame's height, so the whole document grows as the frame does.
+function fitArticleFrame(frame) {
+  const fit = () => {
+    const doc = frame.contentDocument;
+    if (!doc || !doc.body) return;
+    doc.documentElement.style.overflow = "hidden";
+    frame.style.height = doc.body.scrollHeight + 2 + "px";
+  };
+  fit();
+  // Late layout (the stylesheet arriving) can change the height once more.
+  setTimeout(fit, 400);
+}
+
+window.addEventListener("resize", () => {
+  const frame = $("articleReadFrame");
+  if (frame) fitArticleFrame(frame);
+});
+
+// ---- admin ------------------------------------------------------------------------
+
+function renderArticlesAdmin() {
+  const list = $("articleList");
+  if (!list) return;
+  if (articlesError) {
+    list.innerHTML = `<p class="error">${/does not exist|schema cache/i.test(articlesError)
+      ? "Run migration 0036_training_articles.sql in the SQL editor, then reload this page."
+      : esc(articlesError)}</p>`;
+    return;
+  }
+  list.innerHTML = trainingArticles.length ? trainingArticles.map(a => `
+    <div class="role" style="padding:12px 16px${a.is_active ? "" : ";opacity:.6"}" data-article-row="${esc(a.id)}">
+      <div class="row" style="align-items:flex-start">
+        <div style="flex:1;min-width:220px">
+          <div class="note" style="text-transform:uppercase;letter-spacing:.06em;font-weight:600;
+               color:${a.accent === "green" ? "var(--green)" : "var(--red)"}">${esc(a.kicker)}</div>
+          <b>${esc(a.title)}</b>${a.is_active ? "" : ` <span class="badge b-none">Not showing</span>`}
+          <div class="note">Order ${esc(a.sort_order)}${a.updated_at
+            ? " · changed " + esc(new Date(a.updated_at).toLocaleDateString()) : ""}</div>
+        </div>
+        <button class="pdf" data-act="edit-article">Edit</button>
+      </div>
+    </div>`).join("") : `<p class="note">No articles yet.</p>`;
+}
+
+function articleEditorFields() {
+  const editor = $("articleEditor");
+  const get = (f) => editor.querySelector(`[data-a="${f}"]`).value.trim();
+  return {
+    kicker: get("kicker"), title: get("title"), summary: get("summary"),
+    accent: get("accent") === "green" ? "green" : "red",
+    sort_order: parseInt(get("sort_order"), 10) || 0,
+    is_active: get("is_active") === "yes"
+  };
+}
+
+function articleEditorBody() {
+  if (articleHtmlMode) return $("articleHtml").value;
+  const doc = $("articleEditorFrame").contentDocument;
+  const main = doc && doc.querySelector("main");
+  return main ? main.innerHTML : "";
+}
+
+// Draws the frame again from the fields and the body, keeping edits.
+function loadArticleEditorFrame(body) {
+  const frame = $("articleEditorFrame");
+  frame.onload = () => {
+    const doc = frame.contentDocument;
+    if (!doc) return;
+    try { doc.execCommand("defaultParagraphSeparator", false, "p"); } catch (e) { /* older browsers */ }
+    doc.addEventListener("input", () => { articleDirty = true; });
+    // Links in the editor are for editing, not following.
+    doc.addEventListener("click", (e) => { if (e.target.closest("a")) e.preventDefault(); });
+  };
+  frame.srcdoc = articleDocument({ ...articleEditorFields(), body }, { editable: true });
+}
+
+function openArticleEditor(article) {
+  const editor = $("articleEditor");
+  const set = (f, v) => { editor.querySelector(`[data-a="${f}"]`).value = v ?? ""; };
+  editingArticleId = article ? article.id : null;
+  set("kicker", article ? article.kicker : "");
+  set("title", article ? article.title : "");
+  set("summary", article ? article.summary : "");
+  set("accent", article ? article.accent : "red");
+  set("sort_order", article ? article.sort_order
+    : trainingArticles.reduce((m, a) => Math.max(m, a.sort_order || 0), 0) + 10);
+  set("is_active", !article || article.is_active ? "yes" : "no");
+
+  setArticleHtmlMode(false);
+  loadArticleEditorFrame(article ? article.body : "<div class=\"prose\">\n  <p></p>\n</div>");
+  articleDirty = false;
+
+  $("articleEditorTitle").textContent = article ? "Edit article" : "New article";
+  editor.querySelector('[data-act="delete-article"]').classList.toggle("hidden", !article);
+  editor.classList.remove("hidden");
+  speak(editor, "", false);
+  editor.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function setArticleHtmlMode(on) {
+  const frame = $("articleEditorFrame");
+  const area = $("articleHtml");
+  if (on && !articleHtmlMode) {
+    area.value = prettyArticleHtml(cleanArticleHtml(articleEditorBody()));
+  } else if (!on && articleHtmlMode) {
+    loadArticleEditorFrame(area.value);
+  }
+  articleHtmlMode = on;
+  frame.classList.toggle("hidden", on);
+  area.classList.toggle("hidden", !on);
+  $("articleHtmlToggle").textContent = on ? "Back to the page" : "HTML";
+  document.querySelectorAll("#articleTools [data-fmt]").forEach(b => {
+    if (b.dataset.fmt !== "html") b.disabled = on;
+  });
+}
+
+// Puts block tags on their own lines so the code is readable to edit.
+function prettyArticleHtml(html) {
+  return html.replace(/\s*(<\/?(div|section|article|ul|ol|li|h2|h3|h4|p|details|summary|table|tr|thead|tbody)\b[^>]*>)/gi, "\n$1")
+    .replace(/\n{2,}/g, "\n").trim();
+}
+
+function articleSlug(title) {
+  const base = slugify(title, "-") || "article";
+  let id = /^[a-z0-9]/.test(base) ? base : "a-" + base;
+  for (let n = 2; trainingArticles.some(a => a.id === id); n++) id = `${base}-${n}`;
+  return id;
+}
+
+$("articleTools").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-fmt]");
+  if (!button) return;
+  const fmt = button.dataset.fmt;
+  if (fmt === "html") return setArticleHtmlMode(!articleHtmlMode);
+
+  const frame = $("articleEditorFrame");
+  const doc = frame.contentDocument;
+  if (!doc) return;
+  frame.contentWindow.focus();
+
+  if (["h2", "h3", "p"].includes(fmt)) {
+    doc.execCommand("formatBlock", false, `<${fmt}>`);
+  } else if (fmt === "link") {
+    const url = window.prompt("Link to (a web address, email or phone number):", "https://");
+    if (!url) return;
+    const href = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(url.trim()) ? "mailto:" + url.trim()
+      : /^\+?[\d\s().-]{7,}$/.test(url.trim()) ? "tel:" + url.replace(/[^\d+]/g, "") : url.trim();
+    if (!/^(https?:\/\/|mailto:|tel:)/i.test(href)) return alert("That link needs to start with https://");
+    doc.execCommand("createLink", false, href);
+  } else {
+    doc.execCommand(fmt, false, null);
+  }
+  articleDirty = true;
+});
+
+// The title block in the editor follows the fields as they're typed.
+$("articleEditor").addEventListener("input", (event) => {
+  if (!event.target.matches("[data-a]")) return;
+  articleDirty = true;
+  if (articleHtmlMode) return;
+  const doc = $("articleEditorFrame").contentDocument;
+  const hero = doc && doc.querySelector(".article-hero");
+  if (!hero) return;
+  const f = articleEditorFields();
+  hero.querySelector(".kicker").textContent = f.kicker;
+  hero.querySelector(".kicker").classList.toggle("green", f.accent === "green");
+  hero.querySelector("h1").textContent = f.title;
+  hero.querySelector(".avatar").style.background = f.accent === "green" ? "var(--green-dark)" : "";
+});
+$("articleEditor").addEventListener("change", (event) => {
+  if (event.target.matches('[data-a="accent"]')) event.target.dispatchEvent(new Event("input", { bubbles: true }));
+});
+
+$("admin").addEventListener("click", async (event) => {
+  const button = event.target.closest("button[data-act]");
+  if (!button) return;
+  const act = button.dataset.act;
+  if (!["new-article", "edit-article", "cancel-article", "save-article", "delete-article"].includes(act)) return;
+  const editor = $("articleEditor");
+
+  if (act === "new-article" || act === "edit-article") {
+    if (articleDirty && !editor.classList.contains("hidden")
+        && !confirm("Leave the article you're editing? Changes you haven't saved will be lost.")) return;
+    const row = button.closest("[data-article-row]");
+    return openArticleEditor(row ? trainingArticles.find(a => a.id === row.dataset.articleRow) : null);
+  }
+
+  if (act === "cancel-article") {
+    if (articleDirty && !confirm("Throw away the changes to this article?")) return;
+    articleDirty = false;
+    editor.classList.add("hidden");
+    return;
+  }
+
+  if (act === "delete-article") {
+    const article = trainingArticles.find(a => a.id === editingArticleId);
+    if (!article || !confirm(`Delete "${article.title}"? It comes off the Training Center everywhere.`)) return;
+    const { data, error } = await db.from("training_articles").delete().eq("id", article.id).select();
+    if (error) return speak(editor, error.message, true);
+    if (!data || !data.length) return speak(editor, "Nothing deleted — only an owner can remove articles.", true);
+    articleDirty = false;
+    editor.classList.add("hidden");
+    await loadArticles();
+    return renderArticlesAdmin();
+  }
+
+  // save-article
+  const fields = articleEditorFields();
+  if (!fields.title) return speak(editor, "The article needs a title.", true);
+  const body = cleanArticleHtml(articleEditorBody());
+  if (!body.replace(/<[^>]*>/g, "").trim()) return speak(editor, "The article is empty.", true);
+  if (body.length > 200000) return speak(editor, "That article is too long to save.", true);
+
+  const row = { ...fields, body };
+  speak(editor, "Saving…", false);
+  const query = editingArticleId
+    ? db.from("training_articles").update(row).eq("id", editingArticleId).select()
+    : db.from("training_articles").insert({ id: articleSlug(fields.title), ...row }).select();
+  const { data, error } = await query;
+  if (error) return speak(editor, error.message, true);
+  if (!data || !data.length) return speak(editor, "Nothing saved — only an owner can change articles.", true);
+
+  editingArticleId = data[0].id;
+  articleDirty = false;
+  await loadArticles();
+  renderArticlesAdmin();
+  $("articleEditorTitle").textContent = "Edit article";
+  editor.querySelector('[data-act="delete-article"]').classList.remove("hidden");
+  // Show what was actually saved, after cleaning.
+  if (articleHtmlMode) $("articleHtml").value = prettyArticleHtml(body);
+  else loadArticleEditorFrame(body);
+  speak(editor, fields.is_active
+    ? "Saved. Phones show it the next time the Training Center is opened."
+    : "Saved — hidden, so it isn't showing anywhere.", false);
+});
+
 // Keeps the first of any entries that differ only by capitals.
 function uniqueText(list) {
   const seen = new Set();
@@ -5886,7 +6331,7 @@ document.querySelectorAll(".tabs button[data-tab]").forEach(btn => {
     document.querySelectorAll(".tabs button[data-tab]").forEach(b =>
       b.classList.toggle("active", b === btn));
     ["certs", "plans", "people", "support", "banners", "payroll",
-      "directory", "logins", "reminders", "events", "org", "openseat", "inspections", "courses", "sds"].forEach(name =>
+      "directory", "logins", "reminders", "events", "org", "openseat", "inspections", "courses", "articles", "sds"].forEach(name =>
       $("tab-" + name).classList.toggle("hidden", name !== btn.dataset.tab));
     $("adminTitle").textContent = btn.textContent.trim();
     document.body.classList.remove("nav-open");
