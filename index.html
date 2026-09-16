@@ -666,7 +666,7 @@
           Drop the <b>Forklift Certifications.csv</b> here, or
           <label for="file" style="display:inline;color:var(--red);cursor:pointer;
                  text-decoration:underline">choose a file</label>
-          <input id="file" type="file" accept=".csv,text/csv" class="hidden">
+          <input id="file" type="file" accept=".csv,.xlsx,.xls,text/csv" class="hidden">
         </div>
         <p class="note" style="margin-top:12px">
           People are matched on their work email, or their name when the email is
@@ -674,7 +674,13 @@
           record rather than replacing one — and the app's certification card
           shows their most recent. <b>An import replaces the whole table</b>, so
           upload the complete export each time rather than a partial one.
+          The two buttons below give you a sheet to work from: a blank one with
+          the right columns, or everything the app has now, to edit and send back.
         </p>
+        <div class="row" style="margin-top:12px">
+          <button class="pdf" data-template="certs">Download a blank sheet</button>
+          <button class="pdf" data-export="certs">Download what's in the app now</button>
+        </div>
         <div id="importResult"></div>
       </div>
 
@@ -807,7 +813,12 @@
           row with <b>Payroll #</b>, <b>Pay Period Start</b>, <b>Pay Period End</b>,
           <b>Paid Holiday</b> and <b>Payday</b> across it — the 2026 workbook
           already does. An import replaces the whole calendar rather than merging,
-          so upload the full year each time.</p>
+          so upload the full year each time. The buttons below give you a blank
+          sheet with those columns, or this year's calendar to edit and send back.</p>
+        <div class="row" style="margin-top:12px">
+          <button class="pdf" data-template="payroll">Download a blank sheet</button>
+          <button class="pdf" data-export="payroll">Download what's in the app now</button>
+        </div>
         <div id="payrollResult"></div>
         <div id="payrollSummary" style="margin-top:14px"></div>
       </div>
@@ -828,7 +839,12 @@
           <b>Topic</b>, <b>Contact 1</b>, <b>Phone #</b>, <b>Contact 2</b>,
           <b>Phone #</b>. A header row is skipped. Anything with an @ in the
           contact column is treated as a mailbox and gets an email button in the
-          app instead of a call button. An import replaces the whole list.</p>
+          app instead of a call button. An import replaces the whole list. The buttons
+          below give you a blank sheet, or the current list to edit and send back.</p>
+        <div class="row" style="margin-top:12px">
+          <button class="pdf" data-template="directory">Download a blank sheet</button>
+          <button class="pdf" data-export="directory">Download what's in the app now</button>
+        </div>
         <div id="directoryResult"></div>
         <div id="directorySummary" style="margin-top:14px"></div>
       </div>
@@ -6261,8 +6277,11 @@ function parseCSV(text) {
 // The export writes dates as M/D/YY, which Date() reads inconsistently across
 // browsers, so it's converted explicitly.
 function toISODate(value) {
-  const v = (value || "").trim();
+  const v = String(value ?? "").trim();
   if (!v) return null;
+  // Already the way the database wants it — how a spreadsheet often saves a date.
+  const iso = v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (iso) return `${iso[1]}-${iso[2].padStart(2, "0")}-${iso[3].padStart(2, "0")}`;
   const m = v.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
   if (!m) return null;
   let [, mm, dd, yy] = m;
@@ -6287,14 +6306,25 @@ function toClasses(v) {
   return s.split(/[;,]/).map(x => x.trim()).filter(Boolean);
 }
 
-async function importCSV(text) {
-  const rows = parseCSV(text);
+// A saved template can come back as a spreadsheet as easily as a CSV, so both
+// are read the same way.
+async function importCertifications(file) {
+  let rows;
+  try { rows = await rowsFromFile(file); }
+  catch (e) {
+    $("importResult").innerHTML = `<p class="error">Couldn't read that file: ${esc(e.message)}</p>`;
+    return;
+  }
+  return importCertRows(rows);
+}
+
+async function importCertRows(rows) {
   if (rows.length < 2) {
     $("importResult").innerHTML = `<p class="error">That file has no data rows.</p>`;
     return;
   }
 
-  const header = rows[0].map(h => h.trim().toLowerCase());
+  const header = (rows[0] || []).map(h => String(h ?? "").trim().toLowerCase());
   const col = (name) => header.indexOf(name.toLowerCase());
   const need = ["operator name", "expiration date"];
   const missing = need.filter(n => col(n) === -1);
@@ -6304,19 +6334,27 @@ async function importCSV(text) {
     return;
   }
 
+  // A spreadsheet hands dates back as serial numbers and everything else as
+  // whatever type the cell held, so read both shapes rather than assuming text.
+  const at = (row, name) => cell(row, col(name));
+  const dateAt = (row, name) => {
+    const raw = (row || [])[col(name)];
+    return excelDate(raw) || toISODate(cell(row, col(name)));
+  };
+
   const records = rows.slice(1).map(r => ({
-    operator_name:     (r[col("Operator Name")] || "").trim(),
-    email:             (r[col("Email")] || "").trim() || null,
-    evaluation_date:   toISODate(r[col("Evaluation Date")]),
-    evaluator_name:    (r[col("Evaluator Name")] || "").trim() || null,
-    expiration_date:   toISODate(r[col("Expiration Date")]),
-    truck_classes:     toClasses(r[col("Truck Type Authorized")]),
-    passed_driving:    toBool(r[col("Successful Completion of Driving Evaluation")]),
-    inspection:        toBool(r[col("Inspection")]),
-    use_of_controls:   toBool(r[col("Use of Controls")]),
-    maneuvering:       toBool(r[col("Maneuvering Skills")]),
-    driving_with_load: toBool(r[col("Driving with Load")]),
-    modified_by:       (r[col("Modified By")] || "").trim() || null
+    operator_name:     at(r, "Operator Name"),
+    email:             at(r, "Email") || null,
+    evaluation_date:   dateAt(r, "Evaluation Date"),
+    evaluator_name:    at(r, "Evaluator Name") || null,
+    expiration_date:   dateAt(r, "Expiration Date"),
+    truck_classes:     toClasses(at(r, "Truck Type Authorized")),
+    passed_driving:    toBool(at(r, "Successful Completion of Driving Evaluation")),
+    inspection:        toBool(at(r, "Inspection")),
+    use_of_controls:   toBool(at(r, "Use of Controls")),
+    maneuvering:       toBool(at(r, "Maneuvering Skills")),
+    driving_with_load: toBool(at(r, "Driving with Load")),
+    modified_by:       at(r, "Modified By") || null
   })).filter(r => r.operator_name);
 
   // One call that empties the table and refills it inside a single database
@@ -6344,6 +6382,116 @@ async function importCSV(text) {
      for ${people} ${people === 1 ? "person" : "people"}.</p>`;
 }
 
+// ---------------------------------------------------------------- templates
+//
+// Every importer below replaces a whole table, which means the file has to be
+// the complete list — so the two things worth downloading are a blank sheet
+// with the right columns, and what's in there now to edit and send back.
+//
+// Written as CSV because a spreadsheet opens it, saves it, and the importers
+// read either. The byte order mark is what makes Excel treat it as UTF-8, so
+// names with accents survive the round trip.
+
+function csvText(rows) {
+  return "﻿" + rows.map(row => row.map(cell => {
+    const value = String(cell ?? "");
+    return /[",\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
+  }).join(",")).join("\r\n") + "\r\n";
+}
+
+function downloadCSV(filename, rows) {
+  const blob = new Blob([csvText(rows)], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+// Dates go out the way the importers read them back: M/D/YYYY.
+const usDate = (iso) => {
+  const m = String(iso || "").match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? `${Number(m[2])}/${Number(m[3])}/${m[1]}` : "";
+};
+
+const CERT_COLUMNS = ["Operator Name", "Email", "Evaluation Date", "Evaluator Name",
+  "Expiration Date", "Truck Type Authorized",
+  "Successful Completion of Driving Evaluation", "Inspection", "Use of Controls",
+  "Maneuvering Skills", "Driving with Load", "Modified By"];
+
+const DIRECTORY_COLUMNS = ["Topic", "Contact 1", "Phone #", "Contact 2", "Phone #"];
+
+const PAYROLL_COLUMNS = ["Payroll #", "Pay Period Start", "Pay Period End",
+  "Paid Holiday", "Payday"];
+
+const TEMPLATES = {
+  certs: () => [
+    CERT_COLUMNS,
+    ["Jordan Miller", "jordanmiller@agri-service.com", "3/4/2026", "Andrew Kendall",
+     "3/4/2029", "Class IV; Class V", "Yes", "Yes", "Yes", "Yes", "Yes", "Andrew Kendall"],
+    ["Sam Ruiz", "samruiz@agri-service.com", "3/4/2026", "Andrew Kendall",
+     "3/4/2029", "Class IV", "Yes", "Yes", "Yes", "Yes", "Yes", "Andrew Kendall"]
+  ],
+  directory: () => [
+    DIRECTORY_COLUMNS,
+    ["Warranty claims", "Andrew Kendall", "2085551234", "Parts desk", "2085555678"],
+    ["IT help", "helpdesk@agri-service.com", "", "", ""]
+  ],
+  payroll: () => [
+    PAYROLL_COLUMNS,
+    [1, "12/21/2025", "1/3/2026", "", "1/9/2026"],
+    [2, "1/4/2026", "1/17/2026", "", "1/23/2026"],
+    [3, "1/18/2026", "1/31/2026", "", "2/6/2026"],
+    [],
+    ["Paid Holidays"],
+    ["New Year's Day 1/1/2026", "8 hrs"],
+    ["Memorial Day 5/25/2026", "8 hrs"]
+  ]
+};
+
+// What's in the database now, in the same columns as the blank sheet.
+const EXPORTS = {
+  certs: () => [CERT_COLUMNS, ...certs.map(c => [
+    c.operator_name, c.email || "", usDate(c.evaluation_date), c.evaluator_name || "",
+    usDate(c.expiration_date), (c.truck_classes || []).join("; "),
+    yesNo(c.passed_driving), yesNo(c.inspection), yesNo(c.use_of_controls),
+    yesNo(c.maneuvering), yesNo(c.driving_with_load), c.modified_by || ""
+  ])],
+  directory: () => [DIRECTORY_COLUMNS, ...directory.map(d =>
+    [d.topic, d.contact1 || "", d.phone1 || "", d.contact2 || "", d.phone2 || ""])],
+  payroll: () => [
+    PAYROLL_COLUMNS,
+    ...payroll.map(p => [p.number, usDate(p.period_start), usDate(p.period_end),
+                         p.holiday || "", usDate(p.payday)]),
+    [],
+    ["Paid Holidays"],
+    ...holidays.map(h => [h.name, h.hours || ""])
+  ]
+};
+
+const yesNo = (v) => v === true ? "Yes" : v === false ? "No" : "";
+
+const TEMPLATE_NAMES = {
+  certs: "Forklift Certifications",
+  directory: "Who Does What",
+  payroll: "Payroll Calendar"
+};
+
+document.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-template], [data-export]");
+  if (!button) return;
+  const blank = button.dataset.template;
+  const kind = blank || button.dataset.export;
+  const rows = (blank ? TEMPLATES : EXPORTS)[kind]();
+  if (!blank && rows.length < 2) {
+    return alert("There's nothing imported yet to download.");
+  }
+  downloadCSV(`Agri-Service ${TEMPLATE_NAMES[kind]}${blank ? " template" : ""}.csv`, rows);
+});
+
 // ---------------------------------------------------------------- wiring
 
 const drop = $("drop");
@@ -6353,11 +6501,11 @@ const drop = $("drop");
   drop.addEventListener(e, ev => { ev.preventDefault(); drop.classList.remove("over"); }));
 drop.addEventListener("drop", ev => {
   const file = ev.dataTransfer.files[0];
-  if (file) file.text().then(importCSV);
+  if (file) importCertifications(file);
 });
 $("file").addEventListener("change", ev => {
   const file = ev.target.files[0];
-  if (file) file.text().then(importCSV);
+  if (file) importCertifications(file);
 });
 
 $("certSearch").addEventListener("input", renderCerts);
