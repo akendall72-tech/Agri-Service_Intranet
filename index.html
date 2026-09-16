@@ -1766,9 +1766,12 @@ $("view").addEventListener("click", async (event) => {
     if (!field.value.trim()) return say("Nothing to post.", true);
 
     say("Posting…", false);
-    const { error } = await db.from("support_ticket_comments")
-      .insert({ ticket_id: box.dataset.ticket, body: field.value.trim() });
+    const { data, error } = await db.from("support_ticket_comments")
+      .insert({ ticket_id: box.dataset.ticket, body: field.value.trim() })
+      .select("id");
     if (error) return say(error.message, true);
+    // Whoever asked is waiting on an answer.
+    if (data && data[0]) notify("support_comment", data[0].id);
 
   } else {
     const { data, error } = await db.from("support_tickets")
@@ -2016,6 +2019,9 @@ $("view").addEventListener("click", async (event) => {
 
   if (error) return alert(error.message);
   if (!data || !data.length) return alert("Nothing changed - you can't review this plan.");
+
+  // The technician is waiting to hear either way.
+  notify("lift_plan", id);
 
   Object.assign(plans.find(p => p.id === id), data[0]);
   showView("rigging");
@@ -6380,6 +6386,17 @@ async function importCertRows(rows) {
   $("importResult").innerHTML =
     `<p class="ok">Imported ${records.length} record${records.length === 1 ? "" : "s"}
      for ${people} ${people === 1 ? "person" : "people"}.</p>`;
+}
+
+// Tells the notify function something changed, so the people waiting on it get
+// a push. It's told only what changed — the function reads the record and
+// decides who to tell. A failure here never fails the thing that just worked.
+async function notify(kind, id) {
+  try {
+    await db.functions.invoke("notify", { body: { kind, id } });
+  } catch (e) {
+    console.log("notify failed", e);
+  }
 }
 
 // ---------------------------------------------------------------- templates
