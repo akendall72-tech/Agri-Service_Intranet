@@ -299,6 +299,53 @@
   .accent-red, .accent-ink { border-left: 3px solid var(--red); }
   .accent-ink { border-left-color: var(--ink); }
 
+  /* ------------------------------------------------------------------ tech levels */
+  .tl-level-1 { --tl: #137026; } .tl-level-2 { --tl: #2F5D7C; }
+  .tl-level-3 { --tl: #B8760D; } .tl-level-4 { --tl: #CC0033; }
+  .tl-people { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+  button.tl-person { display: flex; gap: 14px; align-items: center; padding: 14px 16px; width: 100%;
+                     background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+                     box-shadow: var(--shadow); text-align: left; font: inherit; color: inherit;
+                     font-weight: 400; justify-content: flex-start; white-space: normal; cursor: pointer; }
+  button.tl-person:hover { border-color: var(--line-strong); box-shadow: var(--shadow-lg); background: var(--card); }
+  .tl-ring { width: 48px; height: 48px; flex: 0 0 48px; border-radius: 50%; display: grid; place-items: center;
+             font-weight: 700; font-size: 18px; color: var(--tl); position: relative;
+             background: conic-gradient(var(--tl) calc(var(--p) * 1%), #ECE7E3 0); }
+  .tl-ring::before { content: ""; position: absolute; inset: 5px; border-radius: 50%; background: var(--card); }
+  .tl-ring > span { position: relative; }
+  .tl-bar { height: 8px; border-radius: 99px; background: #ECE7E3; overflow: hidden; }
+  .tl-bar i { display: block; height: 100%; background: var(--tl); }
+  .tl-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .tl-chip { padding: 4px 10px; border-radius: 99px; font-size: 13px; font-weight: 600; color: var(--muted); background: #F3F0ED; }
+  .tl-chip.on { color: var(--tl); background: color-mix(in srgb, var(--tl) 12%, white); }
+  .tl-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 14px 0; }
+  button.tl-tab { border-radius: 10px; padding: 8px; border: 0; justify-content: center; flex-direction: column;
+                  background: color-mix(in srgb, var(--tl) 12%, white); color: var(--tl); font-weight: 600; }
+  button.tl-tab:hover { background: color-mix(in srgb, var(--tl) 20%, white); }
+  button.tl-tab.on { background: var(--tl); color: #fff; }
+  .tl-tab small { display: block; font-weight: 500; opacity: .85; }
+  .tl-cat { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+            color: var(--muted); margin: 18px 2px 8px; }
+  .tl-list { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); }
+  .tl-item { display: flex; gap: 12px; align-items: flex-start; padding: 11px 14px; border-top: 1px solid var(--line); }
+  .tl-item:first-child { border-top: 0; }
+  .tl-check { width: 22px; height: 22px; flex: 0 0 22px; border-radius: 50%; border: 2px solid #DDD6D1;
+              margin-top: 1px; position: relative; }
+  .tl-item.done .tl-check { background: var(--tl); border-color: var(--tl); }
+  .tl-item.done .tl-check::after { content: ""; position: absolute; left: 6px; top: 2px; width: 5px; height: 10px;
+                                   border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+  .tl-name { flex: 1; min-width: 0; }
+  .tl-name .note { display: block; margin-top: 2px; }
+  .tl-change summary { cursor: pointer; color: var(--red); font-weight: 600; font-size: 14px; }
+  .tl-change input, .tl-change select { margin: 0; }
+  .tl-row { padding: 12px 0; border-top: 1px solid var(--line); }
+  .tl-row.retired { opacity: .55; }
+  .tl-row input, .tl-row select { margin: 0; }
+  .tl-row-meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
+  .tl-row-meta [data-cf="category"] { flex: 1 1 180px; max-width: 260px; }
+  .tl-row-meta [data-cf="level"] { width: auto; }
+  .tl-row-meta [data-cf="sort_order"] { width: 80px; }
+
   /* ------------------------------------------------------------------ articles */
   .article-card .kick { font-size: 11px; font-weight: 700; letter-spacing: .08em;
                         text-transform: uppercase; color: var(--red); margin-bottom: 2px; }
@@ -613,6 +660,7 @@
       <button data-tab="events"><i data-icon="events"></i><span>Events</span></button>
       <button data-tab="courses"><i data-icon="training"></i><span>Course Catalog</span></button>
       <button data-tab="articles"><i data-icon="doc"></i><span>Training Articles</span></button>
+      <button data-tab="techadmin"><i data-icon="training"></i><span>Tech Levels</span></button>
       <button data-tab="sds"><i data-icon="safety"></i><span>Safety Data Sheets</span></button>
       <button data-tab="reminders"><i data-icon="reminders"></i><span>Reminders</span></button>
       <button data-tab="support"><i data-icon="support"></i><span>Support Center</span></button>
@@ -887,6 +935,32 @@
         </div>
         <div id="sdsList"></div>
       </div>
+    </section>
+
+    <!-- Tech levels: the competency list -->
+    <section id="tab-techadmin" class="hidden">
+      <div class="card" id="techAdd">
+        <h2>Tech Levels competencies</h2>
+        <p class="note">The list technicians are signed off against, level by level. Sign-offs happen in the
+          Training Center — admins for their own shop, owners for anyone. Retire a competency rather than
+          removing it: it comes off everyone's list and past sign-offs are kept. Adding one to a level never
+          moves a tech who already finished that level back down.</p>
+        <div id="techAdminStats" style="margin:10px 0 14px"></div>
+        <div class="fields">
+          <div class="wide"><label>New competency</label>
+            <input type="text" data-ca="name" placeholder="e.g. Perform a hydraulic flow test"></div>
+          <div><label>Category</label>
+            <input type="text" data-ca="category" list="techCategories" placeholder="Hydraulics">
+            <datalist id="techCategories"></datalist></div>
+          <div><label>Level</label>
+            <select data-ca="level"><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
+        </div>
+        <div class="row">
+          <button data-comp-add>Add competency</button>
+          <span class="msg" id="techAdminMsg"></span>
+        </div>
+      </div>
+      <div class="card"><div id="techAdminList"></div></div>
     </section>
 
     <!-- Training articles -->
@@ -1303,7 +1377,7 @@ async function loadAll() {
   trainingReports = Object.fromEntries((trr.data || []).map(r => [r.id, r]));
   trainingReportsError = trr.error ? trr.error.message : null;
   await Promise.all([signBanners(), loadEvents(), loadInspections(), loadCourses(), loadSds(),
-    loadArticles()]);
+    loadArticles(), loadTechLevels()]);
 
   // Only your own profile comes back for most people — that policy is the
   // point — so the page reads it out of the list rather than asking twice.
@@ -1362,6 +1436,8 @@ const FEATURES = [
 const TRAINING_LINKS = [
   // Edited on the admin page's Course Catalog tab.
   { title: "Course Catalog", sub: "Agri-Service courses", view: "catalog" },
+  // Competencies and sign-offs; see techLevelsView.
+  { title: "Tech Levels", sub: "Competencies and sign-offs", view: "techlevels" },
   // Built from the uploads on the admin page's Open Seat Report tab.
   { title: "Open Seat Report", sub: "Request registration", view: "openseat" },
   { title: "Training Completions",
@@ -1441,7 +1517,7 @@ function showView(name) {
   $("admin").classList.add("hidden");
   const host = $("view");
   host.classList.remove("hidden");
-  setMode("app", ["openseat", "catalog", "article"].includes(name) ? "training" : name);
+  setMode("app", ["openseat", "catalog", "article", "techlevels"].includes(name) ? "training" : name);
   host.innerHTML = `<nav class="crumbs"><button data-home>Home</button><span>/</span>
     <span>${esc(pageTitle(name))}</span></nav>` + VIEWS[name]();
   window.scrollTo(0, 0);
@@ -1457,7 +1533,7 @@ function showAdmin() {
   renderCerts(); renderPlans(); renderPeople(); renderSupport(); renderBanners();
   renderPayroll(); renderDirectory(); renderLogins(); renderSharedReminders();
   renderEvents(); renderOrg(); renderOsrImport(); renderOsrLive(); renderInspectionsAdmin();
-  renderCoursesAdmin(); renderSdsAdmin(); renderSdsPending(); renderArticlesAdmin();
+  renderCoursesAdmin(); renderSdsAdmin(); renderSdsPending(); renderArticlesAdmin(); renderTechAdmin();
   window.scrollTo(0, 0);
 }
 
@@ -1527,6 +1603,7 @@ const VIEWS = {
 
   openseat: () => openSeatView(),
   catalog: () => catalogView(),
+  techlevels: () => techLevelsView(),
   payroll: () => payrollView(),
   directory: () => directoryView(),
   reminders: () => remindersView(),
@@ -4215,6 +4292,7 @@ const COMPANY_PAGES = [
 
 const pageTitle = (id) => (FEATURES.find(f => f.id === id) || COMPANY_PAGES.find(p => p.id === id)
   || { openseat: { title: "Open Seat Report" }, catalog: { title: "Course Catalog" },
+       techlevels: { title: "Tech Levels" },
        article: { title: (trainingArticles.find(a => a.id === openArticleId) || {}).title || "Article" } }[id]
   || { title: "" }).title;
 
@@ -5882,6 +5960,364 @@ $("osrDrop").addEventListener("drop", (e) => {
   });
 });
 
+// ---------------------------------------------------------------- tech levels
+//
+// The Tech Levels program (migration 0040). A technician sees their own
+// progress; an admin sees the technicians at their shop and signs them off; an
+// owner sees everyone and keeps the competency list in the admin area.
+//
+// The database decides who may see and sign off whom — these screens only
+// decide what to show, and never offer a button the database would refuse.
+
+let competencies = [], compSignoffs = [], levelsDone = [], techPeople = [], levelChanges = [];
+let techError = null;
+let techState = { personId: null, level: null };
+const TECH_LEVELS = [1, 2, 3, 4];
+
+async function loadTechLevels() {
+  const [c, p, s, d, h] = await Promise.all([
+    db.from("competencies").select("*").order("sort_order"),
+    db.from("profiles").select("id,full_name,location_id,is_technician"),
+    db.from("competency_signoffs").select("*"),
+    db.from("tech_level_completions").select("*"),
+    db.from("tech_level_changes").select("*").order("changed_at", { ascending: false })
+  ]);
+  const failed = [c, p, s, d, h].find(r => r.error);
+  techError = failed ? failed.error.message : null;
+  competencies = c.data || [];
+  techPeople = p.data || [];
+  compSignoffs = s.data || [];
+  levelsDone = d.data || [];
+  levelChanges = h.data || [];
+}
+
+// Where one technician is: the level they're on and what's signed off.
+function techProgress(personId) {
+  const items = competencies.filter(c => c.is_active);
+  const signed = new Map(compSignoffs.filter(x => x.technician_id === personId).map(x => [x.competency_id, x]));
+  const done = new Map(levelsDone.filter(x => x.technician_id === personId).map(x => [x.level, x]));
+  const at = (level) => items.filter(c => c.level === level);
+  const current = Math.min(Math.max(0, ...done.keys()) + 1, 4);
+  return {
+    items, signed, done, at, current,
+    finished: done.has(4),
+    count: (level) => at(level).filter(c => signed.has(c.id)).length
+  };
+}
+
+function techSummary(pr) {
+  return pr.finished ? "All four levels complete"
+    : `Level ${pr.current} · ${pr.count(pr.current)} of ${pr.at(pr.current).length} signed off`;
+}
+
+// An owner looks after everyone; an admin, the people at their own shop.
+const techManages = (person) => isOwner()
+  || (isAdmin() && profile && profile.location_id && person.location_id === profile.location_id);
+
+const techName = (person) => (person.full_name || "").trim() || "No name yet";
+
+// Redraws the view without jumping to the top.
+function refreshTechView() {
+  const y = window.scrollY;
+  showView("techlevels");
+  window.scrollTo(0, y);
+}
+
+function techPersonCard(person, label) {
+  const pr = techProgress(person.id);
+  const total = pr.at(pr.current).length;
+  const pct = pr.finished ? 100 : (total ? Math.round(pr.count(pr.current) / total * 100) : 0);
+  return `<button type="button" class="tl-person tl-level-${pr.current}" data-tech-open="${esc(person.id)}">
+    <span class="tl-ring" style="--p:${pct}"><span>${pr.finished ? "✓" : pr.current}</span></span>
+    <span style="flex:1;min-width:0"><b>${esc(label || techName(person))}</b>
+      <span class="note" style="display:block">${esc(techSummary(pr))}${
+        isOwner() && !label ? " · " + esc(locations[person.location_id] || "No shop") : ""}</span></span>
+    <span class="note">&rsaquo;</span>
+  </button>`;
+}
+
+function techLevelsView() {
+  if (techError) {
+    return hero("Tech Levels", "") + `<div class="card"><p class="note">${
+      /does not exist|schema cache/i.test(techError)
+        ? "Tech Levels isn't switched on yet — the training department is setting it up."
+        : "Tech Levels couldn't be loaded. " + esc(techError)}</p></div>`;
+  }
+
+  const open = techState.personId && techPeople.find(p => p.id === techState.personId);
+  if (open) return techChecklist(open);
+
+  const mine = techPeople.find(p => p.id === me.id);
+  let html = hero("Tech Levels",
+    "Four levels of competencies, each signed off by your location admin. Finish every item in a level to move up to the next.");
+
+  if (mine && mine.is_technician) {
+    html += `<div class="section-title">Your progress</div>
+      <div class="tl-people" style="margin-bottom:22px">${techPersonCard(mine, "You")}</div>`;
+  }
+
+  if (isAdmin()) {
+    const techs = techPeople.filter(p => p.is_technician && techManages(p))
+      .sort((a, b) => (locations[a.location_id] || "").localeCompare(locations[b.location_id] || "")
+        || techName(a).localeCompare(techName(b)));
+    const candidates = techPeople.filter(p => !p.is_technician && p.location_id && p.id !== me.id && techManages(p))
+      .sort((a, b) => techName(a).localeCompare(techName(b)));
+
+    html += `<div class="section-title">${isOwner() ? "Technicians" : "Technicians at your shop"}</div>
+      ${techs.length ? `<div class="tl-people">${techs.map(t => techPersonCard(t)).join("")}</div>`
+        : `<p class="note">Nobody's enrolled yet. Add the technicians at your shop below.</p>`}
+      ${candidates.length ? `<div class="card" id="techEnroll" style="margin-top:18px">
+        <h2>Add a technician</h2>
+        <div class="row" style="align-items:flex-end">
+          <div style="flex:1;min-width:200px"><label>Person</label>
+            <select data-enroll="person">${candidates.map(p =>
+              `<option value="${esc(p.id)}">${esc(techName(p))}${isOwner() ? " — " + esc(locations[p.location_id] || "") : ""}</option>`).join("")}</select></div>
+          <div><label>Working on</label>
+            <select data-enroll="level">${TECH_LEVELS.map(l => `<option value="${l}">Level ${l}</option>`).join("")}</select></div>
+          <button data-tech-enroll>Add</button>
+        </div>
+        <p class="note" style="margin:8px 0 0">Anyone already working above Level 1: pick their level, and the
+          levels below are recorded as placed rather than signed off.</p>
+        <span class="msg"></span>
+      </div>` : ""}`;
+  }
+
+  if (!(mine && mine.is_technician) && !isAdmin()) {
+    html += `<div class="card"><b>Tech Levels is for service technicians.</b>
+      <p class="note" style="margin:6px 0 0">If you're a technician and don't see your progress here,
+      ask your location admin to add you.</p></div>`;
+  }
+  return html;
+}
+
+function techChecklist(person) {
+  const pr = techProgress(person.id);
+  const level = techState.level || pr.current;
+  const canSign = techManages(person) && person.id !== me.id;
+  const own = person.id === me.id;
+  const total = pr.at(pr.current).length, doneCount = pr.count(pr.current);
+  const finishedThis = pr.done.get(level);
+  const day = (iso) => iso ? new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "";
+
+  // Categories in list order.
+  const groups = [];
+  pr.at(level).forEach(c => {
+    let g = groups.find(x => x.category === c.category);
+    if (!g) groups.push(g = { category: c.category, items: [] });
+    g.items.push(c);
+  });
+
+  return `
+  ${isAdmin() ? `<button type="button" class="ghost" data-tech-back style="margin-bottom:12px">&larr; All technicians</button>` : ""}
+  <div class="card tl-level-${pr.current}">
+    <div class="note" style="text-transform:uppercase;letter-spacing:.08em;font-weight:600">${esc(own ? "Your progress" : techName(person))}</div>
+    <h2 style="font-size:24px;margin:4px 0 10px">${pr.finished ? "All four levels complete" : `Level ${pr.current} technician`}</h2>
+    ${pr.finished ? "" : `<div class="tl-bar"><i style="width:${total ? doneCount / total * 100 : 0}%"></i></div>
+      <p class="note" style="margin:6px 0 0">${doneCount} of ${total} Level ${pr.current} competencies signed off · ${total - doneCount} to go</p>`}
+    <div class="tl-chips">${TECH_LEVELS.map(l => `<span class="tl-chip tl-level-${l}${
+      pr.done.has(l) || l === pr.current ? " on" : ""}">${pr.done.has(l) ? "✓ " : ""}L${l}</span>`).join("")}</div>
+    ${isOwner() && !own ? `<details class="tl-change" id="techChange" style="margin-top:14px">
+      <summary>Change level</summary>
+      <div class="row" style="align-items:flex-end;margin-top:10px">
+        <div><label>Move to</label>
+          <select data-tl-change="level">${TECH_LEVELS.map(l => `<option value="${l}"${
+            l === Math.max(1, pr.current - (pr.finished ? 0 : 1)) ? " selected" : ""}>Level ${l}</option>`).join("")}</select></div>
+        <div style="flex:1;min-width:220px"><label>Why — needed to move someone down</label>
+          <input type="text" data-tl-change="reason" maxlength="500" placeholder="e.g. Placed too high; needs more time on hydraulics"></div>
+        <button data-tech-setlevel>Change level</button>
+      </div>
+      <p class="note" style="margin:8px 0 0">Moving down takes the finished levels off their record; sign-offs stay.
+        If the level you move them to is still fully signed off, undo the sign-offs that shouldn't count first —
+        otherwise it would finish again at the next sign-off. Logged with your name, the date and the reason.</p>
+      <span class="msg"></span>
+    </details>` : ""}
+  </div>
+
+  ${levelChanges.filter(x => x.technician_id === person.id).slice(0, 3).map(x => `
+    <div class="card tl-level-${x.to_level}" style="padding:12px 16px">
+      <b style="color:var(--tl)">${x.to_level < x.from_level ? "↓ Moved down" : "↑ Moved up"} from ${
+        x.from_level === 5 ? "all four finished" : "Level " + x.from_level} to Level ${x.to_level}</b>
+      <div class="note">${x.changed_by_name ? "by " + esc(x.changed_by_name) + " · " : ""}${day(x.changed_at)}</div>
+      ${x.reason ? `<div class="note"><i>“${esc(x.reason)}”</i></div>` : ""}
+    </div>`).join("")}
+
+  <div class="tl-tabs">${TECH_LEVELS.map(l => `<button type="button" class="tl-tab tl-level-${l}${l === level ? " on" : ""}"
+    data-tech-level="${l}">Level ${l}<small>${pr.count(l)}/${pr.at(l).length}</small></button>`).join("")}</div>
+
+  ${finishedThis ? `<p class="tl-level-${level}" style="color:var(--tl);margin:0 0 6px">✓ ${
+      finishedThis.placed ? `Placed past Level ${level} when enrolled` : `Level ${level} finished`}${
+      finishedThis.completed_at ? " on " + day(finishedThis.completed_at) : ""}.</p>`
+    : level > pr.current ? `<p class="note" style="margin:0 0 6px">Items here can be signed off early. They count once
+      Level ${pr.current} is finished.</p>` : ""}
+
+  ${groups.map(g => `
+    <div class="tl-cat">${esc(g.category)}</div>
+    <div class="tl-list tl-level-${level}">${g.items.map(c => {
+      const s = pr.signed.get(c.id);
+      return `<div class="tl-item${s ? " done" : ""}">
+        <span class="tl-check"></span>
+        <span class="tl-name">${esc(c.name)}
+          ${s ? `<span class="note">Signed off by ${esc(s.signed_by_name || "an admin")} · ${day(s.signed_at)}</span>
+                 ${s.note ? `<span class="note"><i>“${esc(s.note)}”</i></span>` : ""}`
+              : finishedThis ? `<span class="note" style="color:#8a5e00">Added after this level was finished — doesn't affect the level</span>` : ""}
+        </span>
+        ${canSign && !s ? `<button type="button" class="pdf" data-tech-signoff="${esc(c.id)}">Sign off</button>` : ""}
+        ${canSign && s ? `<button type="button" class="ghost" data-tech-remove="${esc(s.id)}" title="Remove this sign-off">Undo</button>` : ""}
+      </div>`;
+    }).join("")}</div>`).join("")}`;
+}
+
+document.addEventListener("click", async (event) => {
+  const openBtn = event.target.closest("[data-tech-open]");
+  if (openBtn) {
+    techState = { personId: openBtn.dataset.techOpen, level: null };
+    return showView("techlevels");
+  }
+  if (event.target.closest("[data-tech-back]")) {
+    techState = { personId: null, level: null };
+    return showView("techlevels");
+  }
+  const levelBtn = event.target.closest("[data-tech-level]");
+  if (levelBtn) {
+    techState.level = Number(levelBtn.dataset.techLevel);
+    return refreshTechView();
+  }
+
+  const signBtn = event.target.closest("[data-tech-signoff]");
+  if (signBtn) {
+    const person = techPeople.find(p => p.id === techState.personId);
+    const item = competencies.find(c => c.id === signBtn.dataset.techSignoff);
+    if (!person || !item) return;
+    const note = window.prompt(`Sign off for ${techName(person)}:\n\n${item.name}\n\n` +
+      `You're confirming you've seen them do this. Add a note if you like (the machine, the job):`, "");
+    if (note === null) return;
+    signBtn.disabled = true;
+    const { error } = await db.from("competency_signoffs")
+      .insert({ technician_id: person.id, competency_id: item.id, note: note.trim() || null });
+    if (error) { signBtn.disabled = false; return alert(error.message); }
+    // If that finished a level, the tech (and the owners) get a notification.
+    // The server checks, and announces each finished level once.
+    notify("tech_level", person.id);
+    await loadTechLevels();
+    return refreshTechView();
+  }
+
+  const undoBtn = event.target.closest("[data-tech-remove]");
+  if (undoBtn) {
+    if (!confirm("Remove this sign-off? Use this for one signed off by mistake. A level already finished stays finished.")) return;
+    const { data, error } = await db.from("competency_signoffs").delete().eq("id", undoBtn.dataset.techRemove).select();
+    if (error) return alert(error.message);
+    if (!data || !data.length) return alert("That sign-off wasn't removed — it isn't yours to change.");
+    await loadTechLevels();
+    return refreshTechView();
+  }
+
+  const setBtn = event.target.closest("[data-tech-setlevel]");
+  if (setBtn) {
+    const box = $("techChange");
+    const person = techPeople.find(p => p.id === techState.personId);
+    const level = Number(box.querySelector('[data-tl-change="level"]').value);
+    const reason = box.querySelector('[data-tl-change="reason"]').value.trim();
+    setBtn.disabled = true;
+    const { error } = await db.rpc("set_tech_level", { target: person.id, new_level: level, reason: reason || null });
+    setBtn.disabled = false;
+    // The database says exactly why a change isn't allowed; show that.
+    if (error) return speak(box, error.message, true);
+    techState.level = null;
+    await loadTechLevels();
+    return refreshTechView();
+  }
+
+  const enrollBtn = event.target.closest("[data-tech-enroll]");
+  if (enrollBtn) {
+    const box = $("techEnroll");
+    const target = box.querySelector('[data-enroll="person"]').value;
+    const level = Number(box.querySelector('[data-enroll="level"]').value);
+    enrollBtn.disabled = true;
+    const { error } = await db.rpc("set_technician", { target, enrolled: true, starting_level: level });
+    enrollBtn.disabled = false;
+    if (error) return speak(box, error.message, true);
+    await loadTechLevels();
+    return refreshTechView();
+  }
+});
+
+// ---- admin: the competency list (owners) ------------------------------------------
+
+function renderTechAdmin() {
+  const box = $("techAdminList");
+  if (!box) return;
+  if (techError) {
+    box.innerHTML = `<p class="error">${/does not exist|schema cache/i.test(techError)
+      ? "Run migration 0040_tech_levels.sql in the SQL editor, then reload this page."
+      : esc(techError)}</p>`;
+    return;
+  }
+  const active = competencies.filter(c => c.is_active);
+  $("techAdminStats").innerHTML = TECH_LEVELS.map(l =>
+    `<span class="stat"><b>${active.filter(c => c.level === l).length}</b>Level ${l}</span>`).join("")
+    + `<span class="stat"><b>${competencies.length - active.length}</b>retired</span>`;
+  $("techCategories").innerHTML = [...new Set(competencies.map(c => c.category))]
+    .map(c => `<option value="${esc(c)}">`).join("");
+
+  box.innerHTML = TECH_LEVELS.map(level => {
+    const rows = competencies.filter(c => c.level === level);
+    return `<div class="section-title tl-level-${level}" style="margin-top:22px;color:var(--tl)">Level ${level}
+      · ${rows.filter(c => c.is_active).length} competencies</div>
+    ${rows.map(c => `<div class="tl-row${c.is_active ? "" : " retired"}" data-comp="${esc(c.id)}">
+      <input type="text" data-cf="name" value="${esc(c.name)}" aria-label="Competency">
+      <div class="tl-row-meta">
+        <input type="text" data-cf="category" list="techCategories" value="${esc(c.category)}" aria-label="Category">
+        <select data-cf="level" aria-label="Level">${TECH_LEVELS.map(l =>
+          `<option value="${l}"${l === c.level ? " selected" : ""}>Level ${l}</option>`).join("")}</select>
+        <input type="text" data-cf="sort_order" value="${esc(c.sort_order)}" aria-label="Order" title="Order in the list">
+        <button class="pdf" data-comp-act="save">Save</button>
+        <button class="ghost" data-comp-act="${c.is_active ? "retire" : "restore"}">${c.is_active ? "Retire" : "Restore"}</button>
+        ${c.is_active ? "" : `<span class="badge b-none">Retired</span>`}
+      </div>
+    </div>`).join("")}`;
+  }).join("");
+}
+
+$("admin").addEventListener("click", async (event) => {
+  const btn = event.target.closest("[data-comp-act], [data-comp-add]");
+  if (!btn) return;
+  const say = (text, bad) => { $("techAdminMsg").textContent = text; $("techAdminMsg").className = "msg " + (bad ? "error" : "ok"); };
+
+  if (btn.matches("[data-comp-add]")) {
+    const form = $("techAdd");
+    const get = (f) => form.querySelector(`[data-ca="${f}"]`).value.trim();
+    if (!get("name") || !get("category")) return say("A competency needs a name and a category.", true);
+    const level = Number(get("level"));
+    const order = competencies.filter(c => c.level === level).reduce((m, c) => Math.max(m, c.sort_order), 0) + 5;
+    const { data, error } = await db.from("competencies")
+      .insert({ name: get("name"), category: get("category"), level, sort_order: order }).select();
+    if (error) return say(error.message, true);
+    if (!data || !data.length) return say("Nothing added — only an owner can change the list.", true);
+    form.querySelector('[data-ca="name"]').value = "";
+    await loadTechLevels(); renderTechAdmin();
+    return say(`Added to Level ${level}. Anyone who already finished Level ${level} keeps it.`, false);
+  }
+
+  const row = btn.closest("[data-comp]");
+  const id = row.dataset.comp;
+  const act = btn.dataset.compAct;
+  const patch = act === "save" ? {
+    name: row.querySelector('[data-cf="name"]').value.trim(),
+    category: row.querySelector('[data-cf="category"]').value.trim(),
+    level: Number(row.querySelector('[data-cf="level"]').value),
+    sort_order: parseInt(row.querySelector('[data-cf="sort_order"]').value, 10) || 0
+  } : { is_active: act === "restore" };
+  if (act === "save" && (!patch.name || !patch.category)) return say("A competency needs a name and a category.", true);
+
+  const { data, error } = await db.from("competencies").update(patch).eq("id", id).select();
+  if (error) return say(error.message, true);
+  if (!data || !data.length) return say("Nothing changed — only an owner can change the list.", true);
+  await loadTechLevels(); renderTechAdmin();
+  say(act === "retire" ? "Retired. It's off everyone's list; past sign-offs for it are kept."
+    : act === "restore" ? "Restored." : "Saved.", false);
+});
+
 // ---------------------------------------------------------------- training articles
 //
 // The Training Center's articles (migration 0036). Each is stored as HTML and
@@ -6534,7 +6970,7 @@ document.querySelectorAll(".tabs button[data-tab]").forEach(btn => {
     document.querySelectorAll(".tabs button[data-tab]").forEach(b =>
       b.classList.toggle("active", b === btn));
     ["certs", "plans", "people", "support", "banners", "payroll",
-      "directory", "logins", "reminders", "events", "org", "openseat", "inspections", "courses", "articles", "sds"].forEach(name =>
+      "directory", "logins", "reminders", "events", "org", "openseat", "inspections", "courses", "articles", "techadmin", "sds"].forEach(name =>
       $("tab-" + name).classList.toggle("hidden", name !== btn.dataset.tab));
     $("adminTitle").textContent = btn.textContent.trim();
     document.body.classList.remove("nav-open");
