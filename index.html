@@ -393,6 +393,8 @@
               padding: 2px 8px; border-radius: 999px; background: var(--green-soft); color: #17702F;
               max-width: 50%; overflow: hidden; text-overflow: ellipsis; }
   .news-meta > .news-tag { flex: 0 0 auto; }
+  .news-new { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+              padding: 1px 7px; border-radius: 999px; background: var(--red); color: #fff; }
   .news-tag.post { background: var(--red-soft); color: var(--red-dark); }
   button.news-pin { margin-left: auto; flex: 0 0 38px; width: 38px; height: 38px; padding: 0; border: 0;
                     border-radius: 999px; background: transparent; color: var(--muted); box-shadow: none; }
@@ -4457,7 +4459,8 @@ function renderAppNav(active) {
     + `<div class="nav-group">Centers</div>`
     + FEATURES.map(f => navButton(f.id, f.title, f.id, tileCount(f.id), "data-view")).join("")
     + `<div class="nav-group">Company</div>`
-    + COMPANY_PAGES.map(p => navButton(p.id, p.title, p.icon, 0, "data-view")).join("")
+    + COMPANY_PAGES.map(p => navButton(p.id, p.title, p.icon,
+        p.id === "news" ? newsUnseenCount() : 0, "data-view")).join("")
     + (isOwner() ? `<div class="nav-group">Manage</div>
         <button class="nav-item" data-open-admin>${icon("settings", 18)}<span>Admin</span></button>` : "");
   document.querySelectorAll("#appNav [data-nav]").forEach(b =>
@@ -6836,19 +6839,62 @@ let newsPosts = [], newsError = null;
 let newsPins = new Map();          // post id -> when it was pinned
 let newsImageUrls = {};            // uploaded picture path -> signed URL
 let openNewsId = null;
+let newsSeenThrough = undefined;   // ms; undefined until known (migration 0042)
+let newsFresh = new Set();         // new when News was opened, marked NEW
 let newsDraft = null;              // the story in the editor
 let newsDirty = false;
 
 async function loadNews() {
-  const [posts, pins] = await Promise.all([
+  const [posts, pins, reader] = await Promise.all([
     db.from("news_posts").select("*")
       .order("published_on", { ascending: false }).order("created_at", { ascending: false }),
-    db.from("news_pins").select("post_id, pinned_at")
+    db.from("news_pins").select("post_id, pinned_at"),
+    db.from("news_readers").select("seen_through")
   ]);
   newsError = posts.error ? posts.error.message : null;
   newsPosts = posts.data || [];
   newsPins = new Map((pins.data || []).map(p => [p.post_id, p.pinned_at]));
+  if (!reader.error) {
+    const row = (reader.data || [])[0];
+    if (row) {
+      newsSeenThrough = Date.parse(row.seen_through);
+    } else {
+      // Nothing recorded yet: what's showing now is the starting point, so a
+      // first look doesn't count every story as new.
+      const newest = newestListed(newsLive());
+      newsSeenThrough = newest ? Date.parse(newest) : Date.now();
+      // A query builder only runs once it's awaited or then-ed.
+      db.rpc("mark_news_seen", { through: newest || new Date().toISOString() }).then(() => {}, () => {});
+    }
+  }
   await signNewsImages();
+}
+
+// ---- new since last read ------------------------------------------------------------
+//
+// The same marker as the app's count on its News tab: opening News here clears
+// it there too, and the other way round.
+
+const newsIsNew = (p) => newsSeenThrough !== undefined && !!p.listed_at
+  && Date.parse(p.listed_at) > newsSeenThrough;
+
+const newsUnseenCount = () => newsLive().filter(newsIsNew).length;
+
+function newestListed(list) {
+  return list.map(p => p.listed_at).filter(Boolean)
+    .sort((a, b) => Date.parse(b) - Date.parse(a))[0] || null;
+}
+
+// News is on screen: new stories are marked NEW for this visit, and stop counting.
+function markNewsSeen() {
+  const fresh = newsLive().filter(newsIsNew);
+  newsFresh = new Set(fresh.map(p => p.id));
+  const newest = newestListed(fresh);
+  if (!newest) return;
+  newsSeenThrough = Date.parse(newest);
+  // Sent exactly as the database wrote it, so nothing is lost to rounding.
+  db.rpc("mark_news_seen", { through: newest }).then(() => {}, () => {});
+  setTimeout(() => renderAppNav("news"));
 }
 
 // Uploaded pictures are in a private bucket, so an <img> needs a signed URL.
@@ -6918,6 +6964,7 @@ function newsCard(p, { preview = false, pictureOverride = null } = {}) {
       <div class="news-text"><b>${esc(p.title || "Title")}</b>${p.summary ? `<span>${esc(p.summary)}</span>` : ""}</div>`,
       preview)}
     <div class="news-meta">${newsTag(p)}<span>${esc(newsDate(p.published_on))}</span>
+      ${!preview && newsFresh.has(p.id) ? `<span class="news-new">New</span>` : ""}
       ${site ? `<span class="site">${esc(site)} &nearr;</span>` : ""}${newsPinButton(p, preview)}</div>
   </article>`;
 }
@@ -6945,6 +6992,7 @@ function newsParagraphs(text) {
 // ---- reading ----------------------------------------------------------------------
 
 function newsView() {
+  markNewsSeen();
   return hero("News", "Stories picked by the training department. Pin one to read later — your pins are the same here and in the app.")
     + `<div id="newsPage">${newsPageInner()}</div>`;
 }
