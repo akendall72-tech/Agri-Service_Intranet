@@ -243,6 +243,8 @@
                    border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center;
                    color: var(--muted); margin-bottom: 12px; font-size: 14px; }
   .banner.off { opacity: .55; }
+  #peopleTable tr.gone td { color: var(--muted); }
+  #peopleTable tr.gone td b { font-weight: 500; }
 
   /* ------------------------------------------------------------------ home */
   .stat-cards { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
@@ -902,10 +904,14 @@
           <input class="search" id="peopleSearch" placeholder="Search a name…"
                  style="margin-left:auto">
         </div>
-        <p class="note">Read-only. As an admin you see your own shop's people;
-          as an owner, everyone. Roles and locations are changed in Supabase —
-          the app deliberately blocks both from the client so nobody can promote
-          themselves or move shops to route their own lift plans elsewhere.</p>
+        <p class="note">As an admin you see your own shop's people; as an owner,
+          everyone. Roles and locations are changed in Supabase — the app
+          deliberately blocks both from the client so nobody can promote themselves
+          or move shops to route their own lift plans elsewhere.</p>
+        <p class="note">When someone leaves, an owner presses <b>Deactivate</b>. They can't
+          sign in to the app or this page, they're signed out, and their notifications
+          stop. Everything they did — lift plans, sign-offs, inspections — stays, with their
+          name on it. <b>Reactivate</b> lets them back in with the same email and password.</p>
         <div style="overflow-x:auto">
           <table id="peopleTable">
             <thead><tr>
@@ -913,6 +919,7 @@
               <th data-sort="role">Role</th>
               <th data-sort="location_id">Location</th>
               <th>Groups</th>
+              <th>Account</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -1532,7 +1539,12 @@ $("signIn").onclick = async () => {
     email: $("email").value.trim(),
     password: $("password").value
   });
-  if (error) { $("authError").textContent = error.message; return; }
+  if (error) {
+    $("authError").textContent = /banned/i.test(error.message)
+      ? "This account has been deactivated. Ask the training department if that's a mistake."
+      : error.message;
+    return;
+  }
   await start();
 };
 
@@ -1549,6 +1561,15 @@ async function start() {
   $("signOut").classList.remove("hidden");
 
   await loadAll();
+
+  // Deactivated since they last signed in: out, and told why.
+  if (profile && profile.deactivated_at) {
+    await db.auth.signOut();
+    me = null;
+    document.body.classList.remove("signed-in");
+    $("authError").textContent = "This account has been deactivated. Ask the training department if that's a mistake.";
+    return;
+  }
 
   const name = (profile && profile.full_name) || user.email;
   $("who").innerHTML =
@@ -1568,7 +1589,7 @@ async function loadAll() {
     db.from("locations").select("*").order("sort_order"),
     db.from("forklift_certifications").select("*"),
     db.from("lift_plans").select("*").order("submitted_at", { ascending: false }),
-    db.from("profiles").select("id,full_name,role,location_id,groups"),
+    db.from("profiles").select("id,full_name,role,location_id,groups,deactivated_at"),
     db.from("support_roles").select("*, support_people(*)").order("sort_order"),
     db.from("weekly_tasks").select("*").eq("is_active", true).order("sort_order"),
     db.from("personal_tasks").select("*").is("archived_at", null),
@@ -2457,34 +2478,84 @@ document.addEventListener("click", async (event) => {
 
 function renderPeople() {
   const q = ($("peopleSearch") ? $("peopleSearch").value : "").trim().toLowerCase();
+  // Deactivated accounts sink to the bottom rather than disappearing, so there's
+  // somewhere to reactivate them from.
   const rows = people.filter(r => !q ||
-    (r.full_name || "").toLowerCase().includes(q));
+    (r.full_name || "").toLowerCase().includes(q))
+    .sort((a, b) => (!!a.deactivated_at) - (!!b.deactivated_at));
 
+  const active = people.filter(r => !r.deactivated_at);
   const byRole = { owner: 0, admin: 0, employee: 0 };
-  people.forEach(r => { byRole[r.role] = (byRole[r.role] || 0) + 1; });
+  active.forEach(r => { byRole[r.role] = (byRole[r.role] || 0) + 1; });
 
-  const withoutLocation = people.filter(r => !r.location_id).length;
+  const withoutLocation = active.filter(r => !r.location_id).length;
+  const deactivated = people.length - active.length;
 
   if ($("peopleStats")) {
     $("peopleStats").innerHTML =
-      `<span class="stat"><b>${people.length}</b>accounts</span>` +
+      `<span class="stat"><b>${active.length}</b>accounts</span>` +
       `<span class="stat"><b>${byRole.admin + byRole.owner}</b>admins</span>` +
       (withoutLocation
         ? `<span class="stat"><b style="color:var(--red)">${withoutLocation}</b>no shop set</span>`
-        : "");
+        : "") +
+      (deactivated ? `<span class="stat"><b>${deactivated}</b>deactivated</span>` : "");
   }
 
-  $("peopleTable").querySelector("tbody").innerHTML = rows.map(r => `<tr>
+  const account = (r) => {
+    if (r.deactivated_at) {
+      return `<span class="badge b-none">Deactivated ${esc(new Date(r.deactivated_at).toLocaleDateString())}</span>
+        ${isOwner() ? `<button class="pdf" data-account="reactivate" data-id="${esc(r.id)}">Reactivate</button>` : ""}`;
+    }
+    if (!isOwner() || r.id === me.id) return `<span class="note">Active</span>`;
+    return `<button class="pdf" data-account="deactivate" data-id="${esc(r.id)}">Deactivate</button>`;
+  };
+
+  $("peopleTable").querySelector("tbody").innerHTML = rows.map(r => `<tr${r.deactivated_at ? ' class="gone"' : ""}>
       <td><b>${esc(r.full_name || "—")}</b>${r.id === me.id
         ? ` <span class="note">· you</span>` : ""}</td>
       <td>${esc(r.role)}</td>
       <td>${r.location_id ? esc(locations[r.location_id] || r.location_id)
         : `<span class="error">not set</span>`}</td>
       <td>${esc(groupNames(r.groups)) || "—"}</td>
+      <td style="white-space:nowrap">${account(r)}</td>
     </tr>`).join("")
-    || `<tr><td colspan="4" class="note">Nothing visible to you. If this is only
+    || `<tr><td colspan="5" class="note">Nothing visible to you. If this is only
         your own row, run migration 0021 in the SQL editor.</td></tr>`;
 }
+
+// Leaving the company: the account function blocks sign-in and takes them off
+// notifications, and everything they did stays. Owners only.
+document.addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-account]");
+  if (!button) return;
+  const person = people.find(r => r.id === button.dataset.id);
+  if (!person) return;
+  const name = person.full_name || "this account";
+  const action = button.dataset.account;
+  const ok = action === "deactivate"
+    ? confirm(`Deactivate ${name}?\n\nThey won't be able to sign in to the app or this page, they're signed out, and they stop getting notifications. Everything they've done stays, with their name on it.\n\nYou can reactivate them any time.`)
+    : confirm(`Reactivate ${name}? They can sign in again with the same email and password.`);
+  if (!ok) return;
+
+  button.disabled = true;
+  let problem = null;
+  try {
+    const { data, error } = await db.functions.invoke("account", { body: { action, id: person.id } });
+    if (error) {
+      problem = error.message;
+      try { const body = await error.context.json(); if (body && body.error) problem = body.error; } catch (e) { /* none */ }
+      if (/failed to send|404|not found/i.test(problem)) problem = "The account function isn't set up yet.";
+    } else if (data && data.error) {
+      problem = data.error;
+    }
+  } catch (e) {
+    problem = "That didn't go through.";
+  }
+  button.disabled = false;
+  if (problem) return alert(problem);
+  await loadAll();
+  renderPeople();
+});
 
 // ---------------------------------------------------------------- support
 
@@ -6216,7 +6287,8 @@ const TECH_LEVELS = [1, 2, 3, 4];
 async function loadTechLevels() {
   const [c, p, s, d, h] = await Promise.all([
     db.from("competencies").select("*").order("sort_order"),
-    db.from("profiles").select("id,full_name,location_id,is_technician"),
+    // Someone who has left drops off the lists; their sign-offs stay.
+    db.from("profiles").select("id,full_name,location_id,is_technician").is("deactivated_at", null),
     db.from("competency_signoffs").select("*"),
     db.from("tech_level_completions").select("*"),
     db.from("tech_level_changes").select("*").order("changed_at", { ascending: false })
