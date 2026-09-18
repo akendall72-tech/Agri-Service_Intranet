@@ -489,6 +489,16 @@
   .cert dl { display: grid; gap: 12px; margin: 18px 0 0; }
   .cert dt { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
   .cert dd { margin: 2px 0 0; font-weight: 600; }
+  .crane-alert { max-width: 560px; border-radius: var(--radius); padding: 16px 18px; margin-bottom: 20px;
+                 border: 1px solid; display: flex; gap: 14px; align-items: flex-start; }
+  .crane-alert.caution { background: var(--caution-soft); border-color: #EBC98A; }
+  .crane-alert.removed { background: var(--red-soft); border-color: #F0B7C4; }
+  .crane-alert svg { flex: 0 0 26px; width: 26px; height: 26px; }
+  .crane-alert.caution svg { color: var(--caution); }
+  .crane-alert.removed svg { color: var(--red); }
+  .crane-alert b { display: block; font-size: 16px; margin-bottom: 2px; }
+  .crane-alert p { margin: 0; color: var(--ink-2); }
+  .crane-alert q { display: block; margin-top: 6px; color: var(--muted); font-style: italic; }
 
   .ticket { border: 1px solid var(--line); border-radius: var(--radius); background: var(--card);
             margin-bottom: 10px; box-shadow: var(--shadow); }
@@ -1624,7 +1634,7 @@ async function loadAll() {
   trainingReports = Object.fromEntries((trr.data || []).map(r => [r.id, r]));
   trainingReportsError = trr.error ? trr.error.message : null;
   await Promise.all([signBanners(), loadEvents(), loadInspections(), loadCourses(), loadSds(),
-    loadArticles(), loadTechLevels(), loadNews(), loadTrainingStatus()]);
+    loadArticles(), loadTechLevels(), loadNews(), loadTrainingStatus(), loadCrane()]);
 
   // Only your own profile comes back for most people — that policy is the
   // point — so the page reads it out of the list rather than asking twice.
@@ -2280,6 +2290,148 @@ $("view").addEventListener("click", async (event) => {
 
 // ---- crane and rigging ---------------------------------------------------
 
+// ---- crane & rigging qualification (migration 0045) ------------------------------------
+//
+// Qualified means "Lifting and Rigging ILT" is on the person's training history
+// (the OLT and ILT report uploaded for Training Status). It doesn't expire. A
+// location admin or owner can remove it with a reason and restore it — only for
+// someone who has taken the course; the database enforces that.
+
+const CRANE_COURSE = "Lifting and Rigging ILT";
+let craneOverrides = new Map(), craneError = null, craneFilter = "all";
+
+async function loadCrane() {
+  const { data, error } = await db.from("crane_qualification_overrides")
+    .select("person_key, revoked, reason, changed_by_name, changed_at");
+  craneError = error ? error.message : null;
+  craneOverrides = new Map((data || []).map(o => [o.person_key, o]));
+}
+
+const craneCompletion = (row) => (row.classes || []).find(c =>
+  tsText(c.course).toLowerCase() === CRANE_COURSE.toLowerCase()) || null;
+
+function craneStatus(row) {
+  const completion = craneCompletion(row);
+  if (!completion) return { kind: "none" };
+  const change = craneOverrides.get(row.person_key);
+  if (change && change.revoked) return { kind: "removed", change, completion };
+  return { kind: "qualified", completion };
+}
+
+// The signed-in person's own training row: by work email, then by name.
+function craneMine() {
+  const email = (me.email || "").toLowerCase();
+  const fullName = ((profile && profile.full_name) || "").trim();
+  const nameKey = fullName ? tsNameKey(fullName, "") : "";
+  return tsPeople.find(r => r.person_key === email)
+    || (nameKey && tsPeople.find(r => tsNameKey(r.first_name, r.last_name) === nameKey)) || null;
+}
+
+const warnIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17.5v.01"/></svg>';
+
+function craneCard() {
+  if (trainingStatusError || craneError) return "";
+  const mine = craneMine();
+  const status = mine ? craneStatus(mine) : { kind: "none" };
+  if (status.kind === "qualified") {
+    return `<div class="cert">
+      <div class="band">QUALIFIED CRANE &amp; RIGGING</div>
+      <div class="body">
+        <div class="name">${esc((profile && profile.full_name) || `${mine.first_name} ${mine.last_name}`)}</div>
+        <span class="badge b-current">Qualified</span>
+        <dl>
+          <div><dt>Course</dt><dd>${CRANE_COURSE}</dd></div>
+          <div><dt>Completed</dt><dd>${esc(newsDate(status.completion.completed))}</dd></div>
+          <div><dt>Location</dt><dd>${esc(mine.store || "-")}</dd></div>
+          <div><dt>Expires</dt><dd>No expiration</dd></div>
+        </dl>
+        <p class="note" style="margin-top:16px">Issued by the Agri-Service Training Department</p>
+      </div>
+    </div>`;
+  }
+  if (status.kind === "removed") {
+    return `<div class="crane-alert removed">${warnIcon}<div>
+      <b>Crane &amp; Rigging Qualification removed</b>
+      <p>${esc(status.change.changed_by_name)} removed it on ${esc(new Date(status.change.changed_at).toLocaleDateString())}.
+        Speak to your location admin.</p>
+      ${status.change.reason ? `<q>${esc(status.change.reason)}</q>` : ""}</div></div>`;
+  }
+  return `<div class="crane-alert caution">${warnIcon}<div>
+    <b>Not qualified yet</b>
+    <p>You're qualified for crane and rigging work once the ${CRANE_COURSE} course shows on your
+      training history${mine ? "" : " — and your training record wasn't found"}. Ask the training
+      department when the next class is.</p></div></div>`;
+}
+
+// Admins and owners: everyone they look after, with Remove and Restore.
+function craneAdminSection() {
+  if (!isAdmin() || trainingStatusError || craneError || !tsPeople.length) return "";
+  const myKey = (me.email || "").toLowerCase();
+  const rows = tsPeople.map(r => ({ r, st: craneStatus(r) }))
+    .filter(x => craneFilter === "all" || x.st.kind === craneFilter)
+    .sort((a, b) => (a.r.store || "").localeCompare(b.r.store || "") || a.r.last_name.localeCompare(b.r.last_name));
+  const counts = { qualified: 0, removed: 0, none: 0 };
+  tsPeople.forEach(r => { counts[craneStatus(r).kind]++; });
+  const filters = [["all", "All"], ["qualified", `Qualified ${counts.qualified}`],
+    ["removed", `Removed ${counts.removed}`], ["none", `Not taken ${counts.none}`]];
+  return `<div class="card" id="craneAdmin"><h2>Crane &amp; rigging qualifications</h2>
+    <p class="note">${isOwner() ? "Everyone" : "Everyone at your location"}. Qualified means ${CRANE_COURSE} is on
+      their training history. You can remove a qualification, with a reason, and restore it — only for someone
+      who has taken the course, and never your own.</p>
+    <div class="chips">${filters.map(([id, label]) =>
+      `<button class="chip${craneFilter === id ? " on" : ""}" data-crane-filter="${id}">${label}</button>`).join("")}</div>
+    <div style="overflow-x:auto"><table>
+      <thead><tr><th>Name</th>${isOwner() ? "<th>Location</th>" : ""}<th>Status</th><th></th></tr></thead>
+      <tbody>${rows.map(({ r, st }) => `<tr>
+        <td><b>${esc(r.first_name)} ${esc(r.last_name)}</b><div class="note">${esc((r.job || "").replace(/^\d+\s*-\s*/, ""))}</div></td>
+        ${isOwner() ? `<td>${esc(r.store || "-")}</td>` : ""}
+        <td>${st.kind === "qualified" ? `<span class="badge b-current">Qualified</span>
+              <div class="note">${esc(newsDate(st.completion.completed))}</div>`
+          : st.kind === "removed" ? `<span class="badge b-expired">Removed</span>
+              <div class="note">by ${esc(st.change.changed_by_name)}, ${esc(new Date(st.change.changed_at).toLocaleDateString())}:
+              ${esc(st.change.reason)}</div>`
+          : `<span class="badge b-none">Not taken</span>`}</td>
+        <td style="white-space:nowrap">${r.person_key === myKey || st.kind === "none" ? ""
+          : st.kind === "qualified" ? `<button class="pdf" data-crane="remove" data-key="${esc(r.person_key)}">Remove</button>`
+          : `<button class="pdf" data-crane="restore" data-key="${esc(r.person_key)}">Restore</button>`}</td>
+      </tr>`).join("") || `<tr><td colspan="4" class="note">Nobody here.</td></tr>`}</tbody>
+    </table></div></div>`;
+}
+
+function redrawCrane() {
+  const host = $("craneAdmin");
+  if (host) host.outerHTML = craneAdminSection();
+}
+
+document.addEventListener("click", async (event) => {
+  const filter = event.target.closest("[data-crane-filter]");
+  if (filter) { craneFilter = filter.dataset.craneFilter; return redrawCrane(); }
+  const button = event.target.closest("[data-crane]");
+  if (!button) return;
+  const row = tsPeople.find(r => r.person_key === button.dataset.key);
+  if (!row) return;
+  const name = `${row.first_name} ${row.last_name}`;
+  const removing = button.dataset.crane === "remove";
+  let reason = "";
+  if (removing) {
+    reason = (prompt(`Why is ${name}'s Crane & Rigging Qualification being removed? They'll see this.`) || "").trim();
+    if (!reason) return;
+  } else if (!confirm(`Restore ${name}'s Crane & Rigging Qualification?`)) {
+    return;
+  }
+  button.disabled = true;
+  const { data, error } = await db.from("crane_qualification_overrides")
+    .upsert({ person_key: row.person_key, revoked: removing, reason }, { onConflict: "person_key" })
+    .select("person_key, revoked, reason, changed_by_name, changed_at");
+  button.disabled = false;
+  if (error || !data || !data.length) {
+    return alert(error && !/row-level/i.test(error.message) ? error.message
+      : "That wasn't saved — only their location admin or an owner can change it, and only for someone who has taken the course.");
+  }
+  craneOverrides.set(row.person_key, data[0]);
+  redrawCrane();
+});
+
 function riggingView() {
   const mine = plans.filter(p => p.created_by === me.id);
   const others = plans.filter(p => p.created_by !== me.id);
@@ -2289,7 +2441,8 @@ function riggingView() {
     : `<p class="note">${empty}</p>`;
 
   return hero("Crane Center",
-      "Lift plans you've submitted, and the ones waiting on you.")
+      "Your crane and rigging qualification, lift plans you've submitted, and the ones waiting on you.")
+    + craneCard()
     + (isAdmin() ? `<div class="card"><h2>Waiting on you</h2>
         ${list(others.filter(p => p.status === "submitted"),
                "Nothing to approve right now.")}</div>` : "")
@@ -2298,7 +2451,8 @@ function riggingView() {
           "You haven't submitted a lift plan yet. Plans are written in the app.")}</div>`
     + (isAdmin() ? `<div class="card"><h2>Everything else at your shop</h2>
         ${list(others.filter(p => p.status !== "submitted"),
-               "Nothing else here.")}</div>` : "");
+               "Nothing else here.")}</div>` : "")
+    + craneAdminSection();
 }
 
 function planRow(plan) {
