@@ -361,6 +361,45 @@
   #articleEditorFrame { height: min(78vh, 900px); }
   #articleHtml { width: 100%; height: min(78vh, 900px); font: 12.5px/1.5 ui-monospace, Menlo, monospace; }
 
+  /* ------------------------------------------------------------------ training status */
+  .ts-tabs { margin-bottom: 16px; }
+  .ts-cards { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); margin-bottom: 14px; }
+  .ts-cards > .card { margin: 0; }
+  .ts-kpi { display: flex; flex-direction: column; gap: 6px; }
+  .ts-kpi small { font-size: 12px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+  .ts-kpi strong { font-size: 34px; line-height: 1.1; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .ts-kpi strong.ok { color: var(--green); }
+  .ts-kpi strong.short { color: var(--red-dark); }
+  .ts-kpi > span { font-size: 13.5px; color: var(--ink-2); }
+  .ts-meter { position: relative; height: 12px; border-radius: 99px; background: #ECE7E3; margin: 6px 0 24px; }
+  .ts-meter i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 99px; }
+  .ts-meter .ts-now { background: var(--red); }
+  .ts-meter .ts-now.ok { background: var(--green); }
+  .ts-meter .ts-proj { background: repeating-linear-gradient(135deg, rgba(30,138,60,.6) 0 6px, rgba(30,138,60,.32) 6px 12px); }
+  .ts-goal { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; background: var(--ink); }
+  .ts-goal span { position: absolute; top: 19px; left: 50%; transform: translateX(-50%); font-size: 11px;
+                  font-weight: 600; color: var(--ink-2); white-space: nowrap; }
+  .ts-table td.num, .ts-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .ts-table tr.ts-group td { background: var(--paper); font-weight: 700; font-size: 13px; }
+  .ts-table tr.ts-group td span { font-weight: 500; color: var(--muted); margin-left: 6px; }
+  .ts-table tr.ts-met td { color: var(--muted); }
+  .ts-hours { display: flex; align-items: center; gap: 10px; min-width: 150px; }
+  .ts-hours span { font-variant-numeric: tabular-nums; font-size: 13px; white-space: nowrap; }
+  .ts-bar { flex: 1; height: 8px; border-radius: 99px; background: #ECE7E3; overflow: hidden; max-width: 140px; }
+  .ts-bar i { display: block; height: 100%; background: var(--caution); }
+  .ts-bar i.ok { background: var(--green); }
+  .ts-classes { margin: 0; padding: 0; list-style: none; display: grid; gap: 3px; min-width: 260px; }
+  .ts-classes li { display: flex; gap: 12px; justify-content: space-between; font-size: 13.5px; }
+  .ts-classes time { color: var(--muted); white-space: nowrap; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  .ts-tags { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
+  .ts-n { opacity: .6; margin-left: 2px; font-weight: 500; }
+  .ts-sources { margin-top: 14px; }
+  .ts-entries { display: flex; flex-wrap: wrap; gap: 2px 10px; margin-top: 4px; font-size: 12px; color: var(--muted); }
+  .ts-tabs { justify-content: space-between; }
+  .ts-year { display: flex; gap: 8px; align-items: baseline; font-weight: 700; margin: 14px 0 6px; }
+  .ts-year:first-of-type { margin-top: 0; }
+  .ts-year span { font-weight: 500; color: var(--muted); font-size: 13px; }
+
   /* ------------------------------------------------------------------ news */
   .news-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); }
   .news-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
@@ -739,6 +778,7 @@
       <button data-tab="payroll"><i data-icon="calendar"></i><span>Payroll</span></button>
       <button data-tab="directory"><i data-icon="phone"></i><span>Who Does What</span></button>
       <button data-tab="openseat"><i data-icon="training"></i><span>Open Seat Report</span></button>
+      <button data-tab="trainingstatus"><i data-icon="training"></i><span>Training Status</span></button>
 
       <div class="nav-group">Setup</div>
       <button data-tab="org"><i data-icon="building"></i><span>Groups &amp; Shops</span></button>
@@ -1287,6 +1327,51 @@
       </div>
     </section>
 
+    <!-- Training status -->
+    <section id="tab-trainingstatus" class="hidden">
+      <div class="card">
+        <h2>Training Status reports</h2>
+        <div class="drop" id="tsDrop">
+          Drop the reports here, or
+          <label for="tsFile" style="display:inline;color:var(--red);
+                 cursor:pointer;text-decoration:underline">choose files</label>
+          <input id="tsFile" type="file" class="hidden" multiple
+                 accept=".csv,.xlsx,.xls,text/csv">
+        </div>
+        <p class="note" style="margin-top:12px">Three UKG exports, all at once or one at a
+          time — each is recognised by its columns, so the file names don't matter:</p>
+        <ul class="note" style="margin-top:0">
+          <li><b>All employees</b> — everyone's job and store. Technicians are the jobs with
+            "Technician" in the title.</li>
+          <li><b>Credits All Time</b> — every credit each person has earned: AGCO training hours
+            toward the 24-hour credit for this year, and EPA 609. Matched to people by email.
+            (The older Credit Rules Report still works, matched by name.)</li>
+          <li><b>OLT and ILT</b> — course completions, for the history by location.</li>
+        </ul>
+        <p class="note">Nothing changes until you press <b>Publish</b>. Each report replaces the
+          last copy of that report; the others stay as they are. Admins and owners see the
+          result under Training Center → <b>Training Status</b>, in the app and on this page.</p>
+        <div id="tsResult"></div>
+      </div>
+      <div class="card" id="tsGoalCard">
+        <h2>Dealer metric</h2>
+        <p class="note">The share of technicians who need 24 or more AGCO training hours. AGCO sets
+          it — change it here when they do, and the app and this page use the new figure straight
+          away. The 24 hours itself comes from the credits report.</p>
+        <div class="row">
+          <input type="number" id="tsGoalInput" min="1" max="100" step="1" value="60"
+                 style="width:96px;margin:0" aria-label="Goal percent">
+          <span>% of technicians</span>
+          <button data-act="ts-goal">Save</button>
+          <span class="msg"></span>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Published now</h2>
+        <div id="tsLive"></div>
+      </div>
+    </section>
+
     <!-- Groups & shops -->
     <section id="tab-org" class="hidden">
       <div class="card">
@@ -1518,7 +1603,7 @@ async function loadAll() {
   trainingReports = Object.fromEntries((trr.data || []).map(r => [r.id, r]));
   trainingReportsError = trr.error ? trr.error.message : null;
   await Promise.all([signBanners(), loadEvents(), loadInspections(), loadCourses(), loadSds(),
-    loadArticles(), loadTechLevels(), loadNews()]);
+    loadArticles(), loadTechLevels(), loadNews(), loadTrainingStatus()]);
 
   // Only your own profile comes back for most people — that policy is the
   // point — so the page reads it out of the list rather than asking twice.
@@ -1583,6 +1668,8 @@ const TRAINING_LINKS = [
   { title: "Tech Levels", sub: "Competencies and sign-offs", view: "techlevels" },
   // Built from the uploads on the admin page's Open Seat Report tab.
   { title: "Open Seat Report", sub: "Request registration", view: "openseat" },
+  // AGCO hours, 609 and history: yours, your location's, or everyone's. See trainingStatusView.
+  { title: "Training Status", sub: "AGCO hours, 609 and history", view: "trainingstatus" },
   { title: "Training Completions",
     url: "https://akendall72-tech.github.io/Training_Summary/" },
   { title: "UKG ProLearning", sub: "Your assigned training",
@@ -1660,7 +1747,7 @@ function showView(name) {
   $("admin").classList.add("hidden");
   const host = $("view");
   host.classList.remove("hidden");
-  setMode("app", ["openseat", "catalog", "article", "techlevels"].includes(name) ? "training"
+  setMode("app", ["openseat", "catalog", "article", "techlevels", "trainingstatus"].includes(name) ? "training"
     : name === "newspost" ? "news" : name);
   host.innerHTML = `<nav class="crumbs"><button data-home>Home</button><span>/</span>
     ${name === "newspost" ? `<button data-view="news">News</button><span>/</span>` : ""}
@@ -1679,7 +1766,7 @@ function showAdmin() {
   renderPayroll(); renderDirectory(); renderLogins(); renderSharedReminders();
   renderEvents(); renderOrg(); renderOsrImport(); renderOsrLive(); renderInspectionsAdmin();
   renderCoursesAdmin(); renderSdsAdmin(); renderSdsPending(); renderArticlesAdmin(); renderTechAdmin();
-  renderNewsAdmin();
+  renderNewsAdmin(); renderTsImport(); renderTsLive();
   window.scrollTo(0, 0);
 }
 
@@ -1751,6 +1838,7 @@ const VIEWS = {
   openseat: () => openSeatView(),
   catalog: () => catalogView(),
   techlevels: () => techLevelsView(),
+  trainingstatus: () => trainingStatusView(),
   payroll: () => payrollView(),
   directory: () => directoryView(),
   news: () => newsView(),
@@ -4443,6 +4531,7 @@ const COMPANY_PAGES = [
 const pageTitle = (id) => (FEATURES.find(f => f.id === id) || COMPANY_PAGES.find(p => p.id === id)
   || { openseat: { title: "Open Seat Report" }, catalog: { title: "Course Catalog" },
        techlevels: { title: "Tech Levels" },
+       trainingstatus: { title: "Training Status" },
        newspost: { title: (newsPosts.find(p => p.id === openNewsId) || {}).title || "News" },
        article: { title: (trainingArticles.find(a => a.id === openArticleId) || {}).title || "Article" } }[id]
   || { title: "" }).title;
@@ -7364,6 +7453,676 @@ $("admin").addEventListener("click", async (event) => {
   if (act === "news-save") return saveNews();
 });
 
+// ---------------------------------------------------------------- training status
+//
+// Technician AGCO training hours, EPA 609 and everyone's training history
+// (migration 0043), built from three UKG exports an owner uploads on the admin
+// page's Training Status tab:
+//
+//   All employees        who everyone is, their job and store. Technicians are
+//                        the jobs with "Technician" in the title.
+//   Credit Rules Report  each technician's hours toward the 24-hour AGCO
+//                        training credit, and whether they hold EPA 609.
+//   OLT and ILT          every course completion, with its date.
+//
+// The dealer metric: 60% of technicians need 24 or more AGCO training hours.
+//
+// Publishing turns the three into one row per employee. The database decides
+// who sees which rows: everyone their own, a location admin their location's,
+// owners everyone's. So the same page works for all three — it just shows
+// whatever came back.
+
+let tsPeople = [], tsSources = null, tsRaw = null, trainingStatusError = null;
+let tsPlan = new Set();            // person keys ticked as planned to reach 24
+let tsState = { tab: "summary", filter: "all", store: null, everyone: false, year: null };
+let tsPending = { employees: null, credits: null, history: null };
+
+// The dealer metric: the share of technicians who need 24+ AGCO hours. AGCO
+// sets it, so it's a setting owners change on the admin page (60% by default).
+const tsGoalPercent = () => {
+  const value = Number(tsSources && tsSources.goal_percent);
+  return value > 0 && value <= 100 ? value : 60;
+};
+const tsGoal = () => tsGoalPercent() / 100;
+
+async function loadTrainingStatus() {
+  const [people, sources, plan, raw] = await Promise.all([
+    db.from("training_status_people").select("*"),
+    db.rpc("training_status_sources"),
+    db.from("training_plans").select("planned").maybeSingle(),
+    db.from("training_status").select("*").eq("id", "current").maybeSingle()
+  ]);
+  trainingStatusError = people.error ? people.error.message : null;
+  tsPeople = people.data || [];
+  tsSources = sources.error ? null : sources.data;
+  tsPlan = new Set((plan.data && plan.data.planned) || []);
+  tsRaw = raw.error ? null : raw.data;   // owners only
+}
+
+// ---- reading the exports -------------------------------------------------------------
+
+const tsText = (value) => String(value ?? "").replace(/ /g, " ").replace(/\s+/g, " ").trim();
+
+// "Andrés  Pérez-Gómez" and "andres perez gomez" are the same person: the credit
+// report carries names but no email, so names are how it's matched.
+const tsNameKey = (first, last) => `${first} ${last}`.normalize("NFD").replace(/[̀-ͯ]/g, "")
+  .toLowerCase().replace(/[^a-z]+/g, " ").trim();
+
+const tsStoreName = (store) => tsText(store).replace(/^store\s*-\s*\d+\s*-\s*/i, "") || "No store";
+
+const tsIsTech = (job) => /\btechnician\b/i.test(job || "");
+
+// Which export a file is, from its column headings — the file names don't matter.
+function tsIdentify(rows) {
+  const heads = [
+    ["employees", "employees", ["firstname", "lastname", "email", "jobs", "store"]],
+    ["history", "history", ["firstname", "lastname", "email", "course", "date completed"]],
+    // Credits All Time: every credit earned, with emails. The one to use.
+    ["credits", "all-time", ["firstname", "lastname", "email", "credit type", "credits number", "earned at"]],
+    // The older Credit Rules Report: a total per rule, names but no emails.
+    ["credits", "rules", ["first name", "last name", "credit rule", "credits", "completion"]]
+  ];
+  for (let i = 0; i < Math.min(rows.length, 40); i++) {
+    const row = (rows[i] || []).map(c => tsText(c).toLowerCase());
+    for (const [kind, format, names] of heads) {
+      if (names.every(n => row.includes(n))) {
+        const col = Object.fromEntries(row.map((name, index) => [name, index]));
+        return { kind, format, headerIndex: i, col };
+      }
+    }
+  }
+  return null;
+}
+
+// "Export Date: Sep 18, 2026 MDT" from the lines above the table.
+function tsExported(rows, headerIndex) {
+  for (const row of rows.slice(0, headerIndex)) {
+    const m = /^export date:\s*(.+)$/i.exec(tsText((row || [])[0]));
+    if (m) return m[1];
+  }
+  return "";
+}
+
+// "2026-09-14 16:41:59 MDT", a spreadsheet date, or anything a browser reads.
+function tsDate(value) {
+  const text = tsText(value);
+  const iso = /^(\d{4})-(\d{2})-(\d{2})/.exec(text);
+  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+  const serial = excelDate(value);
+  if (serial) return serial;
+  const parsed = text ? new Date(text) : null;
+  return parsed && !isNaN(parsed) ? parsed.toISOString().slice(0, 10) : null;
+}
+
+function tsParse(rows, file) {
+  const found = tsIdentify(rows);
+  if (!found) return null;
+  const { kind, format, headerIndex, col } = found;
+  const get = (row, name) => tsText(row[col[name]]);
+  const body = rows.slice(headerIndex + 1).filter(r => r && r.some(c => tsText(c)));
+  const meta = { file: file.name, exported: tsExported(rows, headerIndex) };
+
+  if (kind === "employees") {
+    const list = body.map(r => ({
+      first: get(r, "firstname"), last: get(r, "lastname"), email: get(r, "email").toLowerCase(),
+      department: tsText(r[col["department"]]).replace(/^department\s*-\s*\d+\s*-\s*/i, ""),
+      job: get(r, "jobs"), store: tsStoreName(get(r, "store"))
+    })).filter(p => p.first || p.last);
+    return { kind, data: { ...meta, rows: list } };
+  }
+
+  if (kind === "history") {
+    const list = body.map(r => ({
+      email: get(r, "email").toLowerCase(), first: get(r, "firstname"), last: get(r, "lastname"),
+      course: get(r, "course"), completed: tsDate(r[col["date completed"]]),
+      percent: parseFloat(get(r, "% completed")) || 0
+    })).filter(h => h.course && h.completed && (h.percent >= 100 || !("% completed" in col)))
+      .map(({ percent, ...h }) => h);
+    return { kind, data: { ...meta, rows: list } };
+  }
+
+  if (format === "all-time") {
+    // One row per credit ever earned. AGCO hours count toward the calendar
+    // year they're earned in — the year the export was taken — and EPA 609
+    // counts for life.
+    const yearOf = (text) => (/\b(20\d\d)\b/.exec(text || "") || [])[1] || "";
+    const exportYear = yearOf(meta.exported);
+    const isAgco = (r) => /agco training hours/i.test(get(r, "credit type") + " " + get(r, "credits rule title"));
+    const cycles = [...new Set(body.filter(isAgco).map(r => get(r, "credits period cycle")).filter(Boolean))]
+      .sort((a, b) => yearOf(b).localeCompare(yearOf(a)));
+    const period = cycles.find(c => yearOf(c) === exportYear) || cycles[0] || "";
+
+    const people = new Map();
+    for (const r of body) {
+      const email = get(r, "email").toLowerCase();
+      const first = get(r, "firstname"), last = get(r, "lastname");
+      if (!email && !first && !last) continue;
+      const key = email || `name:${tsNameKey(first, last)}`;
+      const person = people.get(key)
+        || { email, first, last, agcoHours: 0, agcoRequired: null, epa609: false, agcoEntries: [] };
+      const rule = get(r, "credits rule title");
+      const credits = parseFloat(get(r, "credits number")) || 0;
+      const earned = tsDate(r[col["earned at"]]);
+      if (isAgco(r)) {
+        const inPeriod = period ? get(r, "credits period cycle") === period
+          : !!earned && earned.startsWith(exportYear);
+        if (inPeriod) {
+          person.agcoHours += credits;
+          person.agcoEntries.push({ hours: credits, earned, title: get(r, "external certificate title") });
+        }
+        const required = parseFloat((/number of credits:\s*([\d.]+)/i.exec(rule) || [])[1]);
+        if (required) person.agcoRequired = required;
+      } else if (/epa\s*609/i.test(get(r, "credit type") + " " + rule)) {
+        person.epa609 = true;
+      }
+      people.set(key, person);
+    }
+    const list = [...people.values()].map(p => ({
+      ...p, agcoRequired: p.agcoRequired || 24, agcoMet: p.agcoHours >= (p.agcoRequired || 24),
+      agcoEntries: p.agcoEntries.sort((a, b) => (a.earned || "").localeCompare(b.earned || ""))
+    }));
+    return { kind, data: { ...meta, format, period: yearOf(period) || period || exportYear, rows: list } };
+  }
+
+  // The Credit Rules Report: one row per person per rule; kept as one row per person.
+  const people = new Map();
+  for (const r of body) {
+    const first = get(r, "first name"), last = get(r, "last name");
+    if (!first && !last) continue;
+    const key = tsNameKey(first, last);
+    const person = people.get(key) || { first, last, agcoHours: null, agcoRequired: null, agcoMet: null, epa609: null };
+    const rule = get(r, "credit rule");
+    const credits = parseFloat(get(r, "credits")) || 0;
+    const done = /^100\s*%?$/.test(get(r, "completion"));
+    const required = parseFloat((/number of credits:\s*([\d.]+)/i.exec(rule) || [])[1]);
+    if (/agco training hours/i.test(rule)) {
+      person.agcoHours = credits;
+      person.agcoRequired = required || 24;
+      person.agcoMet = done || credits >= (required || 24);
+    } else if (/epa\s*609/i.test(rule)) {
+      person.epa609 = done || credits >= (required || 1);
+    }
+    people.set(key, person);
+  }
+  const list = [...people.values()].filter(p => p.agcoHours !== null || p.epa609 !== null);
+  return { kind, data: { ...meta, format, rows: list } };
+}
+
+// ---- the model --------------------------------------------------------------------------
+
+// The exports, joined into one row per employee, as the database stores them.
+// The credit report has names but no emails, so it's matched by name.
+function tsPeopleFromRaw(raw) {
+  const employees = (raw && raw.employees && raw.employees.rows) || [];
+  const credits = (raw && raw.credits && raw.credits.rows) || [];
+  const history = (raw && raw.history && raw.history.rows) || [];
+  // Credits All Time lists everyone with a credit, so anyone missing simply has
+  // none. The older Credit Rules Report only lists technicians, by name.
+  const allTime = !!(raw && raw.credits && raw.credits.format === "all-time" && raw.credits.rows);
+  const creditByEmail = new Map(credits.filter(c => c.email).map(c => [c.email, c]));
+  const creditByName = new Map(credits.map(c => [tsNameKey(c.first, c.last), c]));
+  const classesByEmail = new Map();
+  for (const h of history) {
+    if (!h.email) continue;
+    if (!classesByEmail.has(h.email)) classesByEmail.set(h.email, []);
+    classesByEmail.get(h.email).push({ course: h.course, completed: h.completed });
+  }
+  const seen = new Set();
+  return employees.map(e => {
+    const key = tsNameKey(e.first, e.last);
+    const credit = (e.email && creditByEmail.get(e.email)) || creditByName.get(key);
+    const classes = (classesByEmail.get(e.email) || [])
+      .sort((a, b) => b.completed.localeCompare(a.completed) || a.course.localeCompare(b.course));
+    return {
+      person_key: e.email || `name:${key}`, email: e.email || null,
+      first_name: e.first, last_name: e.last, name_key: key,
+      department: e.department || "", job: e.job || "", store: e.store || "",
+      is_technician: tsIsTech(e.job),
+      agco_hours: credit ? credit.agcoHours : allTime ? 0 : null,
+      agco_required: credit ? credit.agcoRequired : allTime ? 24 : null,
+      agco_met: !!(credit && credit.agcoMet), epa_609: !!(credit && credit.epa609),
+      in_credits: !!credit || allTime, classes,
+      agco_entries: (credit && credit.agcoEntries) || []
+    };
+  }).filter(p => (p.first_name || p.last_name) && !seen.has(p.person_key) && seen.add(p.person_key));
+}
+
+// Whatever rows this person may see, worked into the metric.
+function tsModel(rows = tsPeople) {
+  const people = rows.map(r => ({
+    key: r.person_key, email: r.email || "", first: r.first_name, last: r.last_name,
+    name: `${r.first_name} ${r.last_name}`.trim(), job: r.job, store: r.store || "No store",
+    isTech: r.is_technician, hours: r.agco_hours === null || r.agco_hours === undefined ? null : Number(r.agco_hours),
+    required: Number(r.agco_required) || 24, met: !!r.agco_met, epa609: !!r.epa_609,
+    inCredits: !!r.in_credits, classes: r.classes || [], entries: r.agco_entries || []
+  }));
+  const byName = (a, b) => a.last.localeCompare(b.last) || a.first.localeCompare(b.first);
+  const techs = people.filter(p => p.isTech).sort((a, b) => a.store.localeCompare(b.store) || byName(a, b));
+  const metCount = techs.filter(t => t.met).length;
+  const goalCount = Math.ceil(techs.length * tsGoal() - 1e-9);
+  const years = new Set();
+  people.forEach(p => p.classes.forEach(c => years.add(c.completed.slice(0, 4))));
+  return {
+    people: people.sort(byName), techs, metCount, goalCount,
+    pct: techs.length ? metCount / techs.length : 0,
+    neededForGoal: Math.max(0, goalCount - metCount),
+    epaCount: techs.filter(t => t.epa609).length,
+    stores: [...new Set(people.map(p => p.store))].sort((a, b) =>
+      (a === "Field Support") - (b === "Field Support") || a.localeCompare(b)),
+    missingCredits: techs.filter(t => !t.inCredits),
+    years: [...years].sort().reverse()
+  };
+}
+
+// "2026", the year the AGCO hours count toward.
+const tsPeriod = () => (tsSources && tsSources.credits && tsSources.credits.period) || "";
+const tsHoursHead = () => `AGCO hours${tsPeriod() ? ` (${esc(tsPeriod())})` : ""}`;
+
+// "16 hrs · Level 4 Balers · Feb 11" for each credit that makes up the hours.
+function tsEntries(t) {
+  if (!t.entries || !t.entries.length) return "";
+  return `<div class="ts-entries">${t.entries.map(e => `<span>${esc(e.hours)} hrs${e.title ? ` · ${esc(e.title)}` : ""}${
+    e.earned ? ` · ${esc(newsDate(e.earned).replace(/, \d{4}$/, ""))}` : ""}</span>`).join("")}</div>`;
+}
+
+const tsPct = (n) => `${(Math.round(n * 1000) / 10).toFixed(1)}%`;
+
+// ---- the page -----------------------------------------------------------------------------
+
+function trainingStatusView() {
+  const admin = isAdmin();
+  const intro = hero(admin ? "Training Status" : "My Training",
+    admin ? "Technician AGCO training hours against the dealer metric, EPA 609, and training history, from the latest UKG exports."
+          : "Your AGCO training hours, EPA 609 and the classes you've completed, from the latest UKG exports.");
+  if (trainingStatusError) {
+    return intro + `<div class="card"><p class="note">${/does not exist|schema cache/i.test(trainingStatusError)
+      ? "Training Status isn't switched on yet." : esc(trainingStatusError)}</p></div>`;
+  }
+  const model = tsModel();
+  if (!admin) return intro + tsSelfView(model) + `<p class="note ts-sources">${tsSourcesNote(tsSources)}</p>`;
+  if (!model.people.length) {
+    const uploaded = tsSources && tsSources.employees && tsSources.employees.file;
+    return intro + `<div class="card"><p class="note">${!uploaded ? "No reports yet. " + (isOwner()
+      ? "Upload them on the admin page's <b>Training Status</b> tab." : "The training department uploads them.")
+      : "Nobody at your location is on the latest reports."}</p></div>`;
+  }
+  const scope = isOwner() ? "All locations" : `Your location: ${esc(locations[profile.location_id] || "not set")}`;
+  const tabs = [["summary", "Summary"], ["techs", "Technicians"], ["history", "History"], ["plan", "Planning"]];
+  return intro + `<div id="tsPage">
+    <div class="row ts-tabs"><div class="chips" style="margin:0">${tabs.map(([id, label]) =>
+      `<button class="chip${tsState.tab === id ? " on" : ""}" data-ts-tab="${id}">${label}</button>`).join("")}</div>
+      <span class="pill">${scope}</span></div>
+    <div id="tsBody">${tsBody(model)}</div>
+    <p class="note ts-sources">${tsSourcesNote(tsSources)}</p></div>`;
+}
+
+// An employee's own record: hours toward 24, 609, and what they've taken.
+function tsSelfView(m) {
+  const mine = m.people.find(p => p.email && p.email === (me.email || "").toLowerCase()) || m.people[0];
+  if (!mine) {
+    return `<div class="card"><b>No training record found for you yet</b>
+      <p class="note" style="margin-bottom:0">Records are matched by your work email${me.email ? ` (${esc(me.email)})` : ""},
+        then by your name. If the reports list you under another address, ask the training department.</p></div>`;
+  }
+  const years = {};
+  mine.classes.forEach(c => { (years[c.completed.slice(0, 4)] ||= []).push(c); });
+  return `<div class="ts-cards">
+      <div class="card ts-kpi"><small>${esc(mine.job.replace(/^\d+\s*-\s*/, "") || "Employee")} · ${esc(mine.store)}</small>
+        <strong style="font-size:26px">${esc(mine.name)}</strong>
+        ${mine.isTech ? `${mine.hours === null ? `<span class="note">Not on the credits report yet.</span>` : `
+          <span>AGCO training hours${tsPeriod() ? ` in ${esc(tsPeriod())}` : " this year"}</span>${tsHoursCell(mine)}${tsEntries(mine)}
+          <span>${mine.met ? `<span class="badge b-current">24 hours met</span>`
+            : `<span class="badge b-expired">${Math.max(0, mine.required - mine.hours)} more hours to reach ${mine.required}</span>`}
+          ${mine.epa609 ? `<span class="badge b-current">EPA 609</span>` : `<span class="badge b-expired">No EPA 609 yet</span>`}</span>`}` : ""}
+      </div></div>
+    <div class="card"><h2>Classes completed</h2>
+      ${Object.keys(years).length ? Object.keys(years).sort().reverse().map(y => `<div class="ts-year">${y}
+        <span>${years[y].length}</span></div><ul class="ts-classes">${years[y].map(c =>
+        `<li><span>${esc(c.course)}</span><time>${esc(newsDate(c.completed))}</time></li>`).join("")}</ul>`).join("")
+      : `<p class="note">None on the OLT and ILT report yet.</p>`}
+    </div>`;
+}
+
+function tsSourcesNote(sources) {
+  if (!sources) return "";
+  const part = (label, block) => block && (block.file || block.exported)
+    ? `${label}${block.exported ? ` exported ${esc(block.exported)}` : ""}` : `${label} not uploaded`;
+  return `From ${part("All employees", sources.employees)}; ${part(sources.credits && sources.credits.format === "rules"
+    ? "Credit Rules" : "Credits All Time", sources.credits)}; ${
+    part("OLT and ILT", sources.history)}.`;
+}
+
+function tsBody(model) {
+  switch (tsState.tab) {
+    case "techs": return tsTechsTab(model);
+    case "history": return tsHistoryTab(model);
+    case "plan": return tsPlanTab(model);
+    default: return tsSummaryTab(model);
+  }
+}
+
+// The bar with the 60% line on it.
+function tsMeter(pct, projected = null) {
+  return `<div class="ts-meter" role="img" aria-label="${tsPct(pct)} of technicians, goal ${tsGoalPercent()}%">
+    ${projected !== null && projected > pct ? `<i class="ts-proj" style="width:${Math.min(100, projected * 100)}%"></i>` : ""}
+    <i class="ts-now${pct >= tsGoal() ? " ok" : ""}" style="width:${Math.min(100, pct * 100)}%"></i>
+    <b class="ts-goal" style="left:${tsGoalPercent()}%"><span>Goal ${tsGoalPercent()}%</span></b></div>`;
+}
+
+function tsSummaryTab(m) {
+  const stores = m.stores.map(store => {
+    const techs = m.techs.filter(t => t.store === store);
+    if (!techs.length) return "";
+    const met = techs.filter(t => t.met).length;
+    const epa = techs.filter(t => t.epa609).length;
+    return `<tr><td><b>${esc(store)}</b></td><td class="num">${techs.length}</td>
+      <td class="num">${met}</td><td class="num">${tsPct(met / techs.length)}</td>
+      <td class="num">${epa} of ${techs.length}</td></tr>`;
+  }).join("");
+  return `<div class="ts-cards">
+      <div class="card ts-kpi">
+        <small>Technicians with 24+ AGCO training hours</small>
+        <strong class="${m.pct >= tsGoal() ? "ok" : "short"}">${tsPct(m.pct)}</strong>
+        ${tsMeter(m.pct)}
+        <span>${m.metCount} of ${m.techs.length} technicians. ${m.neededForGoal
+          ? `<b>${m.neededForGoal} more</b> needed to reach ${tsGoalPercent()}%${isOwner() ? "" : " here"} (${m.goalCount} technicians).`
+          : "The dealer metric is met."}</span>
+      </div>
+      <div class="card ts-kpi">
+        <small>Technicians with an EPA 609 credit</small>
+        <strong>${tsPct(m.techs.length ? m.epaCount / m.techs.length : 0)}</strong>
+        <span>${m.epaCount} of ${m.techs.length} technicians. ${m.techs.length - m.epaCount} still need one.</span>
+      </div>
+    </div>
+    <div class="card"><h2>By location</h2>
+      <div style="overflow-x:auto"><table class="ts-table">
+        <thead><tr><th>Location</th><th class="num">Technicians</th><th class="num">24+ hrs</th>
+          <th class="num">%</th><th class="num">EPA 609</th></tr></thead>
+        <tbody>${stores}</tbody></table></div></div>
+    ${m.missingCredits.length ? `<p class="note">Not on the credits report, so counted as not met:
+      ${m.missingCredits.map(t => esc(t.name)).join(", ")}.</p>` : ""}`;
+}
+
+function tsHoursCell(t) {
+  if (t.hours === null) return `<span class="note">Not on the report</span>`;
+  const pct = Math.min(100, (t.hours / t.required) * 100);
+  return `<div class="ts-hours"><div class="ts-bar"><i class="${t.met ? "ok" : ""}" style="width:${pct}%"></i></div>
+    <span>${t.hours} hrs</span></div>`;
+}
+
+function tsTechsTab(m) {
+  const filters = [["all", "All technicians"], ["hours", "Still need 24 hrs"], ["609", "Missing 609"]];
+  const keep = (t) => tsState.filter === "hours" ? !t.met : tsState.filter === "609" ? !t.epa609 : true;
+  const groups = m.stores.map(store => {
+    const techs = m.techs.filter(t => t.store === store && keep(t));
+    if (!techs.length) return "";
+    return `<tr class="ts-group"><td colspan="4">${esc(store)} <span>${techs.length}</span></td></tr>` +
+      techs.map(t => `<tr><td><b>${esc(t.name)}</b><div class="note">${esc(t.job.replace(/^\d+\s*-\s*/, ""))}</div></td>
+        <td>${tsHoursCell(t)}${tsEntries(t)}</td>
+        <td>${t.met ? `<span class="badge b-current">Met</span>`
+          : `<span class="badge b-expired">Needs ${Math.max(0, t.required - (t.hours || 0))} hrs</span>`}</td>
+        <td>${t.epa609 ? `<span class="badge b-current">Yes</span>` : `<span class="badge b-expired">No</span>`}</td></tr>`).join("");
+  }).join("");
+  return `<div class="chips">${filters.map(([id, label]) =>
+      `<button class="chip${tsState.filter === id ? " on" : ""}" data-ts-filter="${id}">${label}</button>`).join("")}</div>
+    <div class="card" style="padding:0;overflow:hidden"><div style="overflow-x:auto"><table class="ts-table">
+      <thead><tr><th>Technician</th><th>${tsHoursHead()}</th><th>24 hrs</th><th>EPA 609</th></tr></thead>
+      <tbody>${groups || `<tr><td colspan="4" class="note">Nobody — everyone's there.</td></tr>`}</tbody>
+    </table></div></div>`;
+}
+
+function tsHistoryTab(m) {
+  const store = tsState.store && m.stores.includes(tsState.store) ? tsState.store
+    : (m.stores.find(s => m.techs.some(t => t.store === s)) || m.stores[0]);
+  const year = tsState.year && m.years.includes(tsState.year) ? tsState.year : (tsState.year === "all" ? "all" : m.years[0] || "all");
+  const pool = tsState.everyone ? m.people : m.techs;
+  const count = (s) => pool.filter(p => p.store === s).length;
+  const people = pool.filter(p => p.store === store);
+  const rows = people.map(p => {
+    const classes = p.classes.filter(c => year === "all" || c.completed.startsWith(year));
+    return `<tr><td><b>${esc(p.name)}</b><div class="note">${esc(p.job.replace(/^\d+\s*-\s*/, ""))}</div>
+        ${p.isTech ? `<div class="ts-tags">${p.hours !== null ? `<span class="pill">${p.hours} AGCO hrs</span>` : ""}
+          <span class="pill">${p.epa609 ? "609 ✓" : "No 609"}</span></div>` : ""}</td>
+      <td>${classes.length ? `<ul class="ts-classes">${classes.map(c =>
+        `<li><span>${esc(c.course)}</span><time>${esc(newsDate(c.completed))}</time></li>`).join("")}</ul>` : "—"}</td>
+      <td class="num">${classes.length}</td></tr>`;
+  }).join("");
+  return `<div class="chips">${m.stores.filter(s => count(s)).map(s =>
+      `<button class="chip${s === store ? " on" : ""}" data-ts-store="${esc(s)}">${esc(s)} <span class="ts-n">${count(s)}</span></button>`).join("")}</div>
+    <div class="row" style="margin:-2px 0 12px">
+      <label class="check" style="margin:0"><input type="checkbox" data-ts-everyone ${tsState.everyone ? "checked" : ""}>
+        Everyone, not just technicians</label>
+      <select data-ts-year style="width:auto;margin:0">
+        ${m.years.map(y => `<option value="${y}"${y === year ? " selected" : ""}>${y}</option>`).join("")}
+        <option value="all"${year === "all" ? " selected" : ""}>All years</option></select>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden"><div style="overflow-x:auto"><table class="ts-table">
+      <thead><tr><th>${esc(store)} (${people.length})</th><th>Classes completed${year === "all" ? "" : " in " + year}</th>
+        <th class="num">Total</th></tr></thead>
+      <tbody>${rows || `<tr><td colspan="3" class="note">Nobody here.</td></tr>`}</tbody></table></div></div>`;
+}
+
+function tsPlanNumbers(m) {
+  const planned = m.techs.filter(t => !t.met && tsPlan.has(t.key)).length;
+  const projected = m.techs.length ? (m.metCount + planned) / m.techs.length : 0;
+  return { planned, projected, stillNeeded: Math.max(0, m.goalCount - m.metCount - planned) };
+}
+
+function tsPlanTab(m) {
+  const n = tsPlanNumbers(m);
+  const groups = m.stores.map(store => {
+    const techs = m.techs.filter(t => t.store === store);
+    if (!techs.length) return "";
+    return `<tr class="ts-group"><td colspan="3">${esc(store)} <span>${techs.filter(t => t.met).length} of ${techs.length} met</span></td></tr>` +
+      techs.map(t => `<tr class="${t.met ? "ts-met" : ""}">
+        <td><label class="check" style="margin:0"><input type="checkbox" data-ts-plan="${esc(t.key)}"
+          ${t.met || tsPlan.has(t.key) ? "checked" : ""} ${t.met ? "disabled" : ""}> <b>${esc(t.name)}</b></label></td>
+        <td>${tsHoursCell(t)}</td>
+        <td>${t.met ? `<span class="badge b-current">Met</span>` : tsPlan.has(t.key)
+          ? `<span class="badge b-answered">Planned</span>` : `<span class="note">Needs ${Math.max(0, t.required - (t.hours || 0))} hrs</span>`}</td></tr>`).join("");
+  }).join("");
+  return `<div class="ts-cards">
+      <div class="card ts-kpi"><small>Now</small><strong>${tsPct(m.pct)}</strong>
+        <span>${m.metCount} of ${m.techs.length} technicians have 24+ hours.</span></div>
+      <div class="card ts-kpi"><small>With the plan</small>
+        <strong class="${n.projected >= tsGoal() ? "ok" : "short"}">${tsPct(n.projected)}</strong>
+        ${tsMeter(m.pct, n.projected)}
+        <span>${n.planned} planned. ${n.stillNeeded
+          ? `<b>${n.stillNeeded} more</b> to reach ${tsGoalPercent()}%.`
+          : `That reaches ${tsGoalPercent()}%.`}</span></div>
+    </div>
+    <div class="row" style="margin:0 0 12px">
+      <span class="note" style="flex:1">Tick the technicians you plan to get to 24 hours. Your plan is saved to your
+        account, so it's the same in the app, and nobody else sees it.</span>
+      <button class="ghost" data-ts-clear ${n.planned ? "" : "disabled"}>Clear plan</button>
+      <span class="msg" id="tsPlanMsg"></span></div>
+    <div class="card" style="padding:0;overflow:hidden"><div style="overflow-x:auto"><table class="ts-table">
+      <thead><tr><th>Technician</th><th>${tsHoursHead()}</th><th></th></tr></thead>
+      <tbody>${groups}</tbody></table></div></div>`;
+}
+
+function tsRedraw() {
+  const body = $("tsBody");
+  if (!body) return;
+  body.innerHTML = tsBody(tsModel());
+  document.querySelectorAll("[data-ts-tab]").forEach(b => b.classList.toggle("on", b.dataset.tsTab === tsState.tab));
+}
+
+let tsSaveTimer = null;
+function tsSavePlan() {
+  clearTimeout(tsSaveTimer);
+  tsSaveTimer = setTimeout(async () => {
+    const { error } = await db.from("training_plans")
+      .upsert({ planned: [...tsPlan] }, { onConflict: "user_id" });
+    const msg = $("tsPlanMsg");
+    if (msg) {
+      msg.textContent = error ? `Not saved: ${error.message}` : "Saved";
+      msg.className = "msg " + (error ? "error" : "ok");
+    }
+  }, 500);
+}
+
+document.addEventListener("click", (event) => {
+  const tab = event.target.closest("[data-ts-tab]");
+  if (tab) { tsState.tab = tab.dataset.tsTab; return tsRedraw(); }
+  const filter = event.target.closest("[data-ts-filter]");
+  if (filter) { tsState.filter = filter.dataset.tsFilter; return tsRedraw(); }
+  const store = event.target.closest("[data-ts-store]");
+  if (store) { tsState.store = store.dataset.tsStore; return tsRedraw(); }
+  if (event.target.closest("[data-ts-clear]")) {
+    if (!confirm("Clear every planned tick?")) return;
+    tsPlan.clear();
+    tsRedraw();
+    return tsSavePlan();
+  }
+});
+
+document.addEventListener("change", (event) => {
+  const box = event.target.closest("[data-ts-plan]");
+  if (box) {
+    const key = box.dataset.tsPlan;
+    if (box.checked) tsPlan.add(key); else tsPlan.delete(key);
+    tsRedraw();
+    return tsSavePlan();
+  }
+  if (event.target.matches("[data-ts-everyone]")) { tsState.everyone = event.target.checked; return tsRedraw(); }
+  if (event.target.matches("[data-ts-year]")) { tsState.year = event.target.value; return tsRedraw(); }
+});
+
+// ---- admin: uploading ---------------------------------------------------------------------
+
+const TS_KINDS = { employees: "All employees", credits: "Credits All Time", history: "OLT and ILT" };
+
+async function tsReadFiles(files) {
+  const problems = [];
+  for (const file of files) {
+    let rows;
+    try { rows = await rowsFromFile(file); }
+    catch (e) { problems.push(`${file.name}: couldn't be read (${e.message}).`); continue; }
+    const parsed = tsParse(rows, file);
+    if (!parsed) { problems.push(`${file.name}: not one of the three reports — its columns don't match.`); continue; }
+    if (!parsed.data.rows.length) { problems.push(`${file.name}: the ${TS_KINDS[parsed.kind]} report has no rows.`); continue; }
+    tsPending[parsed.kind] = parsed.data;
+  }
+  renderTsImport(problems);
+}
+
+function renderTsImport(problems = []) {
+  const box = $("tsResult");
+  if (!box) return;
+  const kinds = Object.keys(TS_KINDS).filter(k => tsPending[k]);
+  if (!kinds.length && !problems.length) { box.innerHTML = ""; return; }
+
+  // What it would look like with these files over what's published now.
+  const merged = { ...(tsRaw || {}), ...Object.fromEntries(kinds.map(k => [k, tsPending[k]])) };
+  const rows = tsPeopleFromRaw(merged);
+  const m = tsModel(rows);
+  const jobs = {};
+  m.techs.forEach(t => { jobs[t.job] = (jobs[t.job] || 0) + 1; });
+  const staff = (merged.employees && merged.employees.rows) || [];
+  const knownNames = new Set(staff.map(e => tsNameKey(e.first, e.last)));
+  const knownEmails = new Set(staff.map(e => e.email).filter(Boolean));
+  const unmatched = ((merged.credits && merged.credits.rows) || [])
+    .filter(c => !(c.email && knownEmails.has(c.email)) && !knownNames.has(tsNameKey(c.first, c.last)));
+  const appStores = new Set(allLocations.map(l => l.name.toLowerCase()));
+  const strayStores = m.stores.filter(s => s !== "No store" && !appStores.has(s.toLowerCase())
+    && m.people.some(p => p.store === s));
+  const has = (k) => merged[k] && merged[k].rows;
+
+  box.innerHTML = `${problems.map(p => `<p class="error">${esc(p)}</p>`).join("")}
+    ${kinds.length ? `<div class="role" style="margin-top:12px">
+      <b>Ready to publish</b>
+      <ul class="note" style="margin:6px 0 10px">${kinds.map(k => `<li><b>${TS_KINDS[k]}</b> — ${esc(tsPending[k].file)}${
+        tsPending[k].exported ? `, exported ${esc(tsPending[k].exported)}` : ""}: ${tsPending[k].rows.length} ${
+        k === "history" ? "completions" : k === "credits" ? "people" : "employees"}</li>`).join("")}</ul>
+      ${!has("employees") ? `<p class="error" style="margin:0 0 6px">All employees hasn't been uploaded yet — it's needed
+        before anything can be published.</p>` : ""}
+      ${m.techs.length ? `<p class="note" style="margin:0 0 6px">That makes <b>${m.techs.length} technicians</b>
+        (${Object.entries(jobs).map(([job, n]) => `${esc(job.replace(/^\d+\s*-\s*/, ""))} ${n}`).join(", ")}),
+        <b>${m.metCount}</b> with 24+ hours — <b>${tsPct(m.pct)}</b>.</p>` : ""}
+      ${m.missingCredits.length && has("credits") ? `<p class="note" style="margin:0 0 6px">Technicians not on the
+        credits report (counted as not met): ${m.missingCredits.map(t => esc(t.name)).join(", ")}.</p>` : ""}
+      ${unmatched.length && has("employees") ? `<p class="note" style="margin:0 0 6px">On the credits report but not
+        in All employees, so left out: ${unmatched.map(c => esc(c.first + " " + c.last)).join(", ")}.</p>` : ""}
+      ${strayStores.length ? `<p class="note" style="margin:0 0 6px">Stores with no location of the same name in the app,
+        so no location admin sees them (owners still do): ${strayStores.map(esc).join(", ")}. Rename the location under
+        Groups &amp; Shops to match.</p>` : ""}
+      <div class="row"><button data-act="ts-publish" ${has("employees") ? "" : "disabled"}>Publish</button>
+        <button class="ghost" data-act="ts-discard">Discard</button><span class="msg"></span></div>
+    </div>` : ""}`;
+}
+
+function renderTsLive() {
+  const box = $("tsLive");
+  if (!box) return;
+  if (trainingStatusError) {
+    box.innerHTML = `<p class="error">${/does not exist|schema cache/i.test(trainingStatusError)
+      ? "Run migration 0043_training_status.sql in the SQL editor, then reload this page." : esc(trainingStatusError)}</p>`;
+    return;
+  }
+  const goalInput = $("tsGoalInput");
+  if (goalInput && document.activeElement !== goalInput) goalInput.value = tsGoalPercent();
+  if (!tsSources || !(tsSources.employees && tsSources.employees.file)) {
+    box.innerHTML = `<p class="note">Nothing published yet.</p>`;
+    return;
+  }
+  const m = tsModel();
+  box.innerHTML = `<ul class="note" style="margin:0 0 8px">${Object.entries(TS_KINDS).map(([k, label]) => {
+      const block = tsSources[k];
+      return `<li><b>${label}</b>: ${block && block.file ? `${esc(block.file)}${block.exported
+        ? `, exported ${esc(block.exported)}` : ""}` : "not uploaded yet"}</li>`;
+    }).join("")}</ul>
+    <p class="note" style="margin:0">Published ${esc(new Date(tsSources.updated_at).toLocaleString())}.
+      ${m.people.length} employees, ${m.techs.length} technicians, ${m.metCount} at 24+ hours (${tsPct(m.pct)}).</p>`;
+}
+
+$("tsFile").addEventListener("change", (e) => { tsReadFiles([...e.target.files]); e.target.value = ""; });
+["dragenter", "dragover"].forEach(type =>
+  $("tsDrop").addEventListener(type, (e) => { e.preventDefault(); $("tsDrop").classList.add("over"); }));
+["dragleave", "drop"].forEach(type =>
+  $("tsDrop").addEventListener(type, () => $("tsDrop").classList.remove("over")));
+$("tsDrop").addEventListener("drop", (e) => { e.preventDefault(); tsReadFiles([...e.dataTransfer.files]); });
+
+$("admin").addEventListener("click", async (event) => {
+  const button = event.target.closest('button[data-act="ts-goal"]');
+  if (!button) return;
+  const card = $("tsGoalCard");
+  const value = Number($("tsGoalInput").value);
+  if (!(value > 0 && value <= 100)) return speak(card, "Enter a percentage from 1 to 100.", true);
+  button.disabled = true;
+  const { data, error } = await db.from("training_status")
+    .upsert({ id: "current", goal_percent: value }, { onConflict: "id" }).select("goal_percent");
+  button.disabled = false;
+  if (error) return speak(card, error.message, true);
+  if (!data || !data.length) return speak(card, "Not saved — only an owner can change this.", true);
+  await loadTrainingStatus();
+  renderTsLive();
+  speak(card, `Saved. The goal is now ${tsGoalPercent()}%.`, false);
+});
+
+$("admin").addEventListener("click", async (event) => {
+  const button = event.target.closest("button[data-act]");
+  if (!button || !["ts-publish", "ts-discard"].includes(button.dataset.act)) return;
+  if (button.dataset.act === "ts-discard") {
+    tsPending = { employees: null, credits: null, history: null };
+    return renderTsImport();
+  }
+  const card = button.closest(".role");
+  const raw = {};
+  Object.keys(TS_KINDS).forEach(k => { if (tsPending[k]) raw[k] = tsPending[k]; });
+  const people = tsPeopleFromRaw({ ...(tsRaw || {}), ...raw });
+  button.disabled = true;
+  speak(card, "Publishing…", false);
+  const { error } = await db.rpc("publish_training_status", { raw, people });
+  button.disabled = false;
+  if (error) return speak(card, error.message, true);
+  tsPending = { employees: null, credits: null, history: null };
+  await loadTrainingStatus();
+  renderTsImport();
+  renderTsLive();
+  $("tsResult").innerHTML = `<p class="ok" style="margin-top:12px">Published. The app shows it the next time Training Status is opened.</p>`;
+});
+
 // Keeps the first of any entries that differ only by capitals.
 function uniqueText(list) {
   const seen = new Set();
@@ -7659,7 +8418,7 @@ document.querySelectorAll(".tabs button[data-tab]").forEach(btn => {
     document.querySelectorAll(".tabs button[data-tab]").forEach(b =>
       b.classList.toggle("active", b === btn));
     ["certs", "plans", "people", "support", "banners", "payroll",
-      "directory", "logins", "reminders", "events", "org", "openseat", "inspections", "courses", "articles", "techadmin", "sds", "news"].forEach(name =>
+      "directory", "logins", "reminders", "events", "org", "openseat", "inspections", "courses", "articles", "techadmin", "sds", "news", "trainingstatus"].forEach(name =>
       $("tab-" + name).classList.toggle("hidden", name !== btn.dataset.tab));
     $("adminTitle").textContent = btn.textContent.trim();
     document.body.classList.remove("nav-open");
