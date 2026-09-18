@@ -768,7 +768,7 @@
       <button data-tab="events"><i data-icon="events"></i><span>Events</span></button>
       <button data-tab="courses"><i data-icon="training"></i><span>Course Catalog</span></button>
       <button data-tab="articles"><i data-icon="doc"></i><span>Training Articles</span></button>
-      <button data-tab="techadmin"><i data-icon="training"></i><span>Tech Levels</span></button>
+      <button data-tab="techadmin"><i data-icon="training"></i><span>Skills</span></button>
       <button data-tab="sds"><i data-icon="safety"></i><span>Safety Data Sheets</span></button>
       <button data-tab="reminders"><i data-icon="reminders"></i><span>Reminders</span></button>
       <button data-tab="support"><i data-icon="support"></i><span>Support Center</span></button>
@@ -1121,7 +1121,7 @@
     <!-- Tech levels: the competency list -->
     <section id="tab-techadmin" class="hidden">
       <div class="card" id="techAdd">
-        <h2>Tech Levels competencies</h2>
+        <h2>Skills competencies</h2>
         <p class="note">The list technicians are signed off against, level by level. Sign-offs happen in the
           Training Center — admins for their own shop, owners for anyone. Retire a competency rather than
           removing it: it comes off everyone's list and past sign-offs are kept. Adding one to a level never
@@ -1665,13 +1665,11 @@ const TRAINING_LINKS = [
   // Edited on the admin page's Course Catalog tab.
   { title: "Course Catalog", sub: "Agri-Service courses", view: "catalog" },
   // Competencies and sign-offs; see techLevelsView.
-  { title: "Tech Levels", sub: "Competencies and sign-offs", view: "techlevels" },
+  { title: "Skills", sub: "Competencies and sign-offs", view: "techlevels" },
   // Built from the uploads on the admin page's Open Seat Report tab.
   { title: "Open Seat Report", sub: "Request registration", view: "openseat" },
   // AGCO hours, 609 and history: yours, your location's, or everyone's. See trainingStatusView.
   { title: "Training Status", sub: "AGCO hours, 609 and history", view: "trainingstatus" },
-  { title: "Training Completions",
-    url: "https://akendall72-tech.github.io/Training_Summary/" },
   { title: "UKG ProLearning", sub: "Your assigned training",
     url: "https://learning.ultipro.com/academy/AGRI-SERVICELLC/learner/training/my-training/overview" },
   // The articles follow, from the admin page's Training Articles tab.
@@ -4530,7 +4528,7 @@ const COMPANY_PAGES = [
 
 const pageTitle = (id) => (FEATURES.find(f => f.id === id) || COMPANY_PAGES.find(p => p.id === id)
   || { openseat: { title: "Open Seat Report" }, catalog: { title: "Course Catalog" },
-       techlevels: { title: "Tech Levels" },
+       techlevels: { title: "Skills" },
        trainingstatus: { title: "Training Status" },
        newspost: { title: (newsPosts.find(p => p.id === openNewsId) || {}).title || "News" },
        article: { title: (trainingArticles.find(a => a.id === openArticleId) || {}).title || "Article" } }[id]
@@ -6279,17 +6277,17 @@ function techPersonCard(person, label) {
 
 function techLevelsView() {
   if (techError) {
-    return hero("Tech Levels", "") + `<div class="card"><p class="note">${
+    return hero("Skills", "") + `<div class="card"><p class="note">${
       /does not exist|schema cache/i.test(techError)
-        ? "Tech Levels isn't switched on yet — the training department is setting it up."
-        : "Tech Levels couldn't be loaded. " + esc(techError)}</p></div>`;
+        ? "Skills isn't switched on yet — the training department is setting it up."
+        : "Skills couldn't be loaded. " + esc(techError)}</p></div>`;
   }
 
   const open = techState.personId && techPeople.find(p => p.id === techState.personId);
   if (open) return techChecklist(open);
 
   const mine = techPeople.find(p => p.id === me.id);
-  let html = hero("Tech Levels",
+  let html = hero("Skills",
     "Four levels of competencies, each signed off by your location admin. Finish every item in a level to move up to the next.");
 
   if (mine && mine.is_technician) {
@@ -6324,7 +6322,7 @@ function techLevelsView() {
   }
 
   if (!(mine && mine.is_technician) && !isAdmin()) {
-    html += `<div class="card"><b>Tech Levels is for service technicians.</b>
+    html += `<div class="card"><b>Skills is for service technicians.</b>
       <p class="note" style="margin:6px 0 0">If you're a technician and don't see your progress here,
       ask your location admin to add you.</p></div>`;
   }
