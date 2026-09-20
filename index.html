@@ -782,6 +782,7 @@
       <button data-tab="articles"><i data-icon="doc"></i><span>Training Articles</span></button>
       <button data-tab="techadmin"><i data-icon="training"></i><span>Skills</span></button>
       <button data-tab="sds"><i data-icon="safety"></i><span>Safety Data Sheets</span></button>
+      <button data-tab="handbook"><i data-icon="briefcase"></i><span>Employee Handbook</span></button>
       <button data-tab="reminders"><i data-icon="reminders"></i><span>Reminders</span></button>
       <button data-tab="support"><i data-icon="support"></i><span>Support Center</span></button>
       <button data-tab="logins"><i data-icon="key"></i><span>Shared Logins</span></button>
@@ -1344,6 +1345,31 @@
       </div>
     </section>
 
+    <!-- Employee handbook -->
+    <section id="tab-handbook" class="hidden">
+      <div class="card">
+        <h2>Employee handbook</h2>
+        <p class="note">The PDF everyone reads in the app's <b>HR</b> tab and on this page.
+          Uploading a new one replaces it everywhere; phones fetch the new copy the next time
+          the handbook is opened with signal, and keep it for reading offline.</p>
+        <div class="drop" id="handbookDrop">
+          Drop the handbook PDF here, or
+          <label for="handbookFile" style="display:inline;color:var(--red);
+                 cursor:pointer;text-decoration:underline">choose a file</label>
+          <input id="handbookFile" type="file" class="hidden" accept="application/pdf,.pdf">
+        </div>
+        <div class="fields" style="margin-top:14px">
+          <div><label for="handbookTitle">Title</label>
+            <input type="text" id="handbookTitle" placeholder="Employee Handbook"></div>
+          <div><label for="handbookSummary">Summary</label>
+            <input type="text" id="handbookSummary" placeholder="Pay, time off, conduct and benefits."></div>
+        </div>
+        <div class="row"><button data-act="handbook-save-text">Save the wording</button>
+          <span class="msg" id="handbookMsg"></span></div>
+        <div id="handbookLive" style="margin-top:14px"></div>
+      </div>
+    </section>
+
     <!-- Training status -->
     <section id="tab-trainingstatus" class="hidden">
       <div class="card">
@@ -1634,7 +1660,7 @@ async function loadAll() {
   trainingReports = Object.fromEntries((trr.data || []).map(r => [r.id, r]));
   trainingReportsError = trr.error ? trr.error.message : null;
   await Promise.all([signBanners(), loadEvents(), loadInspections(), loadCourses(), loadSds(),
-    loadArticles(), loadTechLevels(), loadNews(), loadTrainingStatus(), loadCrane()]);
+    loadArticles(), loadTechLevels(), loadNews(), loadTrainingStatus(), loadCrane(), loadCompanyDocs()]);
 
   // Only your own profile comes back for most people — that policy is the
   // point — so the page reads it out of the list rather than asking twice.
@@ -1664,6 +1690,7 @@ const ICONS = {
   news: '<path d="M4 5h12v14a2 2 0 0 0 2 2H6a2 2 0 0 1-2-2Z"/><path d="M16 9h4v10a2 2 0 0 1-2 2"/><path d="M7.5 9h5M7.5 13h5M7.5 17h3"/>',
   pin: '<path d="M9 3.5h6l-1 6.5 3.5 3.5h-11L10 10 9 3.5Z"/><path d="M12 13.5V21"/>',
   pinFilled: '<path d="M9 3.5h6l-1 6.5 3.5 3.5h-11L10 10 9 3.5Z" fill="currentColor"/><path d="M12 13.5V21"/>',
+  briefcase: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/>',
   key: '<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M16 7l3 3M14 9l2 2"/>',
   building: '<path d="M4 21V5l8-3v19M12 8h8v13"/><path d="M8 8v.01M8 12v.01M8 16v.01M16 12v.01M16 16v.01"/><path d="M2 21h20"/>',
   settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/>'
@@ -1777,7 +1804,7 @@ function showView(name) {
   const host = $("view");
   host.classList.remove("hidden");
   setMode("app", ["openseat", "catalog", "article", "techlevels", "trainingstatus"].includes(name) ? "training"
-    : name === "newspost" ? "news" : name);
+    : name === "newspost" ? "news" : name === "payroll" ? "hr" : name);
   host.innerHTML = `<nav class="crumbs"><button data-home>Home</button><span>/</span>
     ${name === "newspost" ? `<button data-view="news">News</button><span>/</span>` : ""}
     <span>${esc(pageTitle(name))}</span></nav>` + VIEWS[name]();
@@ -1795,7 +1822,7 @@ function showAdmin() {
   renderPayroll(); renderDirectory(); renderLogins(); renderSharedReminders();
   renderEvents(); renderOrg(); renderOsrImport(); renderOsrLive(); renderInspectionsAdmin();
   renderCoursesAdmin(); renderSdsAdmin(); renderSdsPending(); renderArticlesAdmin(); renderTechAdmin();
-  renderNewsAdmin(); renderTsImport(); renderTsLive();
+  renderNewsAdmin(); renderTsImport(); renderTsLive(); renderHandbook();
   window.scrollTo(0, 0);
 }
 
@@ -1868,6 +1895,7 @@ const VIEWS = {
   catalog: () => catalogView(),
   techlevels: () => techLevelsView(),
   trainingstatus: () => trainingStatusView(),
+  hr: () => hrView(),
   payroll: () => payrollView(),
   directory: () => directoryView(),
   news: () => newsView(),
@@ -4746,7 +4774,7 @@ const todayISO = () => {
 
 // Pages the web page has that aren't Centers in the app's home grid.
 const COMPANY_PAGES = [
-  { id: "payroll", title: "Payroll", icon: "calendar" },
+  { id: "hr", title: "HR", icon: "briefcase" },
   { id: "directory", title: "Who Does What", icon: "phone" },
   { id: "news", title: "News", icon: "news" }
 ];
@@ -4756,6 +4784,7 @@ const pageTitle = (id) => (FEATURES.find(f => f.id === id) || COMPANY_PAGES.find
        techlevels: { title: "Skills" },
        trainingstatus: { title: "Training Status" },
        newspost: { title: (newsPosts.find(p => p.id === openNewsId) || {}).title || "News" },
+       hr: { title: "HR" }, payroll: { title: "Payroll Calendar" },
        article: { title: (trainingArticles.find(a => a.id === openArticleId) || {}).title || "Article" } }[id]
   || { title: "" }).title;
 
@@ -4848,6 +4877,52 @@ function homeStats() {
 }
 
 // ---- payroll & directory ------------------------------------------------------
+
+// ---- HR: the payroll calendar and the employee handbook -------------------------------
+//
+// The handbook is a PDF an owner uploads on the admin page (migration 0046).
+// Opening it here hands the browser the PDF, which brings its own search.
+
+let companyDocs = [], companyDocsError = null, handbookURL = null;
+
+async function loadCompanyDocs() {
+  const { data, error } = await db.from("company_documents")
+    .select("id, title, summary, file_path, file_size, updated_at");
+  companyDocsError = error ? error.message : null;
+  companyDocs = data || [];
+  handbookURL = null;
+  const handbook = companyDocs.find(d => d.id === "handbook");
+  if (handbook) {
+    const { data: signed } = await db.storage.from("company-docs")
+      .createSignedUrl(handbook.file_path, 3600);
+    handbookURL = signed ? signed.signedUrl : null;
+  }
+}
+
+const fileSize = (bytes) => !bytes ? "" :
+  bytes > 1048576 ? `${(bytes / 1048576).toFixed(1)} MB` : `${Math.round(bytes / 1024)} KB`;
+
+function hrView() {
+  const handbook = companyDocs.find(d => d.id === "handbook");
+  const updated = handbook && handbook.updated_at
+    ? `Updated ${new Date(handbook.updated_at).toLocaleDateString()}` : "";
+  return hero("HR", "Your pay calendar and the employee handbook.")
+    + `<button type="button" class="link-card" data-view="payroll"
+        style="width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer">
+        <span class="well red">${icon("calendar")}</span>
+        <span><b>Payroll Calendar</b><span>Days until payday, every pay period, and the paid holidays.</span>
+          <span class="go">Open the calendar &rarr;</span></span></button>`
+    + (handbook && handbookURL
+      ? `<a class="link-card" href="${esc(handbookURL)}" target="_blank" rel="noopener">
+          <span class="well green">${icon("doc")}</span>
+          <span><b>${esc(handbook.title || "Employee Handbook")}</b>
+            <span>${esc([handbook.summary, updated, fileSize(handbook.file_size)].filter(Boolean).join(" · "))}</span>
+            <span class="go">Open the handbook &nearr;</span></span></a>`
+      : `<div class="card"><b>Employee Handbook</b><p class="note" style="margin-bottom:0">${
+          companyDocsError && /does not exist|schema cache/i.test(companyDocsError)
+            ? "Not switched on yet."
+            : "Not uploaded yet. An owner adds it on the admin page."}</p></div>`);
+}
 
 function payrollView() {
   const head = hero("Payroll Calendar", "Paydays, the periods they cover, and paid holidays.");
@@ -8347,6 +8422,103 @@ $("admin").addEventListener("click", async (event) => {
   $("tsResult").innerHTML = `<p class="ok" style="margin-top:12px">Published. The app shows it the next time Training Status is opened.</p>`;
 });
 
+// ---------------------------------------------------------------- employee handbook
+//
+// One PDF in the company-docs bucket, and one row in company_documents
+// (migration 0046). A new upload is stored under a new name so phones can tell
+// it apart from the copy they already saved; the old file is then removed.
+
+function renderHandbook() {
+  const box = $("handbookLive");
+  if (!box) return;
+  if (companyDocsError) {
+    box.innerHTML = `<p class="error">${/does not exist|schema cache/i.test(companyDocsError)
+      ? "Run migration 0046_company_documents.sql in the SQL editor, then reload this page."
+      : esc(companyDocsError)}</p>`;
+    return;
+  }
+  const handbook = companyDocs.find(d => d.id === "handbook");
+  const title = $("handbookTitle"), summary = $("handbookSummary");
+  if (handbook && title && document.activeElement !== title) title.value = handbook.title || "";
+  if (handbook && summary && document.activeElement !== summary) summary.value = handbook.summary || "";
+  box.innerHTML = handbook
+    ? `<div class="role" style="padding:14px 16px"><b>${esc(handbook.title || "Employee Handbook")}</b>
+        <div class="note">${esc(fileSize(handbook.file_size))}${handbook.updated_at
+          ? ` · uploaded ${esc(new Date(handbook.updated_at).toLocaleString())}` : ""}</div>
+        ${handbookURL ? `<div class="row" style="margin-top:10px">
+          <a class="pdf" href="${esc(handbookURL)}" target="_blank" rel="noopener">Open the current PDF &nearr;</a>
+        </div>` : ""}</div>`
+    : `<p class="note">Nothing uploaded yet.</p>`;
+}
+
+async function uploadHandbook(file) {
+  const card = $("tab-handbook").querySelector(".card");
+  const say = (text, bad) => { const m = $("handbookMsg"); m.textContent = text; m.className = "msg " + (bad ? "error" : "ok"); };
+  if (!/pdf$/i.test(file.name) && file.type !== "application/pdf") {
+    return say("The handbook needs to be a PDF.", true);
+  }
+  if (file.size > 40 * 1024 * 1024) return say("That file is over 40 MB.", true);
+
+  const previous = companyDocs.find(d => d.id === "handbook");
+  const path = `handbook/${Date.now()}.pdf`;
+  say("Uploading…", false);
+  const { error: uploadError } = await db.storage.from("company-docs")
+    .upload(path, file, { contentType: "application/pdf", upsert: false });
+  if (uploadError) return say(uploadError.message, true);
+
+  const row = {
+    id: "handbook",
+    title: ($("handbookTitle").value || "").trim() || (previous && previous.title) || "Employee Handbook",
+    summary: ($("handbookSummary").value || "").trim() || (previous && previous.summary) || "",
+    file_path: path,
+    file_size: file.size
+  };
+  const { data, error } = await db.from("company_documents").upsert(row, { onConflict: "id" }).select();
+  if (error || !data || !data.length) {
+    await db.storage.from("company-docs").remove([path]);
+    return say(error ? error.message : "Not saved — only an owner can upload the handbook.", true);
+  }
+  if (previous && previous.file_path && previous.file_path !== path) {
+    await db.storage.from("company-docs").remove([previous.file_path]);
+  }
+  await loadCompanyDocs();
+  renderHandbook();
+  say("Uploaded. Phones pick it up the next time the handbook is opened.", false);
+}
+
+$("handbookFile").addEventListener("change", (event) => {
+  const file = event.target.files[0];
+  event.target.value = "";
+  if (file) uploadHandbook(file);
+});
+["dragenter", "dragover"].forEach(type =>
+  $("handbookDrop").addEventListener(type, (e) => { e.preventDefault(); $("handbookDrop").classList.add("over"); }));
+["dragleave", "drop"].forEach(type =>
+  $("handbookDrop").addEventListener(type, () => $("handbookDrop").classList.remove("over")));
+$("handbookDrop").addEventListener("drop", (e) => {
+  e.preventDefault();
+  const file = e.dataTransfer.files[0];
+  if (file) uploadHandbook(file);
+});
+
+$("admin").addEventListener("click", async (event) => {
+  const button = event.target.closest('button[data-act="handbook-save-text"]');
+  if (!button) return;
+  const say = (text, bad) => { const m = $("handbookMsg"); m.textContent = text; m.className = "msg " + (bad ? "error" : "ok"); };
+  const handbook = companyDocs.find(d => d.id === "handbook");
+  if (!handbook) return say("Upload the handbook first.", true);
+  const { data, error } = await db.from("company_documents").update({
+    title: ($("handbookTitle").value || "").trim() || "Employee Handbook",
+    summary: ($("handbookSummary").value || "").trim()
+  }).eq("id", "handbook").select();
+  if (error || !data || !data.length) {
+    return say(error ? error.message : "Not saved — only an owner can change this.", true);
+  }
+  await loadCompanyDocs();
+  renderHandbook();
+  say("Saved.", false);
+});
+
 // Keeps the first of any entries that differ only by capitals.
 function uniqueText(list) {
   const seen = new Set();
@@ -8642,7 +8814,7 @@ document.querySelectorAll(".tabs button[data-tab]").forEach(btn => {
     document.querySelectorAll(".tabs button[data-tab]").forEach(b =>
       b.classList.toggle("active", b === btn));
     ["certs", "plans", "people", "support", "banners", "payroll",
-      "directory", "logins", "reminders", "events", "org", "openseat", "inspections", "courses", "articles", "techadmin", "sds", "news", "trainingstatus"].forEach(name =>
+      "directory", "logins", "reminders", "events", "org", "openseat", "inspections", "courses", "articles", "techadmin", "sds", "news", "trainingstatus", "handbook"].forEach(name =>
       $("tab-" + name).classList.toggle("hidden", name !== btn.dataset.tab));
     $("adminTitle").textContent = btn.textContent.trim();
     document.body.classList.remove("nav-open");
