@@ -842,8 +842,9 @@
           People are matched on their work email, or their name when the email is
           blank. Somebody can appear more than once — a re-evaluation adds a
           record rather than replacing one — and the app's certification card
-          shows their most recent. <b>An import replaces the whole table</b>, so
+          shows their most recent. <b>An import replaces every imported row</b>, so
           upload the complete export each time rather than a partial one.
+          Evaluations recorded on this page or in the app are left alone.
           The two buttons below give you a sheet to work from: a blank one with
           the right columns, or everything the app has now, to edit and send back.
         </p>
@@ -852,6 +853,38 @@
           <button class="pdf" data-export="certs">Download what's in the app now</button>
         </div>
         <div id="importResult"></div>
+      </div>
+
+      <div class="card" id="evalCard">
+        <h2>Record a driving test</h2>
+        <p class="note">The forklift driving evaluation, as it is carried out. Anyone can perform
+          one — it is usually the location admin — and it lands in the list below straight away,
+          the same as an imported row. An import won't remove it.</p>
+        <div class="fields">
+          <div><label for="evalName">Operator name</label>
+            <input type="text" id="evalName" maxlength="120" placeholder="Jordan Miller"></div>
+          <div><label for="evalEmail">Work email</label>
+            <input type="email" id="evalEmail" maxlength="160"
+                   placeholder="jordanmiller@agri-service.com"></div>
+          <div><label for="evalDate">Evaluated on</label>
+            <input type="date" id="evalDate"></div>
+          <div><label for="evalExpires">Expires</label>
+            <input type="date" id="evalExpires" disabled></div>
+        </div>
+        <p class="note" style="margin-bottom:4px">The work email is what puts the card on that
+          person's My Certification screen. Without it the card is matched on the name alone.</p>
+
+        <h3 style="margin:16px 0 6px">Truck type authorised</h3>
+        <div class="row" id="evalClasses"></div>
+
+        <h3 style="margin:16px 0 6px">The driving test</h3>
+        <div class="row" id="evalChecks"></div>
+        <p class="note" id="evalVerdict"></p>
+
+        <div class="row" style="margin-top:12px">
+          <button data-act="eval-save">Record the result</button>
+          <span class="msg"></span>
+        </div>
       </div>
 
       <div class="card">
@@ -871,6 +904,7 @@
               <th data-sort="evaluator_name">Evaluator</th>
               <th data-sort="expiration_date">Expires</th>
               <th data-sort="status">Status</th>
+              <th></th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -1337,6 +1371,12 @@
         <p class="note">Nothing changes in the app until you press <b>Publish</b>.
           Publishing replaces the previous copy. Classes that have finished drop off
           the report on their own.</p>
+        <p class="note">No export to hand? Start from a blank sheet with the right columns —
+          the importer reads it exactly as it reads UKG's.</p>
+        <div class="row">
+          <button class="pdf" data-template="openSeat">Blank open seat report</button>
+          <button class="pdf" data-template="inClass">Blank in-class event report</button>
+        </div>
         <div id="osrResult"></div>
       </div>
       <div class="card">
@@ -1394,6 +1434,13 @@
         <p class="note">Nothing changes until you press <b>Publish</b>. Each report replaces the
           last copy of that report; the others stay as they are. Admins and owners see the
           result under Training Center → <b>Training Status</b>, in the app and on this page.</p>
+        <p class="note">No export to hand? Start from a blank sheet with the right columns —
+          the importer reads it exactly as it reads UKG's.</p>
+        <div class="row">
+          <button class="pdf" data-template="tsEmployees">Blank all employees</button>
+          <button class="pdf" data-template="tsCredits">Blank credits</button>
+          <button class="pdf" data-template="tsHistory">Blank OLT and ILT</button>
+        </div>
         <div id="tsResult"></div>
       </div>
       <div class="card" id="tsGoalCard">
@@ -1898,7 +1945,7 @@ function showAdmin() {
   setMode("admin");
   const activeTab = document.querySelector("#adminNav button.active");
   if (activeTab) $("adminTitle").textContent = activeTab.textContent.trim();
-  renderCerts(); renderPlans(); renderPeople(); renderSupport(); renderBanners();
+  renderCerts(); renderEvalForm(); renderPlans(); renderPeople(); renderSupport(); renderBanners();
   renderPayroll(); renderDirectory(); renderLogins(); renderSharedReminders();
   renderEvents(); renderOrg(); renderOsrImport(); renderOsrLive(); renderInspectionsAdmin();
   renderCoursesAdmin(); renderSdsAdmin(); renderSdsPending(); renderArticlesAdmin(); renderTechAdmin();
@@ -2700,8 +2747,9 @@ function renderCerts() {
       <td>${esc(r.evaluator_name || "—")}</td>
       <td>${fmtDate(r.expiration_date)}</td>
       <td><span class="badge ${cls}">${label}</span></td>
+      <td><button class="pdf" data-eval-pdf="${esc(r.id)}">PDF</button></td>
     </tr>`;
-  }).join("") || `<tr><td colspan="7" class="note">No certifications yet — import a CSV above.</td></tr>`;
+  }).join("") || `<tr><td colspan="8" class="note">No certifications yet — record one above or import a CSV.</td></tr>`;
 }
 
 function renderPlans() {
@@ -6120,6 +6168,192 @@ async function saveRole(card) {
   say("Saved.", false);
 }
 
+// ---------------------------------------------------------------- driving test
+
+// The forklift driving evaluation, recorded here as well as in the app. Both
+// write the same row into forklift_certifications, and the database stamps who
+// did it — see migration 0054. An import no longer deletes these.
+//
+// The four checks ARE the test: all four have to be met for a card to be
+// issued, so "passed" is worked out rather than asked. There is no honest way
+// to tick all four and fail.
+
+const EVAL_CLASSES = ["Class I", "Class II", "Class III", "Class IV",
+                      "Class V", "Class VI", "Class VII"];
+
+const EVAL_CHECKS = [
+  ["inspection", "Inspection"],
+  ["use_of_controls", "Use of controls"],
+  ["maneuvering", "Manoeuvring skills"],
+  ["driving_with_load", "Driving with a load"]
+];
+
+const evalState = { classes: new Set(), checks: new Set() };
+
+// Three years, the most OSHA allows between evaluations.
+function evalExpiry(on) {
+  const d = new Date(on + "T00:00:00");
+  if (isNaN(d)) return "";
+  d.setFullYear(d.getFullYear() + 3);
+  return d.toISOString().slice(0, 10);
+}
+
+function renderEvalForm() {
+  const classes = $("evalClasses");
+  if (!classes) return;
+  classes.innerHTML = EVAL_CLASSES.map(c =>
+    `<button class="pdf${evalState.classes.has(c) ? " on" : ""}" data-eval-class="${esc(c)}"
+      aria-pressed="${evalState.classes.has(c)}">${esc(c)}</button>`).join(" ");
+  $("evalChecks").innerHTML = EVAL_CHECKS.map(([key, label]) =>
+    `<button class="pdf${evalState.checks.has(key) ? " on" : ""}" data-eval-check="${esc(key)}"
+      aria-pressed="${evalState.checks.has(key)}">${evalState.checks.has(key) ? "&#10003; " : ""}${esc(label)}</button>`).join(" ");
+
+  const passed = EVAL_CHECKS.every(([key]) => evalState.checks.has(key));
+  $("evalVerdict").textContent = passed
+    ? "All four met — this issues a certification card."
+    : "Every part has to be met for the card to be issued. Anything left off is recorded as not passed.";
+  $("evalVerdict").style.color = passed ? "var(--green-deep, #137026)" : "";
+
+  const date = $("evalDate");
+  if (date && !date.value) date.value = new Date().toISOString().slice(0, 10);
+  if (date) $("evalExpires").value = evalExpiry(date.value);
+}
+
+async function saveEvaluation(button) {
+  const card = $("evalCard");
+  const name = $("evalName").value.trim();
+  const email = $("evalEmail").value.trim().toLowerCase();
+  const on = $("evalDate").value;
+
+  if (!name) return speak(card, "Who was evaluated?", true);
+  if (email && !email.includes("@")) return speak(card, "That doesn't look like an email address.", true);
+  if (!on) return speak(card, "When was the evaluation?", true);
+  if (!evalState.classes.size) return speak(card, "Pick at least one truck class.", true);
+
+  const passed = EVAL_CHECKS.every(([key]) => evalState.checks.has(key));
+  const row = {
+    operator_name: name,
+    email: email || null,
+    evaluation_date: on,
+    expiration_date: evalExpiry(on),
+    truck_classes: EVAL_CLASSES.filter(c => evalState.classes.has(c)),
+    passed_driving: passed
+  };
+  EVAL_CHECKS.forEach(([key]) => { row[key] = evalState.checks.has(key); });
+
+  button.disabled = true;
+  const { error } = await db.from("forklift_certifications").insert(row);
+  button.disabled = false;
+  if (error) {
+    // The database refuses an evaluation of yourself; say what that means.
+    return speak(card, /row-level security|violates/i.test(error.message)
+      ? "You can't record your own evaluation. Someone else has to do it."
+      : error.message, true);
+  }
+
+  evalState.classes.clear();
+  evalState.checks.clear();
+  $("evalName").value = "";
+  $("evalEmail").value = "";
+  renderEvalForm();
+  const fresh = await db.from("forklift_certifications").select("*");
+  if (fresh.data) certs = fresh.data;
+  renderCerts();
+  speak(card, passed
+    ? `Recorded. ${name} is certified until ${usDate(row.expiration_date)}.`
+    : `Recorded. ${name} hasn't passed, so no card is issued.`, false);
+}
+
+// Mirrors ForkliftEvaluationPDF.swift, so a result printed from a desk and one
+// printed from a phone are the same document.
+function downloadEvaluationPDF(cert) {
+  const doc = new jspdf.jsPDF({ unit: "pt", format: "letter" });
+  const MARGIN = 54, WIDTH = 612 - MARGIN * 2;
+  let y = MARGIN;
+
+  const text = (str, x, top, { size = 11, style = "normal", grey, width } = {}) => {
+    doc.setFont("helvetica", style);
+    doc.setFontSize(size);
+    doc.setTextColor(grey == null ? 0 : grey);
+    const lines = width ? doc.splitTextToSize(String(str), width) : [String(str)];
+    doc.text(lines, x, top + size * 0.85);
+    return lines.length * size * 1.25;
+  };
+  const or = (v) => String(v ?? "").trim() || "-";
+
+  doc.setFillColor(204, 0, 51);
+  doc.rect(MARGIN, y, WIDTH, 26, "F");
+  text("FORKLIFT DRIVING TEST", MARGIN + 8, y + 5, { size: 15, style: "bold", grey: 255 });
+  y += 30;
+  text("Powered industrial truck operator evaluation - Agri-Service, LLC", MARGIN, y,
+       { size: 9, grey: 90 });
+  y += 24;
+
+  const [statusLabel, statusClass] = certStatus(cert);
+  const passed = statusClass === "b-current" || statusClass === "b-expiring";
+  if (passed) doc.setFillColor(232, 243, 235); else doc.setFillColor(251, 233, 237);
+  doc.rect(MARGIN, y, WIDTH, 44, "F");
+  if (passed) doc.setFillColor(19, 112, 38); else doc.setFillColor(204, 0, 51);
+  doc.rect(MARGIN, y, 4, 44, "F");
+  text(statusLabel.toUpperCase(), MARGIN + 14, y + 8,
+       { size: 13, style: "bold", grey: passed ? 40 : 60 });
+  text(passed
+       ? `Certified to operate the truck types listed below until ${usDate(cert.expiration_date)}.`
+       : "Not certified to operate a powered industrial truck.",
+       MARGIN + 14, y + 26, { size: 9, grey: 90 });
+  y += 60;
+
+  const section = (label) => {
+    y += 6;
+    text(label.toUpperCase(), MARGIN, y, { size: 11, style: "bold" });
+    y += 16;
+    doc.setFillColor(200, 200, 200);
+    doc.rect(MARGIN, y, WIDTH, 0.5, "F");
+    y += 8;
+  };
+  const pair = (l1, v1, l2, v2) => {
+    const half = (WIDTH - 16) / 2;
+    text(l1.toUpperCase(), MARGIN, y, { size: 8, style: "bold", grey: 128 });
+    text(l2.toUpperCase(), MARGIN + half + 16, y, { size: 8, style: "bold", grey: 128 });
+    y += 11;
+    text(or(v1), MARGIN, y, { width: half });
+    text(or(v2), MARGIN + half + 16, y, { width: half });
+    y += 19;
+  };
+
+  section("Operator");
+  pair("Name", cert.operator_name, "Work email", cert.email);
+  pair("Evaluated", usDate(cert.evaluation_date), "Expires", usDate(cert.expiration_date));
+  text("TRUCK TYPES AUTHORISED", MARGIN, y, { size: 8, style: "bold", grey: 128 });
+  y += 11;
+  y += text((cert.truck_classes || []).join(", ") || "None recorded", MARGIN, y, { width: WIDTH });
+  y += 8;
+
+  section("The evaluation");
+  EVAL_CHECKS.forEach(([key, label]) => {
+    const met = cert[key];
+    // "[x]" rather than a tick: jsPDF's built-in fonts are Latin-1 only.
+    text(met ? "[x]" : "[ ]", MARGIN, y, { style: "bold" });
+    text(label, MARGIN + 22, y, { grey: met ? 0 : 90 });
+    text(met === true ? "Met" : met === false ? "Not met" : "Not recorded",
+         612 - MARGIN - 90, y, { grey: met ? 0 : 90 });
+    y += 16;
+  });
+
+  section("Signed off by");
+  pair("Evaluator", cert.evaluator_name, "Recorded", usDate(cert.evaluation_date));
+
+  y += 16;
+  y += text("An evaluation is valid for three years, which is the maximum OSHA "
+            + "1910.178(l)(4)(iii) allows between evaluations. Keep this with the "
+            + "operator's training record.", MARGIN, y, { size: 9, grey: 90, width: WIDTH });
+
+  text(`Agri-Service, LLC - printed ${usDate(new Date().toISOString().slice(0, 10))}`,
+       MARGIN, 792 - MARGIN + 6, { size: 9, grey: 128 });
+
+  doc.save(`Forklift Driving Test - ${cert.operator_name}.pdf`);
+}
+
 // ---------------------------------------------------------------- lift plan PDF
 
 // Mirrors LiftPlanPDF.swift in the app, so a plan printed from a desk and one
@@ -8905,6 +9139,24 @@ const DIRECTORY_COLUMNS = ["Topic", "Contact 1", "Phone #", "Contact 2", "Phone 
 const PAYROLL_COLUMNS = ["Payroll #", "Pay Period Start", "Pay Period End",
   "Paid Holiday", "Payday"];
 
+// The UKG exports. These aren't ours to design — an importer recognises a file
+// by its column headings, so a blank sheet has to carry the exact ones it looks
+// for. tsIdentify and osrRead are where those lists live; if you change a
+// heading there, change it here.
+const TS_EMPLOYEE_COLUMNS = ["Firstname", "Lastname", "Email", "Jobs", "Store", "Department"];
+
+const TS_HISTORY_COLUMNS = ["Firstname", "Lastname", "Email", "Course", "Date Completed",
+  "% Completed"];
+
+const TS_CREDITS_COLUMNS = ["Firstname", "Lastname", "Email", "Credit Type", "Credits Number",
+  "Earned At", "Credits Rule Title", "Credits Period Cycle", "External Certificate Title"];
+
+const OSR_COLUMNS = ["Event Title", "Event City", "Status", "Event Start Date", "Event End Date",
+  "Registered", "Available Seats"];
+
+const IN_CLASS_COLUMNS = ["Firstname", "Lastname", "Email", "Store", "Event Title", "Event Id",
+  "Event City", "Event Start Date", "Instructor Names"];
+
 const TEMPLATES = {
   certs: () => [
     CERT_COLUMNS,
@@ -8917,6 +9169,39 @@ const TEMPLATES = {
     DIRECTORY_COLUMNS,
     ["Warranty claims", "Andrew Kendall", "2085551234", "Parts desk", "2085555678"],
     ["IT help", "helpdesk@agri-service.com", "", "", ""]
+  ],
+  tsEmployees: () => [
+    TS_EMPLOYEE_COLUMNS,
+    ["Jordan", "Miller", "jordanmiller@agri-service.com", "4070 - Technician Master",
+     "Store - 12 - Pasco", "Service"],
+    ["Sam", "Ruiz", "samruiz@agri-service.com", "4060 - Technician", "Store - 14 - Nampa", "Service"]
+  ],
+  tsHistory: () => [
+    TS_HISTORY_COLUMNS,
+    ["Jordan", "Miller", "jordanmiller@agri-service.com", "Lifting and Rigging ILT",
+     "3/4/2026", "100%"],
+    ["Sam", "Ruiz", "samruiz@agri-service.com", "Forklift Certification", "4/18/2026", "100%"]
+  ],
+  tsCredits: () => [
+    TS_CREDITS_COLUMNS,
+    ["Jordan", "Miller", "jordanmiller@agri-service.com", "AGCO Training Hours", "8",
+     "2/11/2026", "AGCO Training Hours - Number of Credits: 24", "2026", "Fendt 1000 Series"],
+    ["Sam", "Ruiz", "samruiz@agri-service.com", "EPA 609", "1",
+     "6/3/2026", "EPA 609 - Number of Credits: 1", "2026", "EPA 609 Certification"]
+  ],
+  openSeat: () => [
+    ["Export date: " + usDate(new Date().toISOString().slice(0, 10))],
+    [],
+    OSR_COLUMNS,
+    ["Fendt 1000 Series Service", "Jackson, MN", "Open", "10/14/2026", "10/16/2026", "6", "4"],
+    ["Combine Header Service", "Hesston, KS", "Full", "11/3/2026", "11/5/2026", "12", "0"]
+  ],
+  inClass: () => [
+    ["Export date: " + usDate(new Date().toISOString().slice(0, 10))],
+    [],
+    IN_CLASS_COLUMNS,
+    ["Jordan", "Miller", "jordanmiller@agri-service.com", "Store - 12 - Pasco",
+     "Fendt 1000 Series Service", "E10042", "Jackson, MN", "10/14/2026", "Chris Bauer"]
   ],
   payroll: () => [
     PAYROLL_COLUMNS,
@@ -8955,8 +9240,43 @@ const yesNo = (v) => v === true ? "Yes" : v === false ? "No" : "";
 const TEMPLATE_NAMES = {
   certs: "Forklift Certifications",
   directory: "Who Does What",
-  payroll: "Payroll Calendar"
+  payroll: "Payroll Calendar",
+  tsEmployees: "All Employees",
+  tsCredits: "Credits All Time",
+  tsHistory: "OLT and ILT",
+  openSeat: "Open Seat Report",
+  inClass: "In-Class Event Report"
 };
+
+document.addEventListener("click", (event) => {
+  const truckClass = event.target.closest("[data-eval-class]");
+  if (truckClass) {
+    const name = truckClass.dataset.evalClass;
+    if (evalState.classes.has(name)) evalState.classes.delete(name);
+    else evalState.classes.add(name);
+    return renderEvalForm();
+  }
+  const check = event.target.closest("[data-eval-check]");
+  if (check) {
+    const key = check.dataset.evalCheck;
+    if (evalState.checks.has(key)) evalState.checks.delete(key);
+    else evalState.checks.add(key);
+    return renderEvalForm();
+  }
+  const save = event.target.closest('button[data-act="eval-save"]');
+  if (save) return saveEvaluation(save);
+
+  const pdf = event.target.closest("[data-eval-pdf]");
+  if (pdf) {
+    const cert = certs.find(c => String(c.id) === pdf.dataset.evalPdf);
+    if (cert) downloadEvaluationPDF(cert);
+    return;
+  }
+});
+
+document.addEventListener("change", (event) => {
+  if (event.target && event.target.id === "evalDate") renderEvalForm();
+});
 
 document.addEventListener("click", (event) => {
   const button = event.target.closest("[data-template], [data-export]");
