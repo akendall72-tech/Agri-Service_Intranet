@@ -859,20 +859,20 @@
         <h2>Record a driving test</h2>
         <p class="note">The forklift driving evaluation, as it is carried out. Anyone can perform
           one — it is usually the location admin — and it lands in the list below straight away,
-          the same as an imported row. An import won't remove it.</p>
+          the same as an imported row. An import won't remove it. Only people who have passed the
+          certification course can be evaluated, which the database enforces rather than just
+          this page.</p>
         <div class="fields">
-          <div><label for="evalName">Operator name</label>
-            <input type="text" id="evalName" maxlength="120" placeholder="Jordan Miller"></div>
+          <div><label for="evalName">Operator</label>
+            <select id="evalName"></select></div>
           <div><label for="evalEmail">Work email</label>
-            <input type="email" id="evalEmail" maxlength="160"
-                   placeholder="jordanmiller@agri-service.com"></div>
+            <input type="email" id="evalEmail" maxlength="160" readonly></div>
           <div><label for="evalDate">Evaluated on</label>
             <input type="date" id="evalDate"></div>
           <div><label for="evalExpires">Expires</label>
             <input type="date" id="evalExpires" disabled></div>
         </div>
-        <p class="note" style="margin-bottom:4px">The work email is what puts the card on that
-          person's My Certification screen. Without it the card is matched on the name alone.</p>
+        <p class="note" style="margin-bottom:4px" id="evalEligibleNote"></p>
 
         <h3 style="margin:16px 0 6px">Truck type authorised</h3>
         <div class="row" id="evalClasses"></div>
@@ -2466,6 +2466,21 @@ const craneCourse = () => {
 // "lifting and  rigging ilt" are the same course. Must match course_key() in
 // the database and CranePerson.courseKey in the app.
 const craneCourseKey = (name) => tsText(name).toLowerCase().replace(/\s+/g, " ").trim();
+
+// The course somebody must have passed before they can be given a forklift
+// driving test (migration 0055). A setting for the same reason the crane one
+// is: course names change. The database refuses an ineligible name whatever
+// this page shows, so the picker below is a convenience, not the rule.
+const FORKLIFT_COURSE_FALLBACK = "Forklift Certification";
+const forkliftCourse = () => {
+  const named = tsText(tsSources && tsSources.forklift_course).trim();
+  return named || FORKLIFT_COURSE_FALLBACK;
+};
+const forkliftEligible = () => {
+  const wanted = craneCourseKey(forkliftCourse());
+  return (tsPeople || []).filter(r => (r.classes || [])
+    .some(c => craneCourseKey(c.course) === wanted));
+};
 let craneOverrides = new Map(), craneError = null, craneFilter = "all";
 
 async function loadCrane() {
@@ -6201,6 +6216,23 @@ function evalExpiry(on) {
 function renderEvalForm() {
   const classes = $("evalClasses");
   if (!classes) return;
+
+  // Only people the training history shows have passed the course.
+  const eligible = forkliftEligible();
+  const picker = $("evalName");
+  const keep = picker.value;
+  picker.innerHTML = `<option value="">Choose someone</option>` + eligible
+    .map(r => `<option value="${esc(r.person_key)}">${esc(`${r.first_name} ${r.last_name}`.trim())}</option>`)
+    .join("");
+  if (keep && eligible.some(r => r.person_key === keep)) picker.value = keep;
+  const chosen = eligible.find(r => r.person_key === picker.value);
+  $("evalEmail").value = chosen ? (chosen.email || "") : "";
+  $("evalEligibleNote").textContent = eligible.length
+    ? `${eligible.length} ${eligible.length === 1 ? "person has" : "people have"} passed `
+      + `${forkliftCourse()} and can be evaluated. The course comes first; the driving test `
+      + `confirms they can drive.`
+    : `Nobody on the roster has passed ${forkliftCourse()} yet, so nobody can be evaluated. `
+      + `Check that is how the OLT and ILT report spells the course.`;
   classes.innerHTML = EVAL_CLASSES.map(c =>
     `<button class="pdf${evalState.classes.has(c) ? " on" : ""}" data-eval-class="${esc(c)}"
       aria-pressed="${evalState.classes.has(c)}">${esc(c)}</button>`).join(" ");
@@ -6221,12 +6253,12 @@ function renderEvalForm() {
 
 async function saveEvaluation(button) {
   const card = $("evalCard");
-  const name = $("evalName").value.trim();
-  const email = $("evalEmail").value.trim().toLowerCase();
+  const chosen = forkliftEligible().find(r => r.person_key === $("evalName").value);
+  const name = chosen ? `${chosen.first_name} ${chosen.last_name}`.trim() : "";
+  const email = chosen ? (chosen.email || "").toLowerCase() : "";
   const on = $("evalDate").value;
 
-  if (!name) return speak(card, "Who was evaluated?", true);
-  if (email && !email.includes("@")) return speak(card, "That doesn't look like an email address.", true);
+  if (!name) return speak(card, "Choose who was evaluated.", true);
   if (!on) return speak(card, "When was the evaluation?", true);
   if (!evalState.classes.size) return speak(card, "Pick at least one truck class.", true);
 
@@ -6246,15 +6278,16 @@ async function saveEvaluation(button) {
   button.disabled = false;
   if (error) {
     // The database refuses an evaluation of yourself; say what that means.
+    // Two rules share this refusal, so say both rather than guess which.
     return speak(card, /row-level security|violates/i.test(error.message)
-      ? "You can't record your own evaluation. Someone else has to do it."
+      ? `That wasn't allowed. A driving test needs the ${forkliftCourse()} course on their `
+        + `training history first, and you can't record your own.`
       : error.message, true);
   }
 
   evalState.classes.clear();
   evalState.checks.clear();
   $("evalName").value = "";
-  $("evalEmail").value = "";
   renderEvalForm();
   const fresh = await db.from("forklift_certifications").select("*");
   if (fresh.data) certs = fresh.data;
