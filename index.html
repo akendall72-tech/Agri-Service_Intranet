@@ -1398,13 +1398,17 @@
       </div>
       <div class="card" id="tsGoalCard">
         <h2>Dealer metric</h2>
-        <p class="note">The share of technicians who need 24 or more AGCO training hours. AGCO sets
-          it — change it here when they do, and the app and this page use the new figure straight
-          away. The 24 hours itself comes from the credits report.</p>
+        <p class="note">AGCO sets both numbers. Change them here when they do and the app and this
+          page use the new figures straight away — no re-upload. The hours decide who has met the
+          requirement, for everyone: the credits report carries its own figure per person, but it
+          lags behind AGCO, so this is what counts.</p>
         <div class="row">
           <input type="number" id="tsGoalInput" min="1" max="100" step="1" value="60"
-                 style="width:96px;margin:0" aria-label="Goal percent">
-          <span>% of technicians</span>
+                 style="width:88px;margin:0" aria-label="Goal percent">
+          <span>% of technicians with</span>
+          <input type="number" id="tsHoursInput" min="1" max="200" step="0.5" value="24"
+                 style="width:88px;margin:0" aria-label="Required AGCO training hours">
+          <span>or more AGCO training hours</span>
           <button data-act="ts-goal">Save</button>
           <span class="msg"></span>
         </div>
@@ -7855,7 +7859,7 @@ $("admin").addEventListener("click", async (event) => {
 //                        training credit, and whether they hold EPA 609.
 //   OLT and ILT          every course completion, with its date.
 //
-// The dealer metric: 60% of technicians need 24 or more AGCO training hours.
+// The dealer metric: a share of technicians need the full AGCO training hours.
 //
 // Publishing turns the three into one row per employee. The database decides
 // who sees which rows: everyone their own, a location admin their location's,
@@ -7872,6 +7876,16 @@ let tsPending = { employees: null, credits: null, history: null };
 const tsGoalPercent = () => {
   const value = Number(tsSources && tsSources.goal_percent);
   return value > 0 && value <= 100 ? value : 60;
+};
+
+// The hours a technician needs. AGCO's credits report states it per person
+// inside the credit rule title ("... Number of Credits: 24"), and that wins —
+// it is what AGCO actually applied to them. This is the answer for everyone
+// the report is quiet about, and it supplies the wording everywhere. Owners
+// change it on the admin page; migration 0052.
+const tsRequiredHours = () => {
+  const value = Number(tsSources && tsSources.required_hours);
+  return value > 0 && value <= 200 ? value : 24;
 };
 const tsGoal = () => tsGoalPercent() / 100;
 
@@ -8020,7 +8034,8 @@ function tsParse(rows, file) {
       people.set(key, person);
     }
     const list = [...people.values()].map(p => ({
-      ...p, agcoRequired: p.agcoRequired || 24, agcoMet: p.agcoHours >= (p.agcoRequired || 24),
+      ...p, agcoRequired: p.agcoRequired || tsRequiredHours(),
+      agcoMet: p.agcoHours >= tsRequiredHours(),
       agcoEntries: p.agcoEntries.sort((a, b) => (a.earned || "").localeCompare(b.earned || ""))
     }));
     return { kind, data: { ...meta, format, period: yearOf(period) || period || exportYear, rows: list } };
@@ -8039,8 +8054,8 @@ function tsParse(rows, file) {
     const required = parseFloat((/number of credits:\s*([\d.]+)/i.exec(rule) || [])[1]);
     if (/agco training hours/i.test(rule)) {
       person.agcoHours = credits;
-      person.agcoRequired = required || 24;
-      person.agcoMet = done || credits >= (required || 24);
+      person.agcoRequired = required || tsRequiredHours();
+      person.agcoMet = done || credits >= tsRequiredHours();
     } else if (/epa\s*609/i.test(rule)) {
       person.epa609 = done || credits >= (required || 1);
     }
@@ -8081,7 +8096,7 @@ function tsPeopleFromRaw(raw) {
       department: e.department || "", job: e.job || "", store: e.store || "",
       is_technician: tsIsTech(e.job),
       agco_hours: credit ? credit.agcoHours : allTime ? 0 : null,
-      agco_required: credit ? credit.agcoRequired : allTime ? 24 : null,
+      agco_required: credit ? credit.agcoRequired : allTime ? tsRequiredHours() : null,
       agco_met: !!(credit && credit.agcoMet), epa_609: !!(credit && credit.epa609),
       in_credits: !!credit || allTime, classes,
       agco_entries: (credit && credit.agcoEntries) || []
@@ -8095,7 +8110,19 @@ function tsModel(rows = tsPeople) {
     key: r.person_key, email: r.email || "", first: r.first_name, last: r.last_name,
     name: `${r.first_name} ${r.last_name}`.trim(), job: r.job, store: r.store || "No store",
     isTech: r.is_technician, hours: r.agco_hours === null || r.agco_hours === undefined ? null : Number(r.agco_hours),
-    required: Number(r.agco_required) || 24, met: !!r.agco_met, epa609: !!r.epa_609,
+    // "Met" is worked out here rather than read from agco_met, which was
+    // decided at upload time against whatever the requirement was then.
+    // Otherwise changing the hours would move every label and none of the
+    // numbers.
+    //
+    // The setting decides for everyone. The report states a figure per person
+    // too (requiredInReport), but AGCO changes the requirement long before the
+    // reports catch up, and every technician on the roster has a report figure
+    // — so a setting that only filled gaps would move nobody.
+    required: tsRequiredHours(),
+    requiredInReport: Number(r.agco_required) || null,
+    met: (Number(r.agco_hours) || 0) >= tsRequiredHours(),
+    epa609: !!r.epa_609,
     inCredits: !!r.in_credits, classes: r.classes || [], entries: r.agco_entries || []
   }));
   const byName = (a, b) => a.last.localeCompare(b.last) || a.first.localeCompare(b.first);
@@ -8173,7 +8200,7 @@ function tsSelfView(m) {
         <strong style="font-size:26px">${esc(mine.name)}</strong>
         ${mine.isTech ? `${mine.hours === null ? `<span class="note">Not on the credits report yet.</span>` : `
           <span>AGCO training hours${tsPeriod() ? ` in ${esc(tsPeriod())}` : " this year"}</span>${tsHoursCell(mine)}${tsEntries(mine)}
-          <span>${mine.met ? `<span class="badge b-current">24 hours met</span>`
+          <span>${mine.met ? `<span class="badge b-current">${tsRequiredHours()} hours met</span>`
             : `<span class="badge b-expired">${Math.max(0, mine.required - mine.hours)} more hours to reach ${mine.required}</span>`}
           ${mine.epa609 ? `<span class="badge b-current">EPA 609</span>` : `<span class="badge b-expired">No EPA 609 yet</span>`}</span>`}` : ""}
       </div></div>
@@ -8223,7 +8250,7 @@ function tsSummaryTab(m) {
   }).join("");
   return `<div class="ts-cards">
       <div class="card ts-kpi">
-        <small>Technicians with 24+ AGCO training hours</small>
+        <small>Technicians with ${tsRequiredHours()}+ AGCO training hours</small>
         <strong class="${m.pct >= tsGoal() ? "ok" : "short"}">${tsPct(m.pct)}</strong>
         ${tsMeter(m.pct)}
         <span>${m.metCount} of ${m.techs.length} technicians. ${m.neededForGoal
@@ -8238,7 +8265,7 @@ function tsSummaryTab(m) {
     </div>
     <div class="card"><h2>By location</h2>
       <div style="overflow-x:auto"><table class="ts-table">
-        <thead><tr><th>Location</th><th class="num">Technicians</th><th class="num">24+ hrs</th>
+        <thead><tr><th>Location</th><th class="num">Technicians</th><th class="num">${tsRequiredHours()}+ hrs</th>
           <th class="num">%</th><th class="num">EPA 609</th></tr></thead>
         <tbody>${stores}</tbody></table></div></div>
     ${m.missingCredits.length ? `<p class="note">Not on the credits report, so counted as not met:
@@ -8253,7 +8280,7 @@ function tsHoursCell(t) {
 }
 
 function tsTechsTab(m) {
-  const filters = [["all", "All technicians"], ["hours", "Still need 24 hrs"], ["609", "Missing 609"]];
+  const filters = [["all", "All technicians"], ["hours", `Still need ${tsRequiredHours()} hrs`], ["609", "Missing 609"]];
   const keep = (t) => tsState.filter === "hours" ? !t.met : tsState.filter === "609" ? !t.epa609 : true;
   const groups = m.stores.map(store => {
     const techs = m.techs.filter(t => t.store === store && keep(t));
@@ -8325,7 +8352,7 @@ function tsPlanTab(m) {
   }).join("");
   return `<div class="ts-cards">
       <div class="card ts-kpi"><small>Now</small><strong>${tsPct(m.pct)}</strong>
-        <span>${m.metCount} of ${m.techs.length} technicians have 24+ hours.</span></div>
+        <span>${m.metCount} of ${m.techs.length} technicians have ${tsRequiredHours()}+ hours.</span></div>
       <div class="card ts-kpi"><small>With the plan</small>
         <strong class="${n.projected >= tsGoal() ? "ok" : "short"}">${tsPct(n.projected)}</strong>
         ${tsMeter(m.pct, n.projected)}
@@ -8334,7 +8361,7 @@ function tsPlanTab(m) {
           : `That reaches ${tsGoalPercent()}%.`}</span></div>
     </div>
     <div class="row" style="margin:0 0 12px">
-      <span class="note" style="flex:1">Tick the technicians you plan to get to 24 hours. Your plan is saved to your
+      <span class="note" style="flex:1">Tick the technicians you plan to get to ${tsRequiredHours()} hours. Your plan is saved to your
         account, so it's the same in the app, and nobody else sees it.</span>
       <button class="ghost" data-ts-clear ${n.planned ? "" : "disabled"}>Clear plan</button>
       <span class="msg" id="tsPlanMsg"></span></div>
@@ -8464,6 +8491,8 @@ function renderTsLive() {
   }
   const goalInput = $("tsGoalInput");
   if (goalInput && document.activeElement !== goalInput) goalInput.value = tsGoalPercent();
+  const hoursInput = $("tsHoursInput");
+  if (hoursInput && document.activeElement !== hoursInput) hoursInput.value = tsRequiredHours();
   const courseInput = $("craneCourseInput");
   if (courseInput && document.activeElement !== courseInput) courseInput.value = craneCourse();
   if (!tsSources || !(tsSources.employees && tsSources.employees.file)) {
@@ -8492,16 +8521,34 @@ $("admin").addEventListener("click", async (event) => {
   if (!button) return;
   const card = $("tsGoalCard");
   const value = Number($("tsGoalInput").value);
+  const hours = Number($("tsHoursInput").value);
   if (!(value > 0 && value <= 100)) return speak(card, "Enter a percentage from 1 to 100.", true);
+  if (!(hours > 0 && hours <= 200)) return speak(card, "Enter the hours as a number from 1 to 200.", true);
+
+  // Changing the hours re-decides who has met the requirement, so say how
+  // many people move before it is saved rather than after.
+  const before = tsRequiredHours();
+  if (hours !== before) {
+    const techs = tsPeople.filter(r => r.is_technician);
+    const metNow = techs.filter(r => (Number(r.agco_hours) || 0) >= before).length;
+    const metAfter = techs.filter(r => (Number(r.agco_hours) || 0) >= hours).length;
+    if (!confirm(
+          `Change the requirement from ${before} to ${hours} hours?\n\n` +
+          `It applies to every technician. ${metNow} of ${techs.length} have met it now; `
+          + `${metAfter} of ${techs.length} would meet ${hours}.\n\n` +
+          `Nothing needs re-uploading — the app and this page work it out live.`)) return;
+  }
+
   button.disabled = true;
   const { data, error } = await db.from("training_status")
-    .upsert({ id: "current", goal_percent: value }, { onConflict: "id" }).select("goal_percent");
+    .upsert({ id: "current", goal_percent: value, required_hours: hours }, { onConflict: "id" })
+    .select("goal_percent, required_hours");
   button.disabled = false;
   if (error) return speak(card, error.message, true);
   if (!data || !data.length) return speak(card, "Not saved — only an owner can change this.", true);
   await loadTrainingStatus();
   renderTsLive();
-  speak(card, `Saved. The goal is now ${tsGoalPercent()}%.`, false);
+  speak(card, `Saved. ${tsGoalPercent()}% of technicians with ${tsRequiredHours()}+ hours.`, false);
 });
 
 $("admin").addEventListener("click", async (event) => {
