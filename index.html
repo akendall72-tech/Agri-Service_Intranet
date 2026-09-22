@@ -1409,6 +1409,19 @@
           <span class="msg"></span>
         </div>
       </div>
+      <div class="card" id="craneCourseCard">
+        <h2>Crane &amp; rigging qualification</h2>
+        <p class="note">The course that qualifies someone for crane and rigging work, spelled as it
+          appears on the OLT and ILT report. Change it here when the course is renamed and the app
+          and this page both follow — nobody has to be re-qualified. Capitals and extra spaces
+          don't matter.</p>
+        <div class="row">
+          <input type="text" id="craneCourseInput" maxlength="120"
+                 style="min-width:280px;margin:0" aria-label="Qualifying course name">
+          <button data-act="crane-course">Save</button>
+          <span class="msg"></span>
+        </div>
+      </div>
       <div class="card">
         <h2>Published now</h2>
         <div id="tsLive"></div>
@@ -1533,6 +1546,69 @@
 <script src="vendor/xlsx-0.20.3.full.min.js"
         integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT"></script>
 <script>
+// ============================================================================
+// Agri-Service intranet — the whole page, in one file
+// ============================================================================
+//
+// One file on purpose. It's served from GitHub Pages with no build step, and
+// anyone can save it, open it and read it. That choice costs it length, so
+// this map is how you find your way instead of scrolling.
+//
+// Every section below is a banner comment in this script. Search for the name
+// to jump to it — they're in this order.
+//
+//   THE FRAME
+//     auth              signing in, the session, who is an owner or admin
+//     loading           db, the query helpers, the little loading states
+//     icons             the inline SVGs
+//     the app           boot, the shell, what renders after sign-in
+//     routing           the hash router; add a page by adding a route here
+//     views             one function per page — the table of contents for
+//                       everything a person can actually open
+//     status / rendering / support / banners     shared bits of UI
+//
+//   THE FEATURES, in the order they appear in the script
+//     shared reminders      the weekly and daily checklists
+//     events                the Event Center, and admin for it
+//     groups & shops        locations and the groups people belong to
+//     open seat report      classes with seats left
+//     inspections           forms, the fields on them, and the records
+//     shell                 home dashboard, HR, the inspection PDF
+//     course catalog        the catalog everyone reads, and admin for it
+//     safety data sheets    the SDS library
+//     shared logins         the shared accounts card
+//     people                accounts, roles, deactivating someone
+//     lift plan PDF         rendering a lift plan to print
+//     payroll & directory   pay periods, holidays, the phone list
+//     tech levels           Skills: competencies and sign-offs (the database
+//                           still calls this tech_levels — see CLAUDE.md)
+//     training articles     the Training Center's written pages
+//     news                  posts and links, pins, what's new since last read
+//     training status       the three UKG exports, the dealer metric, and
+//                           the crane qualification that reads from them
+//     employee handbook     the PDF owners upload for the HR tab
+//     CSV import            the shared importer several admin tabs use
+//     templates             the HTML fragments
+//     wiring                the event listeners, at the very bottom
+//
+//   NAMING
+//     Newer features prefix everything they own, so a name tells you where it
+//     belongs and nothing collides: ts* training status, news*, insp*
+//     inspections, sds* safety data sheets, crane* the qualification. Older
+//     code predates the habit. Follow it for anything new — it is the reason
+//     a feature can be added here without reading the rest of the file.
+//
+//   THINGS THAT WILL BITE YOU
+//     - This page is PUBLIC. It ships the anon key, which is meant to ship.
+//       The service_role key must never appear here. What a person may see or
+//       change is decided by row level security in the database, not by which
+//       buttons this page draws.
+//     - supabase-js builders don't run until awaited. db.rpc(...) on its own
+//       never fires; it needs an await or a .then().
+//     - Edge functions need their CORS block or calls from here fail silently.
+//
+// ============================================================================
+
 // The publishable key is a client key by design — row level security is what
 // protects the data, not this string. It is the same key the iOS app ships.
 const SUPABASE_URL = "https://gzmtxsgaulzkghaqyibt.supabase.co";
@@ -2320,12 +2396,25 @@ $("view").addEventListener("click", async (event) => {
 
 // ---- crane & rigging qualification (migration 0045) ------------------------------------
 //
-// Qualified means "Lifting and Rigging ILT" is on the person's training history
+// Qualified means the qualifying course (a setting, see craneCourse below) is
+// on the person's training history
 // (the OLT and ILT report uploaded for Training Status). It doesn't expire. A
 // location admin or owner can remove it with a reason and restore it — only for
 // someone who has taken the course; the database enforces that.
 
-const CRANE_COURSE = "Lifting and Rigging ILT";
+// Which course qualifies someone is a SETTING (migration 0051), not a
+// constant: UKG renames courses, and a rename used to mean editing this file,
+// the app and a migration. The name below is only what to show before the
+// settings have loaded, or if they can't be reached.
+const CRANE_COURSE_FALLBACK = "Lifting and Rigging ILT";
+const craneCourse = () => {
+  const named = tsText(tsSources && tsSources.crane_course).trim();
+  return named || CRANE_COURSE_FALLBACK;
+};
+// Course names are typed by people: "Lifting and Rigging ILT" and
+// "lifting and  rigging ilt" are the same course. Must match course_key() in
+// the database and CranePerson.courseKey in the app.
+const craneCourseKey = (name) => tsText(name).toLowerCase().replace(/\s+/g, " ").trim();
 let craneOverrides = new Map(), craneError = null, craneFilter = "all";
 
 async function loadCrane() {
@@ -2335,8 +2424,10 @@ async function loadCrane() {
   craneOverrides = new Map((data || []).map(o => [o.person_key, o]));
 }
 
-const craneCompletion = (row) => (row.classes || []).find(c =>
-  tsText(c.course).toLowerCase() === CRANE_COURSE.toLowerCase()) || null;
+const craneCompletion = (row) => {
+  const wanted = craneCourseKey(craneCourse());
+  return (row.classes || []).find(c => craneCourseKey(c.course) === wanted) || null;
+};
 
 function craneStatus(row) {
   const completion = craneCompletion(row);
@@ -2368,7 +2459,7 @@ function craneCard() {
         <div class="name">${esc((profile && profile.full_name) || `${mine.first_name} ${mine.last_name}`)}</div>
         <span class="badge b-current">Qualified</span>
         <dl>
-          <div><dt>Course</dt><dd>${CRANE_COURSE}</dd></div>
+          <div><dt>Course</dt><dd>${craneCourse()}</dd></div>
           <div><dt>Completed</dt><dd>${esc(newsDate(status.completion.completed))}</dd></div>
           <div><dt>Location</dt><dd>${esc(mine.store || "-")}</dd></div>
           <div><dt>Expires</dt><dd>No expiration</dd></div>
@@ -2386,7 +2477,7 @@ function craneCard() {
   }
   return `<div class="crane-alert caution">${warnIcon}<div>
     <b>Not qualified yet</b>
-    <p>You're qualified for crane and rigging work once the ${CRANE_COURSE} course shows on your
+    <p>You're qualified for crane and rigging work once the ${craneCourse()} course shows on your
       training history${mine ? "" : " — and your training record wasn't found"}. Ask the training
       department when the next class is.</p></div></div>`;
 }
@@ -2403,7 +2494,7 @@ function craneAdminSection() {
   const filters = [["all", "All"], ["qualified", `Qualified ${counts.qualified}`],
     ["removed", `Removed ${counts.removed}`], ["none", `Not taken ${counts.none}`]];
   return `<div class="card" id="craneAdmin"><h2>Crane &amp; rigging qualifications</h2>
-    <p class="note">${isOwner() ? "Everyone" : "Everyone at your location"}. Qualified means ${CRANE_COURSE} is on
+    <p class="note">${isOwner() ? "Everyone" : "Everyone at your location"}. Qualified means ${craneCourse()} is on
       their training history. You can remove a qualification, with a reason, and restore it — only for someone
       who has taken the course, and never your own.</p>
     <div class="chips">${filters.map(([id, label]) =>
@@ -7804,6 +7895,18 @@ const tsText = (value) => String(value ?? "").replace(/ /g, " ").replace(/\s+/g
 
 // "Andrés  Pérez-Gómez" and "andres perez gomez" are the same person: the credit
 // report carries names but no email, so names are how it's matched.
+//
+// THIS WRITES name_key, AND TWO OTHER PLACES READ IT. Change one and people
+// stop matching their own records — which is what happened with accents until
+// migration 0049. Keep all three the same:
+//
+//   supabase/migrations/0049_name_key_accents  training_name_key()
+//   Agri-Service/.../PersonName.swift          PersonName.key(_:)
+//
+// The rule: an accented letter becomes the plain letter under it, everything
+// else that isn't a-z is a gap, lower case. A letter that isn't an accented
+// ASCII letter -- ø, ß, æ -- is not folded; NFD leaves it alone and it becomes
+// a gap. 0049 carries the list of names all three are checked against.
 const tsNameKey = (first, last) => `${first} ${last}`.normalize("NFD").replace(/[̀-ͯ]/g, "")
   .toLowerCase().replace(/[^a-z]+/g, " ").trim();
 
@@ -8361,6 +8464,8 @@ function renderTsLive() {
   }
   const goalInput = $("tsGoalInput");
   if (goalInput && document.activeElement !== goalInput) goalInput.value = tsGoalPercent();
+  const courseInput = $("craneCourseInput");
+  if (courseInput && document.activeElement !== courseInput) courseInput.value = craneCourse();
   if (!tsSources || !(tsSources.employees && tsSources.employees.file)) {
     box.innerHTML = `<p class="note">Nothing published yet.</p>`;
     return;
@@ -8397,6 +8502,35 @@ $("admin").addEventListener("click", async (event) => {
   await loadTrainingStatus();
   renderTsLive();
   speak(card, `Saved. The goal is now ${tsGoalPercent()}%.`, false);
+});
+
+$("admin").addEventListener("click", async (event) => {
+  const button = event.target.closest('button[data-act="crane-course"]');
+  if (!button) return;
+  const card = $("craneCourseCard");
+  const value = $("craneCourseInput").value.trim().replace(/\s+/g, " ");
+  if (!value) return speak(card, "Type the course name as it appears on the report.", true);
+
+  // Saving a name nothing matches would quietly un-qualify everyone, so say
+  // so first. It can still be saved — the report may be uploaded later.
+  const matches = tsPeople.filter(r => (r.classes || [])
+    .some(c => craneCourseKey(c.course) === craneCourseKey(value))).length;
+  if (!matches && !confirm(
+        `Nothing on the current report is called "${value}".\n\n` +
+        `Saving this means nobody is qualified for crane and rigging work ` +
+        `until a report with that course is uploaded.\n\nSave it anyway?`)) return;
+
+  button.disabled = true;
+  const { data, error } = await db.from("training_status")
+    .upsert({ id: "current", crane_course: value }, { onConflict: "id" }).select("crane_course");
+  button.disabled = false;
+  if (error) return speak(card, error.message, true);
+  if (!data || !data.length) return speak(card, "Not saved — only an owner can change this.", true);
+  await loadTrainingStatus();
+  renderTsLive();
+  redrawCrane();
+  speak(card, `Saved. ${matches} ${matches === 1 ? "person is" : "people are"} qualified by `
+             + `"${value}".`, false);
 });
 
 $("admin").addEventListener("click", async (event) => {
