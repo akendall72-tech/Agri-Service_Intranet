@@ -950,11 +950,17 @@
           <div id="peopleStats"></div>
           <input class="search" id="peopleSearch" placeholder="Search a name…"
                  style="margin-left:auto">
+          <span class="msg"></span>
         </div>
         <p class="note">As an admin you see your own shop's people; as an owner,
-          everyone. Roles and locations are changed in Supabase — the app
-          deliberately blocks both from the client so nobody can promote themselves
-          or move shops to route their own lift plans elsewhere.</p>
+          everyone. <b>Owners change roles here.</b> An employee sees their own records;
+          a location admin sees everyone at their shop; an owner sees everyone and can
+          reach this page. You can't change your own role, and the last owner can't be
+          demoted — otherwise one wrong tap leaves nobody able to undo it.</p>
+        <p class="note">Locations are still changed in Supabase. The app blocks both from
+          the client so nobody can promote themselves or move shops to route their own
+          lift plans elsewhere; the change here goes through the same owner-only function
+          that deactivation does.</p>
         <p class="note">When someone leaves, an owner presses <b>Deactivate</b>. They can't
           sign in to the app or this page, they're signed out, and their notifications
           stop. Everything they did — lift plans, sign-offs, inspections — stays, with their
@@ -2864,7 +2870,12 @@ function renderPeople() {
   $("peopleTable").querySelector("tbody").innerHTML = rows.map(r => `<tr${r.deactivated_at ? ' class="gone"' : ""}>
       <td><b>${esc(r.full_name || "—")}</b>${r.id === me.id
         ? ` <span class="note">· you</span>` : ""}</td>
-      <td>${esc(r.role)}</td>
+      <td>${isOwner() && !r.deactivated_at && r.id !== me.id
+        ? `<select data-role-for="${esc(r.id)}" style="margin:0;min-width:120px">
+            ${["employee", "admin", "owner"].map(role =>
+              `<option value="${role}"${r.role === role ? " selected" : ""}>${role}</option>`).join("")}
+          </select>`
+        : esc(r.role) + (r.id === me.id ? ` <span class="note">· you</span>` : "")}</td>
       <td>${r.location_id ? esc(locations[r.location_id] || r.location_id)
         : `<span class="error">not set</span>`}</td>
       <td>${esc(groupNames(r.groups)) || "—"}</td>
@@ -2873,6 +2884,56 @@ function renderPeople() {
     || `<tr><td colspan="5" class="note">Nothing visible to you. If this is only
         your own row, run migration 0021 in the SQL editor.</td></tr>`;
 }
+
+// Roles. Through the account function rather than a direct update, because
+// protect_profile_columns refuses a role change from anyone signed in — only
+// the service role gets through, which is the whole point of that guard.
+//
+// The function also refuses to change your own role or to demote the last
+// owner. Both would leave nobody able to undo it.
+document.addEventListener("change", async (event) => {
+  const picker = event.target.closest("[data-role-for]");
+  if (!picker) return;
+  const id = picker.dataset.roleFor;
+  const person = people.find(r => r.id === id);
+  if (!person) return;
+  const role = picker.value;
+  const was = person.role;
+  const name = person.full_name || "this account";
+
+  const what = { employee: "an employee — their own records only",
+                 admin: "a location admin — everyone at their shop",
+                 owner: "an owner — everyone, everywhere, including this page" };
+  if (!confirm(`Make ${name} ${what[role]}?`)) {
+    picker.value = was;
+    return;
+  }
+
+  picker.disabled = true;
+  let problem = null;
+  try {
+    const { data, error } = await db.functions.invoke("account", { body: { action: "setRole", id, role } });
+    if (error) {
+      problem = error.message;
+      try { const body = await error.context.json(); if (body && body.error) problem = body.error; } catch (e) { /* none */ }
+      if (/failed to send|404|not found/i.test(problem)) problem = "The account function isn't deployed yet.";
+    } else if (data && data.error) {
+      problem = data.error;
+    }
+  } catch (e) {
+    problem = String(e);
+  }
+  picker.disabled = false;
+
+  const card = picker.closest(".card") || $("peopleTable");
+  if (problem) {
+    picker.value = was;
+    return speak(card, problem, true);
+  }
+  person.role = role;
+  renderPeople();
+  speak(card, `${name} is now an ${role}.`, false);
+});
 
 // Leaving the company: the account function blocks sign-in and takes them off
 // notifications, and everything they did stays. Owners only.
@@ -6093,7 +6154,14 @@ function readPerson(row) {
 }
 
 function speak(element, text, bad) {
-  const msg = element.querySelector(".msg");
+  // A card without a .msg used to throw here, which turned "the server said
+  // no" into a silent exception and no feedback at all. Say it out loud
+  // instead — an unmissable alert beats a message nobody can see.
+  const msg = element && element.querySelector(".msg");
+  if (!msg) {
+    if (bad) alert(text);
+    return;
+  }
   msg.textContent = text;
   msg.className = "msg " + (bad ? "error" : "ok");
 }
