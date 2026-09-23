@@ -533,6 +533,9 @@
   .ev-customer { background: #E4EEF6; color: #2F6690; }
   .ev-safety   { background: var(--caution-soft); color: #92590A; }
   .ev-holiday  { background: #EEEBF5; color: #6B5B95; }
+  a.join { background: var(--red); color: #fff; padding: 8px 14px; border-radius: 8px;
+    font-weight: 700; text-decoration: none; }
+  a.join:hover { background: var(--red-dark, #B4041E); }
   .evdot { width: 10px; height: 10px; border-radius: 999px; margin-top: 7px; flex: 0 0 10px; }
   .evdot.ev-company { background: var(--red); } .evdot.ev-training { background: #137026; }
   .evdot.ev-customer { background: #2F6690; } .evdot.ev-safety { background: var(--caution); }
@@ -1565,6 +1568,16 @@
             <input type="text" data-e="contact" placeholder="Name, phone or email"></div>
           <div><label>Link (optional)</label>
             <input type="text" data-e="link_url" placeholder="https://"></div>
+          <div class="wide"><label>
+            <input type="checkbox" data-e="is_online"> Online meeting — attended on Teams, not in a room
+          </label></div>
+          <div class="wide" data-online-only><label>Joining link (optional)</label>
+            <input type="text" data-e="meeting_url"
+                   placeholder="https://teams.microsoft.com/l/meetup-join/…">
+            <p class="note" style="margin:4px 0 0">Paste the Teams link. The app shows a
+              <b>Join the meeting</b> button and puts the link in the calendar entry, so it is
+              tappable at two minutes to the hour. Leave it empty if the link isn't made yet —
+              the event still says it's online, which is what stops somebody driving to a shop.</p></div>
         </div>
         <div class="row">
           <button data-act="save-event">Add event</button>
@@ -3394,8 +3407,11 @@ function renderEvents() {
           <b style="font-size:16px">${esc(e.title)}</b>
           ${e.is_published ? "" : ` <span class="badge b-none">Draft — not showing</span>`}
           <div class="note">${esc(eventWhen(e))}</div>
-          ${e.location_name || e.address ? `<div class="note">${esc(
-            [e.location_name, e.address].filter(Boolean).join(" · "))}</div>` : ""}
+          ${eventOnlineLabel(e)
+            ? `<div class="note" style="color:var(--slate,#2F5D7C);font-weight:600">${esc(
+                eventOnlineLabel(e))}${e.meeting_url ? "" : " — link not added yet"}</div>`
+            : e.location_name || e.address ? `<div class="note">${esc(
+              [e.location_name, e.address].filter(Boolean).join(" · "))}</div>` : ""}
         </div>
         <div class="row" style="gap:6px">
           <button class="pdf" data-act="edit-event">Edit</button>
@@ -3409,6 +3425,14 @@ function renderEvents() {
 
 // Timed events edit as date and time; all-day ones as dates only. Switching
 // carries the date across rather than letting the browser blank the field.
+// The joining link only means anything for an online meeting, so it only
+// appears for one.
+function setOnline(online) {
+  const editor = $("eventEditor");
+  editor.querySelectorAll("[data-online-only]").forEach(el =>
+    el.classList.toggle("hidden", !online));
+}
+
 function setAllDay(allDay) {
   const editor = $("eventEditor");
   editor.querySelector('[data-e="all_day"]').checked = allDay;
@@ -3440,7 +3464,10 @@ function fillEventForm(e, { copy = false } = {}) {
   set("details", e && e.details);
   set("contact", e && e.contact);
   set("link_url", e && e.link_url);
+  set("meeting_url", e && e.meeting_url);
   set("is_published", !e || e.is_published ? "yes" : "no");
+  editor.querySelector('[data-e="is_online"]').checked = !!(e && e.is_online);
+  setOnline(!!(e && e.is_online));
 
   setAllDay(!!(e && e.all_day));
   const cut = (iso) => {
@@ -3465,6 +3492,7 @@ $("admin").addEventListener("change", (event) => {
   const get = (f) => editor.querySelector(`[data-e="${f}"]`);
 
   if (field === "all_day") return setAllDay(event.target.checked);
+  if (field === "is_online") return setOnline(event.target.checked);
 
   // Picking the shop sets its clock; it can still be changed afterwards.
   const shop = allLocations.find(l => l.id === event.target.value);
@@ -3551,6 +3579,12 @@ $("admin").addEventListener("click", async (event) => {
     else return speak(editor, "The link has to be a web address, starting https://", true);
   }
 
+  const isOnline = editor.querySelector('[data-e="is_online"]').checked;
+  const meetingURL = get("meeting_url").trim();
+  if (meetingURL && !/^https?:\/\/.+/i.test(meetingURL)) {
+    return speak(editor, "The joining link has to start with https://", true);
+  }
+
   const row = {
     title: get("title"),
     category: get("category"),
@@ -3564,6 +3598,10 @@ $("admin").addEventListener("click", async (event) => {
     details: get("details") || null,
     contact: get("contact") || null,
     link_url: link || null,
+    is_online: isOnline,
+    // The database refuses a joining link on an event not marked online, so
+    // don't send one: unticking the box clears the link rather than failing.
+    meeting_url: isOnline ? (meetingURL || null) : null,
     is_published: get("is_published") === "yes"
   };
 
@@ -3636,7 +3674,10 @@ function eventsView() {
           <span style="flex:1">
             <b style="font-size:16px;display:block">${esc(e.title)}</b>
             <span class="note">${esc(eventWhen(e))}</span>
-            ${where ? `<span class="note" style="display:block">${esc(where)}</span>` : ""}
+            ${eventOnlineLabel(e)
+              ? `<span class="note" style="display:block;color:var(--slate,#2F5D7C);font-weight:600">
+                  ${esc(eventOnlineLabel(e))}</span>`
+              : where ? `<span class="note" style="display:block">${esc(where)}</span>` : ""}
           </span>
         </summary>
         <div class="inner">
@@ -3645,6 +3686,9 @@ function eventsView() {
           ${e.details ? `<p style="white-space:pre-wrap">${esc(e.details)}</p>` : ""}
           ${e.contact ? `<p class="note">Contact: ${esc(e.contact)}</p>` : ""}
           <div class="row" style="margin-top:12px">
+            ${e.meeting_url && /^https?:\/\//i.test(e.meeting_url)
+              ? `<a class="join" href="${esc(e.meeting_url)}" target="_blank"
+                    rel="noopener">Join the meeting &nearr;</a>` : ""}
             <button data-ics="${esc(e.id)}">Add to my calendar</button>
             ${maps ? `<a href="https://maps.google.com/?q=${encodeURIComponent(maps)}"
                          target="_blank" rel="noopener">Directions &nearr;</a>` : ""}
@@ -3656,6 +3700,20 @@ function eventsView() {
         </div>
       </details>`;
   }).join("");
+}
+
+// "Online · Teams", or "Online" before the link exists. Matches
+// CompanyEvent.onlineLabel in the app so both call it the same thing.
+function eventOnlineLabel(e) {
+  if (!e.is_online) return null;
+  const host = (() => {
+    try { return new URL(e.meeting_url).host.toLowerCase(); } catch (x) { return ""; }
+  })();
+  if (host.includes("teams.microsoft") || host.includes("teams.live")) return "Online · Teams";
+  if (host.includes("zoom.")) return "Online · Zoom";
+  if (host.includes("meet.google")) return "Online · Google Meet";
+  if (host.includes("webex")) return "Online · Webex";
+  return "Online";
 }
 
 // iCalendar text: backslashes, commas, semicolons and newlines are escaped,
@@ -3694,12 +3752,21 @@ function downloadICS(e) {
   }
 
   lines.push(`SUMMARY:${icsText(e.title)}`);
-  const where = [e.location_name, e.address].filter(Boolean).join(", ");
+  // An online meeting's "where" is the platform, which is what a calendar
+  // shows in its one-line preview. Same rule as AddToCalendar.swift.
+  const join = e.meeting_url && /^https?:\/\//i.test(e.meeting_url) ? e.meeting_url : null;
+  const where = e.is_online
+    ? (eventOnlineLabel(e) || "Online").replace(/^Online · /, "") || "Online"
+    : [e.location_name, e.address].filter(Boolean).join(", ");
   if (where) lines.push(`LOCATION:${icsText(where)}`);
-  const notes = [e.details, e.contact && `Contact: ${e.contact}`, e.link_url,
+  const notes = [join && `Join the meeting: ${join}`, e.details,
+                 e.contact && `Contact: ${e.contact}`, e.link_url,
                  "From the Agri-Service app"].filter(Boolean).join("\n\n");
   lines.push(`DESCRIPTION:${icsText(notes)}`);
-  if (e.link_url && /^https?:\/\//i.test(e.link_url)) lines.push(`URL:${e.link_url}`);
+  // The join link wins the URL slot: tapping the entry should open the
+  // meeting, not a page about it.
+  const url = join || (e.link_url && /^https?:\/\//i.test(e.link_url) ? e.link_url : null);
+  if (url) lines.push(`URL:${url}`);
   lines.push("END:VEVENT", "END:VCALENDAR");
 
   const blob = new Blob([lines.map(icsFold).join("\r\n") + "\r\n"],
