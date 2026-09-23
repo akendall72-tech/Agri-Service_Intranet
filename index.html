@@ -871,6 +871,8 @@
             <input type="date" id="evalDate"></div>
           <div><label for="evalExpires">Expires</label>
             <input type="date" id="evalExpires" disabled></div>
+          <div><label for="evalCoursePassed">Certification course passed</label>
+            <input type="text" id="evalCoursePassed" readonly></div>
         </div>
         <p class="note" style="margin-bottom:4px" id="evalEligibleNote"></p>
 
@@ -2478,8 +2480,17 @@ const forkliftCourse = () => {
 };
 const forkliftEligible = () => {
   const wanted = craneCourseKey(forkliftCourse());
-  return (tsPeople || []).filter(r => (r.classes || [])
-    .some(c => craneCourseKey(c.course) === wanted));
+  return (tsPeople || [])
+    .filter(r => (r.classes || []).some(c => craneCourseKey(c.course) === wanted))
+    .map(r => ({
+      ...r,
+      // When they passed it, for the picker and the printed record.
+      course_completed: (r.classes || [])
+        .filter(c => craneCourseKey(c.course) === wanted)
+        .map(c => c.completed)
+        .sort()
+        .pop() || null
+    }));
 };
 let craneOverrides = new Map(), craneError = null, craneFilter = "all";
 
@@ -6227,6 +6238,9 @@ function renderEvalForm() {
   if (keep && eligible.some(r => r.person_key === keep)) picker.value = keep;
   const chosen = eligible.find(r => r.person_key === picker.value);
   $("evalEmail").value = chosen ? (chosen.email || "") : "";
+  const coursePassed = $("evalCoursePassed");
+  if (coursePassed) coursePassed.value = chosen && chosen.course_completed
+    ? usDate(chosen.course_completed) : "";
   $("evalEligibleNote").textContent = eligible.length
     ? `${eligible.length} ${eligible.length === 1 ? "person has" : "people have"} passed `
       + `${forkliftCourse()} and can be evaluated. The course comes first; the driving test `
@@ -6361,6 +6375,10 @@ function downloadEvaluationPDF(cert) {
   y += 11;
   y += text((cert.truck_classes || []).join(", ") || "None recorded", MARGIN, y, { width: WIDTH });
   y += 8;
+  // The classroom half of the certification.
+  pair("Certification course passed",
+       cert.course_completed_on ? usDate(cert.course_completed_on) : "Not on the training record",
+       "Course", forkliftCourse());
 
   section("The evaluation");
   EVAL_CHECKS.forEach(([key, label]) => {
@@ -6374,7 +6392,8 @@ function downloadEvaluationPDF(cert) {
   });
 
   section("Signed off by");
-  pair("Evaluator", cert.evaluator_name, "Recorded", usDate(cert.evaluation_date));
+  pair("Evaluated by", cert.evaluator_name || "Not recorded",
+       "On", usDate(cert.evaluation_date));
 
   y += 16;
   y += text("An evaluation is valid for three years, which is the maximum OSHA "
