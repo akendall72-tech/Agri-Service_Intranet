@@ -235,14 +235,6 @@
   .prow input { margin-bottom: 0; }
   .prow .wide { grid-column: 1 / -1; }
   @media (max-width: 720px) { .prow { grid-template-columns: 1fr; } }
-  .banner { border: 1px solid var(--line); border-radius: var(--radius); padding: 18px;
-            margin-bottom: 12px; background: #fff; }
-  .banner img { width: 100%; max-width: 420px; aspect-ratio: 3 / 1; object-fit: cover;
-                border-radius: var(--radius-sm); display: block; margin-bottom: 12px; border: 1px solid var(--line); }
-  .banner .empty { width: 100%; max-width: 420px; aspect-ratio: 3 / 1; border: 1.5px dashed var(--line-strong);
-                   border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center;
-                   color: var(--muted); margin-bottom: 12px; font-size: 14px; }
-  .banner.off { opacity: .55; }
   #peopleTable tr.gone td { color: var(--muted); }
   #peopleTable tr.gone td b { font-weight: 500; }
 
@@ -258,14 +250,6 @@
   .stat-card small svg { color: var(--red); }
   .stat-card strong { font-size: 22px; font-weight: 700; letter-spacing: -.01em; line-height: 1.3; }
   .stat-card span { font-size: 13px; color: var(--muted); }
-
-  .banners { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
-  .webbanner { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
-               overflow: hidden; padding-bottom: 14px; box-shadow: var(--shadow); }
-  .webbanner img { width: 100%; aspect-ratio: 3 / 1; object-fit: cover; display: block; margin-bottom: 12px; }
-  .webbanner b { display: block; padding: 0 16px 2px; }
-  .webbanner b:first-child { padding-top: 14px; }
-  .webbanner span { display: block; padding: 0 16px; }
 
   .tiles { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
   button.tile { width: 100%; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
@@ -778,7 +762,6 @@
       <button data-tab="people"><i data-icon="people"></i><span>People</span></button>
 
       <div class="nav-group">App content</div>
-      <button data-tab="banners"><i data-icon="megaphone"></i><span>Announcements</span></button>
       <button data-tab="news"><i data-icon="news"></i><span>News</span></button>
       <button data-tab="events"><i data-icon="events"></i><span>Events</span></button>
       <button data-tab="courses"><i data-icon="training"></i><span>Course Catalog</span></button>
@@ -812,10 +795,6 @@
       <p id="homeDate"></p>
     </div>
     <div class="stat-cards" id="homeStats"></div>
-    <div id="bannersWrap">
-      <div class="section-title">Announcements</div>
-      <div class="banners" id="banners"></div>
-    </div>
     <div class="section-title">Centers</div>
     <div class="tiles" id="tiles"></div>
   </div>
@@ -862,9 +841,8 @@
         <h2>Record a driving test</h2>
         <p class="note">The forklift driving evaluation, as it is carried out. Anyone can perform
           one — it is usually the location admin — and it lands in the list below straight away,
-          the same as an imported row. An import won't remove it. Only people who have passed the
-          certification course can be evaluated, which the database enforces rather than just
-          this page.</p>
+          the same as an imported row. An import won't remove it. Anyone on the All Employees
+          report can be evaluated. The database checks that, not just this page.</p>
         <div class="fields">
           <div><label for="evalName">Operator</label>
             <select id="evalName"></select></div>
@@ -1002,25 +980,6 @@
         <p class="note">The icon is an SF Symbol name. If you type one this
           version of iOS doesn't have, the app falls back to a life ring instead
           of drawing nothing.</p>
-      </div>
-    </section>
-
-    <!-- Announcements -->
-    <section id="tab-banners" class="hidden">
-      <div class="card">
-        <h2>Announcement banners</h2>
-        <p class="note">These rotate across the top of the app's home screen and
-          open full size when tapped. Three is the number the carousel is built
-          around — more works, but people stop watching.</p>
-        <p class="note"><b>Image size: 1200 &times; 400 pixels</b> (a 3:1 strip),
-          JPEG or PNG, under 1&nbsp;MB. Anything else is scaled to fill that
-          shape, so a square image gets cropped top and bottom. Keep wording
-          away from the edges.</p>
-        <div id="bannerList"></div>
-        <div class="row" style="margin-top:10px">
-          <button data-act="new-banner">Add a banner</button>
-          <span class="msg" id="bannerMsg"></span>
-        </div>
       </div>
     </section>
 
@@ -1643,7 +1602,7 @@
 //     routing           the hash router; add a page by adding a route here
 //     views             one function per page — the table of contents for
 //                       everything a person can actually open
-//     status / rendering / support / banners     shared bits of UI
+//     status / rendering / support              shared bits of UI
 //
 //   THE FEATURES, in the order they appear in the script
 //     shared reminders      the weekly and daily checklists
@@ -1698,7 +1657,7 @@ const $ = (id) => document.getElementById(id);
 let me = null, profile = null;
 let certs = [], plans = [], people = [], supportRoles = [], locations = {};
 let sharedTasks = [], personalTasks = [], hiddenTasks = [], completions = [];
-let tickets = [], workGroups = [], announcements = [];
+let tickets = [], workGroups = [];
 let payroll = [], holidays = [], directory = [], sharedLogins = [];
 // Every shared reminder, including ones switched off — sharedTasks above holds
 // only the showing ones, because that's all the Reminders view needs.
@@ -1774,7 +1733,7 @@ async function start() {
 // ---------------------------------------------------------------- loading
 
 async function loadAll() {
-  const [locs, c, p, pe, sr, wt, pt, ht, tc, tk, gr, an, pr, ph, dir, sl, allWt, trr] =
+  const [locs, c, p, pe, sr, wt, pt, ht, tc, tk, gr, pr, ph, dir, sl, allWt, trr] =
     await Promise.all([
     db.from("locations").select("*").order("sort_order"),
     db.from("forklift_certifications").select("*"),
@@ -1789,7 +1748,6 @@ async function loadAll() {
     db.from("support_tickets").select("*, support_ticket_comments(*)")
       .order("last_activity_at", { ascending: false }),
     db.from("groups").select("*").order("sort_order"),
-    db.from("announcements").select("*").order("sort_order"),
     db.from("payroll_periods").select("*").order("payday"),
     db.from("payroll_holidays").select("*").order("sort_order"),
     db.from("directory_entries").select("*").order("sort_order"),
@@ -1807,13 +1765,12 @@ async function loadAll() {
   completions = tc.data || [];
   tickets = tk.data || [];
   workGroups = gr.data || [];
-  announcements = an.data || [];
   payroll = pr.data || []; holidays = ph.data || []; directory = dir.data || [];
   sharedLogins = sl.data || [];
   allSharedTasks = allWt.data || [];
   trainingReports = Object.fromEntries((trr.data || []).map(r => [r.id, r]));
   trainingReportsError = trr.error ? trr.error.message : null;
-  await Promise.all([signBanners(), loadEvents(), loadInspections(), loadCourses(), loadSds(),
+  await Promise.all([loadEvents(), loadInspections(), loadCourses(), loadSds(),
     loadArticles(), loadTechLevels(), loadNews(), loadTrainingStatus(), loadCrane(), loadCompanyDocs()]);
 
   // Only your own profile comes back for most people — that policy is the
@@ -1921,15 +1878,6 @@ function showHome() {
     { weekday: "long", month: "long", day: "numeric", year: "numeric" });
   $("homeStats").innerHTML = homeStats();
 
-  const strip = announcements.filter(a => a.is_active);
-  $("banners").innerHTML = strip.map(a => `
-    <div class="webbanner">
-      ${a.url ? `<img src="${esc(a.url)}" alt="${esc(a.title)}">` : ""}
-      <b>${esc(a.title)}</b>
-      ${a.body ? `<span class="note">${esc(a.body)}</span>` : ""}
-    </div>`).join("");
-  $("bannersWrap").classList.toggle("hidden", !strip.length);
-
   $("tiles").innerHTML = FEATURES.map(f => {
     const n = tileCount(f.id);
     return `<button class="tile" data-view="${f.id}">
@@ -1972,7 +1920,7 @@ function showAdmin() {
   setMode("admin");
   const activeTab = document.querySelector("#adminNav button.active");
   if (activeTab) $("adminTitle").textContent = activeTab.textContent.trim();
-  renderCerts(); renderEvalForm(); renderPlans(); renderPeople(); renderSupport(); renderBanners();
+  renderCerts(); renderEvalForm(); renderPlans(); renderPeople(); renderSupport();
   renderPayroll(); renderDirectory(); renderLogins(); renderSharedReminders();
   renderEvents(); renderOrg(); renderOsrImport(); renderOsrLive(); renderInspectionsAdmin();
   renderCoursesAdmin(); renderSdsAdmin(); renderSdsPending(); renderArticlesAdmin(); renderTechAdmin();
@@ -2494,28 +2442,13 @@ const craneCourse = () => {
 // the database and CranePerson.courseKey in the app.
 const craneCourseKey = (name) => tsText(name).toLowerCase().replace(/\s+/g, " ").trim();
 
-// The course somebody must have passed before they can be given a forklift
-// driving test (migration 0055). A setting for the same reason the crane one
-// is: course names change. The database refuses an ineligible name whatever
-// this page shows, so the picker below is a convenience, not the rule.
+// The forklift certification course, as named on the printed record. A
+// setting because course names change. Since 0059 it is no longer required
+// before a driving test. It only names the course whose date goes on the card.
 const FORKLIFT_COURSE_FALLBACK = "Forklift Certification";
 const forkliftCourse = () => {
   const named = tsText(tsSources && tsSources.forklift_course).trim();
   return named || FORKLIFT_COURSE_FALLBACK;
-};
-const forkliftEligible = () => {
-  const wanted = craneCourseKey(forkliftCourse());
-  return (tsPeople || [])
-    .filter(r => (r.classes || []).some(c => craneCourseKey(c.course) === wanted))
-    .map(r => ({
-      ...r,
-      // When they passed it, for the picker and the printed record.
-      course_completed: (r.classes || [])
-        .filter(c => craneCourseKey(c.course) === wanted)
-        .map(c => c.completed)
-        .sort()
-        .pop() || null
-    }));
 };
 let craneOverrides = new Map(), craneError = null, craneFilter = "all";
 
@@ -3072,153 +3005,6 @@ document.addEventListener("click", async (event) => {
 });
 
 // ---------------------------------------------------------------- support
-
-// ---------------------------------------------------------------- banners
-
-// The bucket is private, so an <img> needs a signed URL rather than a path.
-// An hour is longer than anyone keeps this tab open.
-async function signBanners() {
-  for (const banner of announcements) {
-    if (!banner.image_path) { banner.url = null; continue; }
-    const { data } = await db.storage.from("announcements")
-      .createSignedUrl(banner.image_path, 3600);
-    banner.url = data ? data.signedUrl : null;
-  }
-}
-
-function renderBanners() {
-  const box = $("bannerList");
-  if (!box) return;
-
-  box.innerHTML = announcements.map(b => `
-    <div class="banner${b.is_active ? "" : " off"}" data-banner="${esc(b.id)}">
-      ${b.url ? `<img src="${esc(b.url)}" alt="">`
-              : `<div class="empty">No image yet &middot; 1200 &times; 400</div>`}
-      <div class="fields">
-        <div class="wide"><label>Title</label>
-          <input type="text" data-b="title" value="${esc(b.title)}"></div>
-        <div class="wide"><label>Body (shown when someone taps the banner)</label>
-          <textarea data-b="body" rows="3">${esc(b.body || "")}</textarea></div>
-        <div class="wide"><label>Link (optional — opens instead of the text)</label>
-          <input type="text" data-b="link_url" value="${esc(b.link_url || "")}"
-                 placeholder="https://…"></div>
-        <div><label>Order</label>
-          <input type="text" data-b="sort_order" value="${esc(b.sort_order)}"></div>
-        <div><label>Showing</label>
-          <select data-b="is_active">
-            <option value="yes"${b.is_active ? " selected" : ""}>Yes</option>
-            <option value="no"${b.is_active ? "" : " selected"}>No</option>
-          </select></div>
-      </div>
-      <div class="row">
-        <button data-act="save-banner">Save</button>
-        <label class="chip" style="cursor:pointer">
-          ${b.image_path ? "Replace image" : "Upload image"}
-          <input type="file" accept="image/png,image/jpeg" class="hidden"
-                 data-act="upload-banner">
-        </label>
-        <button class="ghost" data-act="delete-banner">Delete</button>
-        <span class="msg"></span>
-      </div>
-    </div>`).join("") || `<p class="note">No banners yet.</p>`;
-}
-
-$("admin").addEventListener("change", async (event) => {
-  const input = event.target.closest('input[type=file][data-act="upload-banner"]');
-  if (!input) return;
-
-  const file = input.files[0];
-  if (!file) return;
-  const box = input.closest(".banner");
-  const banner = announcements.find(b => b.id === box.dataset.banner);
-
-  if (file.size > 2 * 1024 * 1024) {
-    return speak(box, "That file is over 2 MB. Save it smaller.", true);
-  }
-
-  speak(box, "Uploading…", false);
-
-  // Named after the row, so replacing an image doesn't leave the old one
-  // behind in the bucket, and a stale signed URL can't resurrect it.
-  const extension = file.type === "image/png" ? "png" : "jpg";
-  const path = `${banner.id}.${extension}`;
-
-  const { error: uploadError } = await db.storage.from("announcements")
-    .upload(path, file, { upsert: true, contentType: file.type });
-  if (uploadError) return speak(box, uploadError.message, true);
-
-  const { data, error } = await db.from("announcements")
-    .update({ image_path: path }).eq("id", banner.id).select();
-  if (error) return speak(box, error.message, true);
-  if (!data || !data.length) {
-    return speak(box, "Nothing changed — this account isn't an admin.", true);
-  }
-
-  await loadAll();
-  renderBanners();
-});
-
-$("admin").addEventListener("click", async (event) => {
-  const button = event.target.closest("button[data-act]");
-  if (!button) return;
-  const act = button.dataset.act;
-  if (!["new-banner", "save-banner", "delete-banner"].includes(act)) return;
-
-  if (act === "new-banner") {
-    const { error } = await db.from("announcements").insert({
-      title: "New announcement",
-      sort_order: (announcements.length + 1) * 10
-    });
-    if (error) {
-      $("bannerMsg").textContent = error.message;
-      $("bannerMsg").className = "msg error";
-      return;
-    }
-    await loadAll();
-    return renderBanners();
-  }
-
-  const box = button.closest(".banner");
-  const banner = announcements.find(b => b.id === box.dataset.banner);
-  const get = (f) => box.querySelector(`[data-b="${f}"]`).value.trim();
-
-  if (act === "delete-banner") {
-    if (!confirm(`Delete "${banner.title}"?`)) return;
-    if (banner.image_path) {
-      await db.storage.from("announcements").remove([banner.image_path]);
-    }
-    const { error } = await db.from("announcements").delete().eq("id", banner.id);
-    if (error) return speak(box, error.message, true);
-    await loadAll();
-    return renderBanners();
-  }
-
-  if (!get("title")) return speak(box, "A banner needs a title.", true);
-
-  // A link that isn't a web address is refused by Safari on the phone, which
-  // takes the app down with it. The database refuses it too — this is just the
-  // friendlier of the two messages.
-  const link = get("link_url");
-  if (link && !/^https?:\/\//i.test(link)) {
-    return speak(box, "A link has to start with https:// — or leave it empty.", true);
-  }
-
-  speak(box, "Saving…", false);
-  const { data, error } = await db.from("announcements").update({
-    title: get("title"),
-    body: get("body") || null,
-    link_url: get("link_url") || null,
-    sort_order: parseInt(get("sort_order"), 10) || 0,
-    is_active: get("is_active") === "yes"
-  }).eq("id", banner.id).select();
-
-  if (error) return speak(box, error.message, true);
-  if (!data || !data.length) {
-    return speak(box, "Nothing changed — this account isn't an admin.", true);
-  }
-  Object.assign(banner, data[0]);
-  speak(box, "Saved.", false);
-});
 
 // ---------------------------------------------------------------- shared reminders
 
@@ -6452,25 +6238,20 @@ function renderEvalForm() {
   const classes = $("evalClasses");
   if (!classes) return;
 
-  // Only people the training history shows have passed the course.
-  const eligible = forkliftEligible();
   const picker = $("evalName");
   const keep = picker.value;
-  picker.innerHTML = `<option value="">Choose someone</option>` + eligible
-    .map(r => `<option value="${esc(r.person_key)}">${esc(`${r.first_name} ${r.last_name}`.trim())}</option>`)
+  picker.innerHTML = `<option value="">Choose someone</option>` + evalPeople
+    .map(r => `<option value="${esc(r.person_key)}">${esc(r.name)}</option>`)
     .join("");
-  if (keep && eligible.some(r => r.person_key === keep)) picker.value = keep;
-  const chosen = eligible.find(r => r.person_key === picker.value);
+  if (keep && evalPeople.some(r => r.person_key === keep)) picker.value = keep;
+  const chosen = evalPeople.find(r => r.person_key === picker.value);
   $("evalEmail").value = chosen ? (chosen.email || "") : "";
-  const coursePassed = $("evalCoursePassed");
-  if (coursePassed) coursePassed.value = chosen && chosen.course_completed
-    ? usDate(chosen.course_completed) : "";
-  $("evalEligibleNote").textContent = eligible.length
-    ? `${eligible.length} ${eligible.length === 1 ? "person has" : "people have"} passed `
-      + `${forkliftCourse()} and can be evaluated. The course comes first; the driving test `
-      + `confirms they can drive.`
-    : `Nobody on the roster has passed ${forkliftCourse()} yet, so nobody can be evaluated. `
-      + `Check that is how the OLT and ILT report spells the course.`;
+  // Not required any more, but still worth the evaluator knowing.
+  $("evalCoursePassed").value = !chosen ? ""
+    : chosen.course_completed ? usDate(chosen.course_completed) : "Not on file yet";
+  $("evalEligibleNote").textContent = evalPeople.length
+    ? `Everyone on the All Employees report can be evaluated: ${evalPeople.length} people.`
+    : `Nobody is on the All Employees report yet. Upload it on the Training Status tab.`;
   classes.innerHTML = EVAL_CLASSES.map(c =>
     `<button class="pdf${evalState.classes.has(c) ? " on" : ""}" data-eval-class="${esc(c)}"
       aria-pressed="${evalState.classes.has(c)}">${esc(c)}</button>`).join(" ");
@@ -6485,14 +6266,16 @@ function renderEvalForm() {
   $("evalVerdict").style.color = passed ? "var(--green-deep, #137026)" : "";
 
   const date = $("evalDate");
-  if (date && !date.value) date.value = new Date().toISOString().slice(0, 10);
+  // Local, not toISOString(): that is UTC, which after about 6 pm Mountain
+  // is already tomorrow, and the record would carry the wrong day.
+  if (date && !date.value) date.value = todayISO();
   if (date) $("evalExpires").value = evalExpiry(date.value);
 }
 
 async function saveEvaluation(button) {
   const card = $("evalCard");
-  const chosen = forkliftEligible().find(r => r.person_key === $("evalName").value);
-  const name = chosen ? `${chosen.first_name} ${chosen.last_name}`.trim() : "";
+  const chosen = evalPeople.find(r => r.person_key === $("evalName").value);
+  const name = chosen ? chosen.name : "";
   const email = chosen ? (chosen.email || "").toLowerCase() : "";
   const on = $("evalDate").value;
 
@@ -6515,11 +6298,11 @@ async function saveEvaluation(button) {
   const { error } = await db.from("forklift_certifications").insert(row);
   button.disabled = false;
   if (error) {
-    // The database refuses an evaluation of yourself; say what that means.
-    // Two rules share this refusal, so say both rather than guess which.
+    // Say what the database refused rather than show its wording. Two rules
+    // share this refusal, so name both rather than guess which.
     return speak(card, /row-level security|violates/i.test(error.message)
-      ? `That wasn't allowed. A driving test needs the ${forkliftCourse()} course on their `
-        + `training history first, and you can't record your own.`
+      ? `That wasn't allowed. The person has to be on the All Employees report, `
+        + `and you can't record your own.`
       : error.message, true);
   }
 
@@ -6624,7 +6407,7 @@ function downloadEvaluationPDF(cert) {
             + "1910.178(l)(4)(iii) allows between evaluations. Keep this with the "
             + "operator's training record.", MARGIN, y, { size: 9, grey: 90, width: WIDTH });
 
-  text(`Agri-Service, LLC - printed ${usDate(new Date().toISOString().slice(0, 10))}`,
+  text(`Agri-Service, LLC - printed ${usDate(todayISO())}`,
        MARGIN, 792 - MARGIN + 6, { size: 9, grey: 128 });
 
   doc.save(`Forklift Driving Test - ${cert.operator_name}.pdf`);
@@ -8377,6 +8160,10 @@ $("admin").addEventListener("click", async (event) => {
 // whatever came back.
 
 let tsPeople = [], tsSources = null, tsRaw = null, trainingStatusError = null;
+// Who a driving test can be about: everyone on All Employees, from
+// forklift_eligible_people() (migration 0059). The same list the app uses.
+// Reading tsPeople instead would show an admin only their own shop.
+let evalPeople = [];
 let tsPlan = new Set();            // person keys ticked as planned to reach 24
 let tsState = { tab: "summary", filter: "all", store: null, everyone: false, year: null };
 let tsPending = { employees: null, credits: null, history: null };
@@ -8400,14 +8187,20 @@ const tsRequiredHours = () => {
 const tsGoal = () => tsGoalPercent() / 100;
 
 async function loadTrainingStatus() {
-  const [people, sources, plan, raw] = await Promise.all([
+  const [people, sources, plan, raw, evaluable] = await Promise.all([
     db.from("training_status_people").select("*"),
     db.rpc("training_status_sources"),
     db.from("training_plans").select("planned").maybeSingle(),
-    db.from("training_status").select("*").eq("id", "current").maybeSingle()
+    db.from("training_status").select("*").eq("id", "current").maybeSingle(),
+    db.rpc("forklift_eligible_people")
   ]);
   trainingStatusError = people.error ? people.error.message : null;
   tsPeople = people.data || [];
+  // Loaded here so a fresh All Employees upload refreshes the driving test
+  // picker along with everything else. Not yourself: the database refuses it.
+  const mine = ((me && me.email) || "").toLowerCase();
+  evalPeople = (evaluable.data || [])
+    .filter(r => (r.email || "").toLowerCase() !== mine);
   tsSources = sources.error ? null : sources.data;
   tsPlan = new Set((plan.data && plan.data.planned) || []);
   tsRaw = raw.error ? null : raw.data;   // owners only
@@ -9590,7 +9383,7 @@ document.querySelectorAll(".tabs button[data-tab]").forEach(btn => {
   btn.onclick = () => {
     document.querySelectorAll(".tabs button[data-tab]").forEach(b =>
       b.classList.toggle("active", b === btn));
-    ["certs", "plans", "people", "support", "banners", "payroll",
+    ["certs", "plans", "people", "support", "payroll",
       "directory", "logins", "reminders", "events", "org", "openseat", "inspections", "courses", "articles", "techadmin", "sds", "news", "trainingstatus", "handbook"].forEach(name =>
       $("tab-" + name).classList.toggle("hidden", name !== btn.dataset.tab));
     $("adminTitle").textContent = btn.textContent.trim();
