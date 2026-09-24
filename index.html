@@ -951,7 +951,7 @@
         <h2>People</h2>
         <div class="row" style="margin-bottom:12px">
           <div id="peopleStats"></div>
-          <input class="search" id="peopleSearch" placeholder="Search a name…"
+          <input class="search" id="peopleSearch" placeholder="Search a name or email…"
                  style="margin-left:auto">
           <span class="msg"></span>
         </div>
@@ -960,10 +960,15 @@
           a location admin sees everyone at their shop; an owner sees everyone and can
           reach this page. You can't change your own role, and the last owner can't be
           demoted — otherwise one wrong tap leaves nobody able to undo it.</p>
-        <p class="note">Locations are still changed in Supabase. The app blocks both from
-          the client so nobody can promote themselves or move shops to route their own
-          lift plans elsewhere; the change here goes through the same owner-only function
-          that deactivation does.</p>
+        <p class="note"><b>Owners also set a name and a shop here.</b> Both are normally
+          chosen by the person on first sign-in in the app — so anyone who only ever uses
+          this page arrives with neither, and there was nowhere to fill them in. Type over
+          the name; pick a shop from the list. The app still blocks both from the client so
+          nobody can promote themselves or move shops to route their own lift plans
+          elsewhere; these go through the same owner-only function deactivation does.</p>
+        <p class="note">The email is the one they sign in with, shown here so an account
+          with no name yet is still recognisable. It's read-only: change it in
+          Supabase under Authentication → Users and it follows on its own.</p>
         <p class="note">When someone leaves, an owner presses <b>Deactivate</b>. They can't
           sign in to the app or this page, they're signed out, and their notifications
           stop. Everything they did — lift plans, sign-offs, inspections — stays, with their
@@ -972,6 +977,7 @@
           <table id="peopleTable">
             <thead><tr>
               <th data-sort="full_name">Name</th>
+              <th data-sort="email">Email</th>
               <th data-sort="role">Role</th>
               <th data-sort="location_id">Location</th>
               <th>Groups</th>
@@ -1773,7 +1779,7 @@ async function loadAll() {
     db.from("locations").select("*").order("sort_order"),
     db.from("forklift_certifications").select("*"),
     db.from("lift_plans").select("*").order("submitted_at", { ascending: false }),
-    db.from("profiles").select("id,full_name,role,location_id,groups,deactivated_at"),
+    db.from("profiles").select("id,full_name,email,role,location_id,groups,deactivated_at"),
     db.from("support_roles").select("*, support_people(*)").order("sort_order"),
     db.from("weekly_tasks").select("*").eq("is_active", true).order("sort_order"),
     db.from("personal_tasks").select("*").is("archived_at", null),
@@ -2850,8 +2856,11 @@ function renderPeople() {
   const q = ($("peopleSearch") ? $("peopleSearch").value : "").trim().toLowerCase();
   // Deactivated accounts sink to the bottom rather than disappearing, so there's
   // somewhere to reactivate them from.
+  // Email as well as name: an account nobody has named yet is findable by the
+  // only thing it has.
   const rows = people.filter(r => !q ||
-    (r.full_name || "").toLowerCase().includes(q))
+    (r.full_name || "").toLowerCase().includes(q) ||
+    (r.email || "").toLowerCase().includes(q))
     .sort((a, b) => (!!a.deactivated_at) - (!!b.deactivated_at));
 
   const active = people.filter(r => !r.deactivated_at);
@@ -2880,22 +2889,63 @@ function renderPeople() {
     return `<button class="pdf" data-account="deactivate" data-id="${esc(r.id)}">Deactivate</button>`;
   };
 
+  // A deactivated account isn't edited, the same way its role isn't. Your own
+  // row is, though — an owner fixing their own spelling can't lock anyone out,
+  // which is the only thing the role rule is protecting against.
+  const editable = (r) => isOwner() && !r.deactivated_at;
+
+  const shopPicker = (r) => `<select data-shop-for="${esc(r.id)}" style="margin:0;min-width:130px">
+      <option value=""${!r.location_id ? " selected" : ""}>— not set —</option>
+      ${allLocations.map(l => `<option value="${esc(l.id)}"${
+        r.location_id === l.id ? " selected" : ""}>${esc(l.name)}</option>`).join("")}
+    </select>`;
+
   $("peopleTable").querySelector("tbody").innerHTML = rows.map(r => `<tr${r.deactivated_at ? ' class="gone"' : ""}>
-      <td><b>${esc(r.full_name || "—")}</b>${r.id === me.id
+      <td>${editable(r)
+        ? `<input data-name-for="${esc(r.id)}" value="${esc(r.full_name || "")}"
+             placeholder="No name yet" style="margin:0;width:170px">`
+        : `<b>${esc(r.full_name || "—")}</b>`}${r.id === me.id
         ? ` <span class="note">· you</span>` : ""}</td>
+      <td class="note" style="white-space:nowrap">${esc(r.email || "—")}</td>
       <td>${isOwner() && !r.deactivated_at && r.id !== me.id
         ? `<select data-role-for="${esc(r.id)}" style="margin:0;min-width:120px">
             ${["employee", "admin", "owner"].map(role =>
               `<option value="${role}"${r.role === role ? " selected" : ""}>${role}</option>`).join("")}
           </select>`
         : esc(r.role) + (r.id === me.id ? ` <span class="note">· you</span>` : "")}</td>
-      <td>${r.location_id ? esc(locations[r.location_id] || r.location_id)
+      <td>${editable(r) ? shopPicker(r)
+        : r.location_id ? esc(locations[r.location_id] || r.location_id)
         : `<span class="error">not set</span>`}</td>
       <td>${esc(groupNames(r.groups)) || "—"}</td>
       <td style="white-space:nowrap">${account(r)}</td>
     </tr>`).join("")
-    || `<tr><td colspan="5" class="note">Nothing visible to you. If this is only
+    || `<tr><td colspan="6" class="note">Nothing visible to you. If this is only
         your own row, run migration 0021 in the SQL editor.</td></tr>`;
+}
+
+// One way in to the account function. Four controls use it now, and the part
+// worth getting right — digging the server's own sentence out of a response
+// that isn't 2xx, where supabase-js only hands you "Edge Function returned a
+// non-2xx status code" — was copied out once per control.
+async function accountAction(body) {
+  try {
+    const { data, error } = await db.functions.invoke("account", { body });
+    if (error) {
+      let problem = error.message;
+      try {
+        const sent = await error.context.json();
+        if (sent && sent.error) problem = sent.error;
+      } catch (e) { /* not JSON — keep the generic message */ }
+      if (/failed to send|404|not found/i.test(problem)) {
+        problem = "The account function isn't deployed yet.";
+      }
+      return { problem };
+    }
+    if (data && data.error) return { problem: data.error };
+    return { data: data || {} };
+  } catch (e) {
+    return { problem: String(e) };
+  }
 }
 
 // Roles. Through the account function rather than a direct update, because
@@ -2923,19 +2973,7 @@ document.addEventListener("change", async (event) => {
   }
 
   picker.disabled = true;
-  let problem = null;
-  try {
-    const { data, error } = await db.functions.invoke("account", { body: { action: "setRole", id, role } });
-    if (error) {
-      problem = error.message;
-      try { const body = await error.context.json(); if (body && body.error) problem = body.error; } catch (e) { /* none */ }
-      if (/failed to send|404|not found/i.test(problem)) problem = "The account function isn't deployed yet.";
-    } else if (data && data.error) {
-      problem = data.error;
-    }
-  } catch (e) {
-    problem = String(e);
-  }
+  const { problem } = await accountAction({ action: "setRole", id, role });
   picker.disabled = false;
 
   const card = picker.closest(".card") || $("peopleTable");
@@ -2946,6 +2984,69 @@ document.addEventListener("change", async (event) => {
   person.role = role;
   renderPeople();
   speak(card, `${name} is now an ${role}.`, false);
+});
+
+// A name and a shop, for somebody who never gets the screen that asks for
+// them. Both are chosen once, by the person, on first sign-in in the app —
+// so anyone who only ever opens this page has neither, and the guard in
+// migration 0007 refuses a second location from anyone signed in. The account
+// function holds the service key, where auth.uid() is null and that guard
+// stands aside. Owners only, like everything else it does.
+document.addEventListener("change", async (event) => {
+  const field = event.target.closest("[data-name-for], [data-shop-for]");
+  if (!field) return;
+  const isName = "nameFor" in field.dataset;
+  const id = isName ? field.dataset.nameFor : field.dataset.shopFor;
+  const person = people.find(r => r.id === id);
+  if (!person) return;
+  const card = field.closest(".card") || $("peopleTable");
+  const who = person.full_name || person.email || "this account";
+
+  if (isName) {
+    const typed = field.value.trim().replace(/\s+/g, " ");
+    if (!typed) {
+      field.value = person.full_name || "";
+      return speak(card, "A name can't be blank.", true);
+    }
+    if (typed === (person.full_name || "")) return;
+
+    field.disabled = true;
+    const { data, problem } = await accountAction(
+      { action: "setProfile", id, fullName: typed });
+    field.disabled = false;
+    if (problem) {
+      field.value = person.full_name || "";
+      return speak(card, problem, true);
+    }
+    // Deliberately no renderPeople() here: rebuilding the table under
+    // somebody who is still typing in it loses the caret and the scroll.
+    person.full_name = (data && data.full_name) || typed;
+    field.value = person.full_name;
+    return speak(card, `Saved — this account is ${person.full_name}.`, false);
+  }
+
+  // A shop decides which admin reviews that person's lift plans and
+  // inspections, so it asks first, the same way a role does.
+  const was = person.location_id || "";
+  const picked = field.value;
+  if (picked === was) return;
+  const to = picked ? (locations[picked] || picked) : "no shop";
+  if (!confirm(`Move ${who} to ${to}?\n\nA shop decides which admin sees their lift plans and inspections.`)) {
+    field.value = was;
+    return;
+  }
+
+  field.disabled = true;
+  const { problem } = await accountAction(
+    { action: "setProfile", id, locationId: picked || null });
+  field.disabled = false;
+  if (problem) {
+    field.value = was;
+    return speak(card, problem, true);
+  }
+  person.location_id = picked || null;
+  renderPeople();          // the "no shop set" count at the top changes
+  speak(card, picked ? `${who} is at ${to}.` : `${who} has no shop set.`, false);
 });
 
 // Leaving the company: the account function blocks sign-in and takes them off
@@ -2963,19 +3064,7 @@ document.addEventListener("click", async (event) => {
   if (!ok) return;
 
   button.disabled = true;
-  let problem = null;
-  try {
-    const { data, error } = await db.functions.invoke("account", { body: { action, id: person.id } });
-    if (error) {
-      problem = error.message;
-      try { const body = await error.context.json(); if (body && body.error) problem = body.error; } catch (e) { /* none */ }
-      if (/failed to send|404|not found/i.test(problem)) problem = "The account function isn't set up yet.";
-    } else if (data && data.error) {
-      problem = data.error;
-    }
-  } catch (e) {
-    problem = "That didn't go through.";
-  }
+  const { problem } = await accountAction({ action, id: person.id });
   button.disabled = false;
   if (problem) return alert(problem);
   await loadAll();
