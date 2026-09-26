@@ -285,52 +285,52 @@
   .accent-red, .accent-ink { border-left: 3px solid var(--red); }
   .accent-ink { border-left-color: var(--ink); }
 
-  /* ------------------------------------------------------------------ tech levels */
-  .tl-level-1 { --tl: #137026; } .tl-level-2 { --tl: #2F5D7C; }
-  .tl-level-3 { --tl: #B8760D; } .tl-level-4 { --tl: #CC0033; }
-  .tl-people { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
-  button.tl-person { display: flex; gap: 14px; align-items: center; padding: 14px 16px; width: 100%;
+  /* ------------------------------------------------------------------ skills */
+  .skill-level-1 { --tl: #137026; } .skill-level-2 { --tl: #2F5D7C; }
+  .skill-level-3 { --tl: #B8760D; } .skill-level-4 { --tl: #CC0033; }
+  .skill-people { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+  button.skill-person { display: flex; gap: 14px; align-items: center; padding: 14px 16px; width: 100%;
                      background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
                      box-shadow: var(--shadow); text-align: left; font: inherit; color: inherit;
                      font-weight: 400; justify-content: flex-start; white-space: normal; cursor: pointer; }
-  button.tl-person:hover { border-color: var(--line-strong); box-shadow: var(--shadow-lg); background: var(--card); }
-  .tl-ring { width: 48px; height: 48px; flex: 0 0 48px; border-radius: 50%; display: grid; place-items: center;
+  button.skill-person:hover { border-color: var(--line-strong); box-shadow: var(--shadow-lg); background: var(--card); }
+  .skill-ring { width: 48px; height: 48px; flex: 0 0 48px; border-radius: 50%; display: grid; place-items: center;
              font-weight: 700; font-size: 18px; color: var(--tl); position: relative;
              background: conic-gradient(var(--tl) calc(var(--p) * 1%), #ECE7E3 0); }
-  .tl-ring::before { content: ""; position: absolute; inset: 5px; border-radius: 50%; background: var(--card); }
-  .tl-ring > span { position: relative; }
-  .tl-bar { height: 8px; border-radius: 99px; background: #ECE7E3; overflow: hidden; }
-  .tl-bar i { display: block; height: 100%; background: var(--tl); }
-  .tl-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
-  .tl-chip { padding: 4px 10px; border-radius: 99px; font-size: 13px; font-weight: 600; color: var(--muted); background: #F3F0ED; }
-  .tl-chip.on { color: var(--tl); background: color-mix(in srgb, var(--tl) 12%, white); }
-  .tl-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 14px 0; }
-  button.tl-tab { border-radius: 10px; padding: 8px; border: 0; justify-content: center; flex-direction: column;
+  .skill-ring::before { content: ""; position: absolute; inset: 5px; border-radius: 50%; background: var(--card); }
+  .skill-ring > span { position: relative; }
+  .skill-bar { height: 8px; border-radius: 99px; background: #ECE7E3; overflow: hidden; }
+  .skill-bar i { display: block; height: 100%; background: var(--tl); }
+  .skill-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .skill-chip { padding: 4px 10px; border-radius: 99px; font-size: 13px; font-weight: 600; color: var(--muted); background: #F3F0ED; }
+  .skill-chip.on { color: var(--tl); background: color-mix(in srgb, var(--tl) 12%, white); }
+  .skill-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 14px 0; }
+  button.skill-tab { border-radius: 10px; padding: 8px; border: 0; justify-content: center; flex-direction: column;
                   background: color-mix(in srgb, var(--tl) 12%, white); color: var(--tl); font-weight: 600; }
-  button.tl-tab:hover { background: color-mix(in srgb, var(--tl) 20%, white); }
-  button.tl-tab.on { background: var(--tl); color: #fff; }
-  .tl-tab small { display: block; font-weight: 500; opacity: .85; }
-  .tl-cat { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  button.skill-tab:hover { background: color-mix(in srgb, var(--tl) 20%, white); }
+  button.skill-tab.on { background: var(--tl); color: #fff; }
+  .skill-tab small { display: block; font-weight: 500; opacity: .85; }
+  .skill-cat { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
             color: var(--muted); margin: 18px 2px 8px; }
-  .tl-list { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); }
-  .tl-item { display: flex; gap: 12px; align-items: flex-start; padding: 11px 14px; border-top: 1px solid var(--line); }
-  .tl-item:first-child { border-top: 0; }
-  .tl-check { width: 22px; height: 22px; flex: 0 0 22px; border-radius: 50%; border: 2px solid #DDD6D1;
+  .skill-list { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); }
+  .skill-item { display: flex; gap: 12px; align-items: flex-start; padding: 11px 14px; border-top: 1px solid var(--line); }
+  .skill-item:first-child { border-top: 0; }
+  .skill-check { width: 22px; height: 22px; flex: 0 0 22px; border-radius: 50%; border: 2px solid #DDD6D1;
               margin-top: 1px; position: relative; }
-  .tl-item.done .tl-check { background: var(--tl); border-color: var(--tl); }
-  .tl-item.done .tl-check::after { content: ""; position: absolute; left: 6px; top: 2px; width: 5px; height: 10px;
+  .skill-item.done .skill-check { background: var(--tl); border-color: var(--tl); }
+  .skill-item.done .skill-check::after { content: ""; position: absolute; left: 6px; top: 2px; width: 5px; height: 10px;
                                    border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
-  .tl-name { flex: 1; min-width: 0; }
-  .tl-name .note { display: block; margin-top: 2px; }
-  .tl-change summary { cursor: pointer; color: var(--red); font-weight: 600; font-size: 14px; }
-  .tl-change input, .tl-change select { margin: 0; }
-  .tl-row { padding: 12px 0; border-top: 1px solid var(--line); }
-  .tl-row.retired { opacity: .55; }
-  .tl-row input, .tl-row select { margin: 0; }
-  .tl-row-meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
-  .tl-row-meta [data-cf="category"] { flex: 1 1 180px; max-width: 260px; }
-  .tl-row-meta [data-cf="level"] { width: auto; }
-  .tl-row-meta [data-cf="sort_order"] { width: 80px; }
+  .skill-name { flex: 1; min-width: 0; }
+  .skill-name .note { display: block; margin-top: 2px; }
+  .skill-change summary { cursor: pointer; color: var(--red); font-weight: 600; font-size: 14px; }
+  .skill-change input, .skill-change select { margin: 0; }
+  .skill-row { padding: 12px 0; border-top: 1px solid var(--line); }
+  .skill-row.retired { opacity: .55; }
+  .skill-row input, .skill-row select { margin: 0; }
+  .skill-row-meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
+  .skill-row-meta [data-cf="category"] { flex: 1 1 180px; max-width: 260px; }
+  .skill-row-meta [data-cf="level"] { width: auto; }
+  .skill-row-meta [data-cf="sort_order"] { width: 80px; }
 
   /* ------------------------------------------------------------------ articles */
   .article-card .kick { font-size: 11px; font-weight: 700; letter-spacing: .08em;
@@ -791,7 +791,7 @@
       <button data-tab="events"><i data-icon="events"></i><span>Events</span></button>
       <button data-tab="courses"><i data-icon="training"></i><span>Course Catalog</span></button>
       <button data-tab="articles"><i data-icon="doc"></i><span>Training Articles</span></button>
-      <button data-tab="techadmin"><i data-icon="training"></i><span>Skills</span></button>
+      <button data-tab="skillsadmin"><i data-icon="training"></i><span>Skills</span></button>
       <button data-tab="sds"><i data-icon="safety"></i><span>Safety Data Sheets</span></button>
       <button data-tab="handbook"><i data-icon="briefcase"></i><span>Employee Handbook</span></button>
       <button data-tab="reminders"><i data-icon="reminders"></i><span>Reminders</span></button>
@@ -1220,30 +1220,30 @@
       </div>
     </section>
 
-    <!-- Tech levels: the competency list -->
-    <section id="tab-techadmin" class="hidden">
+    <!-- Skills: the competency list -->
+    <section id="tab-skillsadmin" class="hidden">
       <div class="card" id="techAdd">
         <h2>Skills competencies</h2>
         <p class="note">The list technicians are signed off against, level by level. Sign-offs happen in the
           Training Center — admins for their own shop, owners for anyone. Retire a competency rather than
           removing it: it comes off everyone's list and past sign-offs are kept. Adding one to a level never
           moves a tech who already finished that level back down.</p>
-        <div id="techAdminStats" style="margin:10px 0 14px"></div>
+        <div id="skillsAdminStats" style="margin:10px 0 14px"></div>
         <div class="fields">
           <div class="wide"><label>New competency</label>
             <input type="text" data-ca="name" placeholder="e.g. Perform a hydraulic flow test"></div>
           <div><label>Category</label>
-            <input type="text" data-ca="category" list="techCategories" placeholder="Hydraulics">
-            <datalist id="techCategories"></datalist></div>
+            <input type="text" data-ca="category" list="skillCategories" placeholder="Hydraulics">
+            <datalist id="skillCategories"></datalist></div>
           <div><label>Level</label>
             <select data-ca="level"><option>1</option><option>2</option><option>3</option><option>4</option></select></div>
         </div>
         <div class="row">
           <button data-comp-add>Add competency</button>
-          <span class="msg" id="techAdminMsg"></span>
+          <span class="msg" id="skillsAdminMsg"></span>
         </div>
       </div>
-      <div class="card"><div id="techAdminList"></div></div>
+      <div class="card"><div id="skillsAdminList"></div></div>
     </section>
 
     <!-- Training articles -->
@@ -1691,8 +1691,7 @@
 //     people                accounts, roles, deactivating someone
 //     lift plan PDF         rendering a lift plan to print
 //     payroll & directory   pay periods, holidays, the phone list
-//     tech levels           Skills: competencies and sign-offs (the database
-//                           still calls this tech_levels — see CLAUDE.md)
+//     skills                competencies and sign-offs (migrations 0040, 0064)
 //     training articles     the Training Center's written pages
 //     news                  posts and links, pins, what's new since last read
 //     training status       the three UKG exports, the dealer metric, and
@@ -1845,7 +1844,7 @@ async function loadAll() {
   trainingReports = Object.fromEntries((trr.data || []).map(r => [r.id, r]));
   trainingReportsError = trr.error ? trr.error.message : null;
   await Promise.all([loadEvents(), loadInspections(), loadCourses(), loadSds(),
-    loadArticles(), loadTechLevels(), loadNews(), loadTrainingStatus(), loadCrane(), loadCompanyDocs(), loadTools()]);
+    loadArticles(), loadSkills(), loadNews(), loadTrainingStatus(), loadCrane(), loadCompanyDocs(), loadTools()]);
 
   // Only your own profile comes back for most people — that policy is the
   // point — so the page reads it out of the list rather than asking twice.
@@ -1908,8 +1907,8 @@ const FEATURES = [
 const TRAINING_LINKS = [
   // Edited on the admin page's Course Catalog tab.
   { title: "Course Catalog", sub: "Agri-Service courses", view: "catalog" },
-  // Competencies and sign-offs; see techLevelsView.
-  { title: "Skills", sub: "Competencies and sign-offs", view: "techlevels" },
+  // Competencies and sign-offs; see skillsView.
+  { title: "Skills", sub: "Competencies and sign-offs", view: "skills" },
   // Built from the uploads on the admin page's Open Seat Report tab.
   { title: "Open Seat Report", sub: "Request registration", view: "openseat" },
   // AGCO hours, 609 and history: yours, your location's, or everyone's. See trainingStatusView.
@@ -1980,7 +1979,7 @@ function showView(name) {
   $("admin").classList.add("hidden");
   const host = $("view");
   host.classList.remove("hidden");
-  setMode("app", ["openseat", "catalog", "article", "techlevels", "trainingstatus"].includes(name) ? "training"
+  setMode("app", ["openseat", "catalog", "article", "skills", "trainingstatus"].includes(name) ? "training"
     : name === "newspost" ? "news" : name === "payroll" ? "hr" : name);
   host.innerHTML = `<nav class="crumbs"><button data-home>Home</button><span>/</span>
     ${name === "newspost" ? `<button data-view="news">News</button><span>/</span>` : ""}
@@ -1998,7 +1997,7 @@ function showAdmin() {
   renderCerts(); renderEvalForm(); renderPlans(); renderPeople(); renderSupport(); renderToolsAdmin();
   renderPayroll(); renderDirectory(); renderLogins(); renderSharedReminders();
   renderEvents(); renderOrg(); renderOsrImport(); renderOsrLive(); renderInspectionsAdmin();
-  renderCoursesAdmin(); renderSdsAdmin(); renderSdsPending(); renderArticlesAdmin(); renderTechAdmin();
+  renderCoursesAdmin(); renderSdsAdmin(); renderSdsPending(); renderArticlesAdmin(); renderSkillsAdmin();
   renderNewsAdmin(); renderTsImport(); renderTsLive(); renderHandbook();
   window.scrollTo(0, 0);
 }
@@ -2070,7 +2069,7 @@ const VIEWS = {
 
   openseat: () => openSeatView(),
   catalog: () => catalogView(),
-  techlevels: () => techLevelsView(),
+  skills: () => skillsView(),
   trainingstatus: () => trainingStatusView(),
   hr: () => hrView(),
   payroll: () => payrollView(),
@@ -5583,7 +5582,7 @@ const COMPANY_PAGES = [
 
 const pageTitle = (id) => (FEATURES.find(f => f.id === id) || COMPANY_PAGES.find(p => p.id === id)
   || { openseat: { title: "Open Seat Report" }, catalog: { title: "Course Catalog" },
-       techlevels: { title: "Skills" },
+       skills: { title: "Skills" },
        trainingstatus: { title: "Training Status" },
        newspost: { title: (newsPosts.find(p => p.id === openNewsId) || {}).title || "News" },
        hr: { title: "HR" }, payroll: { title: "Payroll Calendar" },
@@ -7518,9 +7517,9 @@ $("osrDrop").addEventListener("drop", (e) => {
   });
 });
 
-// ---------------------------------------------------------------- tech levels
+// ---------------------------------------------------------------- skills
 //
-// The Tech Levels program (migration 0040). A technician sees their own
+// The Skills program (migration 0040, renamed from Tech Levels in 0064). A technician sees their own
 // progress; an admin sees the technicians at their shop and signs them off; an
 // owner sees everyone and keeps the competency list in the admin area.
 //
@@ -7528,21 +7527,21 @@ $("osrDrop").addEventListener("drop", (e) => {
 // decide what to show, and never offer a button the database would refuse.
 
 let competencies = [], compSignoffs = [], levelsDone = [], techPeople = [], levelChanges = [];
-let techError = null;
-let techState = { personId: null, level: null };
-const TECH_LEVELS = [1, 2, 3, 4];
+let skillsError = null;
+let skillsState = { personId: null, level: null };
+const SKILL_LEVELS = [1, 2, 3, 4];
 
-async function loadTechLevels() {
+async function loadSkills() {
   const [c, p, s, d, h] = await Promise.all([
     db.from("competencies").select("*").order("sort_order"),
     // Someone who has left drops off the lists; their sign-offs stay.
     db.from("profiles").select("id,full_name,location_id,is_technician").is("deactivated_at", null),
     db.from("competency_signoffs").select("*"),
-    db.from("tech_level_completions").select("*"),
-    db.from("tech_level_changes").select("*").order("changed_at", { ascending: false })
+    db.from("skill_level_completions").select("*"),
+    db.from("skill_level_changes").select("*").order("changed_at", { ascending: false })
   ]);
   const failed = [c, p, s, d, h].find(r => r.error);
-  techError = failed ? failed.error.message : null;
+  skillsError = failed ? failed.error.message : null;
   competencies = c.data || [];
   techPeople = p.data || [];
   compSignoffs = s.data || [];
@@ -7578,7 +7577,7 @@ const techName = (person) => (person.full_name || "").trim() || "No name yet";
 // Redraws the view without jumping to the top.
 function refreshTechView() {
   const y = window.scrollY;
-  showView("techlevels");
+  showView("skills");
   window.scrollTo(0, y);
 }
 
@@ -7586,8 +7585,8 @@ function techPersonCard(person, label) {
   const pr = techProgress(person.id);
   const total = pr.at(pr.current).length;
   const pct = pr.finished ? 100 : (total ? Math.round(pr.count(pr.current) / total * 100) : 0);
-  return `<button type="button" class="tl-person tl-level-${pr.current}" data-tech-open="${esc(person.id)}">
-    <span class="tl-ring" style="--p:${pct}"><span>${pr.finished ? "✓" : pr.current}</span></span>
+  return `<button type="button" class="skill-person skill-level-${pr.current}" data-skill-open="${esc(person.id)}">
+    <span class="skill-ring" style="--p:${pct}"><span>${pr.finished ? "✓" : pr.current}</span></span>
     <span style="flex:1;min-width:0"><b>${esc(label || techName(person))}</b>
       <span class="note" style="display:block">${esc(techSummary(pr))}${
         isOwner() && !label ? " · " + esc(locations[person.location_id] || "No shop") : ""}</span></span>
@@ -7595,15 +7594,15 @@ function techPersonCard(person, label) {
   </button>`;
 }
 
-function techLevelsView() {
-  if (techError) {
+function skillsView() {
+  if (skillsError) {
     return hero("Skills", "") + `<div class="card"><p class="note">${
-      /does not exist|schema cache/i.test(techError)
+      /does not exist|schema cache/i.test(skillsError)
         ? "Skills isn't switched on yet — the training department is setting it up."
-        : "Skills couldn't be loaded. " + esc(techError)}</p></div>`;
+        : "Skills couldn't be loaded. " + esc(skillsError)}</p></div>`;
   }
 
-  const open = techState.personId && techPeople.find(p => p.id === techState.personId);
+  const open = skillsState.personId && techPeople.find(p => p.id === skillsState.personId);
   if (open) return techChecklist(open);
 
   const mine = techPeople.find(p => p.id === me.id);
@@ -7612,7 +7611,7 @@ function techLevelsView() {
 
   if (mine && mine.is_technician) {
     html += `<div class="section-title">Your progress</div>
-      <div class="tl-people" style="margin-bottom:22px">${techPersonCard(mine, "You")}</div>`;
+      <div class="skill-people" style="margin-bottom:22px">${techPersonCard(mine, "You")}</div>`;
   }
 
   if (isAdmin()) {
@@ -7623,7 +7622,7 @@ function techLevelsView() {
       .sort((a, b) => techName(a).localeCompare(techName(b)));
 
     html += `<div class="section-title">${isOwner() ? "Technicians" : "Technicians at your shop"}</div>
-      ${techs.length ? `<div class="tl-people">${techs.map(t => techPersonCard(t)).join("")}</div>`
+      ${techs.length ? `<div class="skill-people">${techs.map(t => techPersonCard(t)).join("")}</div>`
         : `<p class="note">Nobody's enrolled yet. Add the technicians at your shop below.</p>`}
       ${candidates.length ? `<div class="card" id="techEnroll" style="margin-top:18px">
         <h2>Add a technician</h2>
@@ -7632,8 +7631,8 @@ function techLevelsView() {
             <select data-enroll="person">${candidates.map(p =>
               `<option value="${esc(p.id)}">${esc(techName(p))}${isOwner() ? " — " + esc(locations[p.location_id] || "") : ""}</option>`).join("")}</select></div>
           <div><label>Working on</label>
-            <select data-enroll="level">${TECH_LEVELS.map(l => `<option value="${l}">Level ${l}</option>`).join("")}</select></div>
-          <button data-tech-enroll>Add</button>
+            <select data-enroll="level">${SKILL_LEVELS.map(l => `<option value="${l}">Level ${l}</option>`).join("")}</select></div>
+          <button data-skill-enroll>Add</button>
         </div>
         <p class="note" style="margin:8px 0 0">Anyone already working above Level 1: pick their level, and the
           levels below are recorded as placed rather than signed off.</p>
@@ -7651,7 +7650,7 @@ function techLevelsView() {
 
 function techChecklist(person) {
   const pr = techProgress(person.id);
-  const level = techState.level || pr.current;
+  const level = skillsState.level || pr.current;
   const canSign = techManages(person) && person.id !== me.id;
   const own = person.id === me.id;
   const total = pr.at(pr.current).length, doneCount = pr.count(pr.current);
@@ -7667,23 +7666,23 @@ function techChecklist(person) {
   });
 
   return `
-  ${isAdmin() ? `<button type="button" class="ghost" data-tech-back style="margin-bottom:12px">&larr; All technicians</button>` : ""}
-  <div class="card tl-level-${pr.current}">
+  ${isAdmin() ? `<button type="button" class="ghost" data-skill-back style="margin-bottom:12px">&larr; All technicians</button>` : ""}
+  <div class="card skill-level-${pr.current}">
     <div class="note" style="text-transform:uppercase;letter-spacing:.08em;font-weight:600">${esc(own ? "Your progress" : techName(person))}</div>
     <h2 style="font-size:24px;margin:4px 0 10px">${pr.finished ? "All four levels complete" : `Level ${pr.current} technician`}</h2>
-    ${pr.finished ? "" : `<div class="tl-bar"><i style="width:${total ? doneCount / total * 100 : 0}%"></i></div>
+    ${pr.finished ? "" : `<div class="skill-bar"><i style="width:${total ? doneCount / total * 100 : 0}%"></i></div>
       <p class="note" style="margin:6px 0 0">${doneCount} of ${total} Level ${pr.current} competencies signed off · ${total - doneCount} to go</p>`}
-    <div class="tl-chips">${TECH_LEVELS.map(l => `<span class="tl-chip tl-level-${l}${
+    <div class="skill-chips">${SKILL_LEVELS.map(l => `<span class="skill-chip skill-level-${l}${
       pr.done.has(l) || l === pr.current ? " on" : ""}">${pr.done.has(l) ? "✓ " : ""}L${l}</span>`).join("")}</div>
-    ${isOwner() && !own ? `<details class="tl-change" id="techChange" style="margin-top:14px">
+    ${isOwner() && !own ? `<details class="skill-change" id="skillChange" style="margin-top:14px">
       <summary>Change level</summary>
       <div class="row" style="align-items:flex-end;margin-top:10px">
         <div><label>Move to</label>
-          <select data-tl-change="level">${TECH_LEVELS.map(l => `<option value="${l}"${
+          <select data-skill-change="level">${SKILL_LEVELS.map(l => `<option value="${l}"${
             l === Math.max(1, pr.current - (pr.finished ? 0 : 1)) ? " selected" : ""}>Level ${l}</option>`).join("")}</select></div>
         <div style="flex:1;min-width:220px"><label>Why — needed to move someone down</label>
-          <input type="text" data-tl-change="reason" maxlength="500" placeholder="e.g. Placed too high; needs more time on hydraulics"></div>
-        <button data-tech-setlevel>Change level</button>
+          <input type="text" data-skill-change="reason" maxlength="500" placeholder="e.g. Placed too high; needs more time on hydraulics"></div>
+        <button data-skill-setlevel>Change level</button>
       </div>
       <p class="note" style="margin:8px 0 0">Moving down takes the finished levels off their record; sign-offs stay.
         If the level you move them to is still fully signed off, undo the sign-offs that shouldn't count first —
@@ -7693,59 +7692,59 @@ function techChecklist(person) {
   </div>
 
   ${levelChanges.filter(x => x.technician_id === person.id).slice(0, 3).map(x => `
-    <div class="card tl-level-${x.to_level}" style="padding:12px 16px">
+    <div class="card skill-level-${x.to_level}" style="padding:12px 16px">
       <b style="color:var(--tl)">${x.to_level < x.from_level ? "↓ Moved down" : "↑ Moved up"} from ${
         x.from_level === 5 ? "all four finished" : "Level " + x.from_level} to Level ${x.to_level}</b>
       <div class="note">${x.changed_by_name ? "by " + esc(x.changed_by_name) + " · " : ""}${day(x.changed_at)}</div>
       ${x.reason ? `<div class="note"><i>“${esc(x.reason)}”</i></div>` : ""}
     </div>`).join("")}
 
-  <div class="tl-tabs">${TECH_LEVELS.map(l => `<button type="button" class="tl-tab tl-level-${l}${l === level ? " on" : ""}"
-    data-tech-level="${l}">Level ${l}<small>${pr.count(l)}/${pr.at(l).length}</small></button>`).join("")}</div>
+  <div class="skill-tabs">${SKILL_LEVELS.map(l => `<button type="button" class="skill-tab skill-level-${l}${l === level ? " on" : ""}"
+    data-skill-level="${l}">Level ${l}<small>${pr.count(l)}/${pr.at(l).length}</small></button>`).join("")}</div>
 
-  ${finishedThis ? `<p class="tl-level-${level}" style="color:var(--tl);margin:0 0 6px">✓ ${
+  ${finishedThis ? `<p class="skill-level-${level}" style="color:var(--tl);margin:0 0 6px">✓ ${
       finishedThis.placed ? `Placed past Level ${level} when enrolled` : `Level ${level} finished`}${
       finishedThis.completed_at ? " on " + day(finishedThis.completed_at) : ""}.</p>`
     : level > pr.current ? `<p class="note" style="margin:0 0 6px">Items here can be signed off early. They count once
       Level ${pr.current} is finished.</p>` : ""}
 
   ${groups.map(g => `
-    <div class="tl-cat">${esc(g.category)}</div>
-    <div class="tl-list tl-level-${level}">${g.items.map(c => {
+    <div class="skill-cat">${esc(g.category)}</div>
+    <div class="skill-list skill-level-${level}">${g.items.map(c => {
       const s = pr.signed.get(c.id);
-      return `<div class="tl-item${s ? " done" : ""}">
-        <span class="tl-check"></span>
-        <span class="tl-name">${esc(c.name)}
+      return `<div class="skill-item${s ? " done" : ""}">
+        <span class="skill-check"></span>
+        <span class="skill-name">${esc(c.name)}
           ${s ? `<span class="note">Signed off by ${esc(s.signed_by_name || "an admin")} · ${day(s.signed_at)}</span>
                  ${s.note ? `<span class="note"><i>“${esc(s.note)}”</i></span>` : ""}`
               : finishedThis ? `<span class="note" style="color:#8a5e00">Added after this level was finished — doesn't affect the level</span>` : ""}
         </span>
-        ${canSign && !s ? `<button type="button" class="pdf" data-tech-signoff="${esc(c.id)}">Sign off</button>` : ""}
-        ${canSign && s ? `<button type="button" class="ghost" data-tech-remove="${esc(s.id)}" title="Remove this sign-off">Undo</button>` : ""}
+        ${canSign && !s ? `<button type="button" class="pdf" data-skill-signoff="${esc(c.id)}">Sign off</button>` : ""}
+        ${canSign && s ? `<button type="button" class="ghost" data-skill-remove="${esc(s.id)}" title="Remove this sign-off">Undo</button>` : ""}
       </div>`;
     }).join("")}</div>`).join("")}`;
 }
 
 document.addEventListener("click", async (event) => {
-  const openBtn = event.target.closest("[data-tech-open]");
+  const openBtn = event.target.closest("[data-skill-open]");
   if (openBtn) {
-    techState = { personId: openBtn.dataset.techOpen, level: null };
-    return showView("techlevels");
+    skillsState = { personId: openBtn.dataset.skillOpen, level: null };
+    return showView("skills");
   }
-  if (event.target.closest("[data-tech-back]")) {
-    techState = { personId: null, level: null };
-    return showView("techlevels");
+  if (event.target.closest("[data-skill-back]")) {
+    skillsState = { personId: null, level: null };
+    return showView("skills");
   }
-  const levelBtn = event.target.closest("[data-tech-level]");
+  const levelBtn = event.target.closest("[data-skill-level]");
   if (levelBtn) {
-    techState.level = Number(levelBtn.dataset.techLevel);
+    skillsState.level = Number(levelBtn.dataset.skillLevel);
     return refreshTechView();
   }
 
-  const signBtn = event.target.closest("[data-tech-signoff]");
+  const signBtn = event.target.closest("[data-skill-signoff]");
   if (signBtn) {
-    const person = techPeople.find(p => p.id === techState.personId);
-    const item = competencies.find(c => c.id === signBtn.dataset.techSignoff);
+    const person = techPeople.find(p => p.id === skillsState.personId);
+    const item = competencies.find(c => c.id === signBtn.dataset.skillSignoff);
     if (!person || !item) return;
     const note = window.prompt(`Sign off for ${techName(person)}:\n\n${item.name}\n\n` +
       `You're confirming you've seen them do this. Add a note if you like (the machine, the job):`, "");
@@ -7756,38 +7755,38 @@ document.addEventListener("click", async (event) => {
     if (error) { signBtn.disabled = false; return alert(error.message); }
     // If that finished a level, the tech (and the owners) get a notification.
     // The server checks, and announces each finished level once.
-    notify("tech_level", person.id);
-    await loadTechLevels();
+    notify("skill_level", person.id);
+    await loadSkills();
     return refreshTechView();
   }
 
-  const undoBtn = event.target.closest("[data-tech-remove]");
+  const undoBtn = event.target.closest("[data-skill-remove]");
   if (undoBtn) {
     if (!confirm("Remove this sign-off? Use this for one signed off by mistake. A level already finished stays finished.")) return;
-    const { data, error } = await db.from("competency_signoffs").delete().eq("id", undoBtn.dataset.techRemove).select();
+    const { data, error } = await db.from("competency_signoffs").delete().eq("id", undoBtn.dataset.skillRemove).select();
     if (error) return alert(error.message);
     if (!data || !data.length) return alert("That sign-off wasn't removed — it isn't yours to change.");
-    await loadTechLevels();
+    await loadSkills();
     return refreshTechView();
   }
 
-  const setBtn = event.target.closest("[data-tech-setlevel]");
+  const setBtn = event.target.closest("[data-skill-setlevel]");
   if (setBtn) {
-    const box = $("techChange");
-    const person = techPeople.find(p => p.id === techState.personId);
-    const level = Number(box.querySelector('[data-tl-change="level"]').value);
-    const reason = box.querySelector('[data-tl-change="reason"]').value.trim();
+    const box = $("skillChange");
+    const person = techPeople.find(p => p.id === skillsState.personId);
+    const level = Number(box.querySelector('[data-skill-change="level"]').value);
+    const reason = box.querySelector('[data-skill-change="reason"]').value.trim();
     setBtn.disabled = true;
-    const { error } = await db.rpc("set_tech_level", { target: person.id, new_level: level, reason: reason || null });
+    const { error } = await db.rpc("set_skill_level", { target: person.id, new_level: level, reason: reason || null });
     setBtn.disabled = false;
     // The database says exactly why a change isn't allowed; show that.
     if (error) return speak(box, error.message, true);
-    techState.level = null;
-    await loadTechLevels();
+    skillsState.level = null;
+    await loadSkills();
     return refreshTechView();
   }
 
-  const enrollBtn = event.target.closest("[data-tech-enroll]");
+  const enrollBtn = event.target.closest("[data-skill-enroll]");
   if (enrollBtn) {
     const box = $("techEnroll");
     const target = box.querySelector('[data-enroll="person"]').value;
@@ -7796,38 +7795,38 @@ document.addEventListener("click", async (event) => {
     const { error } = await db.rpc("set_technician", { target, enrolled: true, starting_level: level });
     enrollBtn.disabled = false;
     if (error) return speak(box, error.message, true);
-    await loadTechLevels();
+    await loadSkills();
     return refreshTechView();
   }
 });
 
 // ---- admin: the competency list (owners) ------------------------------------------
 
-function renderTechAdmin() {
-  const box = $("techAdminList");
+function renderSkillsAdmin() {
+  const box = $("skillsAdminList");
   if (!box) return;
-  if (techError) {
-    box.innerHTML = `<p class="error">${/does not exist|schema cache/i.test(techError)
-      ? "Run migration 0040_tech_levels.sql in the SQL editor, then reload this page."
-      : esc(techError)}</p>`;
+  if (skillsError) {
+    box.innerHTML = `<p class="error">${/does not exist|schema cache/i.test(skillsError)
+      ? "Run migrations 0040 and 0064 in the SQL editor, then reload this page."
+      : esc(skillsError)}</p>`;
     return;
   }
   const active = competencies.filter(c => c.is_active);
-  $("techAdminStats").innerHTML = TECH_LEVELS.map(l =>
+  $("skillsAdminStats").innerHTML = SKILL_LEVELS.map(l =>
     `<span class="stat"><b>${active.filter(c => c.level === l).length}</b>Level ${l}</span>`).join("")
     + `<span class="stat"><b>${competencies.length - active.length}</b>retired</span>`;
-  $("techCategories").innerHTML = [...new Set(competencies.map(c => c.category))]
+  $("skillCategories").innerHTML = [...new Set(competencies.map(c => c.category))]
     .map(c => `<option value="${esc(c)}">`).join("");
 
-  box.innerHTML = TECH_LEVELS.map(level => {
+  box.innerHTML = SKILL_LEVELS.map(level => {
     const rows = competencies.filter(c => c.level === level);
-    return `<div class="section-title tl-level-${level}" style="margin-top:22px;color:var(--tl)">Level ${level}
+    return `<div class="section-title skill-level-${level}" style="margin-top:22px;color:var(--tl)">Level ${level}
       · ${rows.filter(c => c.is_active).length} competencies</div>
-    ${rows.map(c => `<div class="tl-row${c.is_active ? "" : " retired"}" data-comp="${esc(c.id)}">
+    ${rows.map(c => `<div class="skill-row${c.is_active ? "" : " retired"}" data-comp="${esc(c.id)}">
       <input type="text" data-cf="name" value="${esc(c.name)}" aria-label="Competency">
-      <div class="tl-row-meta">
-        <input type="text" data-cf="category" list="techCategories" value="${esc(c.category)}" aria-label="Category">
-        <select data-cf="level" aria-label="Level">${TECH_LEVELS.map(l =>
+      <div class="skill-row-meta">
+        <input type="text" data-cf="category" list="skillCategories" value="${esc(c.category)}" aria-label="Category">
+        <select data-cf="level" aria-label="Level">${SKILL_LEVELS.map(l =>
           `<option value="${l}"${l === c.level ? " selected" : ""}>Level ${l}</option>`).join("")}</select>
         <input type="text" data-cf="sort_order" value="${esc(c.sort_order)}" aria-label="Order" title="Order in the list">
         <button class="pdf" data-comp-act="save">Save</button>
@@ -7841,7 +7840,7 @@ function renderTechAdmin() {
 $("admin").addEventListener("click", async (event) => {
   const btn = event.target.closest("[data-comp-act], [data-comp-add]");
   if (!btn) return;
-  const say = (text, bad) => { $("techAdminMsg").textContent = text; $("techAdminMsg").className = "msg " + (bad ? "error" : "ok"); };
+  const say = (text, bad) => { $("skillsAdminMsg").textContent = text; $("skillsAdminMsg").className = "msg " + (bad ? "error" : "ok"); };
 
   if (btn.matches("[data-comp-add]")) {
     const form = $("techAdd");
@@ -7854,7 +7853,7 @@ $("admin").addEventListener("click", async (event) => {
     if (error) return say(error.message, true);
     if (!data || !data.length) return say("Nothing added — only an owner can change the list.", true);
     form.querySelector('[data-ca="name"]').value = "";
-    await loadTechLevels(); renderTechAdmin();
+    await loadSkills(); renderSkillsAdmin();
     return say(`Added to Level ${level}. Anyone who already finished Level ${level} keeps it.`, false);
   }
 
@@ -7872,7 +7871,7 @@ $("admin").addEventListener("click", async (event) => {
   const { data, error } = await db.from("competencies").update(patch).eq("id", id).select();
   if (error) return say(error.message, true);
   if (!data || !data.length) return say("Nothing changed — only an owner can change the list.", true);
-  await loadTechLevels(); renderTechAdmin();
+  await loadSkills(); renderSkillsAdmin();
   say(act === "retire" ? "Retired. It's off everyone's list; past sign-offs for it are kept."
     : act === "restore" ? "Restored." : "Saved.", false);
 });
@@ -10018,7 +10017,7 @@ document.querySelectorAll(".tabs button[data-tab]").forEach(btn => {
     document.querySelectorAll(".tabs button[data-tab]").forEach(b =>
       b.classList.toggle("active", b === btn));
     ["certs", "plans", "people", "support", "payroll", "tools",
-      "directory", "logins", "reminders", "events", "org", "openseat", "inspections", "courses", "articles", "techadmin", "sds", "news", "trainingstatus", "handbook"].forEach(name =>
+      "directory", "logins", "reminders", "events", "org", "openseat", "inspections", "courses", "articles", "skillsadmin", "sds", "news", "trainingstatus", "handbook"].forEach(name =>
       $("tab-" + name).classList.toggle("hidden", name !== btn.dataset.tab));
     $("adminTitle").textContent = btn.textContent.trim();
     document.body.classList.remove("nav-open");
