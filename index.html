@@ -4508,6 +4508,28 @@ const osrText = (v) => String(v ?? "").trim();
 // Dates arrive as "2026-11-17 08:00:00 MST", "10/19/2026", Excel serial
 // numbers, or — in the AGCO sheet — broken formulas. Anything that isn't
 // clearly a date becomes null and shows as "Date TBD".
+// "2026-11-17 08:00:00 MST" -> "8:00 AM MST": when the class starts, on the
+// clock where it's held, which is how UKG writes it. Excel keeps the time as
+// the fraction of a day. Midnight is a date with no time, not a class that
+// starts at midnight, so it gives nothing.
+function osrTime(value) {
+  if (value === null || value === undefined || value === "") return null;
+  let hours, minutes, zone = "";
+  if (typeof value === "number") {
+    const total = Math.round((value % 1) * 1440);
+    hours = Math.floor(total / 60) % 24; minutes = total % 60;
+  } else {
+    const m = osrText(value).match(/(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?\s*([A-Za-z]{2,5})?\s*$/i);
+    if (!m) return null;
+    hours = Number(m[1]); minutes = Number(m[2]);
+    if (m[3]) hours = (hours % 12) + (/pm/i.test(m[3]) ? 12 : 0);
+    zone = (m[4] || "").toUpperCase();
+  }
+  if (!hours && !minutes) return null;
+  const clock = `${hours % 12 || 12}:${String(minutes).padStart(2, "0")} ${hours < 12 ? "AM" : "PM"}`;
+  return zone ? `${clock} ${zone}` : clock;
+}
+
 function osrDate(value) {
   if (value === null || value === undefined || value === "") return null;
   if (typeof value === "number") return excelDate(value);
@@ -4609,6 +4631,7 @@ function osrParse(rows, fileName) {
       status: osrText(r["Status"]),
       startRaw: osrText(r["Event Start Date"]),
       startDate: osrDate(r["Event Start Date"]),
+      startTime: osrTime(r["Event Start Date"]),
       endDate: osrDate(r["Event End Date"]),
       registered: parseInt(r["Registered"], 10) || 0,
       available: parseInt(r["Available Seats"], 10) || 0
@@ -4646,6 +4669,8 @@ function osrBuildInternal(openSeat, inClass) {
     const built = {
       eventId: null, title: c.title, city: c.city, status: c.status,
       startDate: c.startDate, endDate: c.endDate || c.startDate,
+      // Null on a report published before times were kept.
+      startTime: c.startTime || null,
       registered: c.registered, available: c.available,
       instructors: "", roster: [], sortKey: `${c.startDate || "9999"} ${c.startRaw}`
     };
@@ -4894,6 +4919,8 @@ function openSeatView() {
     const emails = c.roster.map(p => p.email).filter(Boolean);
     const plain = osrRange(c.startDate, c.endDate, true);
     const mail = `mailto:?bcc=${emails.join(",")}&subject=${encodeURIComponent(`${c.title} — ${plain}`)}`;
+    // The registration request says when it starts too.
+    const plainWhen = c.startTime ? `${plain}, starts ${c.startTime}` : plain;
     return `
       <div class="osr-card">
         <div class="osr-card-top">
@@ -4902,6 +4929,7 @@ function openSeatView() {
               <div class="osr-title-row"><span class="osr-chev">▸</span>
                 <span class="osr-title">${esc(c.title)}</span>${osrBadge(c.status)}</div>
               <div class="osr-meta"><span>📅 ${osrRange(c.startDate, c.endDate)}</span>
+                ${c.startTime ? `<span>🕗 Starts ${esc(c.startTime)}</span>` : ""}
                 <span>📍 ${esc(c.city)}</span>${c.instructors ? `<span>🎓 ${esc(c.instructors)}</span>` : ""}</div>
             </div>
             <div class="osr-seats">
@@ -4913,7 +4941,7 @@ function openSeatView() {
           <div class="osr-actions">
             ${emails.length ? `<a class="osr-email" href="${esc(mail)}">📧 Email Class</a>`
               : `<span class="osr-email disabled" title="No students enrolled">📧 Email Class</span>`}
-            ${osrRequestButton(c.title, c.city, plain)}
+            ${osrRequestButton(c.title, c.city, plainWhen)}
           </div>
         </div>
         <div class="osr-body" id="osr-class-${i}" hidden>
@@ -4937,7 +4965,8 @@ function openSeatView() {
       <div class="osr-scroll"><table class="osr-table"><thead><tr><th>#</th><th>Student</th><th>Class Enrolled</th><th>Email</th></tr></thead><tbody>
       ${students.map((s, n) => `<tr><td class="osr-num">${n + 1}</td><td class="osr-name">${esc(s.name)}</td>
         <td><div class="osr-class-title">${esc(s.cls.title)}</div>
-          <div class="osr-sub">${osrRange(s.cls.startDate, s.cls.endDate)} · 📍 ${esc(s.cls.city)} · ${osrBadge(s.cls.status)}</div></td>
+          <div class="osr-sub">${osrRange(s.cls.startDate, s.cls.endDate)}${s.cls.startTime
+            ? ` · ${esc(s.cls.startTime)}` : ""} · 📍 ${esc(s.cls.city)} · ${osrBadge(s.cls.status)}</div></td>
         <td><a href="mailto:${esc(s.email)}">${esc(s.email)}</a></td></tr>`).join("")}
       </tbody></table></div>`;
   })() : `<p class="osr-empty">No one is enrolled in an upcoming class.</p>`;
