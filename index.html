@@ -494,6 +494,24 @@
   .ticket[open] > summary::after { transform: rotate(-135deg); top: 24px; }
   .ticket > summary:hover { background: var(--paper); border-radius: var(--radius); }
   .ticket .inner { padding: 16px; border-top: 1px solid var(--line); }
+
+  /* ------------------------------------------------------------------ special tools */
+  .tool-list { display: grid; gap: 8px; margin-top: 12px; }
+  .tool-row { border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--card);
+              padding: 12px 14px; display: grid; gap: 3px; }
+  /* Out is the thing to notice: an amber edge, like the app. */
+  .tool-row.out { border-color: var(--caution); box-shadow: inset 4px 0 0 var(--caution); }
+  .tool-row .top { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
+  .tool-row .pn { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 12.5px;
+                  color: var(--muted); }
+  .tool-row .top .badge { margin-left: auto; }
+  .tool-row .where { font-size: 13px; color: #92590A; }
+  .tool-field { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 12px 14px;
+                margin-bottom: 10px; background: var(--paper); }
+  .tool-preview { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 12px 14px;
+                  margin-top: 12px; background: var(--paper); }
+  .tool-preview ul { margin: 4px 0 10px; padding-left: 20px; }
+  .tool-preview .gone { color: var(--red-dark); }
   .comment { padding: 10px 0; border-top: 1px solid var(--line); }
 
   .support-role { border: 1px solid var(--line); border-radius: var(--radius); background: var(--card);
@@ -776,6 +794,7 @@
       <div class="nav-group">Imports</div>
       <button data-tab="payroll"><i data-icon="calendar"></i><span>Payroll</span></button>
       <button data-tab="directory"><i data-icon="phone"></i><span>Who Does What</span></button>
+      <button data-tab="tools"><i data-icon="wrench"></i><span>Special Tools</span></button>
       <button data-tab="openseat"><i data-icon="training"></i><span>Open Seat Report</span></button>
       <button data-tab="trainingstatus"><i data-icon="training"></i><span>Training Status</span></button>
 
@@ -1104,6 +1123,54 @@
         </div>
         <div id="directoryResult"></div>
         <div id="directorySummary" style="margin-top:14px"></div>
+      </div>
+    </section>
+
+    <!-- Special tools -->
+    <section id="tab-tools" class="hidden">
+      <div class="card">
+        <h2>Special tools</h2>
+        <p class="note">The list in the app's Support Center. Tools are added, changed and checked
+          out in the app; this is for the whole list at once — a copy to look over, or a big
+          change made in a spreadsheet.</p>
+        <div id="toolsSummary"></div>
+        <div class="drop" id="toolsDrop">
+          Drop the special tools list here, or
+          <label for="toolsFile" style="display:inline;color:var(--red);
+                 cursor:pointer;text-decoration:underline">choose a file</label>
+          <input id="toolsFile" type="file" class="hidden"
+                 accept=".csv,.xlsx,.xls,text/csv">
+        </div>
+        <p class="note" style="margin-top:12px">Columns are found by their headings:
+          <b>Part Number</b>, <b>Name</b>, <b>Description</b>, <b>Home Location</b> and
+          <b>Quantity</b>, then one column for each field below, headed with its name.
+          <b>Checked Out</b> and <b>Where</b> in the download are there to read, and are
+          ignored on the way back in.</p>
+        <p class="note"><b>The file is the whole list.</b> Tools in it are added or updated by
+          part number; tools not in it are removed. You see exactly what will change before
+          anything is saved, and a tool that's checked out can't be removed or moved until it's
+          checked back in.</p>
+        <div class="row" style="margin-top:12px">
+          <button class="pdf" data-template="tools">Download a blank sheet</button>
+          <button class="pdf" data-export="tools">Download what's in the app now</button>
+        </div>
+        <div id="toolsResult"></div>
+      </div>
+
+      <div class="card">
+        <h2>Fields on the tool form</h2>
+        <p class="note">Anything beyond the name, part number, description, home shop and
+          quantity. A field added here is on the app's form, and on every tool, straight away
+          — no app update. Answers are kept by field rather than by name, so renaming a field
+          keeps them. Set <b>Showing</b> to No to stop asking without losing what's recorded.</p>
+        <div id="toolFieldList"></div>
+        <div class="row" style="margin-top:10px">
+          <input type="text" id="newToolFieldLabel" placeholder="New field name" maxlength="60"
+                 style="max-width:240px;margin-bottom:0">
+          <select id="newToolFieldType" style="max-width:190px;margin-bottom:0"></select>
+          <button data-act="tool-field-add">Add field</button>
+          <span class="msg"></span>
+        </div>
       </div>
     </section>
 
@@ -1771,7 +1838,7 @@ async function loadAll() {
   trainingReports = Object.fromEntries((trr.data || []).map(r => [r.id, r]));
   trainingReportsError = trr.error ? trr.error.message : null;
   await Promise.all([loadEvents(), loadInspections(), loadCourses(), loadSds(),
-    loadArticles(), loadTechLevels(), loadNews(), loadTrainingStatus(), loadCrane(), loadCompanyDocs()]);
+    loadArticles(), loadTechLevels(), loadNews(), loadTrainingStatus(), loadCrane(), loadCompanyDocs(), loadTools()]);
 
   // Only your own profile comes back for most people — that policy is the
   // point — so the page reads it out of the list rather than asking twice.
@@ -1802,6 +1869,7 @@ const ICONS = {
   pin: '<path d="M9 3.5h6l-1 6.5 3.5 3.5h-11L10 10 9 3.5Z"/><path d="M12 13.5V21"/>',
   pinFilled: '<path d="M9 3.5h6l-1 6.5 3.5 3.5h-11L10 10 9 3.5Z" fill="currentColor"/><path d="M12 13.5V21"/>',
   briefcase: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/>',
+  wrench: '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9l-3.8 3.8Z"/>',
   key: '<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M16 7l3 3M14 9l2 2"/>',
   building: '<path d="M4 21V5l8-3v19M12 8h8v13"/><path d="M8 8v.01M8 12v.01M8 16v.01M16 12v.01M16 16v.01"/><path d="M2 21h20"/>',
   settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/>'
@@ -1920,7 +1988,7 @@ function showAdmin() {
   setMode("admin");
   const activeTab = document.querySelector("#adminNav button.active");
   if (activeTab) $("adminTitle").textContent = activeTab.textContent.trim();
-  renderCerts(); renderEvalForm(); renderPlans(); renderPeople(); renderSupport();
+  renderCerts(); renderEvalForm(); renderPlans(); renderPeople(); renderSupport(); renderToolsAdmin();
   renderPayroll(); renderDirectory(); renderLogins(); renderSharedReminders();
   renderEvents(); renderOrg(); renderOsrImport(); renderOsrLive(); renderInspectionsAdmin();
   renderCoursesAdmin(); renderSdsAdmin(); renderSdsPending(); renderArticlesAdmin(); renderTechAdmin();
@@ -2305,6 +2373,7 @@ function supportCards() {
       <span>Computer, phone, printer, or account trouble - email the IT team.</span>
       <span class="go">Start a ticket &nearr;</span></span>
   </a>`
+    + toolsSection()
     + `<div class="group-title">Who to call</div>` + cards;
 }
 
@@ -2313,6 +2382,489 @@ const initials = (name) =>
 
 const displayPhone = (p) => (p || "").length === 10
   ? `(${p.slice(0, 3)}) ${p.slice(3, 6)}-${p.slice(6)}` : (p || "");
+
+// ---- special tools --------------------------------------------------------
+//
+// Where every special tool lives, and where it is right now (migration 0061).
+// Everyone sees the list on the Support Center page. Checking tools out, and
+// adding or changing one, is done in the app. The admin area has the whole
+// list as a CSV, the bulk upload, and the fields owners add to the tool form.
+//
+// A tool's answers to those fields are kept in `extra`, keyed by the field's
+// id, so renaming a field keeps them — the same as the app.
+
+let tools = [], toolFields = [], toolsError = null;
+let toolQuery = "", toolOutOnly = false, toolImport = null;
+
+const TOOL_TYPES = [["text", "Text"], ["long_text", "Long text"], ["number", "Number"],
+  ["date", "Date"], ["choice", "Pick from a list"], ["yes_no", "Yes / No"]];
+const TOOL_COLUMNS = ["Part Number", "Name", "Description", "Home Location", "Quantity"];
+const TOOL_READ_ONLY = ["Checked Out", "Where"];
+
+async function loadTools() {
+  const [t, f] = await Promise.all([
+    db.from("special_tools")
+      .select("id, part_number, name, description, extra, location_id, quantity, "
+        + "special_tool_checkouts(id, to_location_id, quantity, note, checked_out_by_name, "
+        + "checked_out_at, returned_at, returned_by_name)")
+      .order("name"),
+    db.from("special_tool_fields").select("*").order("sort_order")
+  ]);
+  // Before migration 0061 there's no table; the page leaves the section out.
+  toolsError = t.error ? t.error.message : null;
+  tools = t.data || [];
+  toolFields = f.data || [];
+}
+
+const toolOpen = (t) => (t.special_tool_checkouts || []).filter(c => !c.returned_at)
+  .sort((a, b) => String(b.checked_out_at).localeCompare(String(a.checked_out_at)));
+const toolOutCount = (t) => toolOpen(t).reduce((n, c) => n + (c.quantity || 0), 0);
+const activeToolFields = () => toolFields.filter(f => f.is_active)
+  .sort((a, b) => (a.sort_order - b.sort_order) || a.label.localeCompare(b.label));
+const shopName = (id) => locations[id] || id || "another shop";
+// A timestamp as the day it was here, not the day it was in UTC.
+const localDay = (ts) => ts ? new Date(ts).toLocaleDateString("en-US") : "";
+const toolFieldText = (field, value) =>
+  field.field_type === "date" ? (usDate(value) || value || "") : (value || "");
+// Part numbers compare the way the database does: trimmed, single spaces, any case.
+const partKey = (p) => String(p || "").trim().replace(/\s+/g, " ").toUpperCase();
+
+function toolStatusText(t) {
+  const out = toolOutCount(t), home = shopName(t.location_id);
+  if (!out) return t.quantity === 1 ? `At ${home}` : `All ${t.quantity} at ${home}`;
+  const places = [...new Set(toolOpen(t).map(c => shopName(c.to_location_id)))].join(", ");
+  const lead = out >= t.quantity
+    ? (t.quantity === 1 ? "Checked out" : `All ${t.quantity} checked out`)
+    : `${out} of ${t.quantity} checked out`;
+  return `${lead} · at ${places}`;
+}
+
+function toolMatches(t, q) {
+  if (!q) return true;
+  return [t.name, t.part_number, t.description, ...Object.values(t.extra || {})]
+    .join(" ").toLowerCase().includes(q.toLowerCase());
+}
+
+function toolRowsHtml() {
+  const shown = tools.filter(t => toolMatches(t, toolQuery) && (!toolOutOnly || toolOutCount(t) > 0));
+  if (!shown.length) {
+    return `<p class="note">${!tools.length ? "No special tools have been added yet."
+      : toolOutOnly && !toolQuery ? "Nothing is checked out. Every tool is at home." : "Nothing matches."}</p>`;
+  }
+  return shown.map(t => {
+    const out = toolOutCount(t) > 0;
+    const details = activeToolFields()
+      .map(f => { const v = (t.extra || {})[f.id]; return v ? `${esc(f.label)}: ${esc(toolFieldText(f, v))}` : ""; })
+      .filter(Boolean).join(" · ");
+    const trips = toolOpen(t).map(c => `${c.quantity} at ${esc(shopName(c.to_location_id))}`
+      + ` since ${esc(localDay(c.checked_out_at))}, by ${esc(c.checked_out_by_name || "an administrator")}`
+      + (c.note ? ` — ${esc(c.note)}` : "")).join("<br>");
+    return `<div class="tool-row${out ? " out" : ""}">
+      <div class="top"><b>${esc(t.name)}</b><span class="pn">${esc(t.part_number)}</span>
+        <span class="note">${esc(shopName(t.location_id))} · Qty ${t.quantity}</span>
+        <span class="badge ${out ? "b-expiring" : "b-current"}">${esc(toolStatusText(t))}</span></div>
+      ${t.description ? `<span class="note">${esc(t.description)}</span>` : ""}
+      ${details ? `<span class="note">${details}</span>` : ""}
+      ${trips ? `<span class="where">${trips}</span>` : ""}
+    </div>`;
+  }).join("");
+}
+
+// The Support Center's section. Read-only here: the app is where tools are
+// checked out and changed, so this says so rather than offering buttons.
+function toolsSection() {
+  if (toolsError) return "";
+  const out = tools.filter(t => toolOutCount(t) > 0).length;
+  return `<div class="group-title">Special tools</div>
+    <div class="card">
+      <div class="row" style="margin-bottom:8px">
+        <input class="search" id="toolSearch" placeholder="Search a name or part number…"
+               value="${esc(toolQuery)}" style="margin:0;flex:1;min-width:200px">
+        <label class="note" style="display:inline-flex;gap:6px;align-items:center;margin:0">
+          <input type="checkbox" id="toolOutOnly"${toolOutOnly ? " checked" : ""}
+                 style="width:auto;margin:0"> Checked out only</label>
+      </div>
+      <p class="note" style="margin:0">${tools.length} ${tools.length === 1 ? "tool" : "tools"}
+        · ${out} checked out. Checking tools out and in, and adding or changing them, is done
+        in the app.</p>
+      <div class="tool-list" id="toolList">${toolRowsHtml()}</div>
+    </div>`;
+}
+
+document.addEventListener("input", (event) => {
+  if (event.target.id !== "toolSearch") return;
+  toolQuery = event.target.value.trim();
+  $("toolList").innerHTML = toolRowsHtml();
+});
+document.addEventListener("change", (event) => {
+  if (event.target.id !== "toolOutOnly") return;
+  toolOutOnly = event.target.checked;
+  $("toolList").innerHTML = toolRowsHtml();
+});
+
+// ---- special tools: the admin tab
+
+function renderToolsAdmin() {
+  const box = $("toolsSummary");
+  if (!box) return;
+  if (toolsError) {
+    box.innerHTML = `<p class="error">${esc(toolsError)} Run migration 0061 in the SQL editor first.</p>`;
+  } else {
+    const out = tools.filter(t => toolOutCount(t) > 0).length;
+    const perShop = {};
+    tools.forEach(t => { perShop[t.location_id] = (perShop[t.location_id] || 0) + 1; });
+    const shops = Object.entries(perShop)
+      .sort((a, b) => shopName(a[0]).localeCompare(shopName(b[0])))
+      .map(([id, n]) => `${esc(shopName(id))} ${n}`).join(", ");
+    box.innerHTML = `<p class="note"><b>${tools.length}</b> ${tools.length === 1 ? "tool" : "tools"}
+      · <b>${out}</b> checked out${shops ? ` · ${shops}` : ""}.</p>`;
+  }
+  renderToolFields();
+}
+
+function renderToolFields() {
+  const list = $("toolFieldList");
+  if (!list) return;
+  if (!$("newToolFieldType").options.length) {
+    $("newToolFieldType").innerHTML = TOOL_TYPES
+      .map(([value, label]) => `<option value="${value}">${label}</option>`).join("");
+  }
+  const yesNo = (on) => `<option value="yes"${on ? " selected" : ""}>Yes</option>`
+    + `<option value="no"${on ? "" : " selected"}>No</option>`;
+  list.innerHTML = [...toolFields]
+    .sort((a, b) => (a.sort_order - b.sort_order) || a.label.localeCompare(b.label))
+    .map(f => `<div class="tool-field" data-tool-field="${esc(f.id)}">
+      <div class="fields">
+        <div><label>Name</label>
+          <input type="text" data-tf="label" maxlength="60" value="${esc(f.label)}"></div>
+        <div><label>Type</label>
+          <select data-tf="field_type">${TOOL_TYPES.map(([value, label]) =>
+            `<option value="${value}"${f.field_type === value ? " selected" : ""}>${label}</option>`).join("")}</select></div>
+        <div class="wide"><label>Choices, for a pick list — separated by commas</label>
+          <input type="text" data-tf="options" value="${esc((f.options || []).join(", "))}"></div>
+        <div class="wide"><label>Help text (optional)</label>
+          <input type="text" data-tf="help_text" maxlength="200" value="${esc(f.help_text || "")}"></div>
+        <div><label>Required</label><select data-tf="is_required">${yesNo(f.is_required)}</select></div>
+        <div><label>Showing</label><select data-tf="is_active">${yesNo(f.is_active)}</select></div>
+        <div><label>Order</label>
+          <input type="number" data-tf="sort_order" value="${esc(f.sort_order)}"></div>
+      </div>
+      <div class="row">
+        <button data-act="tool-field-save">Save</button>
+        <button class="ghost" data-act="tool-field-delete">Delete</button>
+        <span class="msg"></span>
+      </div>
+    </div>`).join("")
+    || `<p class="note">No extra fields yet. Name one below and pick its type.</p>`;
+}
+
+function toolFieldFromEditor(box) {
+  const get = (key) => box.querySelector(`[data-tf="${key}"]`).value;
+  const options = get("options").split(",").map(o => o.trim()).filter(Boolean)
+    .filter((o, i, all) => all.findIndex(x => x.toLowerCase() === o.toLowerCase()) === i);
+  return {
+    label: get("label").trim().replace(/\s+/g, " "),
+    field_type: get("field_type"),
+    options,
+    help_text: get("help_text").trim(),
+    is_required: get("is_required") === "yes",
+    is_active: get("is_active") === "yes",
+    sort_order: parseInt(get("sort_order"), 10) || 0
+  };
+}
+
+// The name is also the column heading in the CSV, so it has to be unique and
+// can't be one of the fixed columns.
+function toolFieldProblem(row, id) {
+  if (!row.label) return "A field needs a name.";
+  const lower = row.label.toLowerCase();
+  if ([...TOOL_COLUMNS, ...TOOL_READ_ONLY].some(c => c.toLowerCase() === lower)) {
+    return `"${row.label}" is one of the fixed columns already. Pick another name.`;
+  }
+  if (toolFields.some(f => f.id !== id && f.label.trim().toLowerCase() === lower)) {
+    return `There's already a field called "${row.label}".`;
+  }
+  if (row.field_type === "choice" && row.is_active && !row.options.length) {
+    return "A pick list needs at least one choice before it can show.";
+  }
+  return null;
+}
+
+const toolFieldError = (error) => /special_tool_fields_label_key|duplicate/i.test(error.message)
+  ? "There's already a field with that name." : error.message;
+
+document.addEventListener("click", async (event) => {
+  const button = event.target.closest('button[data-act^="tool-field-"]');
+  if (!button) return;
+  const act = button.dataset.act;
+
+  if (act === "tool-field-add") {
+    const row = {
+      label: $("newToolFieldLabel").value.trim().replace(/\s+/g, " "),
+      field_type: $("newToolFieldType").value, options: [], help_text: "",
+      is_required: false, is_active: true,
+      sort_order: toolFields.reduce((m, f) => Math.max(m, f.sort_order || 0), 0) + 10
+    };
+    // A pick list starts hidden: an empty one would show on every phone.
+    if (row.field_type === "choice") row.is_active = false;
+    const where = button.closest(".row");
+    const problem = toolFieldProblem(row, null);
+    if (problem) return speak(where, problem, true);
+    const { error } = await db.from("special_tool_fields").insert(row);
+    if (error) return speak(where, toolFieldError(error), true);
+    $("newToolFieldLabel").value = "";
+    await loadTools();
+    renderToolFields();
+    return speak(where, row.field_type === "choice"
+      ? `Added "${row.label}", hidden for now. Type its choices, set Showing to Yes and Save.`
+      : `Added "${row.label}". It's on the app's form now.`, false);
+  }
+
+  const box = button.closest("[data-tool-field]");
+  const field = toolFields.find(f => f.id === box.dataset.toolField);
+  if (!field) return;
+
+  if (act === "tool-field-save") {
+    const row = toolFieldFromEditor(box);
+    const problem = toolFieldProblem(row, field.id);
+    if (problem) return speak(box, problem, true);
+    const { data, error } = await db.from("special_tool_fields")
+      .update(row).eq("id", field.id).select();
+    if (error) return speak(box, toolFieldError(error), true);
+    if (!data || !data.length) return speak(box, "Nothing changed — only an owner can change the form.", true);
+    Object.assign(field, data[0]);
+    return speak(box, "Saved. Phones pick it up the next time the list is opened.", false);
+  }
+
+  if (act === "tool-field-delete") {
+    const used = tools.filter(t => (t.extra || {})[field.id]).length;
+    const ok = confirm(`Delete the field "${field.label}"?`
+      + (used ? `\n\n${used} ${used === 1 ? "tool has an answer" : "tools have answers"} for it. `
+        + "Those stay with the tools but are no longer shown. To stop asking and keep them, "
+        + "set Showing to No instead." : ""));
+    if (!ok) return;
+    const { error } = await db.from("special_tool_fields").delete().eq("id", field.id);
+    if (error) return speak(box, error.message, true);
+    await loadTools();
+    renderToolFields();
+  }
+});
+
+// ---- special tools: download and upload
+
+function toolFieldColumns() { return activeToolFields().map(f => f.label); }
+
+function toolExport() {
+  const fields = activeToolFields();
+  return [[...TOOL_COLUMNS, ...toolFieldColumns(), ...TOOL_READ_ONLY],
+    ...tools.map(t => [
+      t.part_number, t.name, t.description || "", shopName(t.location_id), t.quantity,
+      ...fields.map(f => toolFieldText(f, (t.extra || {})[f.id])),
+      toolOutCount(t) || "",
+      toolOpen(t).map(c => `${c.quantity} at ${shopName(c.to_location_id)} since `
+        + `${localDay(c.checked_out_at)}${c.note ? ` (${c.note})` : ""}`).join("; ")
+    ])];
+}
+
+function toolTemplate() {
+  const shop = (allLocations.find(l => l.is_active !== false) || { name: "Pasco" }).name;
+  const blanks = toolFieldColumns().map(() => "");
+  return [[...TOOL_COLUMNS, ...toolFieldColumns()],
+    ["ACW1234560", "Injector puller", "Pulls common-rail injectors", shop, 2, ...blanks],
+    ["ACX2201400", "Hydraulic pressure test kit", "", shop, 1, ...blanks]];
+}
+
+// A cell as the database keeps it: dates yyyy-mm-dd, yes/no as Yes or No, a
+// pick-list answer spelled as the list spells it. Null when it can't be.
+function toolFieldFromSheet(field, raw, text) {
+  switch (field.field_type) {
+    case "number": {
+      const plain = text.replace(/,/g, "");
+      return plain !== "" && isFinite(Number(plain)) ? plain : null;
+    }
+    case "date": {
+      // toISODate checks the shape, not the calendar: 13/45/2026 would pass.
+      const iso = excelDate(raw) || toISODate(text);
+      if (!iso) return null;
+      const [y, m, d] = iso.split("-").map(Number);
+      const real = new Date(Date.UTC(y, m - 1, d));
+      return real.getUTCFullYear() === y && real.getUTCMonth() === m - 1 && real.getUTCDate() === d
+        ? iso : null;
+    }
+    case "yes_no": {
+      const b = toBool(text);
+      return b === null ? null : (b ? "Yes" : "No");
+    }
+    case "choice":
+      return (field.options || []).find(o => o.toLowerCase() === text.toLowerCase()) || null;
+    default: return text;
+  }
+}
+
+// What's different about one tool, in words, for the preview.
+function toolChanges(before, row) {
+  const changes = [];
+  if (before.name !== row.name) changes.push(`name → ${row.name}`);
+  if ((before.description || "") !== row.description) changes.push("description");
+  if (before.location_id !== row.location_id) {
+    changes.push(`home ${shopName(before.location_id)} → ${shopName(row.location_id)}`);
+  }
+  if (before.quantity !== row.quantity) changes.push(`quantity ${before.quantity} → ${row.quantity}`);
+  for (const f of toolFields) {
+    const a = (before.extra || {})[f.id] || "", b = (row.extra || {})[f.id] || "";
+    if (a !== b) changes.push(f.label.toLowerCase());
+  }
+  return changes;
+}
+
+async function importTools(file) {
+  const result = $("toolsResult");
+  const say = (html, cls) => { result.innerHTML = `<p class="${cls}">${html}</p>`; };
+  toolImport = null;
+  if (toolsError) return say("Run migration 0061 in the SQL editor first.", "error");
+
+  let rows;
+  try { rows = await rowsFromFile(file); }
+  catch (e) { return say(`Couldn't read that file: ${esc(e.message)}`, "error"); }
+
+  const headAt = rows.findIndex(r => (r || []).some(c => String(c ?? "").trim().toLowerCase() === "part number"));
+  if (headAt < 0) {
+    return say("There's no <b>Part Number</b> heading in that file. Start from the blank sheet "
+      + "or the download.", "error");
+  }
+  const heads = rows[headAt].map(c => String(c ?? "").trim().toLowerCase());
+  const col = (...names) => names.map(n => heads.indexOf(n)).find(i => i >= 0) ?? -1;
+  const at = { part: col("part number"), name: col("name"), description: col("description"),
+               home: col("home location", "home shop", "location"), qty: col("quantity", "qty") };
+  const missing = [["Name", at.name], ["Home Location", at.home], ["Quantity", at.qty]]
+    .filter(([, i]) => i < 0).map(([n]) => `<b>${n}</b>`);
+  if (missing.length) return say(`That file has no ${missing.join(", ")} column.`, "error");
+
+  const fieldCols = toolFields.map(f => [f, heads.indexOf(f.label.trim().toLowerCase())])
+    .filter(([, i]) => i >= 0);
+  const shopIds = new Map();
+  allLocations.forEach(l => {
+    shopIds.set(l.name.trim().toLowerCase(), l.id);
+    shopIds.set(String(l.id).toLowerCase(), l.id);
+  });
+  const existing = new Map(tools.map(t => [partKey(t.part_number), t]));
+  const problems = [], seen = new Set(), incoming = [];
+
+  rows.slice(headAt + 1).forEach((r, i) => {
+    const line = headAt + i + 2;              // the row number the spreadsheet shows
+    const part = cell(r, at.part).replace(/\s+/g, " ");
+    const name = cell(r, at.name).replace(/\s+/g, " ");
+    if (!part && !name) return;               // a blank line
+    if (!part) return problems.push(`Row ${line}: ${esc(name)} has no part number.`);
+    if (!name) return problems.push(`Row ${line}: ${esc(part)} has no name.`);
+    const key = partKey(part);
+    if (seen.has(key)) return problems.push(`Row ${line}: ${esc(part)} is in the file more than once.`);
+    seen.add(key);
+    // Every mistake on the row at once, so it's fixed in one go rather than
+    // one upload per mistake.
+    const before = problems.length;
+    const home = shopIds.get(cell(r, at.home).toLowerCase());
+    if (!home) problems.push(`Row ${line}: "${esc(cell(r, at.home))}" isn't one of the shops.`);
+    const qtyText = cell(r, at.qty), qty = Number(qtyText);
+    if (!Number.isInteger(qty) || qty < 1 || qty > 999) {
+      problems.push(`Row ${line}: ${esc(part)} needs a whole-number quantity from 1 to 999`
+        + (qtyText ? `, not "${esc(qtyText)}".` : "."));
+    }
+    const current = existing.get(key);
+    // Start from what the tool has, so a field the file has no column for
+    // keeps its answer; a column that's there but blank clears it.
+    const extra = { ...((current && current.extra) || {}) };
+    for (const [f, idx] of fieldCols) {
+      const text = cell(r, idx);
+      if (!text) { delete extra[f.id]; continue; }
+      const value = toolFieldFromSheet(f, r[idx], text);
+      if (value === null) {
+        problems.push(`Row ${line}: ${esc(part)}'s ${esc(f.label)} can't be "${esc(text)}"`
+          + (f.field_type === "choice" ? ` — it's one of: ${esc((f.options || []).join(", "))}.` : "."));
+        continue;
+      }
+      extra[f.id] = value;
+    }
+    if (problems.length > before) return;
+    incoming.push({
+      part_number: part, name, location_id: home, quantity: qty, extra,
+      description: at.description >= 0 ? cell(r, at.description) : ((current && current.description) || ""),
+      before: current
+    });
+  });
+
+  if (!incoming.length && !problems.length) return say("No tools found in that file.", "error");
+
+  // The same refusals the database makes, said before anything is sent.
+  const removed = tools.filter(t => !seen.has(partKey(t.part_number)));
+  removed.filter(t => toolOutCount(t) > 0).forEach(t => problems.push(
+    `${esc(t.name)} (${esc(t.part_number)}) isn't in the file but is checked out, so it can't be `
+    + "removed. Check it in first, or keep it in the file."));
+  incoming.filter(r => r.before && toolOutCount(r.before) > 0).forEach(r => {
+    const out = toolOutCount(r.before);
+    if (r.location_id !== r.before.location_id) {
+      problems.push(`${esc(r.name)} (${esc(r.part_number)}) is checked out, so it can't move to `
+        + `${esc(shopName(r.location_id))} until it's checked back in.`);
+    }
+    if (r.quantity < out) {
+      problems.push(`${esc(r.name)} (${esc(r.part_number)}) has ${out} checked out, so its quantity `
+        + `can't go down to ${r.quantity}.`);
+    }
+  });
+
+  if (problems.length) {
+    result.innerHTML = `<div class="tool-preview"><p class="error" style="margin-top:0">Nothing was
+      changed. Fix ${problems.length === 1 ? "this" : `these ${problems.length}`} and upload again:</p>
+      <ul>${problems.slice(0, 15).map(p => `<li>${p}</li>`).join("")}</ul>
+      ${problems.length > 15 ? `<p class="note">…and ${problems.length - 15} more.</p>` : ""}</div>`;
+    return;
+  }
+
+  const added = incoming.filter(r => !r.before);
+  const changed = incoming.filter(r => r.before && toolChanges(r.before, r).length);
+  const unchanged = incoming.length - added.length - changed.length;
+  const list = (items, text) => items.length
+    ? `<ul>${items.slice(0, 20).map(x => `<li>${text(x)}</li>`).join("")}</ul>`
+      + (items.length > 20 ? `<p class="note">…and ${items.length - 20} more.</p>` : "") : "";
+
+  toolImport = incoming.map(({ before, ...row }) => row);
+  result.innerHTML = `<div class="tool-preview">
+    <p style="margin-top:0"><b>Check this before publishing.</b> ${added.length} new,
+      ${changed.length} changed, ${unchanged} unchanged, ${removed.length} removed.</p>
+    ${added.length ? `<b>New</b>${list(added, r => `${esc(r.name)} (${esc(r.part_number)}) · ${esc(shopName(r.location_id))} · Qty ${r.quantity}`)}` : ""}
+    ${changed.length ? `<b>Changed</b>${list(changed, r => `${esc(r.name)} (${esc(r.part_number)}): ${esc(toolChanges(r.before, r).join(", "))}`)}` : ""}
+    ${removed.length ? `<b class="gone">Removed — not in the file</b>${list(removed, t => `<span class="gone">${esc(t.name)} (${esc(t.part_number)}) · ${esc(shopName(t.location_id))}</span>`)}` : ""}
+    <div class="row">
+      <button data-act="tools-publish"${added.length || changed.length || removed.length ? "" : " disabled"}>Publish</button>
+      <button class="ghost" data-act="tools-cancel">Cancel</button>
+      <span class="msg"></span>
+    </div>
+  </div>`;
+}
+
+document.addEventListener("click", async (event) => {
+  const button = event.target.closest('button[data-act="tools-publish"], button[data-act="tools-cancel"]');
+  if (!button) return;
+  const result = $("toolsResult");
+  if (button.dataset.act === "tools-cancel" || !toolImport) {
+    toolImport = null;
+    result.innerHTML = `<p class="note">Nothing was changed.</p>`;
+    return;
+  }
+  button.disabled = true;
+  speak(button.closest(".row"), "Publishing…", false);
+  const { data, error } = await db.rpc("import_special_tools", { tools: toolImport });
+  if (error) {
+    button.disabled = false;
+    return speak(button.closest(".row"), error.message, true);
+  }
+  toolImport = null;
+  await loadTools();
+  renderToolsAdmin();
+  const n = data || {};
+  result.innerHTML = `<p class="ok">Published. ${n.added || 0} added, ${n.changed || 0} changed,
+    ${n.unchanged || 0} unchanged, ${n.removed || 0} removed.</p>`;
+});
 
 // ---- reminders -----------------------------------------------------------
 //
@@ -6868,7 +7420,8 @@ $("osrDrop").addEventListener("drop", (e) => {
 
 // Drop zones, same behaviour as the certification import above.
 [["payrollDrop", "payrollFile", importPayroll],
- ["directoryDrop", "directoryFile", importDirectory]].forEach(([zone, input, run]) => {
+ ["directoryDrop", "directoryFile", importDirectory],
+ ["toolsDrop", "toolsFile", importTools]].forEach(([zone, input, run]) => {
   $(input).addEventListener("change", (e) => {
     if (e.target.files[0]) run(e.target.files[0]);
   });
@@ -9227,6 +9780,7 @@ const IN_CLASS_COLUMNS = ["Firstname", "Lastname", "Email", "Store", "Event Titl
   "Event City", "Event Start Date", "Instructor Names"];
 
 const TEMPLATES = {
+  tools: () => toolTemplate(),
   certs: () => [
     CERT_COLUMNS,
     ["Jordan Miller", "jordanmiller@agri-service.com", "3/4/2026", "Andrew Kendall",
@@ -9286,6 +9840,7 @@ const TEMPLATES = {
 
 // What's in the database now, in the same columns as the blank sheet.
 const EXPORTS = {
+  tools: () => toolExport(),
   certs: () => [CERT_COLUMNS, ...certs.map(c => [
     c.operator_name, c.email || "", usDate(c.evaluation_date), c.evaluator_name || "",
     usDate(c.expiration_date), (c.truck_classes || []).join("; "),
@@ -9307,6 +9862,7 @@ const EXPORTS = {
 const yesNo = (v) => v === true ? "Yes" : v === false ? "No" : "";
 
 const TEMPLATE_NAMES = {
+  tools: "Special Tools",
   certs: "Forklift Certifications",
   directory: "Who Does What",
   payroll: "Payroll Calendar",
@@ -9383,7 +9939,7 @@ document.querySelectorAll(".tabs button[data-tab]").forEach(btn => {
   btn.onclick = () => {
     document.querySelectorAll(".tabs button[data-tab]").forEach(b =>
       b.classList.toggle("active", b === btn));
-    ["certs", "plans", "people", "support", "payroll",
+    ["certs", "plans", "people", "support", "payroll", "tools",
       "directory", "logins", "reminders", "events", "org", "openseat", "inspections", "courses", "articles", "techadmin", "sds", "news", "trainingstatus", "handbook"].forEach(name =>
       $("tab-" + name).classList.toggle("hidden", name !== btn.dataset.tab));
     $("adminTitle").textContent = btn.textContent.trim();
