@@ -494,6 +494,13 @@
   .ticket[open] > summary::after { transform: rotate(-135deg); top: 24px; }
   .ticket > summary:hover { background: var(--paper); border-radius: var(--radius); }
   .ticket .inner { padding: 16px; border-top: 1px solid var(--line); }
+  /* What fixed it: green, and first, because it's what people come back for. */
+  .ticket .solution { background: var(--green-soft); border: 1px solid #BFE3C8;
+                      border-radius: var(--radius-sm); padding: 10px 12px; margin: 0 0 12px; }
+  .ticket .solution .cadence { color: #17702F; }
+  .ticket .fixed { display: block; margin-top: 4px; font-size: 13px; color: #17702F; }
+  .ticket .solution-form { margin-top: 12px; padding: 12px; border: 1px solid var(--line);
+                           border-radius: var(--radius-sm); background: var(--paper); }
 
   /* ------------------------------------------------------------------ special tools */
   .tool-list { display: grid; gap: 8px; margin-top: 12px; }
@@ -2170,10 +2177,15 @@ const TICKET_BADGES = {
   closed: ["Closed", "b-closed"]
 };
 
+// Which requests the list shows. Closed ones are the record of what fixed what.
+let ticketFilter = "all";
+
 function ticketsSection() {
   const open = tickets.filter(t => t.status !== "closed");
+  const shown = tickets.filter(t => ticketFilter === "all"
+    || (ticketFilter === "closed" ? t.status === "closed" : t.status !== "closed"));
 
-  const rows = tickets.map(ticket => {
+  const rows = shown.map(ticket => {
     const [label, cls] = TICKET_BADGES[ticket.status] || ["-", "b-none"];
     const crew = (ticket.support_ticket_comments || [])
       .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
@@ -2193,8 +2205,16 @@ function ticketsSection() {
           esc(ticket.created_by_name || "Someone")} · ${
           crew.length} ${crew.length === 1 ? "reply" : "replies"}${
           (ticket.groups || []).length ? " · " + esc(groupNames(ticket.groups)) : ""}</span>
+        ${ticket.status === "closed" && (ticket.solution || "").trim()
+          ? `<span class="fixed">&#10003; ${esc(firstLine(ticket.solution))}</span>` : ""}
       </summary>
       <div class="inner">
+        ${ticket.status === "closed" && (ticket.solution || "").trim()
+          ? `<div class="solution"><span class="cadence">Solution</span><br>${
+              esc(ticket.solution).replace(/\n/g, "<br>")}${ticket.closed_by_name
+              ? `<br><span class="note">Closed by ${esc(ticket.closed_by_name)}${ticket.closed_at
+                ? ` · ${esc(new Date(ticket.closed_at).toLocaleDateString())}` : ""}</span>` : ""}</div>`
+          : ""}
         ${(ticket.groups || []).length
           ? `<p class="note" style="margin:0 0 10px">For ${
               esc(groupNames(ticket.groups))}</p>` : ""}
@@ -2217,21 +2237,28 @@ function ticketsSection() {
           <div class="row">
             <button data-act="reply">Post reply</button>
             ${(ticket.created_by === me.id || isAdmin())
-              ? `<button class="ghost" data-act="${
-                  ticket.status === "closed" ? "reopen" : "close"}">${
-                  ticket.status === "closed" ? "Reopen" : "Mark as closed"}</button>` : ""}
+              ? (ticket.status === "closed"
+                ? `<button class="ghost" data-act="edit-solution">Edit solution</button>
+                   <button class="ghost" data-act="reopen">Reopen</button>`
+                : `<button class="ghost" data-act="close">Mark as closed</button>`) : ""}
             <span class="msg"></span>
           </div>
         </div>
       </div>
     </details>`;
-  }).join("") || `<p class="note">No requests yet.</p>`;
+  }).join("") || `<p class="note">${!tickets.length ? "No requests yet."
+    : ticketFilter === "closed" ? "Nothing closed yet." : "Nothing open right now."}</p>`;
 
   return `<div class="group-title">Ask the company</div>
   <div class="card" id="ticketsCard">
     <h2>Internal support requests</h2>
     <p class="note">A request reaches only the groups it's aimed at. ${
-      open.length} open.</p>
+      open.length} open. A closed request shows what fixed it.</p>
+    <div class="row" style="margin:0 0 10px;gap:8px">
+      ${[["all", "All"], ["open", "Open"], ["closed", "Closed"]].map(([value, label]) =>
+        `<button type="button" class="chip${ticketFilter === value ? " on" : ""}"
+          data-ticket-filter="${value}">${label}</button>`).join("")}
+    </div>
 
     <label>Your groups</label>
     ${chips(profile.groups || [], "mine")}
@@ -2278,10 +2305,39 @@ $("view").addEventListener("click", async (event) => {
   if (!button) return;
 
   const act = button.dataset.act;
-  if (!["new-ticket", "reply", "close", "reopen"].includes(act)) return;
+  if (!["new-ticket", "reply", "close", "edit-solution", "close-confirm", "close-cancel",
+        "reopen"].includes(act)) return;
 
   const box = button.closest(".ticket");
   const say = (text, bad) => speak(box, text, bad);
+
+  // Closing asks what fixed it first, and so does correcting the answer.
+  if (act === "close" || act === "edit-solution") {
+    if (box.querySelector(".solution-form")) return;
+    const ticket = tickets.find(t => t.id === box.dataset.ticket) || {};
+    const editing = act === "edit-solution";
+    button.closest(".row").insertAdjacentHTML("afterend", `<div class="solution-form">
+      <label>What fixed it?</label>
+      <textarea data-solution rows="4" maxlength="4000"
+        placeholder="The fault, and what fixed it: the part, the setting, the step.">${
+        editing ? esc(ticket.solution || "") : ""}</textarea>
+      <p class="note" style="margin:0 0 8px">It stays on the closed request for the next person
+        with the same problem.</p>
+      <div class="row">
+        <button data-act="close-confirm">${editing ? "Save solution" : "Close request"}</button>
+        <button class="ghost" data-act="close-cancel">Cancel</button>
+        <span class="msg"></span>
+      </div>
+    </div>`);
+    box.querySelector("[data-solution]").focus();
+    return;
+  }
+  if (act === "close-cancel") {
+    button.closest(".solution-form").remove();
+    return;
+  }
+  if (act === "reopen" && !confirm("Reopen this request?\n\nIt goes back on the open list, and "
+      + "its solution is cleared, since it didn't fix it. The replies stay.")) return;
 
   if (act === "new-ticket") {
     const get = (f) => box.querySelector(`[data-new="${f}"]`).value.trim();
@@ -2314,15 +2370,36 @@ $("view").addEventListener("click", async (event) => {
     // Whoever asked is waiting on an answer.
     if (data && data[0]) notify("support_comment", data[0].id);
 
-  } else {
+  } else if (act === "close-confirm") {
+    const form = button.closest(".solution-form");
+    const answer = (form.querySelector("[data-solution]").value || "").trim();
+    const tell = (text, bad) => speak(form, text, bad);
+    if (!answer) return tell("Say what fixed it before closing the request.", true);
+    tell("Saving…", false);
+    // The database stamps who closed it, and refuses a blank solution.
     const { data, error } = await db.from("support_tickets")
-      .update({ status: act === "close" ? "closed" : "open" })
+      .update({ status: "closed", solution: answer })
+      .eq("id", box.dataset.ticket).select();
+    if (error) return tell(error.message, true);
+    if (!data || !data.length) return tell("That isn't yours to change.", true);
+
+  } else {
+    // Reopening. The database clears the solution.
+    const { data, error } = await db.from("support_tickets")
+      .update({ status: "open" })
       .eq("id", box.dataset.ticket).select();
     if (error) return say(error.message, true);
     if (!data || !data.length) return say("That isn't yours to change.", true);
   }
 
   await loadAll();
+  showView("support");
+});
+
+$("view").addEventListener("click", (event) => {
+  const chip = event.target.closest("button[data-ticket-filter]");
+  if (!chip) return;
+  ticketFilter = chip.dataset.ticketFilter;
   showView("support");
 });
 
