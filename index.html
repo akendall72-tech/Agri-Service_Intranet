@@ -2386,8 +2386,9 @@ const displayPhone = (p) => (p || "").length === 10
 // ---- special tools --------------------------------------------------------
 //
 // Where every special tool lives, and where it is right now (migration 0061).
-// Everyone sees the list on the Support Center page. Checking tools out, and
-// adding or changing one, is done in the app. The admin area has the whole
+// Everyone sees the list on the Support Center page. Checking tools out and in
+// is done in the app, by the admin at the tool's home shop or an owner
+// (migration 0062), as is adding or changing one. The admin area has the whole
 // list as a CSV, the bulk upload, and the fields owners add to the tool form.
 //
 // A tool's answers to those fields are kept in `extra`, keyed by the field's
@@ -2485,8 +2486,8 @@ function toolsSection() {
                  style="width:auto;margin:0"> Checked out only</label>
       </div>
       <p class="note" style="margin:0">${tools.length} ${tools.length === 1 ? "tool" : "tools"}
-        · ${out} checked out. Checking tools out and in, and adding or changing them, is done
-        in the app.</p>
+        · ${out} checked out. Need one? Your location admin asks the admin at the tool's home
+        shop, who checks it out to you in the app, and back in when it's returned.</p>
       <div class="tool-list" id="toolList">${toolRowsHtml()}</div>
     </div>`;
 }
