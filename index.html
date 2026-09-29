@@ -814,7 +814,7 @@
   }
 
   /* The stripe down a card's left edge, lit in its colour. */
-  .cab-stripe::before, #view .link-card::before {
+  .cab-stripe::before, #view .link-card::before, .mc-card::before {
     content: ""; position: absolute; left: 10px; top: 12px; bottom: 12px; width: 3px; border-radius: 3px;
     background: var(--accent); box-shadow: 0 0 7px color-mix(in srgb, var(--accent) 65%, transparent);
   }
@@ -970,6 +970,42 @@
   .cr-table td:last-child, .cr-table th:last-child { text-align: right; white-space: nowrap; }
   .cr-table td.note { font-size: 13px; }
   .cr-done { color: #217030; font-variant-numeric: tabular-nums; }
+  /* My Classes: the classes you're registered for, as slate cards with a
+     torn-off calendar page for the first day. */
+  .mc-list { display: flex; flex-direction: column; gap: 12px; max-width: 760px; }
+  .mc-list .cab-heading { margin-bottom: 0; }
+  .mc-list .mc-later { margin-top: 10px; }
+  .cab-heading::after { order: 1; }
+  .cab-heading .trail { order: 2; letter-spacing: .06em; text-transform: none; font-size: 11.5px; }
+  .mc-card { --accent: var(--lit-deep); position: relative; display: flex; gap: 16px; align-items: flex-start;
+    padding: 16px 18px 16px 27px; border: 1px solid var(--cab-edge); border-radius: 14px; color: #fff;
+    background: linear-gradient(var(--cab-top), var(--cab-bottom)); box-shadow: 0 4px 14px rgba(20,28,34,.2); }
+  .mc-date { flex: 0 0 58px; height: 64px; border-radius: 10px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 2px; background: rgba(255,255,255,.06);
+    border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
+  .mc-date small { font: 600 11px var(--font-mono); letter-spacing: .12em; color: var(--accent); }
+  .mc-date b { font: 700 28px/1 var(--font-cab); color: #fff; }
+  .mc-date b.tbd { font-size: 17px; }
+  .mc-body { flex: 1; min-width: 0; }
+  .mc-when { font: 600 11px var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+  .mc-title { font: 600 18px/1.2 var(--font-cab); text-transform: uppercase; letter-spacing: .03em;
+    margin: 4px 0 9px; color: #fff; text-wrap: balance; }
+  .mc-card.next .mc-title { font-size: 21px; }
+  .mc-meta { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; color: var(--cab-sub); font-size: 13.5px; }
+  .mc-meta li { display: flex; gap: 9px; align-items: flex-start; }
+  .mc-meta svg { flex: 0 0 15px; margin-top: 2px; color: var(--cab-detail); }
+  .mc-empty { margin: 0; color: var(--cab-sub); font-size: 13.5px; max-width: 60ch; }
+  button.mc-action { display: inline-flex; background: none; border: 0; box-shadow: none; padding: 0; margin-top: 12px;
+    color: var(--accent); font: 600 13.5px var(--font-cab); letter-spacing: .08em; text-transform: uppercase; }
+  button.mc-action:hover { background: none; color: #fff; }
+  button.mc-action:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  p.mc-foot { max-width: 760px; margin: 16px 0 0; color: var(--cab-heading); }
+  @media (max-width: 600px) {
+    .mc-card { gap: 12px; padding: 14px 14px 14px 23px; }
+    .mc-date { flex-basis: 50px; height: 58px; }
+    .mc-date b { font-size: 24px; }
+  }
+
   @container (max-width: 820px) {
     .cr-layout { grid-template-columns: minmax(0, 1fr); }
     .cr-picker { position: static; max-height: none; }
@@ -2155,6 +2191,9 @@ const ICONS = {
   doc: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z"/><path d="M14 3v5h5"/>',
   home: '<path d="m3 11 9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
   calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  calendarCheck: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="m9 15.5 2 2 4-4"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  person: '<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c.9-3.8 3.9-6 7.5-6s6.6 2.2 7.5 6"/>',
   phone: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/>',
   people: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5c2 .6 3.2 2.5 3.5 5.5"/>',
   megaphone: '<path d="M3 10v4h4l7 5V5L7 10H3Z"/><path d="M18 8a5 5 0 0 1 0 8"/>',
@@ -2211,6 +2250,9 @@ const TRAINING_LINKS = [
   { title: "Skills", sub: "Competencies and sign-offs", view: "skills", tint: "amber", icon: "wrench" },
   // Built from the uploads on the admin page's Open Seat Report tab.
   { title: "Open Seat Report", sub: "Request registration", view: "openseat", tint: "green", icon: "calendar" },
+  // The classes you're registered for, found by your email on that report's
+  // rosters, as the app's My Classes. See myClassesView.
+  { title: "My Classes", sub: "Where you're registered", view: "myclasses", tint: "deep", icon: "calendarCheck" },
   // Who has and hasn't taken a class, for location admins and owners, as in the
   // app. Reads the Training Status uploads; see courseReportView.
   { title: "Course Report", sub: "Who has taken a class", view: "coursereport", tint: "slate",
@@ -2218,13 +2260,11 @@ const TRAINING_LINKS = [
   // AGCO hours, 609 and history: yours, your location's, or everyone's. See trainingStatusView.
   { title: "Training Status", sub: "AGCO hours, 609 and history", view: "trainingstatus", tint: "slate",
     icon: "training" },
-  { title: "UKG ProLearning", sub: "Your assigned training", tint: "green", icon: "training",
-    url: "https://learning.ultipro.com/academy/AGRI-SERVICELLC/learner/training/my-training/overview" },
   // The articles follow, from the admin page's Training Articles tab.
 ];
 
 // The same three as the app's Forklift Center, with the card drawn above them.
-// The certification course is in UKG ProLearning, from the Training Center.
+// The certification course is in UKG ProLearning, with the rest of people's assigned training.
 const FORKLIFT_LINKS = [
   { title: "Certification Report", sub: "Who is certified and when each card runs out.",
     view: "certreport", tint: "green", icon: "people" },
@@ -2329,13 +2369,13 @@ function showView(name) {
   $("admin").classList.add("hidden");
   const host = $("view");
   host.classList.remove("hidden");
-  setMode("app", ["openseat", "catalog", "article", "skills", "trainingstatus", "coursereport"].includes(name) ? "training"
+  setMode("app", ["openseat", "myclasses", "catalog", "article", "skills", "trainingstatus", "coursereport"].includes(name) ? "training"
     : name === "newspost" ? "news" : name === "payroll" ? "hr" : ["certreport", "evaltest", "approvals"].includes(name) ? "forklift" : name);
   document.body.dataset.page = "view";
   host.innerHTML = `<nav class="crumbs"><button data-home>Home</button><span>/</span>
     ${name === "newspost" ? `<button data-view="news">News</button><span>/</span>` : ""}
     ${["certreport", "evaltest", "approvals"].includes(name) ? `<button data-view="forklift">Forklift Center</button><span>/</span>` : ""}
-    ${["openseat", "catalog", "article", "skills", "trainingstatus", "coursereport"].includes(name) ? `<button data-view="training">Training Center</button><span>/</span>` : ""}
+    ${["openseat", "myclasses", "catalog", "article", "skills", "trainingstatus", "coursereport"].includes(name) ? `<button data-view="training">Training Center</button><span>/</span>` : ""}
     <span>${esc(pageTitle(name))}</span></nav>` + VIEWS[name]();
   // A page that opens with its title gets the red band across the top, like
   // the app's title bar, with the way back inside it.
@@ -2421,7 +2461,7 @@ const VIEWS = {
 
   forklift: () =>
     hero("Forklift Center",
-         "Your driving evaluation and your operator card. The certification course itself is in the Training Center, under UKG ProLearning.",
+         "Your driving evaluation and your operator card. The certification course itself is in UKG ProLearning, with the rest of your assigned training.",
          true)
     + certificationCard()
     + linkGrid((isTrainingManager() ? linkCard({ title: `Driving Tests to Approve${pendingTests().length ? ` (${pendingTests().length})` : ""}`,
@@ -2445,6 +2485,7 @@ const VIEWS = {
   skills: () => skillsView(),
   trainingstatus: () => trainingStatusView(),
   coursereport: () => courseReportView(),
+  myclasses: () => myClassesView(),
   hr: () => hrView(),
   payroll: () => payrollView(),
   directory: () => directoryView(),
@@ -6375,6 +6416,7 @@ const pageTitle = (id) => (FEATURES.find(f => f.id === id) || COMPANY_PAGES.find
        skills: { title: "Skills" },
        trainingstatus: { title: "Training Status" },
        coursereport: { title: "Course Report" },
+       myclasses: { title: "My Classes" },
        newspost: { title: (newsPosts.find(p => p.id === openNewsId) || {}).title || "News" },
        hr: { title: "HR" }, payroll: { title: "Payroll Calendar" },
        certreport: { title: "Certification Report" },
@@ -10484,6 +10526,134 @@ $("admin").addEventListener("click", async (event) => {
   renderTsImport();
   renderTsLive();
   $("tsResult").innerHTML = `<p class="ok" style="margin-top:12px">Published. The app shows it the next time Training Status is opened.</p>`;
+});
+
+// ---------------------------------------------------------------- my classes
+//
+// The Agri-Service classes you're registered for, as the app's My Classes
+// (MyClassesView.swift): the Open Seat Report's rosters carry each person's
+// work email, and yours is matched to the one you sign in with. Soonest first,
+// the next one on its own. Only as current as the last upload, which the foot
+// of the page says. AGCO Academy's sessions have no rosters, so aren't here.
+
+// Upcoming classes with your email on the roster, soonest first.
+function myClasses() {
+  const internal = trainingReports.internal && trainingReports.internal.data;
+  const email = ((me && me.email) || "").trim().toLowerCase();
+  if (!internal || !email) return [];
+  const today = osrToday();
+  return (internal.classes || [])
+    .filter(c => (c.endDate || c.startDate || "9999") >= today)
+    .filter(c => (c.roster || []).some(p => (p.email || "").trim().toLowerCase() === email))
+    .sort((a, b) => (a.startDate || "9999").localeCompare(b.startDate || "9999") || a.title.localeCompare(b.title));
+}
+
+const mcKey = (c) => `${c.title}|${c.city}|${c.startDate || ""}`;
+const mcFormat = (ymd, options) => dateOnly(ymd).toLocaleDateString("en-US", options);
+const mcDaysBetween = (a, b) => Math.round((dateOnly(b) - dateOnly(a)) / 86400000);
+
+// "Wed, Oct 14 – Thu, Oct 15, 2026 · 2 days", or one day, or "Date to be set".
+function mcRange(c) {
+  if (!c.startDate) return "Date to be set";
+  const full = { weekday: "short", month: "short", day: "numeric", year: "numeric" };
+  if (!c.endDate || c.endDate <= c.startDate) return mcFormat(c.startDate, full);
+  const sameYear = c.startDate.slice(0, 4) === c.endDate.slice(0, 4);
+  return `${mcFormat(c.startDate, sameYear ? { weekday: "short", month: "short", day: "numeric" } : full)} – ${
+    mcFormat(c.endDate, full)} · ${mcDaysBetween(c.startDate, c.endDate) + 1} days`;
+}
+
+// "In 15 days", "Tomorrow", "Today", "Day 2 of 3", as the app says it.
+function mcWhen(c) {
+  if (!c.startDate) return "Date to be set";
+  const until = mcDaysBetween(osrToday(), c.startDate);
+  if (until > 1) return until >= 14 ? `In ${Math.floor(until / 7)} weeks` : `In ${until} days`;
+  if (until === 1) return "Tomorrow";
+  if (until === 0) return "Today";
+  const total = mcDaysBetween(c.startDate, c.endDate || c.startDate) + 1;
+  return `Day ${1 - until} of ${total}`;
+}
+
+function mcCard(c, next) {
+  const meta = (name, text) => `<li>${icon(name, 15)}<span>${esc(text)}</span></li>`;
+  return `<article class="mc-card${next ? " next" : ""}">
+    <div class="mc-date" aria-hidden="true">${c.startDate
+      ? `<small>${esc(mcFormat(c.startDate, { month: "short" }).toUpperCase())}</small><b>${esc(mcFormat(c.startDate, { day: "numeric" }))}</b>`
+      : `<small>DATE</small><b class="tbd">TBD</b>`}</div>
+    <div class="mc-body">
+      <div class="mc-when">${esc(mcWhen(c))}</div>
+      <h3 class="mc-title">${esc(c.title)}</h3>
+      <ul class="mc-meta">
+        ${meta("calendar", mcRange(c))}
+        ${c.startTime ? meta("clock", `Starts ${c.startTime}`) : ""}
+        ${c.city ? meta("pin", c.city) : ""}
+        ${c.instructors ? meta("person", c.instructors) : ""}
+      </ul>
+      ${c.startDate ? `<button type="button" class="mc-action" data-mc-ics="${esc(mcKey(c))}">Add to my calendar ›</button>` : ""}
+    </div>
+  </article>`;
+}
+
+function myClassesView() {
+  const intro = hero("My Classes", "The Agri-Service classes you're registered for, from the Open Seat Report.");
+  const internal = trainingReports.internal && trainingReports.internal.data;
+  if (!internal) {
+    return intro + `<div class="card"><p class="note" style="margin:0">The training department hasn't published the Open Seat Report yet.</p></div>`;
+  }
+  const list = myClasses();
+  const exported = internal.inClassExported || internal.openSeatExported;
+  const foot = `<p class="note mc-foot">From the Open Seat Report${exported ? ` exported ${esc(exported.replace(" MDT", ""))}` : ""},
+    matched on ${esc(me.email)}. A class you registered for after that shows up with the next upload.${list.length
+      ? " The calendar button downloads a file: open it to add the class to Outlook or your calendar." : ""}</p>`;
+  if (!list.length) {
+    return intro + `<div class="mc-list"><article class="mc-card">
+        <div class="mc-body"><h3 class="mc-title">No classes yet</h3>
+          <p class="mc-empty">You're not on the roster for any upcoming Agri-Service class. The Open Seat Report shows
+            the classes with seats left, and you can ask to be registered from there.</p>
+          <button type="button" class="mc-action" data-view="openseat">See the open seats ›</button></div>
+      </article></div>` + foot;
+  }
+  return intro + `<div class="mc-list">
+      <h2 class="cab-heading"><span>Next up</span></h2>
+      ${mcCard(list[0], true)}
+      ${list.length > 1 ? `<h2 class="cab-heading mc-later"><span>Also registered</span>
+        <span class="trail">${list.length - 1 === 1 ? "1 class" : `${list.length - 1} classes`}</span></h2>
+        ${list.slice(1).map(c => mcCard(c, false)).join("")}` : ""}
+    </div>` + foot;
+}
+
+// A class as a calendar file: all-day across its dates, since the report has
+// when the first day starts but not when any day ends. As AddToCalendar.swift.
+function downloadClassICS(c) {
+  const after = dateOnly(c.endDate || c.startDate);
+  after.setDate(after.getDate() + 1);
+  const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  const notes = [c.startTime && `Starts ${c.startTime} on the first day.`,
+                 c.instructors && `Instructor: ${c.instructors}`, "From the Agri-Service app"].filter(Boolean).join("\n\n");
+  const lines = [
+    "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Agri-Service//My Classes//EN", "METHOD:PUBLISH", "BEGIN:VEVENT",
+    `UID:${(c.eventId || slugify(`${c.title} ${c.city}`, "-"))}-${c.startDate}@agri-service-app`,
+    `DTSTAMP:${stamp}`,
+    `DTSTART;VALUE=DATE:${c.startDate.replace(/-/g, "")}`,
+    `DTEND;VALUE=DATE:${after.getFullYear()}${pad2(after.getMonth() + 1)}${pad2(after.getDate())}`,
+    `SUMMARY:${icsText(c.title)}`,
+    ...(c.city ? [`LOCATION:${icsText(c.city)}`] : []),
+    `DESCRIPTION:${icsText(notes)}`,
+    "END:VEVENT", "END:VCALENDAR"
+  ];
+  const blob = new Blob([lines.map(icsFold).join("\r\n") + "\r\n"], { type: "text/calendar;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = (c.title.replace(/[^\w -]+/g, "").trim() || "class") + ".ics";
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+
+document.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-mc-ics]");
+  if (!button) return;
+  const c = myClasses().find(x => mcKey(x) === button.dataset.mcIcs);
+  if (c) downloadClassICS(c);
 });
 
 // ---------------------------------------------------------------- course report
