@@ -1962,7 +1962,7 @@ const isOwner = () => profile && profile.role === "owner";
 
 $("signIn").onclick = async () => {
   $("authError").textContent = "";
-  const { error } = await db.auth.signInWithPassword({
+  const { data, error } = await db.auth.signInWithPassword({
     email: $("email").value.trim(),
     password: $("password").value
   });
@@ -1972,10 +1972,49 @@ $("signIn").onclick = async () => {
       : error.message;
     return;
   }
+  // Back in after a sign-in ran out (see onAuthStateChange below): the same
+  // person carries on with the page as it was. Anybody else starts clean, so
+  // one person's records never sit on screen under another's sign-in.
+  if (me) {
+    if (data.user && data.user.id === me.id) {
+      me = data.user;
+      document.body.classList.add("signed-in");
+      return;
+    }
+    return location.reload();
+  }
   await start();
 };
 
-$("signOut").onclick = async () => { await db.auth.signOut(); location.reload(); };
+// Set by the Sign out button, so its own sign-out isn't taken for one that ran out.
+let signingOut = false;
+$("signOut").onclick = async () => { signingOut = true; await db.auth.signOut(); location.reload(); };
+
+// A sign-in can end without Sign out being pressed here: a renewal refused
+// after the computer slept, or Sign out in another tab. The page used to carry
+// on regardless, sending everything as nobody, so the database refused each
+// change with "permission denied for function …". Now the sign-in box comes
+// back over the page. Nothing underneath is cleared, so signing in again
+// carries on where it was, an upload waiting to publish included.
+function signInRanOut() {
+  if (!me || signingOut || !document.body.classList.contains("signed-in")) return;
+  document.body.classList.remove("signed-in");
+  $("email").value = me.email || "";
+  $("password").value = "";
+  $("authError").textContent = "Your sign-in ran out. Sign in again to carry on — the page is kept as it was.";
+}
+
+db.auth.onAuthStateChange((event) => {
+  if (event === "SIGNED_OUT") signInRanOut();
+});
+
+// Back to a tab left open for a while: check the sign-in is still good before
+// anything is pressed, rather than finding out from a refused change.
+document.addEventListener("visibilitychange", async () => {
+  if (document.visibilityState !== "visible" || !me) return;
+  const { data } = await db.auth.getSession();
+  if (!data.session) signInRanOut();
+});
 $("adminBtn").onclick = () => document.body.classList.contains("admin-mode") ? showHome() : showAdmin();
 $("wordmark").onclick = () => { if (me) showHome(); };
 
@@ -7555,6 +7594,16 @@ function speak(element, text, bad) {
   }
   msg.textContent = text;
   msg.className = "msg " + (bad ? "error" : "ok");
+
+  // Refused because the sign-in has gone, not because of anything on the
+  // card: say so, and bring the sign-in box back (signInRanOut).
+  if (bad && /permission denied for function|jwt expired/i.test(text)) {
+    db.auth.getSession().then(({ data }) => {
+      if (data.session) return;
+      msg.textContent = "That wasn't saved: your sign-in had run out. Sign in again, then press it once more.";
+      signInRanOut();
+    });
+  }
 }
 
 // Shared by adding and saving: a person needs a name and a number that dials.
