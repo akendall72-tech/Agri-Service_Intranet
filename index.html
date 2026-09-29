@@ -2335,6 +2335,7 @@ function showView(name) {
   host.innerHTML = `<nav class="crumbs"><button data-home>Home</button><span>/</span>
     ${name === "newspost" ? `<button data-view="news">News</button><span>/</span>` : ""}
     ${["certreport", "evaltest", "approvals"].includes(name) ? `<button data-view="forklift">Forklift Center</button><span>/</span>` : ""}
+    ${["openseat", "catalog", "article", "skills", "trainingstatus", "coursereport"].includes(name) ? `<button data-view="training">Training Center</button><span>/</span>` : ""}
     <span>${esc(pageTitle(name))}</span></nav>` + VIEWS[name]();
   // A page that opens with its title gets the red band across the top, like
   // the app's title bar, with the way back inside it.
@@ -6379,7 +6380,8 @@ const pageTitle = (id) => (FEATURES.find(f => f.id === id) || COMPANY_PAGES.find
        certreport: { title: "Certification Report" },
        evaltest: { title: "Forklift Driving Test" },
        approvals: { title: "Driving Tests to Approve" },
-       article: { title: (trainingArticles.find(a => a.id === openArticleId) || {}).title || "Article" } }[id]
+       // What the app's title bar says: the kicker, "AGCO Training Pathway · 2026".
+       article: { title: (a => a && (a.kicker || a.title))(trainingArticles.find(a => a.id === openArticleId)) || "Article" } }[id]
   || { title: "" }).title;
 
 function navButton(id, title, iconName, count, attr) {
@@ -8861,6 +8863,13 @@ function cleanArticleHtml(html) {
 // editable puts the article (not the title block) into editing mode.
 function articleDocument(article, { editable = false } = {}) {
   const green = article.accent === "green";
+  const heroBlock = `<article class="article-hero">
+  <span class="kicker${green ? " green" : ""}">${esc(article.kicker)}</span>
+  <h1>${esc(article.title)}</h1>
+  <div class="byline"><span class="avatar"${green ? ' style="background:var(--green-dark)"' : ""}>AS</span>
+    <span>Agri-Service Training Department</span></div>
+</article>`;
+  const body = cleanArticleHtml(article.body || "");
   return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline'; img-src https: data:">
@@ -8868,13 +8877,10 @@ function articleDocument(article, { editable = false } = {}) {
 <style>body{padding-bottom:28px} main[contenteditable]{outline:none;min-height:240px}
 main[contenteditable]:empty::before{content:"Start typing the article…";color:#aaa}</style>
 </head><body>
-<div class="container"><article class="article-hero">
-  <span class="kicker${green ? " green" : ""}">${esc(article.kicker)}</span>
-  <h1>${esc(article.title)}</h1>
-  <div class="byline"><span class="avatar"${green ? ' style="background:var(--green-dark)"' : ""}>AS</span>
-    <span>Agri-Service Training Department</span></div>
-</article></div>
-<main class="container"${editable ? ' contenteditable="true"' : ""}>${cleanArticleHtml(article.body || "")}</main>
+${editable ? `<div class="container">${heroBlock}</div>
+<main class="container" contenteditable="true">${body}</main>`
+  : `<main class="container">${heroBlock}
+${body}</main>`}
 </body></html>`;
 }
 
@@ -8903,23 +8909,36 @@ function articleView() {
     frame.onload = () => fitArticleFrame(frame);
     frame.srcdoc = articleDocument(article);
   });
-  return `<iframe id="articleReadFrame" class="article-frame" title="${esc(article.title)}"
+  return hero(pageTitle("article"))
+    + `<iframe id="articleReadFrame" class="article-frame" title="${esc(article.title)}"
     sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>`;
 }
 
 // A reading frame is as tall as its page, so the page scrolls rather than the
 // frame. Measured from the body: a decorative shape in the stylesheet is sized
 // from the frame's height, so the whole document grows as the frame does.
+//
+// Measured again whenever the article changes size, not once: opening one of
+// the Syllabus's sections, or a picture arriving late, made the article taller
+// than its frame, and with the frame's own scrolling off, the bottom of it was
+// cut off with no way to reach it.
 function fitArticleFrame(frame) {
+  const doc = frame.contentDocument;
+  if (!doc || !doc.body) return;
   const fit = () => {
-    const doc = frame.contentDocument;
-    if (!doc || !doc.body) return;
     doc.documentElement.style.overflow = "hidden";
     frame.style.height = doc.body.scrollHeight + 2 + "px";
   };
   fit();
-  // Late layout (the stylesheet arriving) can change the height once more.
-  setTimeout(fit, 400);
+  if (frame.articleWatch) frame.articleWatch.disconnect();
+  frame.articleWatch = new ResizeObserver(fit);
+  frame.articleWatch.observe(doc.body);
+  // A section opening is also caught straight away, without waiting for the
+  // next redraw. The page is the same one each time, so this is added once.
+  if (!doc.articleToggleWatched) {
+    doc.articleToggleWatched = true;
+    doc.addEventListener("toggle", fit, true);
+  }
 }
 
 window.addEventListener("resize", () => {
