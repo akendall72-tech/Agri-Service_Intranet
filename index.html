@@ -203,7 +203,7 @@
   .badge { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 999px;
            font-size: 12px; font-weight: 600; white-space: nowrap; line-height: 1.5; }
   .b-current, .b-closed { background: var(--green-soft); color: #17702F; }
-  .b-expiring, .b-answered { background: var(--caution-soft); color: #92590A; }
+  .b-expiring, .b-answered, .b-pending { background: var(--caution-soft); color: #92590A; }
   .b-expired, .b-open { background: var(--red-soft); color: var(--red-dark); }
   .b-none { background: #F0EEEC; color: var(--muted); }
   .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
@@ -1959,6 +1959,7 @@ function showHome() {
 // The same two badges the app shows on its home screen.
 function tileCount(id) {
   if (id === "reminders") return visibleTasks().filter(t => !t.done).length;
+  if (id === "forklift") return isTrainingManager() ? pendingTests().length : 0;
   if (id === "rigging") {
     return isAdmin()
       ? plans.filter(p => p.status === "submitted" && p.created_by !== me.id).length
@@ -1973,10 +1974,10 @@ function showView(name) {
   const host = $("view");
   host.classList.remove("hidden");
   setMode("app", ["openseat", "catalog", "article", "skills", "trainingstatus"].includes(name) ? "training"
-    : name === "newspost" ? "news" : name === "payroll" ? "hr" : ["certreport", "evaltest"].includes(name) ? "forklift" : name);
+    : name === "newspost" ? "news" : name === "payroll" ? "hr" : ["certreport", "evaltest", "approvals"].includes(name) ? "forklift" : name);
   host.innerHTML = `<nav class="crumbs"><button data-home>Home</button><span>/</span>
     ${name === "newspost" ? `<button data-view="news">News</button><span>/</span>` : ""}
-    ${["certreport", "evaltest"].includes(name) ? `<button data-view="forklift">Forklift Center</button><span>/</span>` : ""}
+    ${["certreport", "evaltest", "approvals"].includes(name) ? `<button data-view="forklift">Forklift Center</button><span>/</span>` : ""}
     <span>${esc(pageTitle(name))}</span></nav>` + VIEWS[name]();
   window.scrollTo(0, 0);
 }
@@ -2050,7 +2051,12 @@ const VIEWS = {
     hero("Forklift Center",
          "Your driving evaluation and your operator card. The certification course itself is in the Training Center, under UKG ProLearning.",
          true)
-    + certificationCard() + FORKLIFT_LINKS.map(linkCard).join(""),
+    + certificationCard()
+    + (isTrainingManager() ? linkCard({ title: `Driving Tests to Approve${pendingTests().length ? ` (${pendingTests().length})` : ""}`,
+        sub: pendingTests().length ? "A test only counts once you approve it." : "Nothing waiting.", view: "approvals" }) : "")
+    + FORKLIFT_LINKS.map(linkCard).join(""),
+
+  approvals: () => approvalsView(),
 
   support: () =>
     hero("Support Center",
@@ -2076,6 +2082,65 @@ const VIEWS = {
   evaltest: () => evalTestView()
 };
 
+// ---- approving driving tests (the Training Manager, migration 0068) --------
+
+const isTrainingManager = () => isOwner() && personDesignations.some(pd =>
+  pd.person_id === me.id && pd.designation_id === "training_manager");
+
+const approvedCerts = () => certs.filter(c => (c.approval || "approved") === "approved");
+const pendingTests = () => certs.filter(c => c.approval === "pending")
+  .sort((a, b) => String(a.submitted_at || "").localeCompare(String(b.submitted_at || "")));
+
+function approvalsView() {
+  const tests = pendingTests();
+  const tick = (ok, label) => `<div style="color:${ok ? "#137026" : "var(--red-dark)"}">${ok ? "✓" : "✗"} ${esc(label)}</div>`;
+  return hero("Driving Tests to Approve",
+              "A driving test only counts once you approve it. Someone who already holds a card keeps it meanwhile.")
+    + `<div class="card">${tests.length ? tests.map(t => `
+        <div class="ticket" style="padding:12px 14px" data-approval="${esc(t.id)}">
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline">
+            <b>${esc(t.operator_name)}</b>
+            <span class="badge ${t.passed_driving ? "b-current" : "b-none"}">${t.passed_driving ? "Passed" : "Not passed"}</span></div>
+          <div class="note">Tested ${fmtDate(t.evaluation_date)}${t.evaluator_name ? ` by ${esc(t.evaluator_name)}` : ""}
+            ${(t.truck_classes || []).length ? ` · ${esc(t.truck_classes.join(", "))}` : ""}</div>
+          <div style="margin:6px 0;font-size:13.5px">
+            ${EVAL_CHECKS.map(([key, label]) => tick(!!t[key], label)).join("")}</div>
+          <div class="note">${t.passed_driving
+            ? `Certified until ${fmtDate(t.expiration_date)} once you approve it.`
+            : "Not passed, so no card either way. Approving puts the result on record."}</div>
+          <div class="row" style="margin-top:8px">
+            <button data-review="approve" data-id="${esc(t.id)}">Approve</button>
+            <button class="ghost" data-review="reject" data-id="${esc(t.id)}">Not approved</button>
+            <button class="pdf" data-eval-pdf="${esc(t.id)}">Driving test PDF</button>
+          </div>
+        </div>`).join("")
+      : `<p class="note">Nothing waiting. New driving tests show up here, and you get a notification
+          on the app when one is recorded.</p>`}</div>`;
+}
+
+document.addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-review]");
+  if (!button) return;
+  const test = certs.find(c => String(c.id) === button.dataset.id);
+  if (!test) return;
+  const approve = button.dataset.review === "approve";
+  let note = "";
+  if (!approve) {
+    note = (prompt(`Why isn't ${test.operator_name}'s driving test approved? ${test.evaluator_name || "Whoever recorded it"} will see this.`) || "").trim();
+    if (!note) return;
+  }
+  button.disabled = true;
+  const { error } = await db.rpc("review_forklift_evaluation", { target: test.id, approve, note });
+  button.disabled = false;
+  if (error) return alert(/Only the Training Manager/.test(error.message)
+    ? "Only the Training Manager approves driving tests." : error.message);
+  // Whoever recorded it is told how it went.
+  notify("forklift_evaluation", test.id);
+  const fresh = await db.from("forklift_certifications").select("*");
+  if (fresh.data) certs = fresh.data;
+  showView("approvals");
+});
+
 // ---- forklift driving test ------------------------------------------------
 //
 // Anyone signed in can carry one out, as in the app (migration 0059); it used
@@ -2089,8 +2154,8 @@ function evalTestView() {
     + `<div class="card" id="evalCard">
         <p class="note">Pick the operator, the truck classes they were tested on, and the four
           parts of the test. All four have to be met for a card; anything less is recorded as not
-          passed. The card lasts three years. It shows in the Certification Report straight away,
-          and an import won't remove it. Anyone on the All Employees report can be evaluated,
+          passed. The card lasts three years, and counts once the Training Manager approves the test;
+          they're told it's waiting. An import won't remove it. Anyone on the All Employees report can be evaluated,
           except yourself. The database checks that, not just this page.</p>
         <div class="fields">
           <div><label for="evalName">Operator</label>
@@ -2134,7 +2199,10 @@ let certReportFilter = "all", certReportQuery = "";
 // Grouped on the work email, or the name when there isn't one, as the app does.
 function certsPerPerson() {
   const byPerson = {};
-  certs.forEach(r => {
+  const approved = approvedCerts();
+  const approvedKeys = new Set(approved.map(r => r.match_key));
+  const waitingOnly = pendingTests().filter(r => !approvedKeys.has(r.match_key));
+  [...approved, ...waitingOnly].forEach(r => {
     const email = (r.email || "").trim().toLowerCase();
     const key = email || "name:" + tsNameKey(r.operator_name || "", "");
     const held = byPerson[key];
@@ -2184,20 +2252,25 @@ function certReportList() {
   if (!shown.length) return `<p class="note">${certs.length ? "Nobody matches." : "No certifications yet."}</p>`;
 
   const myEmail = ((me && me.email) || "").toLowerCase();
+  // A newer test on its way, while this card still stands.
+  const waitingKeys = new Set(pendingTests().map(t => t.match_key));
   return shown.map(r => {
     const [label, cls] = certStatusNow(r);
     const removal = certRemoval(r);
     const valid = cls === "b-current" || cls === "b-expiring";
     const expiry = valid ? `Expires ${fmtDate(r.expiration_date)}`
       : removal ? `Expires ${fmtDate(r.expiration_date)} if restored`
+      : r.approval === "pending" ? `Tested ${fmtDate(r.evaluation_date)}, waiting for the Training Manager`
       : cls === "b-expired" ? `Expired ${fmtDate(r.expiration_date)}` : "No valid evaluation";
     const mayChange = isOwner() && r.match_key && r.match_key !== myEmail;
     return `<div class="ticket" style="padding:12px 14px">
         <div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline">
           <b>${esc(r.operator_name)}</b><span class="badge ${cls}">${esc(label)}</span></div>
         ${(r.truck_classes || []).length ? `<div class="note">${esc(r.truck_classes.join(", "))}</div>` : ""}
+        ${r.approval !== "pending" && waitingKeys.has(r.match_key)
+          ? `<div style="color:#8a5e00;font-size:13px;margin-top:4px">New driving test awaiting approval</div>` : ""}
         ${removal && removal.changed_by_name ? `<div style="color:var(--red-dark);font-size:13px;margin-top:4px">${esc(removalLine(removal))}</div>` : ""}
-        <div class="note">${esc(expiry)}${r.evaluation_date ? ` · evaluated ${fmtDate(r.evaluation_date)}` : ""}</div>
+        <div class="note">${esc(expiry)}${r.evaluation_date && r.approval !== "pending" ? ` · evaluated ${fmtDate(r.evaluation_date)}` : ""}</div>
         <div class="row" style="margin-top:8px">
           <button class="pdf" data-eval-pdf="${esc(r.id)}">Driving test PDF</button>
           ${mayChange && removal ? `<button class="pdf" data-cert-restore="${esc(r.match_key)}">Restore</button>` : ""}
@@ -2263,15 +2336,15 @@ document.addEventListener("click", async (event) => {
 // Email first, because it's an identity rather than a spelling. Falls back to
 // the name, as the app does: an account set up by hand may not use the address
 // the CSV carries.
-function myCertification() {
+function myCertification(list = approvedCerts()) {
   const email = (me.email || "").toLowerCase();
-  const byEmail = certs.find(c => (c.email || "").toLowerCase() === email);
+  const byEmail = list.find(c => (c.email || "").toLowerCase() === email);
   if (byEmail) return byEmail;
 
   const mine = tokens((profile && profile.full_name) || "");
   if (!mine.size) return null;
 
-  return certs.find(c => {
+  return list.find(c => {
     const theirs = tokens(c.operator_name || "");
     if (!theirs.size) return false;
     return [...theirs].every(w => mine.has(w)) || [...mine].every(w => theirs.has(w));
@@ -2283,6 +2356,15 @@ const tokens = (name) =>
 
 function certificationCard() {
   const cert = myCertification();
+  // A test of theirs waiting for the Training Manager, newer than the card.
+  const waiting = myCertification(pendingTests());
+  const waitingNote = waiting && (!cert || String(waiting.submitted_at || waiting.evaluation_date)
+      > String(cert.submitted_at || cert.evaluation_date))
+    ? `<div class="card" style="background:#FFF7E6"><b>Driving test awaiting approval</b>
+        <p class="note">Your driving test on ${fmtDate(waiting.evaluation_date)} is waiting for the Training
+        Manager. ${cert ? "The card below stands until it's approved." : "Your card appears here once it's approved."}</p></div>`
+    : "";
+  if (!cert && waitingNote) return waitingNote;
   if (!cert) {
     return `<div class="card"><b>Not on the certification list</b>
       <p class="note">You're matched on your work email first, then your name.
@@ -2293,7 +2375,7 @@ function certificationCard() {
   const removal = certRemoval(cert);
   const classes = (cert.truck_classes || []).join(", ");
 
-  return `<div class="cert">
+  return waitingNote + `<div class="cert">
     <div class="band">CERTIFIED FORKLIFT OPERATOR</div>
     <div class="body">
       <div class="name">${esc(cert.operator_name)}</div>
@@ -3483,6 +3565,9 @@ $("view").addEventListener("click", async (event) => {
 // Mirrors the app: a failed driving evaluation is not a certification, and the
 // expiry date decides the rest. Sixty days is enough notice to re-evaluate.
 function certStatus(row) {
+  // Recorded, and waiting for the Training Manager, or turned down (0068).
+  if (row.approval === "pending") return ["Awaiting approval", "b-pending"];
+  if (row.approval === "rejected") return ["Not approved", "b-none"];
   if (row.passed_driving === false) return ["Not certified", "b-none"];
   if (!row.expiration_date) return ["Not certified", "b-none"];
   const days = Math.round((new Date(row.expiration_date) - new Date()) / 86400000);
@@ -5919,6 +6004,7 @@ const pageTitle = (id) => (FEATURES.find(f => f.id === id) || COMPANY_PAGES.find
        hr: { title: "HR" }, payroll: { title: "Payroll Calendar" },
        certreport: { title: "Certification Report" },
        evaltest: { title: "Forklift Driving Test" },
+       approvals: { title: "Driving Tests to Approve" },
        article: { title: (trainingArticles.find(a => a.id === openArticleId) || {}).title || "Article" } }[id]
   || { title: "" }).title;
 
@@ -7361,7 +7447,7 @@ async function saveEvaluation(button) {
   EVAL_CHECKS.forEach(([key]) => { row[key] = evalState.checks.has(key); });
 
   button.disabled = true;
-  const { error } = await db.from("forklift_certifications").insert(row);
+  const { data: saved, error } = await db.from("forklift_certifications").insert(row).select("id");
   button.disabled = false;
   if (error) {
     // Say what the database refused rather than show its wording. Two rules
@@ -7379,9 +7465,11 @@ async function saveEvaluation(button) {
   const fresh = await db.from("forklift_certifications").select("*");
   if (fresh.data) certs = fresh.data;
   renderCerts();
+  // The Training Manager is told there's a test to approve.
+  if (saved && saved[0]) notify("forklift_evaluation", saved[0].id);
   speak(card, passed
-    ? `Recorded. ${name} is certified until ${usDate(row.expiration_date)}.`
-    : `Recorded. ${name} hasn't passed, so no card is issued.`, false);
+    ? `Sent for approval. ${name}'s card will run until ${usDate(row.expiration_date)} once the Training Manager approves it.`
+    : `Recorded. ${name} hasn't passed, so no card is issued. It goes on record once the Training Manager approves it.`, false);
 }
 
 // Mirrors ForkliftEvaluationPDF.swift, so a result printed from a desk and one
