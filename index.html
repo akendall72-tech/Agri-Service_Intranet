@@ -863,36 +863,13 @@
         <div id="importResult"></div>
       </div>
 
-      <div class="card" id="evalCard">
+      <div class="card">
         <h2>Record a driving test</h2>
-        <p class="note">The forklift driving evaluation, as it is carried out. Anyone can perform
-          one — it is usually the location admin — and it lands in the list below straight away,
-          the same as an imported row. An import won't remove it. Anyone on the All Employees
-          report can be evaluated. The database checks that, not just this page.</p>
-        <div class="fields">
-          <div><label for="evalName">Operator</label>
-            <select id="evalName"></select></div>
-          <div><label for="evalEmail">Work email</label>
-            <input type="email" id="evalEmail" maxlength="160" readonly></div>
-          <div><label for="evalDate">Evaluated on</label>
-            <input type="date" id="evalDate"></div>
-          <div><label for="evalExpires">Expires</label>
-            <input type="date" id="evalExpires" disabled></div>
-          <div><label for="evalCoursePassed">Certification course passed</label>
-            <input type="text" id="evalCoursePassed" readonly></div>
-        </div>
-        <p class="note" style="margin-bottom:4px" id="evalEligibleNote"></p>
-
-        <h3 style="margin:16px 0 6px">Truck type authorised</h3>
-        <div class="row" id="evalClasses"></div>
-
-        <h3 style="margin:16px 0 6px">The driving test</h3>
-        <div class="row" id="evalChecks"></div>
-        <p class="note" id="evalVerdict"></p>
-
-        <div class="row" style="margin-top:12px">
-          <button data-act="eval-save">Record the result</button>
-          <span class="msg"></span>
+        <p class="note">Driving tests are recorded in the Forklift Center, where anyone can carry
+          one out, the same as in the app. They land in the list below straight away, and an
+          import won't remove them.</p>
+        <div class="row" style="margin-top:8px">
+          <button class="pdf" data-view="evaltest">Open the driving test</button>
         </div>
       </div>
 
@@ -1937,13 +1914,13 @@ const TRAINING_LINKS = [
   // The articles follow, from the admin page's Training Articles tab.
 ];
 
+// The same three as the app's Forklift Center, with the card drawn above them.
+// The certification course is in UKG ProLearning, from the Training Center.
 const FORKLIFT_LINKS = [
-  { title: "Forklift OLT Course", sub: "Work through the online forklift training course.",
-    url: "https://learning.ultipro.com/academy/AGRI-SERVICELLC/learner/course-experience/10856418/step/9716028/lecture" },
-  { title: "Forklift Driving Test", sub: "Complete the driving evaluation form.",
-    url: "https://agriservice.sharepoint.com/:l:/s/Aftersales/JABHDvYhCAUUTZJrl6f49bp7AVGuzxY_W5YRYQ7IJLgYz0c?nav=MDhjOTdkYzMtZDQ4OS00MjJiLWIwODgtYjgzY2FkYTQ0MDYw" },
-  { title: "Certification Report", sub: "Check who is certified and when it expires.",
-    view: "certreport" }
+  { title: "Certification Report", sub: "Who is certified and when each card runs out.",
+    view: "certreport" },
+  { title: "Forklift Driving Test", sub: "Evaluate someone on a truck and record the result.",
+    view: "evaltest" }
 ];
 
 const SAFETY_LINKS = [
@@ -1999,10 +1976,10 @@ function showView(name) {
   const host = $("view");
   host.classList.remove("hidden");
   setMode("app", ["openseat", "catalog", "article", "skills", "trainingstatus"].includes(name) ? "training"
-    : name === "newspost" ? "news" : name === "payroll" ? "hr" : name === "certreport" ? "forklift" : name);
+    : name === "newspost" ? "news" : name === "payroll" ? "hr" : ["certreport", "evaltest"].includes(name) ? "forklift" : name);
   host.innerHTML = `<nav class="crumbs"><button data-home>Home</button><span>/</span>
     ${name === "newspost" ? `<button data-view="news">News</button><span>/</span>` : ""}
-    ${name === "certreport" ? `<button data-view="forklift">Forklift Center</button><span>/</span>` : ""}
+    ${["certreport", "evaltest"].includes(name) ? `<button data-view="forklift">Forklift Center</button><span>/</span>` : ""}
     <span>${esc(pageTitle(name))}</span></nav>` + VIEWS[name]();
   window.scrollTo(0, 0);
 }
@@ -2074,7 +2051,7 @@ const VIEWS = {
 
   forklift: () =>
     hero("Forklift Center",
-         "Take the course, complete your driving evaluation, and check your certification.",
+         "Your driving evaluation and your operator card. The certification course itself is in the Training Center, under UKG ProLearning.",
          true)
     + certificationCard() + FORKLIFT_LINKS.map(linkCard).join(""),
 
@@ -2098,8 +2075,53 @@ const VIEWS = {
   newspost: () => newsPostView(),
   reminders: () => remindersView(),
   rigging: () => riggingView(),
-  certreport: () => certReportView()
+  certreport: () => certReportView(),
+  evaltest: () => evalTestView()
 };
+
+// ---- forklift driving test ------------------------------------------------
+//
+// Anyone signed in can carry one out, as in the app (migration 0059); it used
+// to be only in the owners' admin area here. The form keeps its ids, so
+// renderEvalForm() and saveEvaluation() work it wherever it's drawn.
+
+function evalTestView() {
+  setTimeout(renderEvalForm);
+  return hero("Forklift Driving Test",
+              "Evaluate someone on a truck and record the result. Anyone can carry it out; it's usually the location admin.")
+    + `<div class="card" id="evalCard">
+        <p class="note">Pick the operator, the truck classes they were tested on, and the four
+          parts of the test. All four have to be met for a card; anything less is recorded as not
+          passed. The card lasts three years. It shows in the Certification Report straight away,
+          and an import won't remove it. Anyone on the All Employees report can be evaluated,
+          except yourself. The database checks that, not just this page.</p>
+        <div class="fields">
+          <div><label for="evalName">Operator</label>
+            <select id="evalName"></select></div>
+          <div><label for="evalEmail">Work email</label>
+            <input type="email" id="evalEmail" maxlength="160" readonly></div>
+          <div><label for="evalDate">Evaluated on</label>
+            <input type="date" id="evalDate"></div>
+          <div><label for="evalExpires">Expires</label>
+            <input type="date" id="evalExpires" disabled></div>
+          <div><label for="evalCoursePassed">Certification course passed</label>
+            <input type="text" id="evalCoursePassed" readonly></div>
+        </div>
+        <p class="note" style="margin-bottom:4px" id="evalEligibleNote"></p>
+
+        <h3 style="margin:16px 0 6px">Truck type authorised</h3>
+        <div class="row" id="evalClasses"></div>
+
+        <h3 style="margin:16px 0 6px">The driving test</h3>
+        <div class="row" id="evalChecks"></div>
+        <p class="note" id="evalVerdict"></p>
+
+        <div class="row" style="margin-top:12px">
+          <button data-act="eval-save">Record the result</button>
+          <span class="msg"></span>
+        </div>
+      </div>`;
+}
 
 // ---- certification report ------------------------------------------------
 //
@@ -5896,6 +5918,7 @@ const pageTitle = (id) => (FEATURES.find(f => f.id === id) || COMPANY_PAGES.find
        newspost: { title: (newsPosts.find(p => p.id === openNewsId) || {}).title || "News" },
        hr: { title: "HR" }, payroll: { title: "Payroll Calendar" },
        certreport: { title: "Certification Report" },
+       evaltest: { title: "Forklift Driving Test" },
        article: { title: (trainingArticles.find(a => a.id === openArticleId) || {}).title || "Article" } }[id]
   || { title: "" }).title;
 
