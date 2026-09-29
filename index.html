@@ -962,12 +962,9 @@
           <table id="peopleTable">
             <thead><tr>
               <th data-sort="full_name">Name</th>
-              <th data-sort="email">Email</th>
-              <th data-sort="role">Role</th>
               <th data-sort="location_id">Location</th>
-              <th>Groups</th>
+              <th data-sort="role">Role</th>
               <th>Designation</th>
-              <th>Account</th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -3653,13 +3650,17 @@ function renderPeople() {
       (deactivated ? `<span class="stat"><b>${deactivated}</b>deactivated</span>` : "");
   }
 
+  // Under the name, so the table fits the page: when the People table ran
+  // wider than its card, the Location dropdown sat at the cut-off edge with its
+  // arrow hidden, and read as a plain box.
   const account = (r) => {
     if (r.deactivated_at) {
       return `<span class="badge b-none">Deactivated ${esc(new Date(r.deactivated_at).toLocaleDateString())}</span>
         ${isOwner() ? `<button class="pdf" data-account="reactivate" data-id="${esc(r.id)}">Reactivate</button>` : ""}`;
     }
-    if (!isOwner() || r.id === me.id) return `<span class="note">Active</span>`;
-    return `<button class="pdf" data-account="deactivate" data-id="${esc(r.id)}">Deactivate</button>`;
+    if (!isOwner() || r.id === me.id) return "";
+    return `<button class="pdf" data-account="deactivate" data-id="${esc(r.id)}"
+      style="padding:4px 10px;font-size:12.5px">Deactivate</button>`;
   };
 
   // A deactivated account isn't edited, the same way its role isn't. Your own
@@ -3690,26 +3691,25 @@ function renderPeople() {
     </select>`;
 
   $("peopleTable").querySelector("tbody").innerHTML = rows.map(r => `<tr${r.deactivated_at ? ' class="gone"' : ""}>
-      <td>${editable(r)
+      <td style="min-width:180px">${editable(r)
         ? `<input data-name-for="${esc(r.id)}" value="${esc(r.full_name || "")}"
-             placeholder="No name yet" style="margin:0;width:170px">`
-        : `<b>${esc(r.full_name || "—")}</b>`}${r.id === me.id
-        ? ` <span class="note">· you</span>` : ""}</td>
-      <td class="note" style="white-space:nowrap">${esc(r.email || "—")}</td>
+             placeholder="No name yet" style="margin:0;width:100%;max-width:200px">`
+        : `<b>${esc(r.full_name || "—")}</b>`}
+        <div class="note" style="font-size:12.5px;margin-top:4px;overflow-wrap:anywhere">${esc(
+          [r.id === me.id ? "you" : "", r.email || "no email", groupNames(r.groups)].filter(Boolean).join(" · "))}</div>
+        ${account(r) ? `<div style="margin-top:6px">${account(r)}</div>` : ""}</td>
+      <td>${editable(r) ? shopPicker(r)
+        : r.location_id ? esc(locations[r.location_id] || r.location_id)
+        : `<span class="error">not set</span>`}</td>
       <td>${isOwner() && !r.deactivated_at && r.id !== me.id
-        ? `<select data-role-for="${esc(r.id)}" style="margin:0;min-width:120px">
+        ? `<select data-role-for="${esc(r.id)}" style="margin:0;min-width:110px">
             ${["employee", "admin", "owner"].map(role =>
               `<option value="${role}"${r.role === role ? " selected" : ""}>${role}</option>`).join("")}
           </select>`
         : esc(r.role) + (r.id === me.id ? ` <span class="note">· you</span>` : "")}</td>
-      <td>${editable(r) ? shopPicker(r)
-        : r.location_id ? esc(locations[r.location_id] || r.location_id)
-        : `<span class="error">not set</span>`}</td>
-      <td>${esc(groupNames(r.groups)) || "—"}</td>
       <td>${designationCell(r)}</td>
-      <td style="white-space:nowrap">${account(r)}</td>
     </tr>`).join("")
-    || `<tr><td colspan="7" class="note">Nothing visible to you. If this is only
+    || `<tr><td colspan="4" class="note">Nothing visible to you. If this is only
         your own row, run migration 0021 in the SQL editor.</td></tr>`;
 }
 
