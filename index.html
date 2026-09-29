@@ -8808,9 +8808,27 @@ let articleHtmlMode = false;
 let articleDirty = false;
 
 async function loadArticles() {
-  const { data, error } = await db.from("training_articles").select("*").order("sort_order");
+  const [{ data, error }] = await Promise.all([
+    db.from("training_articles").select("*").order("sort_order"),
+    loadArticleStyles()
+  ]);
   articlesError = error ? error.message : null;
   trainingArticles = data || [];
+}
+
+// The article stylesheet's text, put inside each article page the way the app
+// does it, rather than linked. Linked, the frame had to load it itself, and on
+// some browsers it never arrived: the article showed as bare text with its
+// icons blown up to fill the page. Read here, by the page, the frame needs
+// nothing from the network at all. If this read fails, the link is the
+// fallback.
+let articleCss = "";
+async function loadArticleStyles() {
+  if (articleCss) return;
+  try {
+    const response = await fetch("articles/article-styles.css");
+    if (response.ok) articleCss = (await response.text()).replace(/<\/style/gi, "<\\/style");
+  } catch (e) { /* the link below stands in */ }
 }
 
 const ARTICLE_TAGS = new Set(["p", "h2", "h3", "h4", "ul", "ol", "li", "strong", "b", "em", "i",
@@ -8873,8 +8891,9 @@ function articleDocument(article, { editable = false } = {}) {
   return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline'; img-src https: data:">
-<link rel="stylesheet" href="articles/article-styles.css">
-<style>body{padding-bottom:28px} main[contenteditable]{outline:none;min-height:240px}
+${articleCss ? `<style>${articleCss}</style>` : `<link rel="stylesheet" href="articles/article-styles.css">`}
+<style>body{padding-bottom:28px} :where(svg:not([width])){width:24px;height:24px}
+main[contenteditable]{outline:none;min-height:240px}
 main[contenteditable]:empty::before{content:"Start typing the article…";color:#aaa}</style>
 </head><body>
 ${editable ? `<div class="container">${heroBlock}</div>
