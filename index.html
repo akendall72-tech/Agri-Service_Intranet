@@ -1737,6 +1737,9 @@ let me = null, profile = null;
 let certs = [], plans = [], people = [], supportRoles = [], locations = {};
 // Designations (migration 0066): what there is, and who holds which.
 let designations = [], personDesignations = [], designationsError = null;
+// Forklift certification removals (migration 0067): who, for everyone, and
+// why, for owners and the person themselves. Both keyed on match_key.
+let forkliftRemovedAt = {}, forkliftRemovals = {};
 let sharedTasks = [], personalTasks = [], hiddenTasks = [], completions = [];
 let tickets = [], workGroups = [];
 let payroll = [], holidays = [], directory = [], sharedLogins = [];
@@ -1814,7 +1817,7 @@ async function start() {
 // ---------------------------------------------------------------- loading
 
 async function loadAll() {
-  const [locs, c, p, pe, sr, wt, pt, ht, tc, tk, gr, pr, ph, dir, sl, allWt, trr, ds, pds] =
+  const [locs, c, p, pe, sr, wt, pt, ht, tc, tk, gr, pr, ph, dir, sl, allWt, trr, ds, pds, frm, frr] =
     await Promise.all([
     db.from("locations").select("*").order("sort_order"),
     db.from("forklift_certifications").select("*"),
@@ -1836,13 +1839,17 @@ async function loadAll() {
     db.from("weekly_tasks").select("*").order("sort_order"),
     db.from("training_reports").select("*"),
     db.from("designations").select("*").order("sort_order"),
-    db.from("person_designations").select("person_id,designation_id,assigned_by_name,assigned_at")
+    db.from("person_designations").select("person_id,designation_id,assigned_by_name,assigned_at"),
+    db.rpc("forklift_removals"),
+    db.from("forklift_certification_removals").select("*")
   ]);
 
   allLocations = locs.data || [];
   locations = Object.fromEntries(allLocations.map(l => [l.id, l.name]));
   certs = c.data || []; plans = p.data || []; people = pe.data || [];
   designations = ds.data || []; personDesignations = pds.data || [];
+  forkliftRemovedAt = Object.fromEntries((frm.data || []).map(r => [r.person_key, r.removed_at]));
+  forkliftRemovals = Object.fromEntries((frr.data || []).map(r => [r.person_key, r]));
   designationsError = ds.error || pds.error ? (ds.error || pds.error).message : null;
   supportRoles = sr.data || [];
   sharedTasks = wt.data || []; personalTasks = pt.data || [];
@@ -1936,7 +1943,7 @@ const FORKLIFT_LINKS = [
   { title: "Forklift Driving Test", sub: "Complete the driving evaluation form.",
     url: "https://agriservice.sharepoint.com/:l:/s/Aftersales/JABHDvYhCAUUTZJrl6f49bp7AVGuzxY_W5YRYQ7IJLgYz0c?nav=MDhjOTdkYzMtZDQ4OS00MjJiLWIwODgtYjgzY2FkYTQ0MDYw" },
   { title: "Certification Report", sub: "Check who is certified and when it expires.",
-    url: "https://akendall72-tech.github.io/Forklift_Report/" }
+    view: "certreport" }
 ];
 
 const SAFETY_LINKS = [
@@ -1992,9 +1999,10 @@ function showView(name) {
   const host = $("view");
   host.classList.remove("hidden");
   setMode("app", ["openseat", "catalog", "article", "skills", "trainingstatus"].includes(name) ? "training"
-    : name === "newspost" ? "news" : name === "payroll" ? "hr" : name);
+    : name === "newspost" ? "news" : name === "payroll" ? "hr" : name === "certreport" ? "forklift" : name);
   host.innerHTML = `<nav class="crumbs"><button data-home>Home</button><span>/</span>
     ${name === "newspost" ? `<button data-view="news">News</button><span>/</span>` : ""}
+    ${name === "certreport" ? `<button data-view="forklift">Forklift Center</button><span>/</span>` : ""}
     <span>${esc(pageTitle(name))}</span></nav>` + VIEWS[name]();
   window.scrollTo(0, 0);
 }
@@ -2089,8 +2097,147 @@ const VIEWS = {
   news: () => newsView(),
   newspost: () => newsPostView(),
   reminders: () => remindersView(),
-  rigging: () => riggingView()
+  rigging: () => riggingView(),
+  certreport: () => certReportView()
 };
+
+// ---- certification report ------------------------------------------------
+//
+// Who is certified to drive a forklift, the same as the app's report: one row
+// per person, their newest record; certified, expiring or not valid; each
+// person's driving test as a PDF. Owners remove a certification, with a reason,
+// and restore it (migration 0067). Everyone sees that it was removed; owners
+// also see who removed it and why.
+
+let certReportFilter = "all", certReportQuery = "";
+
+// The row that counts for each person: the newest by expiry, then evaluation.
+// Grouped on the work email, or the name when there isn't one, as the app does.
+function certsPerPerson() {
+  const byPerson = {};
+  certs.forEach(r => {
+    const email = (r.email || "").trim().toLowerCase();
+    const key = email || "name:" + tsNameKey(r.operator_name || "", "");
+    const held = byPerson[key];
+    const newer = !held || [r.expiration_date || "", r.evaluation_date || ""].join("|")
+      > [held.expiration_date || "", held.evaluation_date || ""].join("|");
+    if (newer) byPerson[key] = r;
+  });
+  return Object.values(byPerson).sort((a, b) =>
+    (a.operator_name || "").localeCompare(b.operator_name || "", undefined, { sensitivity: "base" }));
+}
+
+function certReportView() {
+  const filters = [["all", "All"], ["certified", "Certified"], ["expiring", "Expiring"], ["lapsed", "Not valid"]];
+  return hero("Certification Report", "Who is certified to drive a forklift, and when each card runs out.")
+    + `<div class="card">
+        <div class="stats" id="certReportStats"></div>
+        <div class="chips">${filters.map(([value, label]) => `<button type="button"
+          class="chip${certReportFilter === value ? " on" : ""}" data-cert-filter="${value}">${label}</button>`).join("")}</div>
+        <input class="search" id="certReportSearch" placeholder="Name or email"
+          value="${esc(certReportQuery)}" style="margin-bottom:10px">
+        <div id="certReportList">${certReportList()}</div>
+        ${isOwner() ? `<p class="note" style="margin-top:12px">As an owner you can remove a certification, with
+          a reason, and restore it. It shows as not valid until it's restored or they pass a new
+          driving test, and they see who removed it and why. Never your own.</p>` : ""}
+      </div>`;
+}
+
+function certReportList() {
+  const everyone = certsPerPerson();
+  const kind = (r) => {
+    const [label, cls] = certStatusNow(r);
+    return cls === "b-current" ? "certified" : cls === "b-expiring" ? "expiring" : "lapsed";
+  };
+  const tally = { certified: 0, expiring: 0, lapsed: 0 };
+  everyone.forEach(r => tally[kind(r)]++);
+  setTimeout(() => {
+    const stats = $("certReportStats");
+    if (stats) stats.innerHTML =
+      `<span class="stat"><b style="color:#178A2A">${tally.certified}</b>certified</span>` +
+      `<span class="stat"><b style="color:#8a5e00">${tally.expiring}</b>expiring</span>` +
+      `<span class="stat"><b style="color:var(--red-dark)">${tally.lapsed}</b>not valid</span>`;
+  });
+
+  const q = certReportQuery.trim().toLowerCase();
+  const shown = everyone.filter(r => (certReportFilter === "all" || kind(r) === certReportFilter)
+    && (!q || (r.operator_name || "").toLowerCase().includes(q) || (r.email || "").toLowerCase().includes(q)));
+  if (!shown.length) return `<p class="note">${certs.length ? "Nobody matches." : "No certifications yet."}</p>`;
+
+  const myEmail = ((me && me.email) || "").toLowerCase();
+  return shown.map(r => {
+    const [label, cls] = certStatusNow(r);
+    const removal = certRemoval(r);
+    const valid = cls === "b-current" || cls === "b-expiring";
+    const expiry = valid ? `Expires ${fmtDate(r.expiration_date)}`
+      : removal ? `Expires ${fmtDate(r.expiration_date)} if restored`
+      : cls === "b-expired" ? `Expired ${fmtDate(r.expiration_date)}` : "No valid evaluation";
+    const mayChange = isOwner() && r.match_key && r.match_key !== myEmail;
+    return `<div class="ticket" style="padding:12px 14px">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline">
+          <b>${esc(r.operator_name)}</b><span class="badge ${cls}">${esc(label)}</span></div>
+        ${(r.truck_classes || []).length ? `<div class="note">${esc(r.truck_classes.join(", "))}</div>` : ""}
+        ${removal && removal.changed_by_name ? `<div style="color:var(--red-dark);font-size:13px;margin-top:4px">${esc(removalLine(removal))}</div>` : ""}
+        <div class="note">${esc(expiry)}${r.evaluation_date ? ` · evaluated ${fmtDate(r.evaluation_date)}` : ""}</div>
+        <div class="row" style="margin-top:8px">
+          <button class="pdf" data-eval-pdf="${esc(r.id)}">Driving test PDF</button>
+          ${mayChange && removal ? `<button class="pdf" data-cert-restore="${esc(r.match_key)}">Restore</button>` : ""}
+          ${mayChange && !removal && valid ? `<button class="ghost" data-cert-remove="${esc(r.match_key)}">Remove</button>` : ""}
+        </div>
+      </div>`;
+  }).join("");
+}
+
+const redrawCertReport = () => {
+  const list = $("certReportList");
+  if (list) list.innerHTML = certReportList();
+};
+
+document.addEventListener("input", (event) => {
+  if (event.target.id !== "certReportSearch") return;
+  certReportQuery = event.target.value;
+  redrawCertReport();
+});
+
+document.addEventListener("click", async (event) => {
+  const chip = event.target.closest("[data-cert-filter]");
+  if (chip) {
+    certReportFilter = chip.dataset.certFilter;
+    document.querySelectorAll("[data-cert-filter]").forEach(b =>
+      b.classList.toggle("on", b === chip));
+    return redrawCertReport();
+  }
+
+  const button = event.target.closest("[data-cert-remove], [data-cert-restore]");
+  if (!button) return;
+  const removing = "certRemove" in button.dataset;
+  const key = removing ? button.dataset.certRemove : button.dataset.certRestore;
+  const row = certsPerPerson().find(r => r.match_key === key);
+  const who = (row && row.operator_name) || "this person";
+
+  let reason = "";
+  if (removing) {
+    reason = (prompt(`Why is ${who}'s forklift certification being removed? They'll see this.`) || "").trim();
+    if (!reason) return;
+  } else if (!confirm(`Restore ${who}'s forklift certification?`)) {
+    return;
+  }
+
+  button.disabled = true;
+  const { data, error } = await db.from("forklift_certification_removals")
+    .upsert({ person_key: key, revoked: removing, reason }, { onConflict: "person_key" })
+    .select();
+  button.disabled = false;
+  if (error || !data || !data.length) {
+    return alert(error ? error.message
+      : "That wasn't saved: only an owner can change it, and never their own.");
+  }
+  const saved = data[0];
+  forkliftRemovals[key] = saved;
+  if (saved.revoked) forkliftRemovedAt[key] = saved.changed_at;
+  else delete forkliftRemovedAt[key];
+  redrawCertReport();
+});
 
 // ---- my certification ----------------------------------------------------
 
@@ -2123,7 +2270,8 @@ function certificationCard() {
       Check the training department has you under the address you sign in with.</p></div>`;
   }
 
-  const [label, cls] = certStatus(cert);
+  const [label, cls] = certStatusNow(cert);
+  const removal = certRemoval(cert);
   const classes = (cert.truck_classes || []).join(", ");
 
   return `<div class="cert">
@@ -2141,6 +2289,8 @@ function certificationCard() {
           <dd>${fmtDate(cert.evaluation_date)}${cert.evaluator_name
             ? " by " + esc(cert.evaluator_name) : ""}</dd></div>` : ""}
       </dl>
+      ${removal ? `<p style="color:var(--red-dark);margin:14px 0 0">${esc(removalLine(removal))}
+        You can't operate a forklift until it's restored or you pass a new driving test.</p>` : ""}
       <p class="note" style="margin-top:16px">
         Issued by the Agri-Service Training Department</p>
     </div>
@@ -3322,6 +3472,32 @@ function certStatus(row) {
   return ["Certified", "b-current"];
 }
 
+// The removal covering this certification, if an owner has removed it
+// (migration 0067): one made on or after the day it was issued. A driving
+// test passed after a removal is a new certification and counts again. The
+// app's ForkliftCertification.isCovered(byRemovalAt:) is the same rule.
+function certRemoval(row) {
+  const at = row && row.match_key && forkliftRemovedAt[row.match_key];
+  if (!at) return null;
+  const issued = row.submitted_at ? new Date(row.submitted_at)
+    : row.evaluation_date ? new Date(row.evaluation_date + "T00:00:00") : null;
+  if (issued && issued > new Date(at)) return null;
+  return forkliftRemovals[row.match_key] || { removed_at: at };
+}
+
+// Whether they can drive today: the record's own status, unless it's been
+// removed since. The driving test PDF keeps certStatus(), because a removal
+// later doesn't change what happened at the test.
+const certStatusNow = (row) => certRemoval(row) ? ["Removed", "b-expired"] : certStatus(row);
+
+// "Removed by Andrew Kendall, Sep 29, 2026: reason", where the reason can be read.
+function removalLine(removal) {
+  if (!removal.changed_by_name) return "Removed.";
+  const when = new Date(removal.changed_at).toLocaleDateString(undefined,
+    { year: "numeric", month: "short", day: "numeric" });
+  return `Removed by ${removal.changed_by_name}, ${when}: “${removal.reason}”`;
+}
+
 // ---------------------------------------------------------------- rendering
 
 function fmtDate(d) {
@@ -3336,17 +3512,18 @@ function renderCerts() {
     (r.operator_name || "").toLowerCase().includes(q) ||
     (r.email || "").toLowerCase().includes(q));
 
-  const counts = { current: 0, expiring: 0, expired: 0, none: 0 };
+  const counts = { current: 0, expiring: 0, expired: 0, none: 0, removed: 0 };
   certs.forEach(r => {
-    const cls = certStatus(r)[1];
-    counts[cls === "b-current" ? "current" : cls === "b-expiring" ? "expiring"
+    const [label, cls] = certStatusNow(r);
+    counts[label === "Removed" ? "removed" : cls === "b-current" ? "current" : cls === "b-expiring" ? "expiring"
       : cls === "b-expired" ? "expired" : "none"]++;
   });
   $("certStats").innerHTML =
     `<span class="stat"><b>${certs.length}</b>total</span>` +
     `<span class="stat"><b style="color:#178A2A">${counts.current}</b>certified</span>` +
     `<span class="stat"><b style="color:#8a5e00">${counts.expiring}</b>expiring</span>` +
-    `<span class="stat"><b style="color:var(--red-dark)">${counts.expired}</b>expired</span>`;
+    `<span class="stat"><b style="color:var(--red-dark)">${counts.expired}</b>expired</span>` +
+    (counts.removed ? `<span class="stat"><b style="color:var(--red-dark)">${counts.removed}</b>removed</span>` : "");
 
   // Which row the app would show for each person, so a superseded record is
   // obviously superseded rather than looking like a second live certification.
@@ -3362,7 +3539,7 @@ function renderCerts() {
   Object.values(byPerson).forEach(r => current.add(r));
 
   $("certTable").querySelector("tbody").innerHTML = rows.map(r => {
-    const [label, cls] = certStatus(r);
+    const [label, cls] = certStatusNow(r);
     return `<tr${current.has(r) ? "" : ' style="opacity:.55"'}>
       <td><b>${esc(r.operator_name)}</b>${current.has(r) ? ""
         : ` <span class="note">· superseded</span>`}</td>
@@ -5718,6 +5895,7 @@ const pageTitle = (id) => (FEATURES.find(f => f.id === id) || COMPANY_PAGES.find
        trainingstatus: { title: "Training Status" },
        newspost: { title: (newsPosts.find(p => p.id === openNewsId) || {}).title || "News" },
        hr: { title: "HR" }, payroll: { title: "Payroll Calendar" },
+       certreport: { title: "Certification Report" },
        article: { title: (trainingArticles.find(a => a.id === openArticleId) || {}).title || "Article" } }[id]
   || { title: "" }).title;
 
@@ -10282,8 +10460,8 @@ document.querySelectorAll("th[data-sort]").forEach(th => {
     const dir = th.dataset.dir === "asc" ? -1 : 1;
     th.dataset.dir = dir === 1 ? "asc" : "desc";
     list.sort((a, b) => {
-      const x = key === "status" ? certStatus(a)[0] : a[key];
-      const y = key === "status" ? certStatus(b)[0] : b[key];
+      const x = key === "status" ? certStatusNow(a)[0] : a[key];
+      const y = key === "status" ? certStatusNow(b)[0] : b[key];
       return String(x ?? "").localeCompare(String(y ?? ""), undefined, { numeric: true }) * dir;
     });
     renderCerts(); renderPlans(); renderPeople();
