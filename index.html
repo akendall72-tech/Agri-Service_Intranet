@@ -973,6 +973,10 @@
         <p class="note">The email is the one they sign in with, shown here so an account
           with no name yet is still recognisable. It's read-only: change it in
           Supabase under Authentication → Users and it follows on its own.</p>
+        <p class="note"><b>Designations</b> are for owners only: Safety Manager and Training
+          Manager. They'll decide who can see or change things that belong to that job. Tick
+          one to give it, untick it to take it away; your own row too. Anyone who isn't an owner
+          can't hold one, and an owner made an admin or an employee loses theirs.</p>
         <p class="note">When someone leaves, an owner presses <b>Deactivate</b>. They can't
           sign in to the app or this page, they're signed out, and their notifications
           stop. Everything they did — lift plans, sign-offs, inspections — stays, with their
@@ -985,6 +989,7 @@
               <th data-sort="role">Role</th>
               <th data-sort="location_id">Location</th>
               <th>Groups</th>
+              <th>Designation</th>
               <th>Account</th>
             </tr></thead>
             <tbody></tbody>
@@ -1730,6 +1735,8 @@ const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = (id) => document.getElementById(id);
 let me = null, profile = null;
 let certs = [], plans = [], people = [], supportRoles = [], locations = {};
+// Designations (migration 0066): what there is, and who holds which.
+let designations = [], personDesignations = [], designationsError = null;
 let sharedTasks = [], personalTasks = [], hiddenTasks = [], completions = [];
 let tickets = [], workGroups = [];
 let payroll = [], holidays = [], directory = [], sharedLogins = [];
@@ -1807,7 +1814,7 @@ async function start() {
 // ---------------------------------------------------------------- loading
 
 async function loadAll() {
-  const [locs, c, p, pe, sr, wt, pt, ht, tc, tk, gr, pr, ph, dir, sl, allWt, trr] =
+  const [locs, c, p, pe, sr, wt, pt, ht, tc, tk, gr, pr, ph, dir, sl, allWt, trr, ds, pds] =
     await Promise.all([
     db.from("locations").select("*").order("sort_order"),
     db.from("forklift_certifications").select("*"),
@@ -1827,12 +1834,16 @@ async function loadAll() {
     db.from("directory_entries").select("*").order("sort_order"),
     db.from("shared_logins").select("*").order("id"),
     db.from("weekly_tasks").select("*").order("sort_order"),
-    db.from("training_reports").select("*")
+    db.from("training_reports").select("*"),
+    db.from("designations").select("*").order("sort_order"),
+    db.from("person_designations").select("person_id,designation_id,assigned_by_name,assigned_at")
   ]);
 
   allLocations = locs.data || [];
   locations = Object.fromEntries(allLocations.map(l => [l.id, l.name]));
   certs = c.data || []; plans = p.data || []; people = pe.data || [];
+  designations = ds.data || []; personDesignations = pds.data || [];
+  designationsError = ds.error || pds.error ? (ds.error || pds.error).message : null;
   supportRoles = sr.data || [];
   sharedTasks = wt.data || []; personalTasks = pt.data || [];
   hiddenTasks = (ht.data || []).map(r => r.task_id);
@@ -3457,6 +3468,22 @@ function renderPeople() {
   // which is the only thing the role rule is protecting against.
   const editable = (r) => isOwner() && !r.deactivated_at;
 
+  // Owners only. An owner ticks and unticks; everyone else reads what's held.
+  const designationCell = (r) => {
+    if (designationsError) return `<span class="note">Run migration 0066</span>`;
+    const held = designations.filter(d => personDesignations.some(pd =>
+      pd.person_id === r.id && pd.designation_id === d.id));
+    if (r.role !== "owner" || r.deactivated_at) {
+      return held.length ? esc(held.map(d => d.label).join(", ")) : `<span class="note">—</span>`;
+    }
+    if (!isOwner()) {
+      return held.length ? esc(held.map(d => d.label).join(", ")) : `<span class="note">None</span>`;
+    }
+    return designations.map(d => `<label class="check" style="margin:2px 0;white-space:nowrap">
+        <input type="checkbox" data-designation="${esc(d.id)}" data-person="${esc(r.id)}"${
+          held.includes(d) ? " checked" : ""}> ${esc(d.label)}</label>`).join("");
+  };
+
   const shopPicker = (r) => `<select data-shop-for="${esc(r.id)}" style="margin:0;min-width:130px">
       <option value=""${!r.location_id ? " selected" : ""}>— not set —</option>
       ${allLocations.map(l => `<option value="${esc(l.id)}"${
@@ -3480,9 +3507,10 @@ function renderPeople() {
         : r.location_id ? esc(locations[r.location_id] || r.location_id)
         : `<span class="error">not set</span>`}</td>
       <td>${esc(groupNames(r.groups)) || "—"}</td>
+      <td>${designationCell(r)}</td>
       <td style="white-space:nowrap">${account(r)}</td>
     </tr>`).join("")
-    || `<tr><td colspan="6" class="note">Nothing visible to you. If this is only
+    || `<tr><td colspan="7" class="note">Nothing visible to you. If this is only
         your own row, run migration 0021 in the SQL editor.</td></tr>`;
 }
 
@@ -3545,6 +3573,10 @@ document.addEventListener("change", async (event) => {
     return speak(card, problem, true);
   }
   person.role = role;
+  // The database takes their designations away with the owner role (0066).
+  if (role !== "owner") {
+    personDesignations = personDesignations.filter(pd => pd.person_id !== id);
+  }
   renderPeople();
   speak(card, `${name} is now an ${role}.`, false);
 });
@@ -3610,6 +3642,38 @@ document.addEventListener("change", async (event) => {
   person.location_id = picked || null;
   renderPeople();          // the "no shop set" count at the top changes
   speak(card, picked ? `${who} is at ${to}.` : `${who} has no shop set.`, false);
+});
+
+// Designations: straight to the table, since the rules are in the database —
+// owners only, and only onto an owner (0066). A refusal comes back as no row.
+document.addEventListener("change", async (event) => {
+  const box = event.target.closest("[data-designation]");
+  if (!box) return;
+  const person = people.find(r => r.id === box.dataset.person);
+  const designation = designations.find(d => d.id === box.dataset.designation);
+  if (!person || !designation) return;
+  const card = box.closest(".card") || $("peopleTable");
+  const who = person.full_name || person.email || "this account";
+  const giving = box.checked;
+
+  box.disabled = true;
+  const query = giving
+    ? db.from("person_designations").insert({ person_id: person.id, designation_id: designation.id })
+    : db.from("person_designations").delete()
+        .eq("person_id", person.id).eq("designation_id", designation.id);
+  const { data, error } = await query.select();
+  box.disabled = false;
+
+  if (error || !data || !data.length) {
+    box.checked = !giving;
+    return speak(card, error ? error.message
+      : "Nothing changed — only an owner can give or take away a designation.", true);
+  }
+  if (giving) personDesignations.push(data[0]);
+  else personDesignations = personDesignations.filter(pd =>
+    !(pd.person_id === person.id && pd.designation_id === designation.id));
+  speak(card, giving ? `${who} is now ${designation.label}.`
+                     : `${who} is no longer ${designation.label}.`, false);
 });
 
 // Leaving the company: the account function blocks sign-in and takes them off
