@@ -1157,11 +1157,16 @@
           reach this page. You can't change your own role, and the last owner can't be
           demoted — otherwise one wrong tap leaves nobody able to undo it.</p>
         <p class="note"><b>Owners also set a name and a shop here.</b> Both are normally
-          chosen by the person on first sign-in in the app — so anyone who only ever uses
-          this page arrives with neither, and there was nowhere to fill them in. Type over
-          the name; pick a shop from the list. The app still blocks both from the client so
-          nobody can promote themselves or move shops to route their own lift plans
-          elsewhere; these go through the same owner-only function deactivation does.</p>
+          chosen by the person on first sign-in in the app, and after that both are locked:
+          only an owner changes them, here. Anyone who only ever uses this page arrives with
+          neither. Type over the name; pick a shop from the list. The lock matters for names
+          too: Training Status finds people without a work email by name, so a name people
+          could change themselves was a way into a colleague's record. These go through the
+          same owner-only function deactivation does.</p>
+        <p class="note"><b>Deactivate, don't delete.</b> Deleting an account in Supabase is
+          refused while it has lift plans, support requests or Skills history, so those
+          records can't be lost with it. Only an account that never did anything can be
+          deleted.</p>
         <p class="note">The email is the one they sign in with, shown here so an account
           with no name yet is still recognisable. It's read-only: change it in
           Supabase under Authentication → Users and it follows on its own.</p>
