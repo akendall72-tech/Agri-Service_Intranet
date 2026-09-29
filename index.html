@@ -6,7 +6,7 @@
 <title>Agri-Service</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
 <style>
   /* ------------------------------------------------------------------ tokens
      The old variable names (--red, --paper, --line…) are kept because the page's
@@ -733,6 +733,214 @@
     .osr-actions { flex-direction:row; }
     .osr-email, .osr-request { padding:10px; }
   }
+
+  /* ------------------------------------------------------------------ the Cab look
+     The app's home page and Centers (CabCard.swift), for the same pages here.
+     Home sits on a photograph with smoked-glass cards; every other app page on
+     "rise", white fading to a cool grey, with slate cards. The admin portal
+     keeps the plain look: the page backgrounds hang off body[data-page], which
+     showHome and showView set, and everything else is under #home or #view. */
+  :root {
+    --cab-top: #2B343A; --cab-bottom: #232A30; --cab-edge: #3A454E;
+    --cab-sub: #A3AEB5; --cab-detail: #86929A; --cab-heading: #555E64; --cab-rule: rgba(0,0,0,.12);
+    --cab-glass: rgba(18,23,26,.74);
+    /* The brand's colours lit up for a dark card, worked out the same way as
+       Cab.lit() in the app. Blue is picked by hand there too. */
+    --lit-red: #FF1A53; --lit-ember: #FF6728; --lit-amber: #FFAC2A; --lit-green: #45FF62;
+    --lit-deep: #2BAC43; --lit-slate: #5AB0FF; --lit-steel: #A5B9C9; --lit-teal: #3ED3C6;
+    --lit-muted: #C9CED2;
+    --font-cab: "Roboto Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    /* .content's own padding, so a band can reach its edges. */
+    --gutter-x: 36px; --gutter-top: 28px;
+  }
+  @media (max-width: 960px) { :root { --gutter-x: 16px; --gutter-top: 20px; } }
+
+  /* cqw below is a width of .content, so a band can run edge to edge however
+     wide the screen is, while its words line up with the column. */
+  .content { container-type: inline-size; }
+
+  /* The page behind: fixed, under the top bar and beside the sidebar. */
+  body.signed-in[data-page]::before { content: ""; position: fixed; z-index: -1; inset: 60px 0 0 252px;
+    pointer-events: none; }
+  @media (max-width: 960px) { body.signed-in[data-page]::before { left: 0; } }
+  body[data-page="view"]::before { background: linear-gradient(#F6F7F8, #BCC3C8); }
+  body[data-page="home"]::before {
+    background: linear-gradient(rgba(0,0,0,.08), rgba(0,0,0,.12) 40%, rgba(0,0,0,.55)),
+                #0D1012 url("images/home-field-wide.jpg") 50% 55% / cover no-repeat;
+  }
+  /* A phone, or a window taller than it's wide: the Fendt 1050, as in the app. */
+  @media (max-aspect-ratio: 1/1) {
+    body[data-page="home"]::before {
+      background: linear-gradient(rgba(0,0,0,0) 30%, rgba(0,0,0,.08) 60%, rgba(0,0,0,.5)),
+                  #0D1012 url("images/home-tractor-tall.jpg") 50% 40% / cover no-repeat;
+    }
+  }
+
+  /* The red band under the top bar: the greeting at home, a page's name
+     elsewhere. Like the app's title bar, carried on down the page a little. */
+  .home-banner, .hero.top {
+    margin: calc(-1 * var(--gutter-top)) calc(50% - 50cqw - var(--gutter-x)) 22px;
+    padding: 16px calc(50cqw - 50% + var(--gutter-x)) 24px;
+    border-radius: 0 0 26px 26px;
+  }
+  .home-banner, .hero { background: linear-gradient(135deg, #CC0033, #B4041E); color: #fff;
+    box-shadow: 0 10px 30px rgba(120,0,25,.22); }
+  .hero { border-radius: 16px; padding: 18px 22px 22px; margin: 0 0 22px; }
+  .hero h1 { font: 700 30px/1.1 var(--font-cab); text-transform: uppercase; letter-spacing: .02em;
+    margin: 0; text-wrap: balance; }
+  .hero p { margin: 8px 0 0; color: rgba(255,255,255,.84); font-size: 15px; max-width: 70ch; }
+  .hero .crumbs { margin-bottom: 8px; color: rgba(255,255,255,.6); font: 500 11.5px var(--font-mono);
+    letter-spacing: .08em; text-transform: uppercase; flex-wrap: wrap; }
+  .hero .crumbs button { color: rgba(255,255,255,.78); font: inherit; letter-spacing: inherit; }
+  .hero .crumbs button:hover { color: #fff; }
+  .hero .crumbs button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+  .home-banner { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px 24px;
+    flex-wrap: wrap; }
+  .home-banner .eyebrow { color: rgba(255,255,255,.72); font: 600 12px var(--font-mono); letter-spacing: .16em;
+    margin: 0 0 2px; }
+  .home-banner h1 { font: 700 36px/1.05 var(--font-cab); letter-spacing: .01em; margin: 0; }
+  .home-where { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .home-where .pill { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,.18);
+    color: #fff; font-size: 13px; font-weight: 600; padding: 4px 11px; }
+  .home-where .pill:empty { display: none; }
+  .home-where small { color: rgba(255,255,255,.75); font: 500 11.5px var(--font-mono); letter-spacing: .1em;
+    text-transform: uppercase; }
+  @media (max-width: 600px) {
+    .home-banner h1 { font-size: 30px; }
+    .home-where { align-items: flex-start; }
+    .hero h1 { font-size: 25px; }
+  }
+
+  /* The stripe down a card's left edge, lit in its colour. */
+  .cab-stripe::before, #view .link-card::before {
+    content: ""; position: absolute; left: 10px; top: 12px; bottom: 12px; width: 3px; border-radius: 3px;
+    background: var(--accent); box-shadow: 0 0 7px color-mix(in srgb, var(--accent) 65%, transparent);
+  }
+  /* Smoked glass over the photograph. */
+  .cab-glass { position: relative; background: var(--cab-glass); color: #fff;
+    -webkit-backdrop-filter: blur(16px) saturate(140%); backdrop-filter: blur(16px) saturate(140%);
+    border: 1px solid rgba(255,255,255,.16); border-radius: 14px; box-shadow: 0 5px 20px rgba(0,0,0,.38); }
+  button.cab-glass { font: inherit; font-weight: 400; white-space: normal; text-align: left; cursor: pointer;
+    transition: background .12s ease, border-color .12s ease, transform .12s ease; }
+  button.cab-glass:hover { background: rgba(18,23,26,.84); border-color: rgba(255,255,255,.32);
+    transform: translateY(-1px); }
+  button.cab-glass:active { transform: scale(.985); }
+  button.cab-glass:focus-visible, #home .news-open:focus-visible, #view .link-card:focus-visible {
+    outline: 2px solid var(--accent, #fff); outline-offset: 2px; }
+
+  /* A group heading: small monospaced capitals and a rule, like a divider on
+     a display. White with a shadow at home, where it sits on the picture. */
+  .cab-heading, #view .section-title, #view .group-title {
+    display: flex; align-items: center; gap: 10px; margin: 0 2px 11px; color: var(--cab-heading);
+    font: 600 12px var(--font-mono); letter-spacing: .16em; text-transform: uppercase; }
+  .cab-heading::after, #view .section-title::after, #view .group-title::after {
+    content: ""; flex: 1; height: 1px; background: var(--cab-rule); }
+  #view .section-title, #view .group-title { margin-top: 26px; }
+  #home .cab-heading { color: rgba(255,255,255,.86);
+    text-shadow: 0 1px 3px rgba(0,0,0,.85), 0 0 12px rgba(0,0,0,.45); }
+  #home .cab-heading::after { background: rgba(255,255,255,.26); box-shadow: 0 1px 2px rgba(0,0,0,.3); }
+
+  /* Home: the summary cards. */
+  /* All in a row, or two by two: never three and one left over. */
+  #home .stat-cards { gap: 12px; margin-bottom: 26px; grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr)); }
+  @container (max-width: 820px) { #home .stat-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  #home button.stat-card { gap: 1px; padding: 13px 14px 14px 25px; background: var(--cab-glass); color: #fff;
+    border: 1px solid rgba(255,255,255,.16); border-radius: 14px; box-shadow: 0 5px 20px rgba(0,0,0,.38); }
+  #home button.stat-card:hover { background: rgba(18,23,26,.84); border-color: rgba(255,255,255,.32);
+    box-shadow: 0 8px 26px rgba(0,0,0,.45); }
+  #home .stat-card small { color: var(--cab-sub); font: 600 11px var(--font-mono); letter-spacing: .12em; }
+  #home .stat-card small svg { color: var(--accent); }
+  #home .stat-card strong { font: 700 24px/1.2 var(--font-cab); text-transform: uppercase; letter-spacing: .02em; }
+  #home .stat-card span { color: var(--cab-sub); font-size: 13px; }
+  @media (max-width: 600px) {
+    #home .stat-card strong { font-size: 20px; }
+    #home .stat-card span { font-size: 12.5px; }
+  }
+
+  /* Home: the Centers beside the news. */
+  .home-grid { display: grid; gap: 26px 28px; grid-template-columns: minmax(0, 1fr) minmax(300px, 370px);
+    align-items: start; }
+  .home-grid.solo { grid-template-columns: minmax(0, 1fr); }
+  .home-groups { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+  .cab-grid { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .home-grid.solo .cab-grid.tiles4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  @container (max-width: 820px) {
+    .home-grid { grid-template-columns: minmax(0, 1fr); }
+    .home-grid.solo .cab-grid.tiles4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @container (max-width: 520px) { .cab-grid.rows { grid-template-columns: minmax(0, 1fr); } }
+
+  button.cab-tile { display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start;
+    gap: 0; min-height: 100px; padding: 12px 12px 13px 23px; }
+  .cab-glyph { display: flex; align-items: center; color: var(--accent); height: 24px; margin-bottom: 7px; }
+  .cab-glyph svg { width: 23px; height: 23px; stroke-width: 2; }
+  .cab-tile b, .cab-row b { font: 600 17px/1.2 var(--font-cab); text-transform: uppercase; letter-spacing: .04em; }
+  .cab-tile b + span, .cab-row b + span { display: block; color: var(--cab-sub); font-size: 13px; margin-top: 1px; }
+  button.cab-row { display: flex; align-items: center; justify-content: flex-start; gap: 14px; width: 100%;
+    min-height: 66px; padding: 12px 16px 12px 25px; }
+  .cab-row .cab-glyph { margin: 0; height: auto; }
+  .cab-row > span:nth-child(2) { flex: 1; min-width: 0; }
+  .cab-chev { color: var(--cab-detail); font-size: 20px; line-height: 1; }
+  /* A red count, glowing a little, like a warning lamp. */
+  .cab-badge { display: inline-block; min-width: 21px; padding: 4px 6px; border-radius: 999px; text-align: center;
+    background: #CC0033; color: #fff; font: 700 11.5px/1 var(--font-mono);
+    box-shadow: 0 0 10px rgba(204,0,51,.65); }
+  .cab-tile .cab-badge { position: absolute; top: -6px; right: -6px; }
+
+  /* Home: the latest news. */
+  .home-news .cab-glass { overflow: hidden; }
+  .home-news .news-open { color: #fff; }
+  .home-news .news-pic { background: #1A2024; }
+  .hn-lead .news-pic { aspect-ratio: 16 / 9; }
+  .hn-lead .hn-text { padding: 12px 16px 14px; }
+  .hn-lead b { display: block; font: 600 19px/1.2 var(--font-cab); letter-spacing: .01em; text-wrap: balance; }
+  .hn-lead .hn-sum { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    color: var(--cab-sub); font-size: 13.5px; margin-top: 4px; }
+  .hn-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; color: var(--cab-detail);
+    font: 500 11px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
+  .hn-meta .src { color: var(--lit-deep); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hn-meta .src.post { color: var(--lit-red); }
+  .hn-new { background: #CC0033; color: #fff; border-radius: 999px; padding: 1px 7px; font-weight: 600;
+    letter-spacing: .06em; }
+  .hn-row .news-open { display: flex; align-items: center; gap: 12px; padding: 11px 14px;
+    border-top: 1px solid rgba(255,255,255,.09); }
+  .hn-row .news-pic { width: 58px; height: 58px; flex: 0 0 58px; aspect-ratio: auto; border-radius: 8px; }
+  .hn-row .news-pic.stand-in svg { width: 20px; height: 20px; }
+  .hn-row b { display: block; font-size: 14px; font-weight: 600; line-height: 1.3; }
+  .hn-row .hn-meta { margin: 3px 0 0; }
+  .home-news .news-open:hover b { text-decoration: underline; text-decoration-color: rgba(255,255,255,.4);
+    text-underline-offset: 3px; }
+  button.hn-all { display: flex; width: 100%; justify-content: space-between; padding: 12px 16px; border: 0;
+    border-top: 1px solid rgba(255,255,255,.09); border-radius: 0; background: transparent; box-shadow: none;
+    color: var(--lit-slate); font: 600 13.5px var(--font-cab); letter-spacing: .08em; text-transform: uppercase; }
+  button.hn-all:hover { background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.09); }
+
+  /* The Centers: their links as slate cards on the light page. */
+  .link-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+    margin-bottom: 12px; }
+  .link-grid > .link-card { margin: 0; }
+  #view .link-card { --accent: var(--lit-slate); position: relative; align-items: flex-start; gap: 12px;
+    padding: 13px 14px 14px 25px; border: 1px solid var(--cab-edge); border-radius: 14px;
+    background: linear-gradient(var(--cab-top), var(--cab-bottom));
+    box-shadow: 0 4px 14px rgba(20,28,34,.2); transition: transform .12s ease, box-shadow .12s ease; }
+  #view a.link-card:hover, #view button.link-card:hover {
+    background: linear-gradient(#313B42, #262E34); border-color: #4A5762;
+    box-shadow: 0 8px 22px rgba(20,28,34,.28); transform: translateY(-1px); }
+  #view .link-card:has(> .well.red) { --accent: var(--lit-ember); }
+  #view .link-card:has(> .well.green) { --accent: var(--lit-deep); }
+  #view .link-card:has(> .well.ink) { --accent: var(--lit-steel); }
+  #view .link-card .well { width: 24px; height: 22px; flex: 0 0 24px; border-radius: 0; background: none;
+    color: var(--accent); margin-top: 1px; }
+  #view .link-card .well svg { stroke-width: 2; }
+  #view .link-card b { color: #fff; font: 600 17px/1.25 var(--font-cab); text-transform: uppercase;
+    letter-spacing: .04em; }
+  #view .link-card span span { color: var(--cab-sub); }
+  #view .link-card .go { color: var(--accent); font: 600 13.5px var(--font-cab); letter-spacing: .08em;
+    text-transform: uppercase; margin-top: 6px; }
+  #view .article-card .kick, #view .article-card .kick.green { color: var(--accent);
+    font-family: var(--font-mono); letter-spacing: .1em; }
 </style>
 </head>
 <body>
@@ -815,14 +1023,21 @@
 
   <!-- Home, mirroring the app -->
   <div id="home" class="hidden">
-    <div class="page-head">
-      <div class="eyebrow" id="homeLocation"></div>
-      <h1 id="greeting">Welcome back</h1>
-      <p id="homeDate"></p>
-    </div>
+    <header class="home-banner">
+      <div>
+        <div class="eyebrow" id="greetingEyebrow">Welcome back</div>
+        <h1 id="greeting">Welcome back</h1>
+      </div>
+      <div class="home-where">
+        <span class="pill" id="homeLocation"></span>
+        <small id="homeDate"></small>
+      </div>
+    </header>
     <div class="stat-cards" id="homeStats"></div>
-    <div class="section-title">Centers</div>
-    <div class="tiles" id="tiles"></div>
+    <div class="home-grid" id="homeGrid">
+      <div class="home-groups" id="tiles"></div>
+      <aside class="home-news" id="homeNews" aria-label="Latest news"></aside>
+    </div>
   </div>
 
   <!-- One feature at a time -->
@@ -1884,29 +2099,43 @@ const icon = (name, size = 24) =>
 // Same features, same order, same wording as HomeDestination.swift. News is
 // one of the company pages below, as it's a tab rather than a Center in the app.
 
+// `accent` is the colour of its home tile, the app's HomeDestination.tint lit
+// for a dark card. The Event Center isn't a tile in the app, so it has its own.
 const FEATURES = [
-  { id: "training",  title: "Training Center", sub: "Courses & requirements", tint: "red" },
-  { id: "reminders", title: "Reminders", sub: "Daily, weekly & monthly", tint: "green" },
-  { id: "forklift",  title: "Forklift Center",
-    sub: "Course, test & records", tint: "green" },
-  { id: "safety",    title: "Safety Center", sub: "Reports & training", tint: "red" },
-  { id: "rigging",   title: "Crane Center", sub: "Lift plans & approvals",
-    tint: "red" },
-  { id: "support",   title: "Support Center", sub: "IT help & requests", tint: "green" },
-  { id: "inspection", title: "Inspection Center", sub: "Checks & walk-arounds", tint: "green" },
-  { id: "events",    title: "Event Center", sub: "What's coming up", tint: "red" }
+  { id: "training",  title: "Training Center", sub: "Courses & requirements", accent: "deep" },
+  { id: "reminders", title: "Reminders", sub: "Daily, weekly & monthly", accent: "red" },
+  { id: "forklift",  title: "Forklift Center", sub: "Course, test & records", accent: "amber" },
+  { id: "safety",    title: "Safety Center", sub: "Reports & training", accent: "ember" },
+  { id: "rigging",   title: "Crane Center", sub: "Lift plans & approvals", accent: "steel" },
+  { id: "support",   title: "Support Center", sub: "IT help & requests", accent: "slate" },
+  { id: "inspection", title: "Inspection Center", sub: "Checks & walk-arounds", accent: "deep" },
+  { id: "events",    title: "Event Center", sub: "What's coming up", accent: "teal" }
 ];
 
+// The home page's groups, as in the app's HomeGroup, with the Event Center in
+// "Your day" beside Reminders.
+const HOME_GROUPS = [
+  { title: "Your day", ids: ["reminders", "events"], rows: true },
+  { title: "On the job", ids: ["rigging", "inspection", "forklift", "safety"] },
+  { title: "Learning & help", ids: ["training", "support"] }
+];
+
+// A lit colour by name, for a style attribute: `--accent:var(--lit-amber)`.
+const lit = (name) => `--accent:var(--lit-${name || "slate"})`;
+
+// `tint` and `icon` are the card's colour and glyph, the same colours as the
+// app's cards for these (TrainingHubModel.swift and the Centers' views).
 const TRAINING_LINKS = [
   // Edited on the admin page's Course Catalog tab.
-  { title: "Course Catalog", sub: "Agri-Service courses", view: "catalog" },
+  { title: "Course Catalog", sub: "Agri-Service courses", view: "catalog", tint: "ember", icon: "doc" },
   // Competencies and sign-offs; see skillsView.
-  { title: "Skills", sub: "Competencies and sign-offs", view: "skills" },
+  { title: "Skills", sub: "Competencies and sign-offs", view: "skills", tint: "amber", icon: "wrench" },
   // Built from the uploads on the admin page's Open Seat Report tab.
-  { title: "Open Seat Report", sub: "Request registration", view: "openseat" },
+  { title: "Open Seat Report", sub: "Request registration", view: "openseat", tint: "green", icon: "calendar" },
   // AGCO hours, 609 and history: yours, your location's, or everyone's. See trainingStatusView.
-  { title: "Training Status", sub: "AGCO hours, 609 and history", view: "trainingstatus" },
-  { title: "UKG ProLearning", sub: "Your assigned training",
+  { title: "Training Status", sub: "AGCO hours, 609 and history", view: "trainingstatus", tint: "slate",
+    icon: "training" },
+  { title: "UKG ProLearning", sub: "Your assigned training", tint: "green", icon: "training",
     url: "https://learning.ultipro.com/academy/AGRI-SERVICELLC/learner/training/my-training/overview" },
   // The articles follow, from the admin page's Training Articles tab.
 ];
@@ -1915,18 +2144,18 @@ const TRAINING_LINKS = [
 // The certification course is in UKG ProLearning, from the Training Center.
 const FORKLIFT_LINKS = [
   { title: "Certification Report", sub: "Who is certified and when each card runs out.",
-    view: "certreport" },
+    view: "certreport", tint: "green", icon: "people" },
   { title: "Forklift Driving Test", sub: "Evaluate someone on a truck and record the result.",
-    view: "evaltest" }
+    view: "evaltest", tint: "green", icon: "reminders" }
 ];
 
 const SAFETY_LINKS = [
-  { title: "Safety Report", sub: "Report an incident, near miss, or hazard.",
+  { title: "Safety Report", sub: "Report an incident, near miss, or hazard.", tint: "ember", icon: "megaphone",
     url: "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=82pjZGDa0ES1EhOSwxioxkNHkm4Go2RPtJFaiGf2dyZURVhQOU5XRzRQVUFSQkRBWkdaNzlDNjc0VS4u" },
   // The app signs into GotSafety for you. A browser can't do that across
   // origins, so this is the login page and the shared account gets typed.
   { title: "Safety Training", sub: "GotSafety - sign in with the shared company account.",
-    url: "https://new.gotsafety.com/login" }
+    tint: "amber", icon: "safety", url: "https://new.gotsafety.com/login" }
 ];
 
 // ---------------------------------------------------------------- routing
@@ -1936,24 +2165,68 @@ function showHome() {
   $("view").classList.add("hidden");
   $("home").classList.remove("hidden");
   setMode("app", "home");
+  document.body.dataset.page = "home";
 
   const first = ((profile && profile.full_name) || "").split(" ")[0];
-  $("greeting").textContent = first ? `Welcome back, ${first}` : "Welcome back";
-  $("homeLocation").textContent =
-    (profile && locations[profile.location_id]) || "";
+  $("greeting").textContent = first || "Welcome back";
+  $("greetingEyebrow").classList.toggle("hidden", !first);
+  const shop = (profile && locations[profile.location_id]) || "";
+  $("homeLocation").innerHTML = shop ? `${icon("pin", 14)}${esc(shop)}` : "";
   $("homeDate").textContent = new Date().toLocaleDateString(undefined,
     { weekday: "long", month: "long", day: "numeric", year: "numeric" });
   $("homeStats").innerHTML = homeStats();
+  $("homeStats").style.setProperty("--n", $("homeStats").children.length);
 
-  $("tiles").innerHTML = FEATURES.map(f => {
-    const n = tileCount(f.id);
-    return `<button class="tile" data-view="${f.id}">
-      <span class="well ${f.tint}">${icon(f.id)}</span>
-      <span><b>${esc(f.title)}</b><span>${esc(f.sub)}</span></span>
-      ${n ? `<span class="count">${n}</span>` : ""}
-    </button>`;
-  }).join("");
+  $("tiles").innerHTML = HOME_GROUPS.map(group => `
+    <section>
+      <h2 class="cab-heading">${esc(group.title)}</h2>
+      <div class="cab-grid ${group.rows ? "rows" : group.ids.length === 4 ? "tiles4" : ""}">
+        ${group.ids.map(id => homeTile(FEATURES.find(f => f.id === id), group.rows)).join("")}
+      </div>
+    </section>`).join("");
+
+  const news = homeNews();
+  $("homeNews").innerHTML = news;
+  $("homeNews").classList.toggle("hidden", !news);
+  $("homeGrid").classList.toggle("solo", !news);
   window.scrollTo(0, 0);
+}
+
+// A Center on the home page: a tile, or a full-width row in "Your day".
+function homeTile(f, row) {
+  const n = tileCount(f.id);
+  const badge = n ? `<span class="cab-badge" aria-label="${n} waiting">${n}</span>` : "";
+  return row
+    ? `<button class="cab-row cab-glass cab-stripe" data-view="${f.id}" style="${lit(f.accent)}">
+        <span class="cab-glyph">${icon(f.id, 22)}</span>
+        <span><b>${esc(f.title)}</b><span>${esc(f.sub)}</span></span>
+        ${badge}<span class="cab-chev" aria-hidden="true">&rsaquo;</span>
+      </button>`
+    : `<button class="cab-tile cab-glass cab-stripe" data-view="${f.id}" style="${lit(f.accent)}">
+        <span class="cab-glyph">${icon(f.id, 23)}</span>
+        <b>${esc(f.title)}</b><span>${esc(f.sub)}</span>${badge}
+      </button>`;
+}
+
+// The newest three stories: the first with its picture, two more beneath.
+// Opening one works as it does on News; only News itself marks them read.
+function homeNews() {
+  if (newsError) return "";
+  const top = newsLive().slice(0, 3);
+  if (!top.length) return "";
+  const meta = (p) => `<span class="hn-meta"><span class="src${p.kind === "post" ? " post" : ""}">${
+      esc(newsSource(p))}</span><span>${esc(newsDate(p.published_on))}${newsLink(p) ? " &nearr;" : ""}</span>${
+      newsIsNew(p) ? `<span class="hn-new">New</span>` : ""}</span>`;
+  const [lead, ...rest] = top;
+  return `<h2 class="cab-heading">Latest news</h2>
+    <div class="cab-glass">
+      <div class="hn-lead">${newsOpen(lead, `${newsPicture(lead)}
+        <span class="hn-text" style="display:block">${meta(lead)}<b>${esc(lead.title)}</b>${
+          lead.summary ? `<span class="hn-sum">${esc(lead.summary)}</span>` : ""}</span>`)}</div>
+      ${rest.map(p => `<div class="hn-row">${newsOpen(p, `${newsPicture(p)}
+        <span style="min-width:0"><b>${esc(p.title)}</b>${meta(p)}</span>`)}</div>`).join("")}
+      <button type="button" class="hn-all" data-view="news">All news <span aria-hidden="true">&rarr;</span></button>
+    </div>`;
 }
 
 // The same two badges the app shows on its home screen.
@@ -1975,10 +2248,18 @@ function showView(name) {
   host.classList.remove("hidden");
   setMode("app", ["openseat", "catalog", "article", "skills", "trainingstatus"].includes(name) ? "training"
     : name === "newspost" ? "news" : name === "payroll" ? "hr" : ["certreport", "evaltest", "approvals"].includes(name) ? "forklift" : name);
+  document.body.dataset.page = "view";
   host.innerHTML = `<nav class="crumbs"><button data-home>Home</button><span>/</span>
     ${name === "newspost" ? `<button data-view="news">News</button><span>/</span>` : ""}
     ${["certreport", "evaltest", "approvals"].includes(name) ? `<button data-view="forklift">Forklift Center</button><span>/</span>` : ""}
     <span>${esc(pageTitle(name))}</span></nav>` + VIEWS[name]();
+  // A page that opens with its title gets the red band across the top, like
+  // the app's title bar, with the way back inside it.
+  const head = host.children[1];
+  if (head && head.classList.contains("hero")) {
+    head.prepend(host.children[0]);
+    head.classList.add("top");
+  }
   window.scrollTo(0, 0);
 }
 
@@ -1987,6 +2268,7 @@ function showAdmin() {
   $("view").classList.add("hidden");
   $("admin").classList.remove("hidden");
   setMode("admin");
+  document.body.dataset.page = "admin";
   const activeTab = document.querySelector("#adminNav button.active");
   if (activeTab) $("adminTitle").textContent = activeTab.textContent.trim();
   renderCerts(); renderEvalForm(); renderPlans(); renderPeople(); renderSupport(); renderToolsAdmin();
@@ -2007,10 +2289,12 @@ document.addEventListener("click", (event) => {
 
 // ---------------------------------------------------------------- views
 
+// A page's name in red. Opening a page, showView turns it into the band
+// across the top; anywhere else it's a red card.
 const hero = (title, blurb) => `
-  <div class="page-head">
+  <header class="hero">
     <h1>${esc(title)}</h1>${blurb ? `<p>${esc(blurb)}</p>` : ""}
-  </div>`;
+  </header>`;
 
 const comingSoon = (message) => `
   <div class="card" style="text-align:center;border-style:dashed;padding:34px 24px">
@@ -2018,33 +2302,37 @@ const comingSoon = (message) => `
     <span class="note">${esc(message)}</span>
   </div>`;
 
+// A Center's link, as a slate card in the link's colour (FeatureCard in the app).
 const linkCard = (link) => link.view ? `
   <button type="button" class="link-card" data-view="${esc(link.view)}"
-          style="width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer">
-    <span class="well green">${icon("doc")}</span>
+          style="width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer;${lit(link.tint)}">
+    <span class="well">${icon(link.icon || "doc")}</span>
     <span><b>${esc(link.title)}</b>
       ${link.sub ? `<span>${esc(link.sub)}</span>` : ""}
       <span class="go">Open &rarr;</span></span>
   </button>` : `
-  <a class="link-card" href="${esc(link.url)}" target="_blank" rel="noopener">
-    <span class="well green">${icon("doc")}</span>
+  <a class="link-card" href="${esc(link.url)}" target="_blank" rel="noopener" style="${lit(link.tint)}">
+    <span class="well">${icon(link.icon || "doc")}</span>
     <span><b>${esc(link.title)}</b>
       ${link.sub ? `<span>${esc(link.sub)}</span>` : ""}
       <span class="go">Open &nearr;</span></span>
   </a>`;
 
+// Cards side by side where there's room.
+const linkGrid = (html) => html ? `<div class="link-grid">${html}</div>` : "";
+
 const VIEWS = {
   training: () =>
     hero("Training Center",
          "Course catalog, schedules, certifications, and the AGCO requirements behind them.")
-    + TRAINING_LINKS.map(linkCard).join("") + articleCards(),
+    + linkGrid(TRAINING_LINKS.map(linkCard).join("")) + articleCards(),
 
   article: () => articleView(),
 
   safety: () => {
     setTimeout(renderSdsView);
     return hero("Safety Center", "Report what you see, keep your safety training current, and find the safety data sheet for any product.")
-      + SAFETY_LINKS.map(linkCard).join("") + sdsSectionHtml();
+      + linkGrid(SAFETY_LINKS.map(linkCard).join("")) + sdsSectionHtml();
   },
 
   forklift: () =>
@@ -2052,9 +2340,10 @@ const VIEWS = {
          "Your driving evaluation and your operator card. The certification course itself is in the Training Center, under UKG ProLearning.",
          true)
     + certificationCard()
-    + (isTrainingManager() ? linkCard({ title: `Driving Tests to Approve${pendingTests().length ? ` (${pendingTests().length})` : ""}`,
-        sub: pendingTests().length ? "A test only counts once you approve it." : "Nothing waiting.", view: "approvals" }) : "")
-    + FORKLIFT_LINKS.map(linkCard).join(""),
+    + linkGrid((isTrainingManager() ? linkCard({ title: `Driving Tests to Approve${pendingTests().length ? ` (${pendingTests().length})` : ""}`,
+        sub: pendingTests().length ? "A test only counts once you approve it." : "Nothing waiting.", view: "approvals",
+        tint: "green", icon: "safety" }) : "")
+      + FORKLIFT_LINKS.map(linkCard).join("")),
 
   approvals: () => approvalsView(),
 
@@ -6088,8 +6377,11 @@ function homeStats() {
       value: open ? `${open} open` : "None open", sub: "Across your groups" });
   }
 
+  // Each in its Center's colour; payday in the app's Payroll Calendar orange.
+  const accent = (view) => view === "payroll" ? "ember"
+    : (FEATURES.find(f => f.id === view) || {}).accent;
   return cards.map(c => `
-    <button class="stat-card" data-view="${esc(c.view)}">
+    <button class="stat-card cab-glass cab-stripe" data-view="${esc(c.view)}" style="${lit(accent(c.view))}">
       <small>${icon(c.icon, 14)} ${esc(c.label)}</small>
       <strong>${esc(c.value)}</strong>
       <span>${esc(c.sub)}</span>
@@ -6126,8 +6418,8 @@ function hrView() {
   const handbook = companyDocs.find(d => d.id === "handbook");
   const updated = handbook && handbook.updated_at
     ? `Updated ${new Date(handbook.updated_at).toLocaleDateString()}` : "";
-  return hero("HR", "Your pay calendar and the employee handbook.")
-    + `<button type="button" class="link-card" data-view="payroll"
+  return hero("HR", "Your pay calendar and the employee handbook.") + linkGrid(
+      `<button type="button" class="link-card" data-view="payroll"
         style="width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer">
         <span class="well red">${icon("calendar")}</span>
         <span><b>Payroll Calendar</b><span>Days until payday, every pay period, and the paid holidays.</span>
@@ -6141,7 +6433,7 @@ function hrView() {
       : `<div class="card"><b>Employee Handbook</b><p class="note" style="margin-bottom:0">${
           companyDocsError && /does not exist|schema cache/i.test(companyDocsError)
             ? "Not switched on yet."
-            : "Not uploaded yet. An owner adds it on the admin page."}</p></div>`);
+            : "Not uploaded yet. An owner adds it on the admin page."}</p></div>`));
 }
 
 function payrollView() {
@@ -8496,7 +8788,7 @@ main[contenteditable]:empty::before{content:"Start typing the article…";color:
 function articleCards() {
   const live = trainingArticles.filter(a => a.is_active);
   if (!live.length) return "";
-  return `<div class="section-title" style="margin-top:22px">Read up</div>` + live.map(a => `
+  return `<div class="section-title" style="margin-top:22px">Read up</div>` + linkGrid(live.map(a => `
     <button type="button" class="link-card article-card" data-view="article" data-article="${esc(a.id)}"
             style="width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer">
       <span class="well ${a.accent === "green" ? "green" : "red"}">${icon("doc")}</span>
@@ -8504,7 +8796,7 @@ function articleCards() {
         <b>${esc(a.title)}</b>
         ${a.summary ? `<span>${esc(a.summary)}</span>` : ""}
         <span class="go">Read the article &rarr;</span></span>
-    </button>`).join("");
+    </button>`).join(""));
 }
 
 function articleView() {
