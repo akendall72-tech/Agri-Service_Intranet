@@ -970,6 +970,39 @@
   .cr-table td:last-child, .cr-table th:last-child { text-align: right; white-space: nowrap; }
   .cr-table td.note { font-size: 13px; }
   .cr-done { color: #217030; font-variant-numeric: tabular-nums; }
+  /* Filling in an inspection: one white card per question on the rise page. */
+  .insp-start { margin: 0 2px 12px; }
+  p.insp-sub { font: 600 11.5px var(--font-mono); letter-spacing: .12em; text-transform: uppercase;
+    color: var(--cab-heading); margin: 14px 4px 8px; }
+  .insp-notice, .insp-form { max-width: 760px; }
+  .insp-form .card { margin-bottom: 12px; padding: 16px 18px; }
+  .insp-stage { border-left: 4px solid #137026; }
+  .insp-stage b { color: #137026; }
+  .insp-stage p { margin: 4px 0 0; font-size: 14px; }
+  .insp-carried-row { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; }
+  .insp-carried-row span { color: var(--muted); }
+  label.insp-label { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 6px; }
+  .insp-label .req { color: var(--red); margin-left: 3px; }
+  p.insp-help { margin: -2px 0 8px; font-size: 13px; }
+  .insp-earlier { margin: 0 0 8px; font-size: 13px; font-weight: 600; color: #137026; }
+  .insp-field input, .insp-field textarea { margin-bottom: 0; }
+  .insp-field .chips { margin-bottom: 0; }
+  .insp-field.missing { border-color: var(--red); box-shadow: 0 0 0 1px var(--red); }
+  .insp-thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+  .insp-thumb { position: relative; width: 88px; height: 88px; }
+  .insp-thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
+  .insp-thumb button { position: absolute; top: 3px; right: 3px; width: 22px; height: 22px; padding: 0;
+    border-radius: 50%; background: rgba(0,0,0,.6); border: 0; color: #fff; font-size: 15px; line-height: 1; }
+  label.insp-add-photo { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; margin: 0;
+    padding: 7px 13px; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); background: #fff;
+    font-size: 13.5px; font-weight: 600; color: var(--ink-2); text-transform: none; letter-spacing: 0; }
+  label.insp-add-photo:hover { border-color: var(--muted); color: var(--ink); }
+  p.error#inspMissing:empty { display: none; }
+  .insp-actions { margin-top: 4px; }
+  button.linkish { background: none; border: 0; box-shadow: none; padding: 0; color: var(--red); font: inherit; }
+  button.linkish:hover { background: none; text-decoration: underline; }
+
   /* The evaluator's responsibilities, before the driving test: a document
      with a red rule across its head, the acceptance box at its foot. */
   .terms-card { max-width: 760px; border-top: 5px solid var(--red); padding: 26px 28px 24px; }
@@ -2400,12 +2433,13 @@ function showView(name) {
   const host = $("view");
   host.classList.remove("hidden");
   setMode("app", ["openseat", "myclasses", "catalog", "article", "skills", "trainingstatus", "coursereport"].includes(name) ? "training"
-    : name === "newspost" ? "news" : name === "payroll" ? "hr" : ["certreport", "evaltest", "approvals"].includes(name) ? "forklift" : name);
+    : name === "newspost" ? "news" : name === "payroll" ? "hr" : ["certreport", "evaltest", "approvals"].includes(name) ? "forklift" : name === "inspform" ? "inspection" : name);
   document.body.dataset.page = "view";
   if (name !== "evaltest") { evalAgreed = null; evalNotice = ""; }
   host.innerHTML = `<nav class="crumbs"><button data-home>Home</button><span>/</span>
     ${name === "newspost" ? `<button data-view="news">News</button><span>/</span>` : ""}
     ${["certreport", "evaltest", "approvals"].includes(name) ? `<button data-view="forklift">Forklift Center</button><span>/</span>` : ""}
+    ${name === "inspform" ? `<button data-view="inspection">Inspection Center</button><span>/</span>` : ""}
     ${["openseat", "myclasses", "catalog", "article", "skills", "trainingstatus", "coursereport"].includes(name) ? `<button data-view="training">Training Center</button><span>/</span>` : ""}
     <span>${esc(pageTitle(name))}</span></nav>` + VIEWS[name]();
   // A page that opens with its title gets the red band across the top, like
@@ -2526,7 +2560,8 @@ const VIEWS = {
   reminders: () => remindersView(),
   rigging: () => riggingView(),
   certreport: () => certReportView(),
-  evaltest: () => evalTestView()
+  evaltest: () => evalTestView(),
+  inspform: () => inspFormView()
 };
 
 // ---- approving driving tests (the Training Manager, migration 0068) --------
@@ -6071,7 +6106,7 @@ function inspRecordHtml(record, editable) {
           ${done ? `<p class="note" style="margin-top:0">${esc([inspWhen(record.post_submitted_at), record.post_by_name,
                    used !== null ? `${inspHoursPhrase(used)} used` : ""].filter(Boolean).join(" · "))}</p>
                    ${inspPartHtml(record, "after", editable)}`
-                 : `<p class="note">Not done yet. ${esc(record.created_by_name || "Whoever started it")} finishes it in the app,
+                 : `<p class="note">Not done yet. ${esc(record.created_by_name || "Whoever started it")} finishes it here or in the app,
                      under "After class to do". Only the person who started an inspection can finish it.</p>`}` : ""}
         ${editable ? `<div class="row">
           <button data-act="insp-save">Save changes</button>
@@ -6416,16 +6451,343 @@ function inspectionView() {
   const forms = inspForms.filter(f => f.is_active);
   if (!forms.length) return head + comingSoon("No inspections have been set up yet.");
 
-  return head + forms.map(form => {
+  const notice = inspNotice
+    ? `<div class="card insp-notice"><p class="ok" style="margin:0">${esc(inspNotice)}</p></div>` : "";
+  inspNotice = "";
+  return head + notice + forms.map(form => {
     const records = inspections.filter(r => r.form_id === form.id);
+    // Only whoever started an inspection can finish it (0065), so only theirs.
+    const toDo = form.has_after_class
+      ? records.filter(r => r.created_by === me.id && !r.post_submitted_at) : [];
+    const draftHere = inspDraft && inspDraft.formId === form.id;
     return `
       <div class="group-title">${esc(form.title)}</div>
       ${form.description ? `<p class="note" style="margin:0 4px 10px">${esc(form.description)}</p>` : ""}
-      <p class="note" style="margin:0 4px 12px">Inspections are filled in on the app${
-        form.has_after_class ? ", before class and again after it" : ""}.</p>
+      <div class="row insp-start">
+        <button type="button" data-insp-start="${esc(form.id)}">${form.has_after_class
+          ? "Start a before-class inspection" : "Start an inspection"}</button>
+        ${draftHere ? `<button type="button" class="ghost" data-view="inspform">Carry on with the one you started</button>` : ""}
+      </div>
+      ${toDo.length ? `<p class="insp-sub">After class to do</p>
+        <div class="link-grid">${toDo.map(r => `
+          <button type="button" class="link-card" data-insp-after="${esc(r.id)}" style="width:100%;text-align:left;${lit("deep")}">
+            <span class="well">${icon("inspection")}</span>
+            <span><b>${esc(inspTitle(r))}</b>
+              <span>${esc(["Before class", inspWhen(r.submitted_at)].filter(Boolean).join(" · "))}</span>
+              <span class="go">Finish after class &rarr;</span></span>
+          </button>`).join("")}</div>` : ""}
+      <p class="insp-sub">Recent inspections</p>
       ${records.map(r => inspRecordHtml(r, false)).join("") || `<p class="note" style="margin-left:4px">None yet.</p>`}`;
   }).join("");
 }
+
+// ---- filling one in --------------------------------------------------------------
+//
+// The same inspection as the app's InspectionFormView, from the same form
+// definition, saved the same way: photos to inspection-photos under
+// <you>/<inspection>/<photo>.jpg, then the row (before class, or the only
+// part), or complete_inspection() for the after-class part, which checks it's
+// yours to finish (0065). An inspection started here can be finished in the
+// app, and the other way round.
+//
+// What's filled in is kept in inspDraft until it's sent or cancelled, so going
+// to another page and coming back finds it as it was.
+
+let inspDraft = null;
+let inspNotice = "";
+
+const inspActiveFields = (form) => (form.inspection_fields || []).filter(f => f.is_active);
+// Asked once, before class, and shown after class as it was: as InspectionField.carriesOver.
+const inspCarries = (f) => f.after_class === "carry" && f.field_type !== "photos";
+
+function inspNumber(value) {
+  const text = String(value ?? "").replace(/,/g, "").trim();
+  return text !== "" && isFinite(Number(text)) ? Number(text) : null;
+}
+
+function inspAnswered(field, draft) {
+  const v = draft.values[inspKey(field.id)];
+  switch (field.field_type) {
+    case "number": return inspNumber(v) !== null;
+    case "date": return !!v;
+    case "yes_no": return typeof v === "boolean";
+    case "photos": return (draft.photos[inspKey(field.id)] || []).length > 0;
+    default: return !!String(v ?? "").trim();
+  }
+}
+
+function inspStartDraft(form, stage, recordId) {
+  const values = {};
+  // A date starts as today, as in the app.
+  inspActiveFields(form).filter(f => f.field_type === "date").forEach(f => { values[inspKey(f.id)] = todayISO(); });
+  inspDraft = { formId: form.id, stage, recordId: recordId || null, values, photos: {}, showMissing: false };
+}
+
+function inspDiscardDraft() {
+  if (!inspDraft) return;
+  Object.values(inspDraft.photos).flat().forEach(p => URL.revokeObjectURL(p.url));
+  inspDraft = null;
+}
+
+function inspDraftParts() {
+  const form = inspForms.find(f => f.id === inspDraft.formId);
+  const record = inspDraft.recordId ? inspections.find(r => r.id === inspDraft.recordId) : null;
+  const fields = form ? inspActiveFields(form) : [];
+  const after = inspDraft.stage === "after";
+  return { form, record, fields,
+           asked: after ? fields.filter(f => !inspCarries(f)) : fields,
+           carried: after ? fields.filter(inspCarries) : [] };
+}
+
+function inspFieldHtml(field, record) {
+  const key = inspKey(field.id);
+  const v = inspDraft.values[key];
+  const flagged = inspDraft.showMissing && field.is_required && !inspAnswered(field, inspDraft);
+  const earlier = inspDraft.stage === "after" && record && field.field_type !== "photos"
+    ? inspDisplay((record.answers || {})[key], field.field_type) : "";
+  const chip = (label, on, attrs) =>
+    `<button type="button" class="chip${on ? " on" : ""}" ${attrs}>${on ? "✓ " : ""}${esc(label)}</button>`;
+
+  let input;
+  switch (field.field_type) {
+    case "long_text":
+      input = `<textarea rows="3" data-insp-field="${key}" id="insp-in-${key}">${esc(v || "")}</textarea>`; break;
+    case "number":
+      input = `<input type="text" inputmode="decimal" placeholder="0" data-insp-field="${key}" id="insp-in-${key}" value="${esc(v ?? "")}">`; break;
+    case "date":
+      input = `<input type="date" data-insp-field="${key}" id="insp-in-${key}" value="${esc(v || "")}">`; break;
+    case "choice":
+      input = `<div class="chips">${(field.options || []).map(o =>
+        chip(o, v === o, `data-insp-choice="${key}" data-value="${esc(o)}"`)).join("")}</div>`; break;
+    case "yes_no":
+      input = `<div class="chips">${chip("Yes", v === true, `data-insp-yesno="${key}" data-value="true"`)}${
+        chip("No", v === false, `data-insp-yesno="${key}" data-value="false"`)}</div>`; break;
+    case "photos": {
+      const list = inspDraft.photos[key] || [];
+      input = `${list.length ? `<div class="insp-thumbs">${list.map(p => `<span class="insp-thumb">
+          <img src="${esc(p.url)}" alt="">
+          <button type="button" data-insp-unphoto="${key}" data-photo-id="${esc(p.id)}" aria-label="Remove photo">×</button>
+        </span>`).join("")}</div>` : ""}
+        <label class="pdf insp-add-photo" for="insp-in-${key}">${icon("inspection", 15)} ${list.length ? "Add more photos" : "Add photos"}</label>
+        <input type="file" id="insp-in-${key}" accept="image/*" multiple data-insp-photos="${key}" class="hidden">`;
+      break;
+    }
+    default:
+      // Autocorrect turns "Fendt" into "Fender".
+      input = `<input type="text" autocomplete="off" autocorrect="off" spellcheck="false" data-insp-field="${key}" id="insp-in-${key}" value="${esc(v || "")}">`;
+  }
+
+  return `<div class="card insp-field${flagged ? " missing" : ""}" id="insp-card-${key}">
+    <label class="insp-label" for="insp-in-${key}">${esc(field.label)}${field.is_required ? `<span class="req">*</span>` : ""}</label>
+    ${field.help_text ? `<p class="note insp-help">${esc(field.help_text)}</p>` : ""}
+    ${earlier ? `<p class="insp-earlier">Before class: ${esc(earlier)}</p>` : ""}
+    ${input}
+  </div>`;
+}
+
+function inspFormView() {
+  if (!inspDraft) {
+    return hero("Inspection") + `<div class="card"><p class="note" style="margin:0">Nothing's being filled in.
+      Start one from the <button type="button" class="linkish" data-view="inspection">Inspection Center</button>.</p></div>`;
+  }
+  const { form, record, fields, asked, carried } = inspDraftParts();
+  if (!form || (inspDraft.stage === "after" && !record)) {
+    inspDiscardDraft();
+    return hero("Inspection") + `<div class="card"><p class="note" style="margin:0">That inspection isn't available any more.</p></div>`;
+  }
+  const twoPart = form.has_after_class;
+  const before = inspDraft.stage === "before";
+  const missing = inspDraft.showMissing ? asked.filter(f => f.is_required && !inspAnswered(f, inspDraft)) : [];
+
+  return hero(form.title, twoPart ? (before ? "Before class" : "After class") : "New inspection")
+    + `<div class="insp-form">
+      ${twoPart ? `<div class="card insp-stage">
+          <b>${before ? "Part 1 of 2 · Before class" : "Part 2 of 2 · After class"}</b>
+          <p>${before
+            ? "Save this before the class starts. The after-class part will be waiting under “After class to do”, here or in the app."
+            : `${esc(inspTitle(record))}: answer the same questions now the class is over.`}</p></div>`
+        : form.description ? `<p class="note">${esc(form.description)}</p>` : ""}
+      ${carried.length ? `<div class="card insp-carried">${carried.map(f => `<div class="insp-carried-row">
+          <span>${esc(f.label)}</span><b>${esc(inspDisplay((record.answers || {})[inspKey(f.id)], f.field_type) || "—")}</b></div>`).join("")}
+          <p class="note" style="margin:6px 0 0">Carried over from before class.</p></div>` : ""}
+      ${asked.map(f => inspFieldHtml(f, record)).join("")}
+      <p class="error" id="inspMissing">${missing.length ? `Still needed: ${esc(missing.map(f => f.label).join(", "))}.` : ""}</p>
+      <div class="row insp-actions">
+        <button type="button" data-insp-submit>${!twoPart ? "Submit inspection"
+          : before ? "Save before-class inspection" : "Finish after-class inspection"}</button>
+        <button type="button" class="ghost" data-insp-cancel>Cancel</button>
+        <span class="msg" id="inspFormMsg"></span>
+      </div>
+    </div>`;
+}
+
+// One question's card drawn again, after a pick or a photo, without redrawing
+// the rest of the page and losing what's being typed.
+function inspRedrawField(key) {
+  const { record, asked } = inspDraftParts();
+  const field = asked.find(f => inspKey(f.id) === key);
+  const card = $(`insp-card-${key}`);
+  if (field && card) card.outerHTML = inspFieldHtml(field, record);
+}
+
+// A phone photo is several megabytes; 1600 pixels on the long side, as the
+// app sends, is plenty to see a scratch.
+async function inspShrink(file) {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  return await new Promise((resolve, reject) =>
+    canvas.toBlob(b => b ? resolve(b) : reject(new Error("unreadable")), "image/jpeg", 0.8));
+}
+
+async function inspSubmit(button) {
+  const { form, record, fields, asked, carried } = inspDraftParts();
+  inspDraft.showMissing = true;
+  const missing = asked.filter(f => f.is_required && !inspAnswered(f, inspDraft));
+  if (missing.length) {
+    missing.forEach(f => inspRedrawField(inspKey(f.id)));
+    $("inspMissing").textContent = `Still needed: ${missing.map(f => f.label).join(", ")}.`;
+    const first = $(`insp-card-${inspKey(missing[0].id)}`);
+    if (first) first.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+  $("inspMissing").textContent = "";
+
+  const msg = $("inspFormMsg");
+  button.disabled = true;
+  msg.className = "msg";
+  msg.textContent = "Sending…";
+
+  const before = inspDraft.stage === "before";
+  const id = inspDraft.recordId || crypto.randomUUID();
+  const folder = `${me.id}/${id}`;
+  const answers = {};
+  // Carried answers go into the after-class part too, so it reads complete on its own.
+  carried.forEach(f => {
+    const k = inspKey(f.id);
+    if (record && record.answers && record.answers[k] !== undefined) answers[k] = record.answers[k];
+  });
+
+  try {
+    for (const f of asked) {
+      const k = inspKey(f.id);
+      const v = inspDraft.values[k];
+      if (["text", "long_text", "choice"].includes(f.field_type)) {
+        if (String(v ?? "").trim()) answers[k] = String(v).trim();
+      } else if (f.field_type === "number") {
+        if (inspNumber(v) !== null) answers[k] = inspNumber(v);
+      } else if (f.field_type === "date") {
+        if (v) answers[k] = v;
+      } else if (f.field_type === "yes_no") {
+        if (typeof v === "boolean") answers[k] = v;
+      } else if (f.field_type === "photos") {
+        const paths = [];
+        for (const photo of inspDraft.photos[k] || []) {
+          const path = `${folder}/${photo.id}.jpg`;
+          const { error } = await db.storage.from("inspection-photos")
+            .upload(path, photo.blob, { contentType: "image/jpeg", upsert: true });
+          if (error) throw new Error(`A photo didn't upload: ${error.message}`);
+          paths.push(path);
+        }
+        if (paths.length) answers[k] = paths;
+      }
+    }
+
+    const snapshot = fields.map(f => ({ id: f.id, label: f.label, type: f.field_type }));
+    const { error } = before
+      ? await db.from("inspections").insert({ id, form_id: form.id, answers, fields_snapshot: snapshot })
+      : await db.rpc("complete_inspection", { target: id, after_answers: answers, after_snapshot: snapshot });
+    if (error) throw new Error(error.message);
+  } catch (e) {
+    button.disabled = false;
+    msg.className = "msg error";
+    msg.textContent = `It wasn't saved. ${e.message}`;
+    return;
+  }
+
+  inspDiscardDraft();
+  await loadInspections();
+  inspNotice = !form.has_after_class ? "Inspection submitted."
+    : before ? "Before-class inspection saved. After class, finish it under “After class to do”, here or in the app."
+    : "After-class inspection saved. The inspection is complete.";
+  showView("inspection");
+}
+
+document.addEventListener("click", (event) => {
+  const start = event.target.closest("[data-insp-start]");
+  if (start) {
+    const form = inspForms.find(f => f.id === start.dataset.inspStart);
+    if (!form) return;
+    if (inspDraft && !confirm("Discard the inspection you started and begin a new one?")) return;
+    inspDiscardDraft();
+    inspStartDraft(form, "before");
+    return showView("inspform");
+  }
+  const after = event.target.closest("[data-insp-after]");
+  if (after) {
+    const record = inspections.find(r => r.id === after.dataset.inspAfter);
+    const form = record && inspForms.find(f => f.id === record.form_id);
+    if (!form) return;
+    const same = inspDraft && inspDraft.recordId === record.id;
+    if (!same && inspDraft && !confirm("Discard the inspection you started and finish this one instead?")) return;
+    if (!same) { inspDiscardDraft(); inspStartDraft(form, "after", record.id); }
+    return showView("inspform");
+  }
+  if (!inspDraft) return;
+  const choice = event.target.closest("[data-insp-choice]");
+  if (choice) {
+    const key = choice.dataset.inspChoice;
+    inspDraft.values[key] = inspDraft.values[key] === choice.dataset.value ? undefined : choice.dataset.value;
+    return inspRedrawField(key);
+  }
+  const yesNo = event.target.closest("[data-insp-yesno]");
+  if (yesNo) {
+    const key = yesNo.dataset.inspYesno, value = yesNo.dataset.value === "true";
+    inspDraft.values[key] = inspDraft.values[key] === value ? undefined : value;
+    return inspRedrawField(key);
+  }
+  const unphoto = event.target.closest("[data-insp-unphoto]");
+  if (unphoto) {
+    const key = unphoto.dataset.inspUnphoto;
+    const list = inspDraft.photos[key] || [];
+    const gone = list.find(p => p.id === unphoto.dataset.photoId);
+    if (gone) URL.revokeObjectURL(gone.url);
+    inspDraft.photos[key] = list.filter(p => p !== gone);
+    return inspRedrawField(key);
+  }
+  const submit = event.target.closest("[data-insp-submit]");
+  if (submit) return inspSubmit(submit);
+  if (event.target.closest("[data-insp-cancel]")) {
+    if (!confirm("Discard this inspection? Nothing has been saved.")) return;
+    inspDiscardDraft();
+    return showView("inspection");
+  }
+});
+
+// Typing is kept as it happens; nothing is redrawn, so the cursor stays put.
+document.addEventListener("input", (event) => {
+  const key = event.target.dataset && event.target.dataset.inspField;
+  if (key && inspDraft) inspDraft.values[key] = event.target.value;
+});
+
+document.addEventListener("change", async (event) => {
+  const key = event.target.dataset && event.target.dataset.inspPhotos;
+  if (!key || !inspDraft) return;
+  const files = [...event.target.files];
+  event.target.value = "";
+  const unread = [];
+  for (const file of files) {
+    try {
+      const blob = await inspShrink(file);
+      (inspDraft.photos[key] ||= []).push({ id: crypto.randomUUID(), blob, url: URL.createObjectURL(blob) });
+    } catch (e) { unread.push(file.name); }
+  }
+  inspRedrawField(key);
+  if (unread.length) alert(`These couldn't be read as photos here: ${unread.join(", ")}. A JPEG or PNG works in any browser.`);
+});
 
 // ---------------------------------------------------------------- shell
 //
@@ -6455,6 +6817,7 @@ const pageTitle = (id) => (FEATURES.find(f => f.id === id) || COMPANY_PAGES.find
        hr: { title: "HR" }, payroll: { title: "Payroll Calendar" },
        certreport: { title: "Certification Report" },
        evaltest: { title: "Forklift Driving Test" },
+       inspform: { title: inspDraft ? (inspDraft.stage === "after" ? "After Class" : "New Inspection") : "Inspection" },
        approvals: { title: "Driving Tests to Approve" },
        // What the app's title bar says: the kicker, "AGCO Training Pathway · 2026".
        article: { title: (a => a && (a.kicker || a.title))(trainingArticles.find(a => a.id === openArticleId)) || "Article" } }[id]
