@@ -970,6 +970,35 @@
   .cr-table td:last-child, .cr-table th:last-child { text-align: right; white-space: nowrap; }
   .cr-table td.note { font-size: 13px; }
   .cr-done { color: #217030; font-variant-numeric: tabular-nums; }
+  /* The evaluator's responsibilities, before the driving test: a document
+     with a red rule across its head, the acceptance box at its foot. */
+  .terms-card { max-width: 760px; border-top: 5px solid var(--red); padding: 26px 28px 24px; }
+  .terms-notice { max-width: 760px; }
+  .terms-eyebrow { font: 600 12px var(--font-mono); letter-spacing: .12em; text-transform: uppercase;
+    color: var(--red); }
+  .card h2.terms-title { font: 700 30px/1.1 var(--font-cab); letter-spacing: .01em; margin: 6px 0 8px;
+    text-transform: none; }
+  .terms-cite { display: flex; align-items: center; gap: 6px; color: var(--muted);
+    font: 500 12.5px var(--font-mono); }
+  .terms-cite svg { color: var(--muted); }
+  .terms-intro { font-size: 15px; margin: 14px 0 6px; padding-bottom: 16px; border-bottom: 1px solid var(--line);
+    max-width: 68ch; }
+  .terms-list { list-style: none; counter-reset: clause; margin: 16px 0 0; padding: 0; display: grid; gap: 16px; }
+  .terms-list li { counter-increment: clause; position: relative; padding-left: 40px; }
+  .terms-list li::before { content: counter(clause); position: absolute; left: 0; top: 0; width: 26px; height: 26px;
+    border-radius: 50%; border: 1.2px solid rgba(204,0,51,.5); color: var(--red); font-weight: 700;
+    font-size: 13px; display: grid; place-items: center; }
+  .terms-list b { display: block; font: 600 16.5px var(--font-cab); letter-spacing: .01em; }
+  .terms-list p { margin: 3px 0 4px; font-size: 14.5px; color: var(--ink-2); max-width: 68ch; }
+  .terms-list small { font: 500 12px var(--font-mono); color: var(--muted); }
+  label.terms-accept { display: flex; gap: 12px; align-items: flex-start; margin: 22px 0 16px; padding: 14px 16px;
+    border: 1px solid var(--line-strong); border-radius: 12px; background: var(--paper); cursor: pointer;
+    font-size: 14.5px; font-weight: 500; color: var(--ink); }
+  label.terms-accept.on { border-color: rgba(30,138,60,.6); background: var(--green-soft); }
+  label.terms-accept input { width: 20px; height: 20px; margin: 1px 0 0; flex: 0 0 20px; accent-color: var(--green); }
+  button.terms-agree { width: 100%; height: 48px; font: 700 17px var(--font-cab); letter-spacing: .02em; }
+  @media (max-width: 600px) { .terms-card { padding: 20px 18px; } .card h2.terms-title { font-size: 25px; } }
+
   /* My Classes: the classes you're registered for, as slate cards with a
      torn-off calendar page for the first day. */
   .mc-list { display: flex; flex-direction: column; gap: 12px; max-width: 760px; }
@@ -2289,6 +2318,7 @@ function showHome() {
   $("home").classList.remove("hidden");
   setMode("app", "home");
   document.body.dataset.page = "home";
+  evalAgreed = null; evalNotice = "";
 
   const first = ((profile && profile.full_name) || "").split(" ")[0];
   $("greeting").textContent = first || "Welcome back";
@@ -2372,6 +2402,7 @@ function showView(name) {
   setMode("app", ["openseat", "myclasses", "catalog", "article", "skills", "trainingstatus", "coursereport"].includes(name) ? "training"
     : name === "newspost" ? "news" : name === "payroll" ? "hr" : ["certreport", "evaltest", "approvals"].includes(name) ? "forklift" : name);
   document.body.dataset.page = "view";
+  if (name !== "evaltest") { evalAgreed = null; evalNotice = ""; }
   host.innerHTML = `<nav class="crumbs"><button data-home>Home</button><span>/</span>
     ${name === "newspost" ? `<button data-view="news">News</button><span>/</span>` : ""}
     ${["certreport", "evaltest", "approvals"].includes(name) ? `<button data-view="forklift">Forklift Center</button><span>/</span>` : ""}
@@ -2393,6 +2424,7 @@ function showAdmin() {
   $("admin").classList.remove("hidden");
   setMode("admin");
   document.body.dataset.page = "admin";
+  evalAgreed = null; evalNotice = "";
   const activeTab = document.querySelector("#adminNav button.active");
   if (activeTab) $("adminTitle").textContent = activeTab.textContent.trim();
   renderCerts(); renderEvalForm(); renderPlans(); renderPeople(); renderSupport(); renderToolsAdmin();
@@ -2563,9 +2595,11 @@ document.addEventListener("click", async (event) => {
 // renderEvalForm() and saveEvaluation() work it wherever it's drawn.
 
 function evalTestView() {
+  const intro = hero("Forklift Driving Test",
+              "Evaluate someone on a truck and record the result. Anyone can carry it out; it's usually the location admin.");
+  if (!evalAgreed) return intro + evalTermsCard();
   setTimeout(renderEvalForm);
-  return hero("Forklift Driving Test",
-              "Evaluate someone on a truck and record the result. Anyone can carry it out; it's usually the location admin.")
+  return intro
     + `<div class="card" id="evalCard">
         <p class="note">Pick the operator, the truck classes they were tested on, and the four
           parts of the test. All four have to be met for a card; anything less is recorded as not
@@ -7809,6 +7843,84 @@ const EVAL_CHECKS = [
 
 const evalState = { classes: new Set(), checks: new Set() };
 
+// The evaluator's responsibilities, accepted before the form opens. The same
+// words as EvaluatorTerms in ForkliftEvaluationFormView.swift: change both
+// together, and give new wording a new version, which each test records
+// (migration 0071).
+const EVALUATOR_TERMS = {
+  version: "2026-09-30",
+  intro: "This evaluation becomes part of Agri-Service, LLC's operator certification record under the "
+    + "Occupational Safety and Health Administration standard for powered industrial trucks. Before "
+    + "recording it, you must read and accept the following responsibilities.",
+  clauses: [
+    ["Qualified evaluator",
+     "Operator evaluations must be conducted by a person who has the knowledge, training, and experience "
+     + "to train powered industrial truck operators and to evaluate their competence. By proceeding, you "
+     + "confirm that you meet this requirement for each type of truck you evaluate.",
+     "29 CFR 1910.178(l)(2)(iii)"],
+    ["Observed in the workplace",
+     "The evaluation must be based on your direct observation of the operator's performance in the "
+     + "workplace, on the type of truck for which authorization is sought. Record only what you personally "
+     + "observe during this evaluation, never results from memory, from another person's account, or from "
+     + "a previous evaluation.",
+     "29 CFR 1910.178(l)(2)(ii)"],
+    ["Truck in safe operating condition",
+     "The truck must be examined before it is placed in service. A truck found in need of repair, "
+     + "defective, or in any way unsafe must be taken out of service until it has been restored to safe "
+     + "operating condition. No evaluation may be conducted on such a truck.",
+     "29 CFR 1910.178(q)(7) and (p)(1)"],
+    ["Safe conduct of the evaluation",
+     "The operator may drive only under your direct supervision, and only where doing so does not "
+     + "endanger the operator or other employees. Keep pedestrians clear of the evaluation area, ensure "
+     + "the operator restraint is used where one is fitted, and stop the evaluation immediately if the "
+     + "operator's performance creates a hazard.",
+     "29 CFR 1910.178(l)(2)(i)"],
+    ["Accurate results",
+     "Mark a part of the evaluation as met only if the operator demonstrated it competently. Authorize "
+     + "only the truck types on which the operator was actually evaluated. No operator may be certified "
+     + "unless every part of the evaluation is met.",
+     "29 CFR 1910.178(l)(1)(i)"],
+    ["Certification record",
+     "Your name and the date will be recorded as the evaluator on this certification, and the result "
+     + "takes effect only when approved by the Training Manager. An evaluation is valid for no more than "
+     + "three years. Re-evaluation is required sooner if the operator is observed operating unsafely, is "
+     + "involved in an accident or near-miss, is assigned a different type of truck, or workplace "
+     + "conditions change.",
+     "29 CFR 1910.178(l)(6), (l)(4)(ii) and (l)(4)(iii)"],
+    ["Integrity of the record",
+     "Recording an evaluation that is false or incomplete endangers the operator and co-workers, and "
+     + "exposes the company to liability. It is a violation of Agri-Service safety policy and may result "
+     + "in disciplinary action.",
+     "Agri-Service safety policy"]
+  ],
+  acknowledgment: "I have read and understand these responsibilities. I am qualified to conduct this "
+    + "evaluation, and I will record only results I personally observe, in accordance with OSHA "
+    + "29 CFR 1910.178(l) and Agri-Service safety policy."
+};
+
+// The version accepted for the test being recorded, or null. Each visit to the
+// page, and each test recorded, asks again, as the app does.
+let evalAgreed = null;
+// What the last test recorded said, shown above the statement for the next.
+let evalNotice = "";
+
+function evalTermsCard() {
+  return `${evalNotice ? `<div class="card terms-notice"><p class="ok" style="margin:0">${esc(evalNotice)}</p></div>` : ""}
+    <article class="card terms-card">
+      <div class="terms-eyebrow">Powered Industrial Truck Operator Evaluation</div>
+      <h2 class="terms-title">Evaluator Responsibilities</h2>
+      <div class="terms-cite">${icon("safety", 14)} OSHA 29 CFR 1910.178(l) · Operator training</div>
+      <p class="terms-intro">${esc(EVALUATOR_TERMS.intro)}</p>
+      <ol class="terms-list">${EVALUATOR_TERMS.clauses.map(([title, text, cite]) => `
+        <li><b>${esc(title)}</b><p>${esc(text)}</p><small>${esc(cite)}</small></li>`).join("")}</ol>
+      <label class="terms-accept" for="evalAccept">
+        <input type="checkbox" id="evalAccept">
+        <span>${esc(EVALUATOR_TERMS.acknowledgment)}</span>
+      </label>
+      <button type="button" class="terms-agree" data-eval-agree disabled>Agree and Begin the Evaluation</button>
+    </article>`;
+}
+
 // Three years, the most OSHA allows between evaluations.
 function evalExpiry(on) {
   const d = new Date(on + "T00:00:00");
@@ -7876,9 +7988,15 @@ async function saveEvaluation(button) {
     passed_driving: passed
   };
   EVAL_CHECKS.forEach(([key]) => { row[key] = evalState.checks.has(key); });
+  row.evaluator_attestation = evalAgreed;
 
   button.disabled = true;
-  const { data: saved, error } = await db.from("forklift_certifications").insert(row).select("id");
+  let { data: saved, error } = await db.from("forklift_certifications").insert(row).select("id");
+  if (error && /evaluator_attestation/.test(error.message)) {
+    // A database without migration 0071 yet: the test still counts.
+    delete row.evaluator_attestation;
+    ({ data: saved, error } = await db.from("forklift_certifications").insert(row).select("id"));
+  }
   button.disabled = false;
   if (error) {
     // Say what the database refused rather than show its wording. Two rules
@@ -7898,9 +8016,12 @@ async function saveEvaluation(button) {
   renderCerts();
   // The Training Manager is told there's a test to approve.
   if (saved && saved[0]) notify("forklift_evaluation", saved[0].id);
-  speak(card, passed
+  // Back to the statement: the next test is accepted afresh.
+  evalNotice = passed
     ? `Sent for approval. ${name}'s card will run until ${usDate(row.expiration_date)} once the Training Manager approves it.`
-    : `Recorded. ${name} hasn't passed, so no card is issued. It goes on record once the Training Manager approves it.`, false);
+    : `Recorded. ${name} hasn't passed, so no card is issued. It goes on record once the Training Manager approves it.`;
+  evalAgreed = null;
+  showView("evaltest");
 }
 
 // Mirrors ForkliftEvaluationPDF.swift, so a result printed from a desk and one
@@ -7986,6 +8107,13 @@ function downloadEvaluationPDF(cert) {
   section("Signed off by");
   pair("Evaluated by", cert.evaluator_name || "Not recorded",
        "On", usDate(cert.evaluation_date));
+  // The evaluator's acceptance of their responsibilities (migration 0071).
+  if (cert.evaluator_attested_at) {
+    y += text(`The evaluator accepted the evaluator responsibilities under OSHA 29 CFR 1910.178(l) `
+      + `(statement of ${cert.evaluator_attestation || "-"}) when recording this test, on `
+      + `${new Date(cert.evaluator_attested_at).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })}.`,
+      MARGIN, y, { size: 9, grey: 90, width: WIDTH }) + 4;
+  }
 
   y += 16;
   y += text("An evaluation is valid for three years, which is the maximum OSHA "
@@ -10805,6 +10933,11 @@ document.addEventListener("click", (event) => {
 
 document.addEventListener("change", (event) => {
   if (event.target.id === "crTechs") { crState.techs = event.target.checked; crRedraw(); }
+  if (event.target.id === "evalAccept") {
+    const agree = document.querySelector("[data-eval-agree]");
+    if (agree) agree.disabled = !event.target.checked;
+    event.target.closest(".terms-accept").classList.toggle("on", event.target.checked);
+  }
 });
 
 // Only the list changes as you type, so the box keeps its place and focus.
@@ -11337,6 +11470,13 @@ document.addEventListener("click", (event) => {
   }
   const save = event.target.closest('button[data-act="eval-save"]');
   if (save) return saveEvaluation(save);
+  if (event.target.closest("[data-eval-agree]")) {
+    if (!$("evalAccept") || !$("evalAccept").checked) return;
+    evalAgreed = EVALUATOR_TERMS.version;
+    evalNotice = "";
+    showView("evaltest");
+    return;
+  }
 
   const pdf = event.target.closest("[data-eval-pdf]");
   if (pdf) {
