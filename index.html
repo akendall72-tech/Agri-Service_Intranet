@@ -598,140 +598,162 @@
     .content { padding: 0; }
   }
 
-  /* ---- Course Catalog: the green, amber and red of the catalog website it
-     replaced. Everything is under .cat so nothing leaks. ---- */
-  .cat { --cg9:#123524; --cg8:#1a4a30; --cg7:#215e3c; --cg6:#2c7a4b; --camber:#d98829; --cred:#a6192e;
-         --cbg:#f6f5f1; --cink:#1c231d; --cink6:#4b564d; --cink4:#7a857b; --cborder:#e2e1da; color:var(--cink); }
-  .cat-header { background:linear-gradient(135deg,var(--cg9),var(--cg7)); color:#fff; border-top:4px solid var(--cred);
-                border-radius:14px; padding:30px 26px 26px; margin-bottom:18px; }
-  .cat-eyebrow { text-transform:uppercase; letter-spacing:.14em; font-size:12px; font-weight:700; color:var(--camber); margin:0 0 8px; }
-  .cat-header h3 { font-size:clamp(24px,3.4vw,32px); margin:0 0 8px; font-weight:800; letter-spacing:-.01em; }
-  .cat-header p:last-child { margin:0; color:#dfe9e1; font-size:15px; max-width:640px; }
-  .cat-controls { position:sticky; top:60px; z-index:5; background:var(--canvas); padding:10px 0 12px;
-                  border-bottom:1px solid var(--cborder); margin-bottom:8px; }
-  .cat-search-row { display:flex; gap:10px; align-items:center; }
-  .cat-search-row input { flex:1; margin:0; padding:11px 16px; border-radius:10px; border-color:var(--cborder); font-size:15px; }
-  .cat-search-row input:focus { border-color:var(--cg6); box-shadow:0 0 0 3px rgba(44,122,75,.15); }
-  .cat-count { font-size:13px; color:var(--cink4); white-space:nowrap; }
-  .cat-filter { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:10px; }
-  .cat-filter > span { font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--cink4); margin-right:4px; }
-  button.cat-chip { border-radius:999px; padding:6px 14px; font-size:13.5px; font-weight:600; background:#fff;
-                    color:var(--cg8); border:1px solid var(--cborder); box-shadow:none; }
-  button.cat-chip:hover { background:#fff; border-color:var(--cg6); color:var(--cg8); }
-  button.cat-chip.on, button.cat-chip.on:hover { background:var(--cg7); border-color:var(--cg7); color:#fff; }
-  .cat-heading { font-size:12px; text-transform:uppercase; letter-spacing:.1em; font-weight:800; color:var(--cg8);
-                 margin:28px 0 12px; padding-bottom:8px; border-bottom:2px solid var(--cg7); }
-  .cat-stack { display:flex; flex-direction:column; gap:8px; }
-  details.cat-course { background:#fff; border:1px solid var(--cborder); border-left:3px solid var(--cg6); border-radius:10px;
-                       box-shadow:0 1px 3px rgba(18,53,36,.08), 0 1px 2px rgba(18,53,36,.06); overflow:hidden; }
-  details.cat-course summary { list-style:none; cursor:pointer; padding:14px 18px; display:flex; align-items:center;
-                               justify-content:space-between; gap:12px; }
-  details.cat-course summary::-webkit-details-marker { display:none; }
-  .cat-summary { display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; min-width:0; }
-  .cat-title { font-size:15.5px; font-weight:700; color:var(--cg9); }
-  .cat-subtitle { font-size:12.5px; color:var(--cink4); font-weight:500; }
-  .cat-chevron { flex-shrink:0; width:18px; height:18px; color:var(--cink4); transition:transform .15s ease; }
-  details[open] .cat-chevron { transform:rotate(180deg); }
-  .cat-body { padding:14px 18px 18px; border-top:1px solid var(--cborder); }
-  .cat-meta { display:flex; flex-wrap:wrap; gap:8px 16px; font-size:12.5px; color:var(--cink4); font-weight:600; margin-bottom:10px; }
-  .cat-desc { font-size:13.5px; color:var(--cink6); margin:0 0 12px; }
-  .cat-label { font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--cink4); font-weight:700; margin:0 0 6px; }
-  .cat-tags { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
-  .cat-tags span { font-size:11.5px; background:#eef4ef; color:var(--cg8); border:1px solid #dbe8dd; padding:3px 9px; border-radius:6px; }
-  .cat-prereqs { margin:0; padding-left:18px; font-size:12.5px; color:var(--cink6); }
-  .cat-empty { text-align:center; padding:50px 20px; color:var(--cink4); }
-  .cat-foot { margin-top:28px; font-size:13px; color:var(--cink4); }
-  .cat-foot a { color:var(--cg7); }
-  @media (max-width:960px) { .cat-controls { top:60px; } }
+  /* ---- Course Catalog, in the Cab look like the rest of the Training
+     Center: slate cards on the light page, in the orange of its tile.
+     Everything is under .cat so nothing leaks. ---- */
+  .cat { --accent: var(--lit-ember); }
+  .cat-controls { position: sticky; top: 64px; z-index: 5; padding: 12px 14px; margin-bottom: 8px;
+    border-radius: 14px; border: 1px solid rgba(255,255,255,.85); box-shadow: 0 6px 18px rgba(20,28,34,.08);
+    background: rgba(255,255,255,.72); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+  .cat-search-row { display: flex; gap: 10px; align-items: center; }
+  .cat-search-row input { flex: 1; margin: 0; padding: 11px 16px; border-radius: 10px; font-size: 15px; }
+  .cat-count { font: 500 12px var(--font-mono); color: var(--cab-heading); white-space: nowrap; }
+  .cat-filter { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+  .cat-filter > span { font: 600 11px var(--font-mono); letter-spacing: .14em; text-transform: uppercase;
+    color: var(--cab-heading); margin-right: 4px; }
+  button.cat-chip { margin: 0; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--cab-rule);
+    background: rgba(255,255,255,.75); color: var(--cab-heading); box-shadow: none;
+    font: 600 14px var(--font-cab); letter-spacing: .04em; text-transform: uppercase; }
+  button.cat-chip:hover { background: #fff; color: var(--ink); border-color: var(--line-strong); }
+  button.cat-chip.on, button.cat-chip.on:hover { background: linear-gradient(var(--cab-top), var(--cab-bottom));
+    border-color: var(--cab-edge); color: #fff; }
+  .cat h2.cat-heading { display: flex; align-items: center; gap: 10px; margin: 26px 2px 12px; color: var(--cab-heading);
+    font: 600 12px var(--font-mono); letter-spacing: .16em; text-transform: uppercase; }
+  .cat h2.cat-heading::after { content: ""; flex: 1; height: 1px; background: var(--cab-rule); }
+  .cat-stack { display: flex; flex-direction: column; gap: 10px; }
+  details.cat-course { position: relative; overflow: hidden; color: #fff; border: 1px solid var(--cab-edge);
+    border-radius: 14px; background: linear-gradient(var(--cab-top), var(--cab-bottom));
+    box-shadow: 0 4px 14px rgba(20,28,34,.2); }
+  details.cat-course::before { content: ""; position: absolute; left: 10px; top: 12px; bottom: 12px; width: 3px;
+    border-radius: 3px; background: var(--accent); box-shadow: 0 0 7px color-mix(in srgb, var(--accent) 65%, transparent); }
+  details.cat-course summary { list-style: none; cursor: pointer; padding: 14px 16px 14px 27px; display: flex;
+    align-items: center; justify-content: space-between; gap: 12px; }
+  details.cat-course summary::-webkit-details-marker { display: none; }
+  details.cat-course summary:hover { background: rgba(255,255,255,.03); }
+  .cat-summary { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .cat-title { font: 600 17px/1.2 var(--font-cab); text-transform: uppercase; letter-spacing: .04em; color: #fff; }
+  .cat-subtitle { font-size: 13px; color: var(--cab-sub); }
+  .cat-chevron { flex-shrink: 0; width: 18px; height: 18px; color: var(--accent); transition: transform .15s ease; }
+  details[open] .cat-chevron { transform: rotate(180deg); }
+  .cat-body { padding: 12px 16px 16px 27px; border-top: 1px solid rgba(255,255,255,.09); }
+  .cat-meta { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 12.5px; font-weight: 600; color: var(--cab-sub);
+    margin-bottom: 10px; }
+  .cat-meta span { display: inline-flex; align-items: center; gap: 5px; }
+  .cat-meta svg { color: var(--accent); }
+  .cat-desc { font-size: 14px; color: var(--cab-sub); margin: 0 0 12px; max-width: 70ch; }
+  .cat-label { font: 600 11px var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent);
+    margin: 0 0 6px; }
+  .cat-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .cat-tags span { font-size: 12px; color: rgba(255,255,255,.9); background: rgba(255,255,255,.07);
+    border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); padding: 3px 9px; border-radius: 6px; }
+  .cat-prereqs { margin: 0; padding-left: 18px; font-size: 13px; color: var(--cab-sub); }
+  .cat-prereqs li::marker { color: var(--accent); }
+  .cat-empty { text-align: center; padding: 50px 20px; color: var(--cab-heading); }
+  .cat-foot { margin-top: 28px; font-size: 13px; color: var(--cab-heading); }
+  .cat-foot a { color: var(--red); }
 
-  /* ---- Training Class Enrollment Report: its own green and gold, as the
-     report has always looked. Everything is under .osr so nothing leaks. ---- */
-  .osr { --g9:#0f2b1f; --g8:#16382a; --g7:#1f4d38; --g6:#2c6b4d; --g5:#3d8a66;
-         --au:#c79a2b; --au4:#dcb84a; --au1:#faf3df; --line2:#e2e6e1; --mute2:#64716a;
-         color:#1f2a24; }
-  .osr-header { background:linear-gradient(135deg,var(--g9) 0%,var(--g7) 55%,var(--g6) 100%);
-    color:#fff; border-radius:16px; padding:28px 24px 50px; position:relative; overflow:hidden; }
-  .osr-header::after { content:""; position:absolute; right:-60px; top:-60px; width:220px; height:220px;
-    border-radius:50%; background:rgba(220,184,74,.12); }
-  .osr-eyebrow { text-transform:uppercase; letter-spacing:.12em; font-size:12px; color:var(--au4);
-    font-weight:700; margin-bottom:6px; }
-  .osr-header h3 { margin:0 0 6px; font-size:27px; font-weight:700; }
-  .osr-subhead { color:rgba(255,255,255,.75); font-size:13.5px; }
-  .osr-summary { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin:-30px 16px 0;
-    position:relative; z-index:1; }
-  .osr-summary div { background:#fff; border-radius:12px; padding:14px 16px; border-top:3px solid var(--au);
-    box-shadow:0 4px 18px rgba(15,43,31,.10); }
-  .osr-summary b { display:block; font-size:24px; color:var(--g8); }
-  .osr-summary span { font-size:12px; color:var(--mute2); text-transform:uppercase; letter-spacing:.05em; }
-  .osr-tabs { display:flex; flex-wrap:wrap; gap:4px; border-bottom:2px solid var(--line2); margin:22px 0 16px; }
-  .osr-tab, .osr-subtab { background:none; border:0; border-bottom:3px solid transparent; margin-bottom:-2px;
-    color:var(--mute2); font-weight:700; font-size:14.5px; padding:11px 16px; border-radius:0; }
-  .osr-tab span, .osr-subtab span { background:var(--line2); color:#1f2a24; font-size:11px; padding:1px 8px;
-    border-radius:20px; margin-left:4px; }
-  .osr-tab.on, .osr-subtab.on { color:var(--g8); border-bottom-color:var(--au); }
-  .osr-tab.on span, .osr-subtab.on span { background:var(--au1); color:var(--au); }
-  .osr-subtabs { display:flex; flex-wrap:wrap; gap:4px; border-bottom:2px solid var(--line2); margin-bottom:14px; }
-  .osr-subtab { font-size:14px; font-weight:600; padding:9px 14px; }
-  .osr-desc { color:var(--mute2); font-size:13.5px; margin-bottom:16px; }
-  .osr-card { background:#fff; border:1px solid var(--line2); border-radius:10px; margin-bottom:12px; overflow:hidden; }
-  .osr-card:hover { box-shadow:0 2px 10px rgba(15,43,31,.07); }
-  .osr-card-top { display:flex; align-items:stretch; }
-  .osr-head { flex:1; min-width:0; display:flex; justify-content:space-between; align-items:center; gap:20px;
-    padding:15px 18px; background:none; border:0; border-radius:0; text-align:left; color:inherit;
-    font:inherit; font-weight:400; cursor:pointer; }
-  .osr-title-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:6px; }
-  .osr-chev { color:var(--au); font-size:13px; transition:transform .18s ease; display:inline-block; }
-  .osr-head[aria-expanded="true"] .osr-chev { transform:rotate(90deg); }
-  .osr-title, .osr-class-title { font-weight:700; font-size:15.5px; color:var(--g8); }
-  .osr-class-title { font-size:14px; }
-  .osr-meta { display:flex; gap:14px; flex-wrap:wrap; font-size:12.5px; color:var(--mute2); }
-  .osr-seats { min-width:150px; text-align:right; flex-shrink:0; font-size:13px; }
-  .osr-bar { width:150px; height:6px; border-radius:4px; background:#e7ece8; overflow:hidden; margin:4px 0 4px auto; }
-  .osr-bar div { height:100%; background:linear-gradient(90deg,var(--g5),var(--au)); border-radius:4px; }
-  .osr-open { font-size:11.5px; color:var(--mute2); }
-  .osr-actions { flex-shrink:0; display:flex; flex-direction:column; }
-  .osr-email, .osr-request { flex:1; display:flex; align-items:center; justify-content:center; gap:6px;
-    padding:8px 16px; font-size:12.5px; font-weight:600; white-space:nowrap; text-decoration:none;
-    border:0; border-radius:0; cursor:pointer; }
-  .osr-email { background:var(--g7); color:#fff; }
-  .osr-email:hover { background:var(--g6); }
-  .osr-email.disabled { background:#c7cdc9; color:#8a938c; cursor:default; }
-  .osr-request { background:var(--au); color:var(--g9); }
-  .osr-request:hover { background:var(--au4); }
-  .osr-request.small { flex:none; display:inline-flex; padding:6px 12px; font-size:11.5px; border-radius:6px; }
-  .osr-body { background:#fbfbf9; border-top:1px solid var(--line2); padding:14px 18px 18px; overflow-x:auto; }
-  .osr-roster { font-size:13.5px; }
-  .osr-roster th, .osr-table th { cursor:default; }
-  .osr-roster td { border-bottom:1px solid #eef1ee; padding:8px 10px; }
-  .osr-roster a, .osr-table a { color:var(--g6); text-decoration:none; }
-  .osr-num { color:var(--mute2); width:28px; }
-  .osr-name { font-weight:600; }
-  .osr-empty { color:var(--mute2); font-size:13px; font-style:italic; margin:6px 0; }
-  .osr-badge { display:inline-block; font-size:11px; font-weight:700; padding:2px 9px; border-radius:20px;
-    text-transform:uppercase; letter-spacing:.03em; white-space:nowrap; }
-  .osr-badge.gold { background:var(--au1); color:var(--au); border:1px solid var(--au4); }
-  .osr-badge.green { background:#e9f2ec; color:var(--g6); border:1px solid var(--g5); }
-  .osr-badge.red { background:#fbeaea; color:#b3352c; border:1px solid #e08a83; }
-  .osr-scroll { overflow-x:auto; }
-  .osr-table { background:#fff; border-radius:10px; overflow:hidden; box-shadow:0 1px 4px rgba(15,43,31,.06); }
-  .osr-table thead th { background:var(--g8); color:#fff; font-size:11.5px; padding:10px 14px; }
-  .osr-table tbody td { padding:11px 14px; font-size:13.5px; }
-  .osr-table tbody tr:hover { background:#fbfbf9; }
-  .osr-sub { font-size:12px; color:var(--mute2); margin-top:3px; display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
-  .osr-controls { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
-  .osr-controls input { flex:1; min-width:220px; margin:0; background:#fff; }
-  .osr-controls select { width:auto; margin:0; background:#fff; }
-  .osr-program { display:inline-block; font-size:10.5px; font-weight:700; padding:2px 9px; border-radius:20px;
-    text-transform:uppercase; background:#eef1ee; color:var(--g7); border:1px solid var(--line2); }
-  .osr-program.alt { background:var(--au1); color:var(--au); border-color:var(--au4); }
+  /* ---- Open Seat Report (the Training Class Enrollment Report), in the Cab
+     look, in the green of its tile. Everything is under .osr so nothing
+     leaks. ---- */
+  .osr { --accent: var(--lit-green); color: var(--ink); }
+  .osr-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 0 0 18px; }
+  .osr-summary div { position: relative; padding: 13px 14px 14px 25px; border: 1px solid var(--cab-edge);
+    border-radius: 14px; background: linear-gradient(var(--cab-top), var(--cab-bottom)); color: #fff;
+    box-shadow: 0 4px 14px rgba(20,28,34,.2); --tint: var(--lit-green); }
+  .osr-summary div:nth-child(2) { --tint: var(--lit-slate); }
+  .osr-summary div:nth-child(3) { --tint: var(--lit-amber); }
+  .osr-summary div:nth-child(4) { --tint: var(--lit-steel); }
+  .osr-summary div::before { content: ""; position: absolute; left: 10px; top: 12px; bottom: 12px; width: 3px;
+    border-radius: 3px; background: var(--tint); box-shadow: 0 0 7px color-mix(in srgb, var(--tint) 65%, transparent); }
+  .osr-summary b { display: block; font: 700 28px/1.15 var(--font-cab); color: #fff; }
+  .osr-summary span { font: 600 10.5px var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--cab-sub); }
+  .osr-tabs, .osr-subtabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; border: 0; }
+  button.osr-tab, button.osr-subtab { margin: 0; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--cab-rule);
+    background: rgba(255,255,255,.75); color: var(--cab-heading); box-shadow: none;
+    font: 600 14px var(--font-cab); letter-spacing: .04em; text-transform: uppercase; }
+  button.osr-tab:hover, button.osr-subtab:hover { background: #fff; color: var(--ink); border-color: var(--line-strong); }
+  .osr-tab span, .osr-subtab span { background: none; color: inherit; font: 500 11px var(--font-mono); padding: 0;
+    margin-left: 6px; opacity: .8; }
+  button.osr-tab.on, button.osr-subtab.on, button.osr-tab.on:hover, button.osr-subtab.on:hover {
+    background: linear-gradient(var(--cab-top), var(--cab-bottom)); border-color: var(--cab-edge); color: #fff; }
+  .osr-tab.on span, .osr-subtab.on span { color: var(--accent); opacity: 1; }
+  .osr-desc { color: var(--cab-heading); font-size: 13.5px; margin-bottom: 14px; max-width: 80ch; }
+  .osr-card { position: relative; overflow: hidden; margin-bottom: 12px; border: 1px solid var(--cab-edge); border-radius: 14px;
+    background: linear-gradient(var(--cab-top), var(--cab-bottom)); color: #fff; box-shadow: 0 4px 14px rgba(20,28,34,.2); }
+  .osr-card::before { content: ""; position: absolute; left: 10px; top: 12px; bottom: 12px; width: 3px; border-radius: 3px;
+    background: var(--accent); box-shadow: 0 0 7px color-mix(in srgb, var(--accent) 65%, transparent); }
+  .osr-card:hover { box-shadow: 0 8px 22px rgba(20,28,34,.28); }
+  .osr-card-top { display: flex; align-items: stretch; }
+  button.osr-head { flex: 1; min-width: 0; display: flex; justify-content: space-between; align-items: center; gap: 20px;
+    padding: 15px 18px 15px 27px; background: none; border: 0; border-radius: 0; box-shadow: none; text-align: left;
+    color: #fff; font: inherit; font-weight: 400; white-space: normal; cursor: pointer; }
+  button.osr-head:hover { background: rgba(255,255,255,.03); border: 0; }
+  .osr-title-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 7px; }
+  .osr-chev { color: var(--accent); font-size: 13px; transition: transform .18s ease; display: inline-block; }
+  .osr-head[aria-expanded="true"] .osr-chev { transform: rotate(90deg); }
+  .osr-title { font: 600 17px/1.2 var(--font-cab); text-transform: uppercase; letter-spacing: .04em; color: #fff; }
+  .osr-meta { display: flex; gap: 6px 16px; flex-wrap: wrap; font-size: 12.5px; color: var(--cab-sub); }
+  .osr-meta span, .osr-sub span.i { display: inline-flex; align-items: center; gap: 5px; }
+  .osr-meta svg, .osr-sub svg { color: var(--cab-detail); }
+  .osr-seats { min-width: 150px; text-align: right; flex-shrink: 0; font-size: 13px; color: var(--cab-sub); }
+  .osr-seats strong { color: #fff; }
+  .osr-bar { width: 150px; height: 5px; border-radius: 4px; background: rgba(255,255,255,.1); overflow: hidden; margin: 5px 0 5px auto; }
+  .osr-bar div { height: 100%; background: var(--accent); border-radius: 4px; }
+  .osr-open { font: 500 11px var(--font-mono); color: var(--cab-detail); }
+  .osr-actions { flex-shrink: 0; display: flex; flex-direction: column; justify-content: center; gap: 8px; padding: 12px 14px 12px 0; }
+  .osr-email, button.osr-request { display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 8px 14px; border-radius: 9px; border: 1px solid; white-space: nowrap; text-decoration: none; cursor: pointer;
+    font: 600 13px var(--font-cab); letter-spacing: .05em; text-transform: uppercase; box-shadow: none; }
+  .osr-email { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.22); color: #fff; }
+  a.osr-email:hover { background: rgba(255,255,255,.12); text-decoration: none; }
+  .osr-email.disabled { opacity: .4; cursor: default; }
+  button.osr-request { background: #137026; border-color: #137026; color: #fff; }
+  button.osr-request:hover { background: #1A8A31; border-color: #1A8A31; }
+  button.osr-request.small { padding: 6px 12px; font-size: 12px; }
+  .osr-body { background: rgba(0,0,0,.16); border-top: 1px solid rgba(255,255,255,.09); padding: 10px 18px 14px 27px; overflow-x: auto; }
+  .osr-roster, .osr-table { color: #fff; }
+  .osr-roster th, .osr-table th { cursor: default; }
+  .osr .osr-roster thead th { background: none; color: var(--cab-detail); border-bottom: 1px solid rgba(255,255,255,.12);
+    font: 600 10.5px var(--font-mono); letter-spacing: .12em; }
+  .osr .osr-roster td { border-bottom: 1px solid rgba(255,255,255,.07); padding: 8px 10px; }
+  .osr .osr-roster tbody tr:hover { background: rgba(255,255,255,.03); }
+  .osr-roster a, .osr-table a { color: var(--lit-slate); text-decoration: none; }
+  .osr-num { color: var(--cab-detail); width: 28px; }
+  .osr-name { font-weight: 600; }
+  .osr-empty { color: var(--cab-heading); font-size: 13px; font-style: italic; margin: 6px 0; }
+  .osr-body .osr-empty { color: var(--cab-sub); }
+  /* A status or seat count, lit on the slate; Full in red, like a warning lamp. */
+  .osr-badge { display: inline-block; font: 600 10px var(--font-mono); letter-spacing: .08em; text-transform: uppercase;
+    padding: 2px 8px; border-radius: 20px; white-space: nowrap; background: none; border: 1px solid; }
+  .osr-badge.gold { color: var(--lit-amber); border-color: color-mix(in srgb, var(--lit-amber) 55%, transparent); }
+  .osr-badge.green { color: var(--lit-green); border-color: color-mix(in srgb, var(--lit-green) 55%, transparent); }
+  .osr-badge.red { color: #fff; background: #CC0033; border-color: #CC0033; box-shadow: 0 0 10px rgba(204,0,51,.6); }
+  .osr-scroll { overflow-x: auto; border-radius: 14px; }
+  .osr-table { border: 1px solid var(--cab-edge); border-radius: 14px; overflow: hidden;
+    background: linear-gradient(var(--cab-top), var(--cab-bottom)); box-shadow: 0 4px 14px rgba(20,28,34,.2); }
+  .osr .osr-table thead th { background: rgba(0,0,0,.2); color: var(--cab-sub); padding: 10px 14px;
+    font: 600 10.5px var(--font-mono); letter-spacing: .12em; border-bottom: 1px solid rgba(255,255,255,.1); }
+  .osr .osr-table tbody td { padding: 11px 14px; font-size: 13.5px; border-bottom: 1px solid rgba(255,255,255,.07); color: var(--cab-sub); }
+  .osr .osr-table tbody tr:hover { background: rgba(255,255,255,.04); }
+  .osr .osr-table tbody tr:last-child td { border-bottom: 0; }
+  .osr-table .osr-name { color: #fff; }
+  .osr-class-title { font: 600 14.5px/1.25 var(--font-cab); text-transform: uppercase; letter-spacing: .03em; color: #fff; }
+  .osr-sub { font-size: 12px; color: var(--cab-sub); margin-top: 3px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .osr-controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .osr-controls input { flex: 1; min-width: 220px; margin: 0; background: #fff; }
+  .osr-controls select { width: auto; margin: 0; background: #fff; }
+  .osr-program { display: inline-block; font: 600 10px var(--font-mono); letter-spacing: .08em; padding: 2px 8px;
+    border-radius: 20px; text-transform: uppercase; color: var(--lit-slate);
+    border: 1px solid color-mix(in srgb, var(--lit-slate) 55%, transparent); }
+  .osr-program.alt { color: var(--lit-amber); border-color: color-mix(in srgb, var(--lit-amber) 55%, transparent); }
   @media (max-width:720px) {
-    .osr-summary { grid-template-columns:repeat(2,1fr); }
-    .osr-card-top { flex-direction:column; }
-    .osr-head { flex-direction:column; align-items:flex-start; }
-    .osr-seats { text-align:left; width:100%; }
-    .osr-bar { margin-left:0; }
-    .osr-actions { flex-direction:row; }
-    .osr-email, .osr-request { padding:10px; }
+    .osr-summary { grid-template-columns: repeat(2, 1fr); }
+    .osr-card-top { flex-direction: column; }
+    button.osr-head { flex-direction: column; align-items: flex-start; }
+    .osr-seats { text-align: left; width: 100%; }
+    .osr-bar { margin-left: 0; width: 100%; }
+    .osr-actions { flex-direction: row; padding: 0 14px 14px 27px; }
+    .osr-email, button.osr-request { flex: 1; }
   }
 
   /* ------------------------------------------------------------------ the Cab look
@@ -2256,6 +2278,9 @@ const ICONS = {
   calendarCheck: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="m9 15.5 2 2 4-4"/>',
   clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
   person: '<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c.9-3.8 3.9-6 7.5-6s6.6 2.2 7.5 6"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 7 8.5-7"/>',
+  pencil: '<path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/>',
+  level: '<path d="M5 20v-6M12 20V9M19 20V4"/>',
   phone: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/>',
   people: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5c2 .6 3.2 2.5 3.5 5.5"/>',
   megaphone: '<path d="M3 10v4h4l7 5V5L7 10H3Z"/><path d="M18 8a5 5 0 0 1 0 8"/>',
@@ -5712,7 +5737,7 @@ function osrBadge(status) {
 const osrRequestButton = (title, place, dates, small) => `
   <button type="button" class="osr-request${small ? " small" : ""}" data-osr-request
     data-title="${esc(title)}" data-city="${esc(place)}" data-dates="${esc(dates)}">
-    📝 ${small ? "Request" : "Request Registration"}</button>`;
+    ${icon("pencil", 14)} ${small ? "Request" : "Request Registration"}</button>`;
 
 function openSeatView() {
   const internal = trainingReports.internal && trainingReports.internal.data;
@@ -5760,9 +5785,9 @@ function openSeatView() {
             <div class="osr-head-main">
               <div class="osr-title-row"><span class="osr-chev">▸</span>
                 <span class="osr-title">${esc(c.title)}</span>${osrBadge(c.status)}</div>
-              <div class="osr-meta"><span>📅 ${osrRange(c.startDate, c.endDate)}</span>
-                ${c.startTime ? `<span>🕗 Starts ${esc(c.startTime)}</span>` : ""}
-                <span>📍 ${esc(c.city)}</span>${c.instructors ? `<span>🎓 ${esc(c.instructors)}</span>` : ""}</div>
+              <div class="osr-meta"><span>${icon("calendar", 14)}${osrRange(c.startDate, c.endDate)}</span>
+                ${c.startTime ? `<span>${icon("clock", 14)}Starts ${esc(c.startTime)}</span>` : ""}
+                <span>${icon("pin", 14)}${esc(c.city)}</span>${c.instructors ? `<span>${icon("person", 14)}${esc(c.instructors)}</span>` : ""}</div>
             </div>
             <div class="osr-seats">
               <div><strong>${c.registered}</strong> / ${cap} enrolled</div>
@@ -5771,8 +5796,8 @@ function openSeatView() {
             </div>
           </button>
           <div class="osr-actions">
-            ${emails.length ? `<a class="osr-email" href="${esc(mail)}">📧 Email Class</a>`
-              : `<span class="osr-email disabled" title="No students enrolled">📧 Email Class</span>`}
+            ${emails.length ? `<a class="osr-email" href="${esc(mail)}">${icon("mail", 14)} Email Class</a>`
+              : `<span class="osr-email disabled" title="No students enrolled">${icon("mail", 14)} Email Class</span>`}
             ${osrRequestButton(c.title, c.city, plainWhen)}
           </div>
         </div>
@@ -5798,7 +5823,7 @@ function openSeatView() {
       ${students.map((s, n) => `<tr><td class="osr-num">${n + 1}</td><td class="osr-name">${esc(s.name)}</td>
         <td><div class="osr-class-title">${esc(s.cls.title)}</div>
           <div class="osr-sub">${osrRange(s.cls.startDate, s.cls.endDate)}${s.cls.startTime
-            ? ` · ${esc(s.cls.startTime)}` : ""} · 📍 ${esc(s.cls.city)} · ${osrBadge(s.cls.status)}</div></td>
+            ? ` · ${esc(s.cls.startTime)}` : ""} · ${esc(s.cls.city)} ${osrBadge(s.cls.status)}</div></td>
         <td><a href="mailto:${esc(s.email)}">${esc(s.email)}</a></td></tr>`).join("")}
       </tbody></table></div>`;
   })() : `<p class="osr-empty">No one is enrolled in an upcoming class.</p>`;
@@ -5814,7 +5839,7 @@ function openSeatView() {
     } else { badge = `<span class="osr-badge gold">${esc(s.status || "TBD")}</span>`; status = "open"; }
     return `<tr data-osr-search="${esc(`${s.title} ${s.facility} ${s.program}`.toLowerCase())}" data-osr-status="${status}">
       <td><span class="osr-program${s.program === "AGCO" ? "" : " alt"}">${esc(s.program)}</span></td>
-      <td><div class="osr-class-title">${esc(s.title)}</div>${s.description ? `<div class="osr-sub">📌 ${esc(s.description)}</div>` : ""}</td>
+      <td><div class="osr-class-title">${esc(s.title)}</div>${s.description ? `<div class="osr-sub">${esc(s.description)}</div>` : ""}</td>
       <td>${esc(s.facility)}</td>
       <td>${osrRange(s.startDate, s.endDate)}</td>
       <td>${badge}</td>
@@ -5822,13 +5847,10 @@ function openSeatView() {
   }).join("");
   const agcoOpen = sessions.filter(s => !s.full).length;
 
-  return `
+  return hero("Open Seat Report", internal
+      ? `Open Seat Report exported ${internal.openSeatExported} · In-Class Event Report exported ${internal.inClassExported}`
+      : "Upcoming classes, who's enrolled, and open seats.") + `
   <div class="osr">
-    <div class="osr-header">
-      <div class="osr-eyebrow">AGRI-SERVICE, LLC · Training Department</div>
-      <h3>Training Class Enrollment Report</h3>
-      <div class="osr-subhead">${esc(internal ? `Open Seat Report exported ${internal.openSeatExported} · In-Class Event Report exported ${internal.inClassExported}` : "")}</div>
-    </div>
     <div class="osr-summary">
       <div><b>${classes.length}</b><span>Upcoming Classes</span></div>
       <div><b>${registered}</b><span>Total Registered</span></div>
@@ -7339,10 +7361,10 @@ const CAT_CHEVRON = `<svg class="cat-chevron" viewBox="0 0 20 20" fill="none" st
 
 function catalogCourseHtml(c) {
   const meta = [
-    c.level && `<span>${esc(c.level)}</span>`,
-    c.credits && `<span>🎓 ${esc(c.credits)}</span>`,
-    c.duration && `<span>🕑 ${esc(c.duration)}</span>`,
-    (c.audiences || []).length && `<span>👥 ${esc(c.audiences.join(", "))}</span>`
+    c.level && `<span>${icon("level", 14)}${esc(c.level)}</span>`,
+    c.credits && `<span>${icon("training", 14)}${esc(c.credits)}</span>`,
+    c.duration && `<span>${icon("clock", 14)}${esc(c.duration)}</span>`,
+    (c.audiences || []).length && `<span>${icon("people", 14)}${esc(c.audiences.join(", "))}</span>`
   ].filter(Boolean).join("");
   const prereqs = (c.prerequisites || []).length
     ? `<ul class="cat-prereqs">${c.prerequisites.map(p => `<li>${esc(p)}</li>`).join("")}</ul>`
@@ -7392,13 +7414,8 @@ function catalogView() {
   if (catalogState.audience && !audiences.includes(catalogState.audience)) catalogState.audience = null;
   setTimeout(renderCatalogList);
 
-  return `
+  return hero("Course Catalog", "A reference of Agri-Service technician, parts, and safety training courses.") + `
   <div class="cat">
-    <header class="cat-header">
-      <p class="cat-eyebrow">Agri-Service Technical Training Program</p>
-      <h3>Agri-Service Training Catalog</h3>
-      <p>A reference of Agri-Service technician, parts, and safety training courses.</p>
-    </header>
     <div class="cat-controls">
       <div class="cat-search-row">
         <input type="text" id="catSearch" placeholder="Search courses, equipment, or topics…"
