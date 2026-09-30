@@ -494,47 +494,18 @@
   .ticket[open] > summary::after { transform: rotate(-135deg); top: 24px; }
   .ticket > summary:hover { background: var(--paper); border-radius: var(--radius); }
   .ticket .inner { padding: 16px; border-top: 1px solid var(--line); }
-  /* What fixed it: green, and first, because it's what people come back for. */
-  .ticket .solution { background: var(--green-soft); border: 1px solid #BFE3C8;
-                      border-radius: var(--radius-sm); padding: 10px 12px; margin: 0 0 12px; }
-  .ticket .solution .cadence { color: #17702F; }
-  .ticket .fixed { display: block; margin-top: 4px; font-size: 13px; color: #17702F; }
-  .ticket .solution-form { margin-top: 12px; padding: 12px; border: 1px solid var(--line);
-                           border-radius: var(--radius-sm); background: var(--paper); }
 
-  /* ------------------------------------------------------------------ special tools */
-  .tool-list { display: grid; gap: 8px; margin-top: 12px; }
-  .tool-row { border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--card);
-              padding: 12px 14px; display: grid; gap: 3px; }
-  /* Out is the thing to notice: an amber edge, like the app. */
-  .tool-row.out { border-color: var(--caution); box-shadow: inset 4px 0 0 var(--caution); }
-  .tool-row .top { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; }
-  .tool-row .pn { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 12.5px;
-                  color: var(--muted); }
-  .tool-row .top .badge { margin-left: auto; }
-  .tool-row .where { font-size: 13px; color: #92590A; }
+  /* ------------------------------------------------------------------ special tools: admin */
   .tool-field { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 12px 14px;
                 margin-bottom: 10px; background: var(--paper); }
   .tool-preview { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 12px 14px;
                   margin-top: 12px; background: var(--paper); }
   .tool-preview ul { margin: 4px 0 10px; padding-left: 20px; }
   .tool-preview .gone { color: var(--red-dark); }
-  .comment { padding: 10px 0; border-top: 1px solid var(--line); }
 
-  .support-role { border: 1px solid var(--line); border-radius: var(--radius); background: var(--card);
-                  margin-bottom: 12px; box-shadow: var(--shadow); overflow: hidden; }
-  .support-role .head { display: flex; gap: 14px; padding: 16px; align-items: center; background: var(--paper);
-                        border-bottom: 1px solid var(--line); }
-  .support-role .head span span { display: block; font-size: 13px; color: var(--muted); }
-  .person { display: flex; gap: 12px; align-items: center; padding: 14px 16px;
-            border-top: 1px solid var(--line); flex-wrap: wrap; }
-  .support-role .head + .person { border-top: 0; }
   .avatar { width: 40px; height: 40px; border-radius: 999px; background: var(--green);
             color: #fff; font-weight: 600; display: flex; align-items: center;
             justify-content: center; flex: 0 0 40px; }
-  .avatar.empty { background: none; border: 1.5px dashed var(--line-strong); color: var(--muted); }
-  .person .actions { margin-left: auto; display: flex; gap: 8px; }
-  .person .actions a { text-decoration: none; }
 
   /* ------------------------------------------------------------------ events & inspections */
   .ev-company  { background: var(--red-soft); color: var(--red-dark); }
@@ -963,6 +934,199 @@
     text-transform: uppercase; margin-top: 6px; }
   #view .article-card .kick, #view .article-card .kick.green { color: var(--accent);
     font-family: var(--font-mono); letter-spacing: .1em; }
+
+  /* ---- Support Center, in the Cab look like the app's: its cards, then who
+     to call, folded. Requests and special tools are pages of their own. ---- */
+  .sc-groups { display: grid; gap: 0 14px; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); }
+  .sc-groups section { display: flex; flex-direction: column; min-width: 0; }
+  .sc-groups .link-card { flex: 1; margin: 0; }
+  .sc-groups button.link-card { width: 100%; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+  #view .link-card .sc-foot { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 8px;
+    color: var(--cab-sub); font-size: 13px; }
+  .sc-foot svg { color: var(--cab-detail); flex: none; }
+  .sc-foot em { font-style: normal; font-weight: 600; color: var(--lit-amber); }
+  button.group-title.sc-fold { width: 100%; padding: 0; min-height: 34px; border: 0; border-radius: 0;
+    background: none; box-shadow: none; cursor: pointer; white-space: normal; justify-content: flex-start; }
+  button.sc-fold::after { order: 1; }
+  .sc-fold-go { order: 2; display: inline-flex; align-items: center; gap: 4px; color: #137026;
+    font: 600 13.5px var(--font-cab); letter-spacing: .08em; }
+  .sc-fold-go svg { transition: transform .15s ease; }
+  .sc-fold[aria-expanded="true"] .sc-fold-go svg { transform: rotate(180deg); }
+  button.sc-fold:hover .sc-fold-go { color: #1A8A31; }
+  button.sc-fold:focus-visible { outline: 2px solid #137026; outline-offset: 4px; }
+  .sc-role-names { margin: -4px 2px 0; font-size: 13.5px; color: var(--ink-2); max-width: 90ch; }
+  .sc-roles { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    align-items: start; }
+  .sc-role { --accent: var(--lit-deep); position: relative; padding: 14px 16px 4px 27px; color: #fff;
+    border: 1px solid var(--cab-edge); border-radius: 14px; background: linear-gradient(var(--cab-top), var(--cab-bottom));
+    box-shadow: 0 4px 14px rgba(20,28,34,.2); }
+  .sc-role-head { display: flex; gap: 12px; align-items: flex-start; padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255,255,255,.09); }
+  .sc-role-head svg { color: var(--accent); flex: none; margin-top: 1px; }
+  .sc-role-head b, .sc-who b { display: block; font: 600 16.5px/1.2 var(--font-cab); letter-spacing: .03em; }
+  .sc-role-head b { text-transform: uppercase; }
+  .sc-role-head span span, .sc-who span span { display: block; color: var(--cab-sub); font-size: 13px; margin-top: 2px; }
+  .sc-person { display: grid; gap: 12px; padding: 12px 0; }
+  .sc-person + .sc-person { border-top: 1px solid rgba(255,255,255,.09); }
+  .sc-who { display: flex; gap: 12px; align-items: center; }
+  .sc-avatar { display: grid; place-items: center; width: 42px; height: 42px; flex: 0 0 42px; border-radius: 50%;
+    background: var(--green); font: 700 17px var(--font-cab); }
+  .sc-avatar.empty { background: none; border: 2px dashed rgba(255,255,255,.25); color: var(--cab-detail); }
+  .sc-who .sc-phone { color: #fff; font: 500 14px var(--font-mono); }
+  .sc-reach { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .sc-reach a { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 9px 12px;
+    border-radius: 10px; border: 1px solid transparent; text-decoration: none;
+    font: 600 14.5px var(--font-cab); letter-spacing: .06em; text-transform: uppercase; }
+  .sc-reach .sc-call { background: var(--green); color: #fff; }
+  .sc-reach .sc-call:hover { background: #17702F; }
+  .sc-reach .sc-text { background: color-mix(in srgb, var(--green) 16%, transparent); color: var(--lit-green);
+    border-color: color-mix(in srgb, var(--lit-green) 40%, transparent); }
+  .sc-reach .sc-text:hover { background: color-mix(in srgb, var(--green) 26%, transparent); }
+  .sc-reach a:focus-visible { outline: 2px solid var(--lit-green); outline-offset: 2px; }
+
+  /* The pills that filter a list, on the light page. */
+  .cab-pills { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
+  button.cab-pill { margin: 0; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--cab-rule);
+    background: rgba(255,255,255,.75); color: var(--cab-heading); box-shadow: none;
+    font: 600 14px var(--font-cab); letter-spacing: .04em; text-transform: uppercase; }
+  button.cab-pill:hover { background: #fff; color: var(--ink); border-color: var(--line-strong); }
+  button.cab-pill span { font: 500 11px var(--font-mono); letter-spacing: 0; margin-left: 2px; opacity: .8; }
+  button.cab-pill.on, button.cab-pill.on:hover { background: linear-gradient(var(--cab-top), var(--cab-bottom));
+    border-color: var(--cab-edge); color: #fff; }
+  button.cab-pill.on span { color: var(--accent, var(--lit-slate)); opacity: 1; }
+
+  /* A slate card to click into, with its stripe lit in --accent. */
+  button.cab-card { position: relative; width: 100%; margin: 0; text-align: left; white-space: normal;
+    font: inherit; font-weight: 400; color: #fff; border: 1px solid var(--cab-edge); border-radius: 14px;
+    background: linear-gradient(var(--cab-top), var(--cab-bottom)); box-shadow: 0 4px 14px rgba(20,28,34,.2);
+    transition: transform .12s ease, box-shadow .12s ease; }
+  button.cab-card::before, .st-facts div::before, .sc-role::before { content: ""; position: absolute;
+    left: 10px; top: 12px; bottom: 12px; width: 3px; border-radius: 3px;
+    background: var(--accent); box-shadow: 0 0 7px color-mix(in srgb, var(--accent) 65%, transparent); }
+  button.cab-card:hover { background: linear-gradient(#313B42, #262E34); border-color: #4A5762;
+    box-shadow: 0 8px 22px rgba(20,28,34,.28); transform: translateY(-1px); }
+  button.cab-card:active { transform: scale(.99); }
+  button.cab-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .cab-tag { display: inline-block; padding: 2px 8px; border-radius: 20px; border: 1px solid;
+    color: var(--accent); border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+    font: 600 10.5px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
+
+  /* ---- Support requests ---- */
+  .sr { --accent: var(--lit-slate); max-width: 900px; }
+  .sr-bar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between;
+    margin-bottom: 14px; }
+  .sr-bar .cab-pills { margin: 0; }
+  .sr-list { display: grid; gap: 10px; }
+  button.sr-row { display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start;
+    gap: 5px; padding: 13px 16px 14px 27px; }
+  .sr-top { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 10px; }
+  .sr-count { display: inline-flex; align-items: center; gap: 4px; color: var(--cab-detail);
+    font: 500 12px var(--font-mono); }
+  .sr-row b { font: 600 17px/1.25 var(--font-cab); letter-spacing: .02em; color: #fff; text-wrap: pretty; }
+  .sr-machine { color: var(--cab-sub); font-size: 13px; }
+  .sr-for { color: var(--lit-steel); font: 600 11px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
+  .sr-fix { display: flex; gap: 6px; align-items: flex-start; color: var(--lit-green); font-size: 13px; }
+  .sr-fix svg { flex: none; margin-top: 1px; }
+  .sr-fix span { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .sr-by { color: var(--cab-detail); font-size: 12px; }
+  .sr-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 40px 20px 30px;
+    text-align: center; color: var(--cab-heading); }
+  .sr-empty svg { color: var(--cab-detail); }
+  .sr-empty b { font: 700 20px var(--font-cab); color: var(--ink); }
+  .sr-empty p { margin: 0; max-width: 52ch; font-size: 14px; }
+  .sr-mine { margin: 22px 0 0; }
+  .sr-mine .chips { margin-bottom: 8px; }
+  .sr-mine p.note { margin: 0; }
+  button.sr-new, button.st-add { gap: 7px; }
+  .sr-detail, .st-detail { max-width: 820px; display: flex; flex-direction: column; gap: 12px; }
+  .sr-detail > .card, .st-detail > .card, .sr-form .card, .st-form .card { margin: 0; }
+  .sr-status-row { gap: 10px 12px; }
+  .sr-when { color: var(--cab-heading); font-size: 13px; }
+  .sr-acts { margin-left: auto; display: flex; flex-wrap: wrap; gap: 8px; }
+  .sr-acts button, .st-manage button { gap: 6px; }
+  .sr-status-row .msg:empty { display: none; }
+  .solution-form p.note { margin: 0 0 10px; }
+  /* What fixed it: green, and first, because it's what people come back for. */
+  .sr-solution { padding: 14px 16px; border-radius: var(--radius); background: var(--green-soft);
+    border: 1px solid #BFE3C8; }
+  .sr-label { display: inline-flex; align-items: center; gap: 6px; color: #17702F;
+    font: 600 11px var(--font-mono); letter-spacing: .12em; text-transform: uppercase; }
+  .sr-solution p { margin: 6px 0 4px; font-size: 15px; }
+  .sr-solution small { color: var(--muted); font-size: 12.5px; }
+  .sr-facts dl, .st-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px 20px; margin: 0; }
+  .sr-facts dl + dl { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .sr-facts dt, .st-fields dt { font: 600 10.5px var(--font-mono); letter-spacing: .12em; text-transform: uppercase;
+    color: var(--muted); }
+  .sr-facts dd, .st-fields dd { margin: 3px 0 0; font-size: 15px; overflow-wrap: anywhere; }
+  .sr-desc { grid-template-columns: minmax(0, 1fr) !important; }
+  .sr-desc dd { max-width: 75ch; }
+  .sr-thread h2 { margin-bottom: 4px; }
+  .sr-comment { padding: 12px 0 2px; border-top: 1px solid var(--line); }
+  .sr-comment-head { display: flex; justify-content: space-between; gap: 12px; }
+  .sr-comment-head span { color: var(--muted); font-size: 12.5px; white-space: nowrap; }
+  .sr-comment p { margin: 4px 0 10px; font-size: 15px; max-width: 75ch; }
+  .sr-reply textarea { margin-bottom: 10px; }
+  .sr-form, .st-form { max-width: 760px; display: flex; flex-direction: column; gap: 12px; }
+
+  /* ---- Special tools: amber, the colour of its card. Out is the thing to
+     notice, so a tool that's away is lit amber and one at home green. ---- */
+  .st { --accent: var(--lit-amber); max-width: 1000px; }
+  .st-controls { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
+  .st-controls input.search { flex: 1; max-width: none; margin: 0; }
+  .st-list { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); }
+  @container (max-width: 520px) { .st-list { grid-template-columns: minmax(0, 1fr); } }
+  button.st-row { display: flex; align-items: center; justify-content: flex-start; gap: 12px;
+    padding: 13px 16px 14px 27px; }
+  .st-main { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+  .st-row b { font: 600 17px/1.2 var(--font-cab); letter-spacing: .04em; text-transform: uppercase; color: #fff; }
+  .st-sub { display: flex; flex-wrap: wrap; gap: 2px 10px; color: var(--cab-sub); font-size: 12.5px; }
+  .st-pn { color: #fff; font: 500 12.5px var(--font-mono); }
+  .st-status { display: inline-flex; align-items: center; gap: 5px; margin-top: 3px; padding: 3px 9px 3px 7px;
+    border-radius: 999px; color: var(--accent); background: color-mix(in srgb, var(--accent) 13%, transparent);
+    font: 600 12.5px var(--font-cab); letter-spacing: .03em; }
+  .st-status svg { flex: none; }
+  .st-empty { color: var(--cab-heading); padding: 18px 2px; margin: 0; }
+  .st-how, .st-hint { display: flex; gap: 8px; align-items: flex-start; color: var(--cab-heading); font-size: 13.5px; }
+  .st-how { margin: 16px 2px 0; max-width: 75ch; }
+  .st-how svg, .st-hint svg { flex: none; margin-top: 1px; }
+  .st-facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  @container (max-width: 640px) { .st-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .st-facts div { position: relative; padding: 12px 12px 13px 25px; border: 1px solid var(--cab-edge);
+    border-radius: 14px; background: linear-gradient(var(--cab-top), var(--cab-bottom)); color: #fff;
+    box-shadow: 0 4px 14px rgba(20,28,34,.2); }
+  .st-facts b { display: block; font: 700 22px/1.15 var(--font-cab); overflow-wrap: anywhere; }
+  .st-facts span { font: 600 10.5px var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--cab-sub); }
+  .st-desc { margin: 0; font-size: 15px; max-width: 75ch; }
+  .st-desc + .st-fields { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .st-where { display: flex; flex-direction: column; gap: 12px; padding: 16px 18px; border-radius: var(--radius);
+    background: #EFF8F1; border: 1px solid #BFE3C8; }
+  .st-where.out { background: #FDF5E6; border-color: #F0CD8C; }
+  .st-where-head { display: flex; align-items: center; gap: 8px; color: #17702F; }
+  .st-where.out .st-where-head { color: #8A5A00; }
+  .st-where-head b { font: 600 19px var(--font-cab); letter-spacing: .02em; }
+  .st-where .row { margin: 0; }
+  .st-notice { margin: 0; }
+  .st-trip { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between;
+    padding: 12px 14px; border-radius: 12px; background: #fff; }
+  .st-trip b { display: block; font: 600 16px var(--font-cab); letter-spacing: .02em; }
+  .st-trip span { display: block; color: var(--muted); font-size: 13px; }
+  .st-trip .st-note { color: var(--ink); }
+  .st-hint { margin: 0; color: var(--ink-2); }
+  button.st-out { gap: 7px; }
+  .st-checkout { padding: 14px 16px 12px; border-radius: 12px; background: #fff; }
+  .st-checkout p.note { margin: -4px 0 10px; }
+  .st-history { padding-top: 6px; padding-bottom: 6px; }
+  .st-past { display: flex; flex-direction: column; gap: 2px; padding: 10px 0; }
+  .st-past + .st-past { border-top: 1px solid var(--line); }
+  .st-past b { font: 600 15px var(--font-cab); letter-spacing: .02em; }
+  .st-past span { color: var(--muted); font-size: 12.5px; }
+  .st-detail .group-title { margin: 12px 2px -2px; }
+  button.danger { color: var(--red-dark); }
+  button.danger:hover { color: var(--red-dark); border-color: var(--red); background: var(--red-soft); }
+  input.mono { font-family: var(--font-mono); }
+  .st-help { display: block; margin: -8px 0 12px; font-size: 12.5px; }
+  .st-form .req { color: var(--muted); font-weight: 400; }
 
   /* Course Report: the classes down the side, the report beside them. On a
      phone the list gives way to the report once a class is picked. */
@@ -1491,9 +1655,9 @@
     <section id="tab-tools" class="hidden">
       <div class="card">
         <h2>Special tools</h2>
-        <p class="note">The list in the app's Support Center. Tools are added, changed and checked
-          out in the app; this is for the whole list at once — a copy to look over, or a big
-          change made in a spreadsheet.</p>
+        <p class="note">The list in the Support Center, in the app and on this page. Tools are
+          added, changed and checked out there, one at a time; this is for the whole list at
+          once — a copy to look over, or a big change made in a spreadsheet.</p>
         <div id="toolsSummary"></div>
         <div class="drop" id="toolsDrop">
           Drop the special tools list here, or
@@ -2291,6 +2455,16 @@ const ICONS = {
   wrench: '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.8a6 6 0 0 1-7.9 7.9l-6.9 6.9a2.1 2.1 0 0 1-3-3l6.9-6.9a6 6 0 0 1 7.9-7.9l-3.8 3.8Z"/>',
   key: '<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M16 7l3 3M14 9l2 2"/>',
   building: '<path d="M4 21V5l8-3v19M12 8h8v13"/><path d="M8 8v.01M8 12v.01M8 16v.01M16 12v.01M16 16v.01"/><path d="M2 21h20"/>',
+  chat: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.9A8 8 0 1 1 21 12Z"/><path d="M8.5 10.5h7M8.5 13.5h4.5"/>',
+  tray: '<path d="M3 13h5l1.5 3h5l1.5-3h5"/><path d="M5.5 5h13L21 13v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-6Z"/>',
+  monitor: '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',
+  box: '<path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5Z"/><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9"/>',
+  arrowOut: '<circle cx="12" cy="12" r="9"/><path d="m9 15 6-6M10 9h5v5"/>',
+  checkCircle: '<circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8 5.7-5.8"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.5v.01"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  trash: '<path d="M4 7h16M10 11v6M14 11v6"/><path d="m6 7 1 13h10l1-13M9 7V4h6v3"/>',
+  chevronDown: '<path d="m6 9 6 6 6-6"/>',
   settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/>'
 };
 
@@ -2452,19 +2626,29 @@ function tileCount(id) {
   return 0;
 }
 
+// The Support Center's own pages, under it in the crumbs and the sidebar.
+const SUPPORT_PAGES = ["requests", "request", "newrequest", "tools", "tool", "toolform"];
+
 function showView(name) {
   $("home").classList.add("hidden");
   $("admin").classList.add("hidden");
   const host = $("view");
   host.classList.remove("hidden");
   setMode("app", ["openseat", "myclasses", "catalog", "article", "skills", "trainingstatus", "coursereport"].includes(name) ? "training"
-    : name === "newspost" ? "news" : name === "payroll" ? "hr" : ["certreport", "evaltest", "approvals"].includes(name) ? "forklift" : name === "inspform" ? "inspection" : name);
+    : name === "newspost" ? "news" : name === "payroll" ? "hr" : ["certreport", "evaltest", "approvals"].includes(name) ? "forklift" : name === "inspform" ? "inspection"
+    : SUPPORT_PAGES.includes(name) ? "support" : name);
   document.body.dataset.page = "view";
   if (name !== "evaltest") { evalAgreed = null; evalNotice = ""; }
+  if (name !== "tool") toolCheckingOut = false;
   host.innerHTML = `<nav class="crumbs"><button data-home>Home</button><span>/</span>
     ${name === "newspost" ? `<button data-view="news">News</button><span>/</span>` : ""}
     ${["certreport", "evaltest", "approvals"].includes(name) ? `<button data-view="forklift">Forklift Center</button><span>/</span>` : ""}
     ${name === "inspform" ? `<button data-view="inspection">Inspection Center</button><span>/</span>` : ""}
+    ${SUPPORT_PAGES.includes(name) ? `<button data-view="support">Support Center</button><span>/</span>` : ""}
+    ${["request", "newrequest"].includes(name) ? `<button data-view="requests">Support Requests</button><span>/</span>` : ""}
+    ${["tool", "toolform"].includes(name) ? `<button data-view="tools">Special Tools</button><span>/</span>` : ""}
+    ${name === "toolform" && toolDraft && toolDraft.mode === "edit"
+      ? `<button data-view="tool">${esc(toolDraft.name)}</button><span>/</span>` : ""}
     ${["openseat", "myclasses", "catalog", "article", "skills", "trainingstatus", "coursereport"].includes(name) ? `<button data-view="training">Training Center</button><span>/</span>` : ""}
     <span>${esc(pageTitle(name))}</span></nav>` + VIEWS[name]();
   // A page that opens with its title gets the red band across the top, like
@@ -2498,6 +2682,8 @@ document.addEventListener("click", (event) => {
   const tile = event.target.closest("[data-view]");
   if (tile && tile.dataset.article) openArticleId = tile.dataset.article;
   if (tile && tile.dataset.news) openNewsId = tile.dataset.news;
+  if (tile && tile.dataset.ticket) openTicketId = tile.dataset.ticket;
+  if (tile && tile.dataset.tool) { openToolId = tile.dataset.tool; toolNotice = ""; }
   if (tile) return showView(tile.dataset.view);
   if (event.target.closest("[data-home]")) return showHome();
 });
@@ -2562,10 +2748,13 @@ const VIEWS = {
 
   approvals: () => approvalsView(),
 
-  support: () =>
-    hero("Support Center",
-         "Something not working? Get it in front of the right people here.", true)
-    + ticketsSection() + supportCards(),
+  support: () => supportView(),
+  requests: () => requestsView(),
+  request: () => requestView(),
+  newrequest: () => newRequestView(),
+  tools: () => toolsView(),
+  tool: () => toolView(),
+  toolform: () => toolFormView(),
 
   inspection: () => inspectionView(),
 
@@ -2908,11 +3097,142 @@ function certificationCard() {
 }
 
 // ---- support -------------------------------------------------------------
+//
+// The Support Center, laid out like the app's (SupportCenterView.swift): ask
+// the company, IT help, special tools, and who to call. Requests and special
+// tools are each a card to click into, so this page stays the same length
+// however many of either there are.
+
+// A page redrawn where it was, rather than back at the top.
+function redraw(view) {
+  const y = window.scrollY;
+  showView(view);
+  window.scrollTo(0, y);
+}
+
+function supportView() {
+  const open = tickets.filter(t => t.status !== "closed").length;
+  const out = tools.filter(t => toolOutCount(t) > 0).length;
+  const body = "Describe the problem here:\n\n\n\n-\n"
+    + ((profile && profile.full_name) ? "From: " + profile.full_name + "\n" : "")
+    + ((profile && locations[profile.location_id])
+       ? "Location: " + locations[profile.location_id] + "\n" : "")
+    + "Sent from the Agri-Service web page";
+
+  return hero("Support Center", "Something not working? Get it in front of the right people here.")
+    + `<div class="sc-groups">
+      <section>
+        <div class="group-title">Ask the company</div>
+        <button type="button" class="link-card" data-view="requests" style="${lit("slate")}">
+          <span class="well">${icon("chat")}</span>
+          <span><b>Internal Support Requests</b>
+            <span>Ask the company a question about a machine, or answer someone else's.</span>
+            <span class="sc-foot">${icon("tray", 14)}${open
+              ? `${open} open ${open === 1 ? "request" : "requests"}` : "Nothing open right now"}</span>
+            <span class="go">Open requests &rarr;</span></span>
+        </button>
+      </section>
+      <section>
+        <div class="group-title">IT help</div>
+        <a class="link-card" href="mailto:IT@agri-service.com?body=${encodeURIComponent(body)}"
+           style="${lit("steel")}">
+          <span class="well">${icon("monitor")}</span>
+          <span><b>Submit an IT Ticket</b>
+            <span>Computer, phone, printer, or account trouble — email the IT team.</span>
+            <span class="sc-foot">${icon("mail", 14)}Opens a message to IT@agri-service.com</span>
+            <span class="go">Start a ticket &nearr;</span></span>
+        </a>
+      </section>
+      ${toolsError ? "" : `<section>
+        <div class="group-title">Special tools</div>
+        <button type="button" class="link-card" data-view="tools" style="${lit("amber")}">
+          <span class="well">${icon("wrench")}</span>
+          <span><b>Special Tools</b>
+            <span>Where every special tool lives, and where it is right now.</span>
+            <span class="sc-foot">${icon("box", 14)}${tools.length
+              ? `${tools.length} ${tools.length === 1 ? "tool" : "tools"}` : "None added yet"}${
+              out ? `<em>· ${out} checked out</em>` : ""}</span>
+            <span class="go">Open the list &rarr;</span></span>
+        </button>
+      </section>`}
+    </div>
+    <div id="whoToCall">${whoToCallHtml()}</div>`;
+}
+
+// Who to call is most of the page's length, a card per role with a row per
+// person, so it folds. Folded, it still names the roles inside. Opened once,
+// it stays open in this browser, as the app remembers it on the phone.
+const WHO_TO_CALL = "support.whoToCall.open";
+let whoToCallOpen = (() => {
+  try { return localStorage.getItem(WHO_TO_CALL) === "1"; } catch (e) { return false; }
+})();
+
+function whoToCallHtml() {
+  const names = supportRoles.map(r => esc(r.title)).join(" · ");
+  return `<button type="button" class="group-title sc-fold" data-who-to-call
+      aria-expanded="${whoToCallOpen}">Who to call<span class="sc-fold-go">${
+      whoToCallOpen ? "Hide" : "Show"}${icon("chevronDown", 14)}</span></button>
+    ${whoToCallOpen
+      ? `<div class="sc-roles">${supportRoles.map(roleCardHtml).join("")}</div>`
+      : names ? `<p class="sc-role-names">${names}</p>` : ""}`;
+}
+
+// Not one link like the other cards: each person has two, so the card is a
+// surface and Call and Text are the targets.
+function roleCardHtml(role) {
+  const crew = (role.support_people || []).slice()
+    .sort((a, b) => (a.sort_order - b.sort_order) || a.name.localeCompare(b.name));
+  // A role can be covered by more than one person, and one nobody covers yet
+  // is shown rather than hidden, so people know the route is coming.
+  const rows = crew.length ? crew.map(person => `
+    <div class="sc-person">
+      <div class="sc-who">
+        <span class="sc-avatar">${esc(initials(person.name))}</span>
+        <span><b>${esc(person.name)}</b>
+          ${person.title ? `<span>${esc(person.title)}</span>` : ""}
+          <span class="sc-phone">${esc(displayPhone(person.phone))}</span></span>
+      </div>
+      <div class="sc-reach">
+        <a class="sc-call" href="tel:+1${esc(person.phone)}">${icon("phone", 15)}Call</a>
+        <a class="sc-text" href="sms:+1${esc(person.phone)}">${icon("chat", 15)}Text</a>
+      </div>
+    </div>`).join("") : `
+    <div class="sc-person">
+      <div class="sc-who">
+        <span class="sc-avatar empty">${icon("person", 18)}</span>
+        <span><b>No one assigned yet</b>
+          <span>The training department will add a name here.</span></span>
+      </div>
+    </div>`;
+
+  return `<div class="sc-role">
+    <div class="sc-role-head">${icon("phone", 19)}
+      <span><b>${esc(role.title)}</b>${role.subtitle ? `<span>${esc(role.subtitle)}</span>` : ""}</span>
+    </div>
+    ${rows}
+  </div>`;
+}
+
+document.addEventListener("click", (event) => {
+  if (!event.target.closest("[data-who-to-call]")) return;
+  whoToCallOpen = !whoToCallOpen;
+  try { localStorage.setItem(WHO_TO_CALL, whoToCallOpen ? "1" : "0"); } catch (e) { /* this visit only */ }
+  $("whoToCall").innerHTML = whoToCallHtml();
+});
+
+const initials = (name) =>
+  name.split(" ").filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase();
+
+const displayPhone = (p) => (p || "").length === 10
+  ? `(${p.slice(0, 3)}) ${p.slice(3, 6)}-${p.slice(6)}` : (p || "");
 
 // ---- internal support requests -------------------------------------------
+//
+// The list, one request, and the form for a new one, as three pages like the
+// app's (SupportTicketsView, SupportTicketDetailView, NewSupportTicketView).
 
 // Groups are the person's own to change, so the same chips appear on the
-// request form and on your own profile.
+// request form and under the list.
 const chips = (selected, attr) => `<div class="chips">` +
   workGroups.filter(g => g.is_active !== false || selected.includes(g.id))
     .map(g => `<button type="button" class="chip${
@@ -2924,7 +3244,7 @@ const groupNames = (ids) => (ids || [])
   .join(", ");
 
 // Chips toggle in place; nothing is saved until the surrounding button is used,
-// except on the profile row, which saves as you tap.
+// except for your own groups, which save as you tap.
 $("view").addEventListener("click", async (event) => {
   const chip = event.target.closest("button[data-chip]");
   if (!chip) return;
@@ -2937,139 +3257,188 @@ $("view").addEventListener("click", async (event) => {
       .update({ groups: picked }).eq("id", me.id);
     if (error) return alert(error.message);
     profile.groups = picked;
-    await loadAll();
-    showView("support");
+    // Which requests reach you follows your groups.
+    await loadTickets();
+    redraw("requests");
   }
 });
 
-const TICKET_BADGES = {
-  open: ["Open", "b-open"],
-  answered: ["Answered", "b-answered"],
-  closed: ["Closed", "b-closed"]
-};
-
-// Which requests the list shows. Closed ones are the record of what fixed what.
-let ticketFilter = "all";
-
-function ticketsSection() {
-  const open = tickets.filter(t => t.status !== "closed");
-  const shown = tickets.filter(t => ticketFilter === "all"
-    || (ticketFilter === "closed" ? t.status === "closed" : t.status !== "closed"));
-
-  const rows = shown.map(ticket => {
-    const [label, cls] = TICKET_BADGES[ticket.status] || ["-", "b-none"];
-    const crew = (ticket.support_ticket_comments || [])
-      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-
-    const machine = [ticket.brand, ticket.model, ticket.machine_type]
-      .map(v => (v || "").trim()).filter(Boolean).join(" · ");
-
-    const detail = (label, value) => (value || "").trim()
-      ? `<p style="margin:0 0 8px"><span class="cadence">${label}</span><br>${esc(value)}</p>`
-      : "";
-
-    return `<details class="ticket" data-ticket="${esc(ticket.id)}">
-      <summary>
-        <span class="badge ${cls}">${label}</span>
-        <b style="display:block;margin:6px 0 2px">${esc(firstLine(ticket.description))}</b>
-        <span class="note">${machine ? esc(machine) + " · " : ""}${
-          esc(ticket.created_by_name || "Someone")} · ${
-          crew.length} ${crew.length === 1 ? "reply" : "replies"}${
-          (ticket.groups || []).length ? " · " + esc(groupNames(ticket.groups)) : ""}</span>
-        ${ticket.status === "closed" && (ticket.solution || "").trim()
-          ? `<span class="fixed">&#10003; ${esc(firstLine(ticket.solution))}</span>` : ""}
-      </summary>
-      <div class="inner">
-        ${ticket.status === "closed" && (ticket.solution || "").trim()
-          ? `<div class="solution"><span class="cadence">Solution</span><br>${
-              esc(ticket.solution).replace(/\n/g, "<br>")}${ticket.closed_by_name
-              ? `<br><span class="note">Closed by ${esc(ticket.closed_by_name)}${ticket.closed_at
-                ? ` · ${esc(new Date(ticket.closed_at).toLocaleDateString())}` : ""}</span>` : ""}</div>`
-          : ""}
-        ${(ticket.groups || []).length
-          ? `<p class="note" style="margin:0 0 10px">For ${
-              esc(groupNames(ticket.groups))}</p>` : ""}
-        ${detail("Machine or system", ticket.machine_type)}
-        ${detail("Brand", ticket.brand)}
-        ${detail("Model", ticket.model)}
-        ${detail("Error codes", ticket.error_codes)}
-        <p style="margin:0 0 8px"><span class="cadence">Description</span><br>${
-          esc(ticket.description).replace(/\n/g, "<br>")}</p>
-
-        ${crew.map(c => `<div class="comment">
-          <b>${esc(c.created_by_name || "Someone")}</b>
-          <span class="note">· ${new Date(c.created_at).toLocaleString()}</span><br>
-          ${esc(c.body).replace(/\n/g, "<br>")}
-        </div>`).join("")}
-
-        <div style="margin-top:12px">
-          <label>Add a reply</label>
-          <textarea data-reply rows="3"></textarea>
-          <div class="row">
-            <button data-act="reply">Post reply</button>
-            ${(ticket.created_by === me.id || isAdmin())
-              ? (ticket.status === "closed"
-                ? `<button class="ghost" data-act="edit-solution">Edit solution</button>
-                   <button class="ghost" data-act="reopen">Reopen</button>`
-                : `<button class="ghost" data-act="close">Mark as closed</button>`) : ""}
-            <span class="msg"></span>
-          </div>
-        </div>
-      </div>
-    </details>`;
-  }).join("") || `<p class="note">${!tickets.length ? "No requests yet."
-    : ticketFilter === "closed" ? "Nothing closed yet." : "Nothing open right now."}</p>`;
-
-  return `<div class="group-title">Ask the company</div>
-  <div class="card" id="ticketsCard">
-    <h2>Internal support requests</h2>
-    <p class="note">A request reaches only the groups it's aimed at. ${
-      open.length} open. A closed request shows what fixed it.</p>
-    <div class="row" style="margin:0 0 10px;gap:8px">
-      ${[["all", "All"], ["open", "Open"], ["closed", "Closed"]].map(([value, label]) =>
-        `<button type="button" class="chip${ticketFilter === value ? " on" : ""}"
-          data-ticket-filter="${value}">${label}</button>`).join("")}
-    </div>
-
-    <label>Your groups</label>
-    ${chips(profile.groups || [], "mine")}
-    <p class="note" style="margin-top:-4px">Requests aimed at these reach you.
-      Tap to change — this saves straight away.</p>
-
-    <details class="ticket" id="newTicket" style="border-color:var(--red)">
-      <summary><b>Raise a new request</b></summary>
-      <div class="inner">
-        <label>Who should see this</label>
-        ${chips([], "new")}
-        <div class="fields">
-          <div><label>Machine or system</label>
-            <input type="text" data-new="machine_type"
-                   placeholder="Tractor, combine, display…"></div>
-          <div><label>Brand</label>
-            <input type="text" data-new="brand" placeholder="Fendt, Massey…"></div>
-          <div><label>Model</label>
-            <input type="text" data-new="model" placeholder="1050 Vario"></div>
-          <div><label>Error codes</label>
-            <input type="text" data-new="error_codes" placeholder="SPN 3216, FMI 4"></div>
-          <div class="wide"><label>Description</label>
-            <textarea data-new="description" rows="5"
-              placeholder="What have you tried, and what did it do?"></textarea></div>
-        </div>
-        <div class="row">
-          <button data-act="new-ticket">Send request</button>
-          <span class="msg"></span>
-        </div>
-      </div>
-    </details>
-
-    ${rows}
-  </div>`;
+async function loadTickets() {
+  const { data, error } = await db.from("support_tickets").select("*, support_ticket_comments(*)")
+    .order("last_activity_at", { ascending: false });
+  if (!error) tickets = data || [];
 }
+
+const TICKET_STATUS = {
+  open: { label: "Open", tint: "red", badge: "b-open" },
+  answered: { label: "Answered", tint: "amber", badge: "b-answered" },
+  closed: { label: "Closed", tint: "green", badge: "b-closed" }
+};
+const ticketStatus = (t) => TICKET_STATUS[t.status] || TICKET_STATUS.open;
+
+// Which requests the list shows: open ones first, as in the app. Closed ones
+// are the record of what fixed what.
+let ticketFilter = "open", openTicketId = null;
+
+const TICKET_FILTERS = [
+  ["open", "Open", t => t.status !== "closed"],
+  ["closed", "Closed", t => t.status === "closed"],
+  ["all", "All", () => true],
+  ["mine", "Mine", t => t.created_by === me.id]
+];
 
 const firstLine = (text) => {
   const line = String(text || "").trim().split("\n")[0];
   return line.length > 90 ? line.slice(0, 90) + "…" : line;
 };
+
+// "Fendt · 1050 · Tractor": what the request is about, in the fewest words.
+const machineLine = (t) => [t.brand, t.model, t.machine_type]
+  .map(v => (v || "").trim()).filter(Boolean).join(" · ");
+
+const solutionOf = (t) => t.status === "closed" ? (t.solution || "").trim() : "";
+
+// "3 days ago", as the app words it.
+function ago(ts) {
+  if (!ts) return "just now";
+  const seconds = (new Date(ts) - Date.now()) / 1000;
+  const say = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+  for (const [size, unit] of [[31536000, "year"], [2592000, "month"], [604800, "week"],
+                              [86400, "day"], [3600, "hour"], [60, "minute"]]) {
+    if (Math.abs(seconds) >= size) return say.format(Math.round(seconds / size), unit);
+  }
+  return "just now";
+}
+
+function requestsView() {
+  const [, , test] = TICKET_FILTERS.find(f => f[0] === ticketFilter) || TICKET_FILTERS[0];
+  const shown = tickets.filter(test);
+  const [heading, words] = ticketFilter === "closed"
+    ? ["Nothing closed yet", "Closed requests appear here with what fixed them, for the next person with the same problem."]
+    : [ticketFilter === "mine" ? "You haven't asked anything yet" : "No open requests",
+       "Raise one with New request. Everyone in the groups you pick can see it, so the next person with the same problem finds the answer."];
+
+  return hero("Support Requests",
+      "Ask the company a question about a machine, or answer someone else's. A closed request shows what fixed it.")
+    + `<div class="sr">
+      <div class="sr-bar">
+        <div class="cab-pills">${TICKET_FILTERS.map(([id, label, f]) => `
+          <button type="button" class="cab-pill${ticketFilter === id ? " on" : ""}"
+            data-ticket-filter="${id}">${label}<span>${tickets.filter(f).length}</span></button>`).join("")}</div>
+        <button type="button" class="sr-new" data-view="newrequest">${icon("pencil", 16)}New request</button>
+      </div>
+      ${shown.length ? `<div class="sr-list">${shown.map(ticketRowHtml).join("")}</div>`
+        : `<div class="sr-empty">${icon("tray", 34)}<b>${heading}</b><p>${words}</p></div>`}
+      <div class="card sr-mine">
+        <h2>Your groups</h2>
+        ${chips((profile && profile.groups) || [], "mine")}
+        <p class="note">Requests aimed at these reach you. Tap to change — this saves straight away.</p>
+      </div>
+    </div>`;
+}
+
+function ticketRowHtml(t) {
+  const status = ticketStatus(t), replies = (t.support_ticket_comments || []).length;
+  const machine = machineLine(t), fix = solutionOf(t);
+  return `<button type="button" class="sr-row cab-card" data-view="request" data-ticket="${esc(t.id)}"
+      style="${lit(status.tint)}">
+    <span class="sr-top"><span class="cab-tag">${status.label}</span>
+      ${replies ? `<span class="sr-count">${icon("chat", 13)}${replies}</span>` : ""}</span>
+    <b>${esc(firstLine(t.description))}</b>
+    ${machine ? `<span class="sr-machine">${esc(machine)}</span>` : ""}
+    ${(t.groups || []).length ? `<span class="sr-for">${esc(groupNames(t.groups))}</span>` : ""}
+    ${fix ? `<span class="sr-fix">${icon("checkCircle", 15)}<span>${esc(fix)}</span></span>` : ""}
+    <span class="sr-by">${esc(t.created_by_name || "Someone")} · ${esc(ago(t.last_activity_at || t.created_at))}</span>
+  </button>`;
+}
+
+function requestView() {
+  const t = tickets.find(x => x.id === openTicketId);
+  if (!t) {
+    return hero("Request") + `<div class="sr-empty"><b>This request isn't in the list any more.</b>
+      <p><button type="button" class="ghost" data-view="requests">Back to requests</button></p></div>`;
+  }
+  const status = ticketStatus(t), fix = solutionOf(t);
+  const replies = (t.support_ticket_comments || []).slice()
+    .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+  const canClose = t.created_by === me.id || isAdmin();
+  const fact = (label, value) => (value || "").trim()
+    ? `<div><dt>${label}</dt><dd>${esc(value.trim())}</dd></div>` : "";
+  const facts = fact("Machine or system", t.machine_type) + fact("Brand", t.brand)
+    + fact("Model", t.model) + fact("Error codes", t.error_codes);
+
+  return hero(firstLine(t.description) || "Request",
+      `${t.created_by_name || "Someone"} · ${ago(t.created_at)}`
+      + ((t.groups || []).length ? ` · For ${groupNames(t.groups)}` : ""))
+    + `<div class="sr-detail" data-ticket-box="${esc(t.id)}">
+      <div class="row sr-status-row">
+        <span class="badge ${status.badge}">${status.label}</span>
+        <span class="sr-when">Last activity ${esc(ago(t.last_activity_at || t.created_at))}</span>
+        ${canClose ? `<span class="sr-acts">${t.status === "closed"
+          ? `<button type="button" class="ghost" data-act="edit-solution">${icon("pencil", 15)}Edit solution</button>
+             <button type="button" class="ghost" data-act="reopen">Reopen</button>`
+          : `<button type="button" class="ghost" data-act="close">${icon("checkCircle", 15)}Mark as closed</button>`}
+          </span><span class="msg"></span>` : ""}
+      </div>
+
+      ${fix ? `<div class="sr-solution">
+        <span class="sr-label">${icon("checkCircle", 15)}Solution</span>
+        <p>${esc(fix).replace(/\n/g, "<br>")}</p>
+        ${t.closed_by_name ? `<small>Closed by ${esc(t.closed_by_name)}${
+          t.closed_at ? ` · ${esc(ago(t.closed_at))}` : ""}</small>` : ""}
+      </div>` : ""}
+
+      <div class="card sr-facts">
+        ${facts ? `<dl>${facts}</dl>` : ""}
+        <dl class="sr-desc"><div><dt>Description</dt>
+          <dd>${esc(t.description || "").replace(/\n/g, "<br>")}</dd></div></dl>
+      </div>
+
+      <div class="card sr-thread">
+        <h2>${replies.length ? `${replies.length} ${replies.length === 1 ? "reply" : "replies"}` : "No replies yet"}</h2>
+        ${replies.map(c => `<div class="sr-comment">
+          <div class="sr-comment-head"><b>${esc(c.created_by_name || "Someone")}</b>
+            <span title="${esc(new Date(c.created_at).toLocaleString())}">${esc(ago(c.created_at))}</span></div>
+          <p>${esc(c.body).replace(/\n/g, "<br>")}</p>
+        </div>`).join("")}
+      </div>
+
+      <div class="card sr-reply">
+        <label for="replyText">Add a reply</label>
+        <textarea id="replyText" data-reply rows="4"></textarea>
+        <div class="row"><button type="button" data-act="reply">Post reply</button><span class="msg"></span></div>
+      </div>
+    </div>`;
+}
+
+function newRequestView() {
+  return hero("New Request",
+      "Ask about a machine or a system. Only the groups you pick see it, and anyone in them can answer.")
+    + `<div class="sr-form" data-new-request>
+      <div class="card">
+        <label>Who should see this</label>
+        ${chips([], "new")}
+        <div class="fields">
+          <div><label for="nrMachine">Machine or system</label>
+            <input id="nrMachine" type="text" data-new="machine_type" placeholder="Tractor, combine, display…"></div>
+          <div><label for="nrBrand">Brand</label>
+            <input id="nrBrand" type="text" data-new="brand" placeholder="Fendt, Massey…"></div>
+          <div><label for="nrModel">Model</label>
+            <input id="nrModel" type="text" data-new="model" placeholder="1050 Vario"></div>
+          <div><label for="nrCodes">Error codes</label>
+            <input id="nrCodes" type="text" data-new="error_codes" placeholder="SPN 3216, FMI 4"></div>
+          <div class="wide"><label for="nrDescription">Description</label>
+            <textarea id="nrDescription" data-new="description" rows="6"
+              placeholder="What's happening, what have you tried, and what did it do?"></textarea></div>
+        </div>
+        <div class="row">
+          <button type="button" data-act="new-ticket">Send request</button>
+          <button type="button" class="ghost" data-view="requests">Cancel</button>
+          <span class="msg"></span>
+        </div>
+      </div>
+    </div>`;
+}
 
 $("view").addEventListener("click", async (event) => {
   const button = event.target.closest("button[data-act]");
@@ -3079,24 +3448,25 @@ $("view").addEventListener("click", async (event) => {
   if (!["new-ticket", "reply", "close", "edit-solution", "close-confirm", "close-cancel",
         "reopen"].includes(act)) return;
 
-  const box = button.closest(".ticket");
-  const say = (text, bad) => speak(box, text, bad);
+  const say = (text, bad) => speak(button.closest(".row"), text, bad);
+  const box = button.closest("[data-ticket-box]");
+  const id = box && box.dataset.ticketBox;
 
   // Closing asks what fixed it first, and so does correcting the answer.
   if (act === "close" || act === "edit-solution") {
-    if (box.querySelector(".solution-form")) return;
-    const ticket = tickets.find(t => t.id === box.dataset.ticket) || {};
+    const open = box.querySelector(".solution-form");
+    if (open) return open.querySelector("textarea").focus();
+    const ticket = tickets.find(t => t.id === id) || {};
     const editing = act === "edit-solution";
-    button.closest(".row").insertAdjacentHTML("afterend", `<div class="solution-form">
-      <label>What fixed it?</label>
-      <textarea data-solution rows="4" maxlength="4000"
+    button.closest(".row").insertAdjacentHTML("afterend", `<div class="card solution-form">
+      <label for="solutionText">What fixed it?</label>
+      <textarea id="solutionText" data-solution rows="4" maxlength="4000"
         placeholder="The fault, and what fixed it: the part, the setting, the step.">${
         editing ? esc(ticket.solution || "") : ""}</textarea>
-      <p class="note" style="margin:0 0 8px">It stays on the closed request for the next person
-        with the same problem.</p>
+      <p class="note">It stays on the closed request for the next person with the same problem.</p>
       <div class="row">
-        <button data-act="close-confirm">${editing ? "Save solution" : "Close request"}</button>
-        <button class="ghost" data-act="close-cancel">Cancel</button>
+        <button type="button" data-act="close-confirm">${editing ? "Save solution" : "Close request"}</button>
+        <button type="button" class="ghost" data-act="close-cancel">Cancel</button>
         <span class="msg"></span>
       </div>
     </div>`);
@@ -3111,9 +3481,9 @@ $("view").addEventListener("click", async (event) => {
       + "its solution is cleared, since it didn't fix it. The replies stay.")) return;
 
   if (act === "new-ticket") {
-    const get = (f) => box.querySelector(`[data-new="${f}"]`).value.trim();
-    const picked = [...box.querySelectorAll('[data-chip="new"].on')]
-      .map(c => c.dataset.id);
+    const form = button.closest("[data-new-request]");
+    const get = (f) => form.querySelector(`[data-new="${f}"]`).value.trim();
+    const picked = [...form.querySelectorAll('[data-chip="new"].on')].map(c => c.dataset.id);
 
     if (!get("description")) return say("Say what's happening first.", true);
     // A request with no group would go to everybody, which is the thing groups
@@ -3122,128 +3492,81 @@ $("view").addEventListener("click", async (event) => {
 
     say("Sending…", false);
     // created_by, the name and the shop are all filled in by the database.
-    const { error } = await db.from("support_tickets").insert({
+    const { data, error } = await db.from("support_tickets").insert({
       machine_type: get("machine_type"), brand: get("brand"), model: get("model"),
       error_codes: get("error_codes"), description: get("description"),
       groups: picked
-    });
+    }).select("id");
     if (error) return say(error.message, true);
+    await loadTickets();
+    if (data && data[0]) { openTicketId = data[0].id; return showView("request"); }
+    ticketFilter = "mine";
+    return showView("requests");
+  }
 
-  } else if (act === "reply") {
+  if (act === "reply") {
     const field = box.querySelector("[data-reply]");
     if (!field.value.trim()) return say("Nothing to post.", true);
 
     say("Posting…", false);
     const { data, error } = await db.from("support_ticket_comments")
-      .insert({ ticket_id: box.dataset.ticket, body: field.value.trim() })
+      .insert({ ticket_id: id, body: field.value.trim() })
       .select("id");
     if (error) return say(error.message, true);
     // Whoever asked is waiting on an answer.
     if (data && data[0]) notify("support_comment", data[0].id);
 
   } else if (act === "close-confirm") {
-    const form = button.closest(".solution-form");
-    const answer = (form.querySelector("[data-solution]").value || "").trim();
-    const tell = (text, bad) => speak(form, text, bad);
-    if (!answer) return tell("Say what fixed it before closing the request.", true);
-    tell("Saving…", false);
+    const answer = (box.querySelector("[data-solution]").value || "").trim();
+    if (!answer) return say("Say what fixed it before closing the request.", true);
+    say("Saving…", false);
     // The database stamps who closed it, and refuses a blank solution.
     const { data, error } = await db.from("support_tickets")
       .update({ status: "closed", solution: answer })
-      .eq("id", box.dataset.ticket).select();
-    if (error) return tell(error.message, true);
-    if (!data || !data.length) return tell("That isn't yours to change.", true);
+      .eq("id", id).select();
+    if (error) return say(error.message, true);
+    if (!data || !data.length) return say("That isn't yours to change.", true);
 
   } else {
     // Reopening. The database clears the solution.
     const { data, error } = await db.from("support_tickets")
       .update({ status: "open" })
-      .eq("id", box.dataset.ticket).select();
+      .eq("id", id).select();
     if (error) return say(error.message, true);
     if (!data || !data.length) return say("That isn't yours to change.", true);
   }
 
-  await loadAll();
-  showView("support");
+  await loadTickets();
+  redraw("request");
 });
 
 $("view").addEventListener("click", (event) => {
-  const chip = event.target.closest("button[data-ticket-filter]");
-  if (!chip) return;
-  ticketFilter = chip.dataset.ticketFilter;
-  showView("support");
+  const pill = event.target.closest("button[data-ticket-filter]");
+  if (!pill) return;
+  ticketFilter = pill.dataset.ticketFilter;
+  redraw("requests");
 });
-
-function supportCards() {
-  const cards = supportRoles.map(role => {
-    const crew = (role.support_people || [])
-      .sort((a, b) => (a.sort_order - b.sort_order) || a.name.localeCompare(b.name));
-
-    const rows = crew.length ? crew.map(person => `
-      <div class="person">
-        <span class="avatar">${esc(initials(person.name))}</span>
-        <span><b>${esc(person.name)}</b><br>
-          <span class="note">${esc(person.title || "")}</span><br>
-          ${esc(displayPhone(person.phone))}</span>
-        <span class="actions">
-          <a href="tel:+1${esc(person.phone)}"><button class="green">Call</button></a>
-          <a href="sms:+1${esc(person.phone)}"><button class="ghost">Text</button></a>
-        </span>
-      </div>`).join("") : `
-      <div class="person">
-        <span class="avatar empty">?</span>
-        <span><b>No one assigned yet</b><br>
-          <span class="note">The training department will add a name here.</span></span>
-      </div>`;
-
-    return `<div class="support-role">
-      <div class="head">
-        <span class="well green">${icon("support")}</span>
-        <span><b>${esc(role.title)}</b><br>
-          <span class="note">${esc(role.subtitle)}</span></span>
-      </div>
-      ${rows}
-    </div>`;
-  }).join("");
-
-  const body = "Describe the problem here:\n\n\n\n-\n"
-    + ((profile && profile.full_name) ? "From: " + profile.full_name + "\n" : "")
-    + ((profile && locations[profile.location_id])
-       ? "Location: " + locations[profile.location_id] + "\n" : "")
-    + "Sent from the Agri-Service web page";
-
-  // IT first, straight after requests, matching the app.
-  return `<div class="group-title">IT help</div>`
-    + `<a class="link-card accent-ink"
-      href="mailto:IT@agri-service.com?body=${encodeURIComponent(body)}">
-    <span class="well ink">${icon("doc")}</span>
-    <span><b>Submit an IT Ticket</b>
-      <span>Computer, phone, printer, or account trouble - email the IT team.</span>
-      <span class="go">Start a ticket &nearr;</span></span>
-  </a>`
-    + toolsSection()
-    + `<div class="group-title">Who to call</div>` + cards;
-}
-
-const initials = (name) =>
-  name.split(" ").filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase();
-
-const displayPhone = (p) => (p || "").length === 10
-  ? `(${p.slice(0, 3)}) ${p.slice(3, 6)}-${p.slice(6)}` : (p || "");
 
 // ---- special tools --------------------------------------------------------
 //
-// Where every special tool lives, and where it is right now (migration 0061).
-// Everyone sees the list on the Support Center page. Checking tools out and in
-// is done in the app, by the admin at the tool's home shop or an owner
-// (migration 0062), as is adding or changing one. The admin area has the whole
-// list as a CSV, the bulk upload, and the fields owners add to the tool form.
+// Where every special tool lives, and where it is right now (migration 0061),
+// as in the app: a list to search and filter, and a page per tool with where
+// it is, where it's been, and — for the admin of its home shop, or an owner —
+// Check out, Check in, Edit and Delete (migration 0062). The database decides
+// who can do each; the buttons only show for the people it will accept.
 //
-// A tool's answers to those fields are kept in `extra`, keyed by the field's
-// id, so renaming a field keeps them — the same as the app.
+// A tool's answers to the fields owners add are kept in `extra`, keyed by the
+// field's id, so renaming a field keeps them — the same as the app. The admin
+// area has the whole list as a CSV, the bulk upload, and those fields.
+//
+// Nothing here waits to send later: a checkout that went through late could
+// claim a tool someone else took in the meantime.
 
 let tools = [], toolFields = [], toolsError = null;
-let toolQuery = "", toolOutOnly = false, toolImport = null;
+let toolQuery = "", toolFilter = "all", toolImport = null;
+// The tool open, whether its checkout form is showing, what the last check-in
+// said, and the add or edit form's contents.
+let openToolId = null, toolCheckingOut = false, toolNotice = "", toolDraft = null;
 
 const TOOL_TYPES = [["text", "Text"], ["long_text", "Long text"], ["number", "Number"],
   ["date", "Date"], ["choice", "Pick from a list"], ["yes_no", "Yes / No"]];
@@ -3267,25 +3590,39 @@ async function loadTools() {
 
 const toolOpen = (t) => (t.special_tool_checkouts || []).filter(c => !c.returned_at)
   .sort((a, b) => String(b.checked_out_at).localeCompare(String(a.checked_out_at)));
+const toolHistory = (t) => (t.special_tool_checkouts || []).filter(c => c.returned_at)
+  .sort((a, b) => String(b.returned_at).localeCompare(String(a.returned_at)));
 const toolOutCount = (t) => toolOpen(t).reduce((n, c) => n + (c.quantity || 0), 0);
 const activeToolFields = () => toolFields.filter(f => f.is_active)
   .sort((a, b) => (a.sort_order - b.sort_order) || a.label.localeCompare(b.label));
 const shopName = (id) => locations[id] || id || "another shop";
 // A timestamp as the day it was here, not the day it was in UTC.
 const localDay = (ts) => ts ? new Date(ts).toLocaleDateString("en-US") : "";
+const toolDay = (ts) => ts ? new Date(ts).toLocaleDateString("en-US",
+  { month: "short", day: "numeric", year: "numeric" }) : "";
 const toolFieldText = (field, value) =>
   field.field_type === "date" ? (usDate(value) || value || "") : (value || "");
 // Part numbers compare the way the database does: trimmed, single spaces, any case.
 const partKey = (p) => String(p || "").trim().replace(/\s+/g, " ").toUpperCase();
 
+// Owners anywhere; a location admin at their own shop. The same rules as
+// manages_special_tool() in migration 0062, which has the final word.
+const canAddTools = () => isOwner() || (isAdmin() && !!(profile && profile.location_id));
+const canManageTool = (t) => isOwner()
+  || (isAdmin() && !!profile && !!profile.location_id && t.location_id === profile.location_id);
+
 function toolStatusText(t) {
   const out = toolOutCount(t), home = shopName(t.location_id);
   if (!out) return t.quantity === 1 ? `At ${home}` : `All ${t.quantity} at ${home}`;
   const places = [...new Set(toolOpen(t).map(c => shopName(c.to_location_id)))].join(", ");
-  const lead = out >= t.quantity
+  return `${toolOutLead(t)} · at ${places}`;
+}
+
+function toolOutLead(t) {
+  const out = toolOutCount(t);
+  return out >= t.quantity
     ? (t.quantity === 1 ? "Checked out" : `All ${t.quantity} checked out`)
     : `${out} of ${t.quantity} checked out`;
-  return `${lead} · at ${places}`;
 }
 
 function toolMatches(t, q) {
@@ -3294,50 +3631,71 @@ function toolMatches(t, q) {
     .join(" ").toLowerCase().includes(q.toLowerCase());
 }
 
-function toolRowsHtml() {
-  const shown = tools.filter(t => toolMatches(t, toolQuery) && (!toolOutOnly || toolOutCount(t) > 0));
-  if (!shown.length) {
-    return `<p class="note">${!tools.length ? "No special tools have been added yet."
-      : toolOutOnly && !toolQuery ? "Nothing is checked out. Every tool is at home." : "Nothing matches."}</p>`;
+const NOT_YOURS = "That's not yours to change. A location admin can only change tools at their own shop.";
+const NOT_HOME_SHOP = "Only the admin at the tool's home shop, or an owner, can check it out or back in.";
+
+// The database's own sentence when it's one of ours, and plain words for the
+// codes it uses when it isn't.
+function toolSentence(error, partNumber, refusal = NOT_YOURS) {
+  if (error.code === "23505") {
+    return `Part number ${partNumber || ""} is already in the list. Each part number is one tool — change its quantity instead.`;
   }
-  return shown.map(t => {
-    const out = toolOutCount(t) > 0;
-    const details = activeToolFields()
-      .map(f => { const v = (t.extra || {})[f.id]; return v ? `${esc(f.label)}: ${esc(toolFieldText(f, v))}` : ""; })
-      .filter(Boolean).join(" · ");
-    const trips = toolOpen(t).map(c => `${c.quantity} at ${esc(shopName(c.to_location_id))}`
-      + ` since ${esc(localDay(c.checked_out_at))}, by ${esc(c.checked_out_by_name || "an administrator")}`
-      + (c.note ? ` — ${esc(c.note)}` : "")).join("<br>");
-    return `<div class="tool-row${out ? " out" : ""}">
-      <div class="top"><b>${esc(t.name)}</b><span class="pn">${esc(t.part_number)}</span>
-        <span class="note">${esc(shopName(t.location_id))} · Qty ${t.quantity}</span>
-        <span class="badge ${out ? "b-expiring" : "b-current"}">${esc(toolStatusText(t))}</span></div>
-      ${t.description ? `<span class="note">${esc(t.description)}</span>` : ""}
-      ${details ? `<span class="note">${details}</span>` : ""}
-      ${trips ? `<span class="where">${trips}</span>` : ""}
-    </div>`;
-  }).join("");
+  if (error.code === "42501") return refusal;
+  return error.message;
 }
 
-// The Support Center's section. Read-only here: the app is where tools are
-// checked out and changed, so this says so rather than offering buttons.
-function toolsSection() {
-  if (toolsError) return "";
-  const out = tools.filter(t => toolOutCount(t) > 0).length;
-  return `<div class="group-title">Special tools</div>
-    <div class="card">
-      <div class="row" style="margin-bottom:8px">
-        <input class="search" id="toolSearch" placeholder="Search a name or part number…"
-               value="${esc(toolQuery)}" style="margin:0;flex:1;min-width:200px">
-        <label class="note" style="display:inline-flex;gap:6px;align-items:center;margin:0">
-          <input type="checkbox" id="toolOutOnly"${toolOutOnly ? " checked" : ""}
-                 style="width:auto;margin:0"> Checked out only</label>
+// ---- special tools: the list
+
+function toolsView() {
+  const mine = profile && profile.location_id;
+  if (toolFilter === "mine" && !mine) toolFilter = "all";
+  const pills = [["all", "All", tools.length],
+    ["out", "Checked out", tools.filter(t => toolOutCount(t) > 0).length]]
+    .concat(mine ? [["mine", shopName(mine), tools.filter(t => t.location_id === mine).length]] : []);
+
+  return hero("Special Tools", "Where every special tool lives, and where it is right now.")
+    + `<div class="st">
+      <div class="st-controls">
+        <input class="search" id="toolSearch" placeholder="Name or part number"
+               value="${esc(toolQuery)}" autocomplete="off" aria-label="Search special tools">
+        ${canAddTools() ? `<button type="button" class="st-add" data-tool-add>${icon("plus", 16)}Add a tool</button>` : ""}
       </div>
-      <p class="note" style="margin:0">${tools.length} ${tools.length === 1 ? "tool" : "tools"}
-        · ${out} checked out. Need one? Your location admin asks the admin at the tool's home
-        shop, who checks it out to you in the app, and back in when it's returned.</p>
-      <div class="tool-list" id="toolList">${toolRowsHtml()}</div>
+      <div class="cab-pills">${pills.map(([id, label, n]) => `
+        <button type="button" class="cab-pill${toolFilter === id ? " on" : ""}"
+          data-tool-filter="${id}">${esc(label)}<span>${n}</span></button>`).join("")}</div>
+      <div class="st-list" id="toolList">${toolRowsHtml()}</div>
+      <p class="st-how">${icon("info", 16)}<span>Need one? Your location admin asks the admin at the
+        tool's home shop, who checks it out to you, and back in when it's returned.</span></p>
     </div>`;
+}
+
+function toolRowsHtml() {
+  const mine = profile && profile.location_id;
+  const shown = tools.filter(t => toolMatches(t, toolQuery)
+    && (toolFilter !== "out" || toolOutCount(t) > 0)
+    && (toolFilter !== "mine" || t.location_id === mine));
+  if (!shown.length) {
+    const why = !tools.length
+        ? (canAddTools() ? "No special tools yet. Add the first with Add a tool." : "No special tools have been added yet.")
+      : toolQuery ? `Nothing matches "${toolQuery}".`
+      : toolFilter === "out" ? "Nothing is checked out. Every tool is at home."
+      : `No special tools live at ${shopName(mine)} yet.`;
+    return `<p class="st-empty">${esc(why)}</p>`;
+  }
+  // Out is the thing to notice, so those are the ones in amber.
+  return shown.map(t => {
+    const out = toolOutCount(t) > 0;
+    return `<button type="button" class="st-row cab-card" data-view="tool" data-tool="${esc(t.id)}"
+        style="${lit(out ? "amber" : "deep")}">
+      <span class="st-main">
+        <b>${esc(t.name)}</b>
+        <span class="st-sub"><span class="st-pn">${esc(t.part_number)}</span>
+          <span>${esc(shopName(t.location_id))} · Qty ${t.quantity}</span></span>
+        <span class="st-status">${icon(out ? "arrowOut" : "checkCircle", 14)}${esc(toolStatusText(t))}</span>
+      </span>
+      <span class="cab-chev" aria-hidden="true">&rsaquo;</span>
+    </button>`;
+  }).join("");
 }
 
 document.addEventListener("input", (event) => {
@@ -3345,10 +3703,343 @@ document.addEventListener("input", (event) => {
   toolQuery = event.target.value.trim();
   $("toolList").innerHTML = toolRowsHtml();
 });
-document.addEventListener("change", (event) => {
-  if (event.target.id !== "toolOutOnly") return;
-  toolOutOnly = event.target.checked;
-  $("toolList").innerHTML = toolRowsHtml();
+
+// ---- special tools: one tool
+
+function toolView() {
+  const t = tools.find(x => x.id === openToolId);
+  if (!t) {
+    return hero("Special Tool") + `<div class="sr-empty"><b>This tool isn't in the list any more.</b>
+      <p><button type="button" class="ghost" data-view="tools">Back to the list</button></p></div>`;
+  }
+  const home = shopName(t.location_id), out = toolOutCount(t), atHome = Math.max(0, t.quantity - out);
+  const manage = canManageTool(t);
+  const answered = activeToolFields().map(f => [f, (t.extra || {})[f.id]]).filter(([, v]) => v);
+  const open = toolOpen(t), history = toolHistory(t);
+  const notice = toolNotice;
+  toolNotice = "";
+
+  // Where it is now, and the one thing to do about it.
+  let action;
+  if (!manage) {
+    // The way to get one: through your own admin, to the shop that owns it.
+    action = `<p class="st-hint">${icon("info", 16)}<span>${profile && t.location_id === profile.location_id
+      ? "Need it? Ask your location admin. They check it out to you, and back in when it's returned."
+      : `Need it? Your location admin asks the ${esc(home)} admin, who checks it out to you and back in when it's returned.`}</span></p>`;
+  } else if (toolCheckingOut && atHome > 0) {
+    action = checkoutFormHtml(t, atHome);
+  } else if (atHome > 0) {
+    action = `<div class="row"><button type="button" class="st-out" data-tool-checkout>${
+      icon("arrowOut", 16)}Check out</button></div>`;
+  } else {
+    action = `<p class="st-hint">None at ${esc(home)} to check out.</p>`;
+  }
+
+  return hero(t.name, t.part_number)
+    + `<div class="st-detail">
+      <div class="st-facts">
+        <div style="${lit("slate")}"><b>${esc(home)}</b><span>Home</span></div>
+        <div style="${lit("steel")}"><b>${t.quantity}</b><span>Quantity</span></div>
+        <div style="${lit("deep")}"><b>${atHome}</b><span>At home</span></div>
+        <div style="${lit(out ? "amber" : "steel")}"><b>${out}</b><span>Checked out</span></div>
+      </div>
+
+      ${t.description || answered.length ? `<div class="card st-about">
+        ${t.description ? `<p class="st-desc">${esc(t.description).replace(/\n/g, "<br>")}</p>` : ""}
+        ${answered.length ? `<dl class="st-fields">${answered.map(([f, v]) =>
+          `<div><dt>${esc(f.label)}</dt><dd>${esc(toolFieldText(f, v))}</dd></div>`).join("")}</dl>` : ""}
+      </div>` : ""}
+
+      <div class="st-where${out ? " out" : ""}">
+        <div class="st-where-head">${icon(out ? "arrowOut" : "checkCircle", 20)}<b>${
+          esc(out ? toolOutLead(t) : toolStatusText(t))}</b></div>
+        ${notice ? `<p class="error st-notice">${esc(notice)}</p>` : ""}
+        ${open.map(c => `<div class="st-trip">
+          <div><b>${c.quantity} at ${esc(shopName(c.to_location_id))}</b>
+            <span>Since ${esc(toolDay(c.checked_out_at))} · by ${esc(c.checked_out_by_name || "an administrator")}</span>
+            ${c.note ? `<span class="st-note">${esc(c.note)}</span>` : ""}</div>
+          ${manage ? `<button type="button" class="ghost" data-tool-checkin="${esc(c.id)}">Check in</button>` : ""}
+        </div>`).join("")}
+        ${action}
+      </div>
+
+      ${history.length ? `<div class="group-title">History</div>
+        <div class="card st-history">${history.slice(0, 15).map(c => `<div class="st-past">
+          <b>${c.quantity} to ${esc(shopName(c.to_location_id))}</b>
+          <span>${esc(toolDay(c.checked_out_at))} – ${esc(toolDay(c.returned_at))} · out by ${
+            esc(c.checked_out_by_name || "an administrator")}${
+            c.returned_by_name ? `, in by ${esc(c.returned_by_name)}` : ""}</span>
+          ${c.note ? `<span>${esc(c.note)}</span>` : ""}
+        </div>`).join("")}</div>` : ""}
+
+      ${manage ? `<div class="row st-manage">
+        <button type="button" class="ghost" data-tool-edit>${icon("pencil", 15)}Edit</button>
+        <button type="button" class="ghost danger" data-tool-delete>${icon("trash", 15)}Delete</button>
+        <span class="msg"></span>
+      </div>` : ""}
+    </div>`;
+}
+
+// Where it's going, how many, and a note for who has it. The destination is a
+// shop; the note carries anything finer than that.
+function checkoutFormHtml(t, atHome) {
+  // Anywhere but home: checking a tool out to its own shop isn't "out".
+  const places = allLocations.filter(l => l.is_active !== false && l.id !== t.location_id);
+  return `<div class="st-checkout">
+    <div class="fields">
+      <div><label for="coTo">Going to</label>
+        <select id="coTo"><option value="">Choose a shop</option>${places.map(l =>
+          `<option value="${esc(l.id)}">${esc(l.name)}</option>`).join("")}</select></div>
+      ${atHome > 1 ? `<div><label for="coQty">How many</label>
+        <input id="coQty" type="number" min="1" max="${atHome}" value="1"></div>` : ""}
+      <div class="wide"><label for="coNote">Who has it, or which job (optional)</label>
+        <input id="coNote" type="text" maxlength="200"></div>
+    </div>
+    <p class="note">Everyone sees it as out, and where, until it's checked back in.
+      ${atHome} at ${esc(shopName(t.location_id))} now.</p>
+    <div class="row">
+      <button type="button" data-tool-checkout-save>Check out</button>
+      <button type="button" class="ghost" data-tool-checkout-cancel>Cancel</button>
+      <span class="msg"></span>
+    </div>
+  </div>`;
+}
+
+document.addEventListener("click", async (event) => {
+  const b = event.target.closest("[data-tool-filter], [data-tool-add], [data-tool-checkout], "
+    + "[data-tool-checkout-save], [data-tool-checkout-cancel], [data-tool-checkin], "
+    + "[data-tool-edit], [data-tool-delete]");
+  if (!b) return;
+  const t = tools.find(x => x.id === openToolId);
+  const say = (text, bad) => speak(b.closest(".row"), text, bad);
+
+  if (b.dataset.toolFilter) {
+    toolFilter = b.dataset.toolFilter;
+    return redraw("tools");
+  }
+
+  if (b.hasAttribute("data-tool-add")) {
+    // A new tool starts at your own shop. An owner can change that; a
+    // location admin can't.
+    toolDraft = { mode: "add", name: "", part_number: "", description: "",
+      location_id: (profile && profile.location_id) || "", quantity: 1, extra: {} };
+    return showView("toolform");
+  }
+  if (!t) return;
+
+  if (b.hasAttribute("data-tool-checkout")) {
+    toolCheckingOut = true;
+    redraw("tool");
+    return $("coTo") && $("coTo").focus();
+  }
+  if (b.hasAttribute("data-tool-checkout-cancel")) {
+    toolCheckingOut = false;
+    return redraw("tool");
+  }
+
+  if (b.hasAttribute("data-tool-checkout-save")) {
+    const atHome = Math.max(0, t.quantity - toolOutCount(t));
+    const to = $("coTo").value;
+    const quantity = $("coQty") ? Number($("coQty").value) : 1;
+    const note = $("coNote").value.trim();
+    if (!to) return say("Where is it going?", true);
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > atHome) {
+      return say(`Only ${atHome} at ${shopName(t.location_id)} to check out.`, true);
+    }
+    say("Checking out…", false);
+    // Who and when are stamped by the database.
+    const { error } = await db.from("special_tool_checkouts")
+      .insert({ tool_id: t.id, to_location_id: to, quantity, note });
+    if (error) return say(toolSentence(error, "", NOT_HOME_SHOP), true);
+    toolCheckingOut = false;
+    await loadTools();
+    return redraw("tool");
+  }
+
+  if (b.dataset.toolCheckin) {
+    const trip = toolOpen(t).find(c => c.id === b.dataset.toolCheckin);
+    if (!trip) return;
+    if (!confirm(`Check in ${trip.quantity} from ${shopName(trip.to_location_id)}?\n\n`
+        + `Only once it's back at ${shopName(t.location_id)}.`)) return;
+    b.disabled = true;
+    // The time and who are replaced by the database's own, in its trigger.
+    const { data, error } = await db.from("special_tool_checkouts")
+      .update({ returned_at: new Date().toISOString() })
+      .eq("id", trip.id).is("returned_at", null).select("id");
+    await loadTools();
+    if (error) {
+      toolNotice = toolSentence(error, "", NOT_HOME_SHOP);
+    } else if (!data || !data.length) {
+      // Nothing matched. Either someone checked it in a moment ago, which the
+      // reload now shows, or it isn't this person's to check in.
+      const now = tools.find(x => x.id === t.id);
+      toolNotice = now && toolOpen(now).some(c => c.id === trip.id)
+        ? NOT_HOME_SHOP : "That was already checked back in.";
+    }
+    return redraw("tool");
+  }
+
+  if (b.hasAttribute("data-tool-edit")) {
+    toolDraft = { mode: "edit", id: t.id, name: t.name, part_number: t.part_number,
+      description: t.description || "", location_id: t.location_id, quantity: t.quantity,
+      extra: { ...(t.extra || {}) } };
+    return showView("toolform");
+  }
+
+  if (b.hasAttribute("data-tool-delete")) {
+    if (!confirm(`Delete ${t.name}?\n\nIt comes off the list for every shop, with its checkout history.`)) return;
+    say("Deleting…", false);
+    const { data, error } = await db.from("special_tools").delete().eq("id", t.id).select("id");
+    if (error) return say(toolSentence(error), true);
+    if (!data || !data.length) return say(NOT_YOURS, true);
+    await loadTools();
+    return showView("tools");
+  }
+});
+
+// ---- special tools: adding one, or changing one
+
+function toolFormView() {
+  const d = toolDraft;
+  if (!d) return hero("Special Tool") + `<div class="sr-empty">
+    <p><button type="button" class="ghost" data-view="tools">Back to the list</button></p></div>`;
+  const owner = isOwner();
+  // Active shops, plus the tool's own if it has since been switched off, so
+  // an old tool's home still shows.
+  const shops = allLocations.filter(l => l.is_active !== false || l.id === d.location_id);
+  const fields = activeToolFields();
+
+  return hero(d.mode === "add" ? "Add a Tool" : "Edit Tool",
+      d.mode === "add" ? "It's in every shop's list as soon as it's saved." : `${d.name} · ${d.part_number}`)
+    + `<div class="st-form" data-tool-form>
+      <div class="card">
+        <div class="fields">
+          <div class="wide"><label for="tfName">Name</label>
+            <input id="tfName" type="text" maxlength="120" placeholder="What it's called" value="${esc(d.name)}"></div>
+          <div><label for="tfPart">Part number</label>
+            <input id="tfPart" class="mono" type="text" maxlength="60" placeholder="As on the tool"
+                   autocapitalize="characters" spellcheck="false" value="${esc(d.part_number)}"></div>
+          <div><label for="tfQty">Quantity</label>
+            <input id="tfQty" type="number" min="1" max="999" value="${esc(d.quantity)}"></div>
+          <div class="wide"><label for="tfDesc">Description</label>
+            <textarea id="tfDesc" rows="3" maxlength="1000"
+              placeholder="Optional: what it's for, what it fits">${esc(d.description)}</textarea></div>
+          <div class="wide"><label for="tfHome">Home shop</label>
+            ${owner ? `<select id="tfHome"><option value="">Choose a shop</option>${shops.map(l =>
+              `<option value="${esc(l.id)}"${l.id === d.location_id ? " selected" : ""}>${esc(l.name)}</option>`).join("")}</select>`
+            : `<input id="tfHome" type="text" value="${esc(shopName(d.location_id))}" disabled>`}</div>
+        </div>
+        <p class="note">The part number is what makes a tool unique. No two tools share one, so a
+          second of the same tool is its quantity going up. ${owner
+          ? "The home shop is where it lives when it isn't checked out."
+          : "Tools you add live at your own shop. An owner can move one to another shop."}</p>
+      </div>
+      ${fields.length ? `<div class="card">
+        <h2>Details</h2>
+        <div class="fields">${fields.map(f => toolFieldInput(f, (d.extra || {})[f.id] || "")).join("")}</div>
+        <p class="note">These fields are set by an owner on the admin page.</p>
+      </div>` : ""}
+      <div class="row">
+        <button type="button" data-tool-save>${d.mode === "add" ? "Add tool" : "Save changes"}</button>
+        <button type="button" class="ghost" data-tool-cancel>Cancel</button>
+        <span class="msg"></span>
+      </div>
+    </div>`;
+}
+
+// One of the owner's fields, as the input its type calls for.
+function toolFieldInput(f, value) {
+  const id = `tfx-${f.id}`, attrs = `id="${esc(id)}" data-tx="${esc(f.id)}"`;
+  const option = (v, label = v) => `<option value="${esc(v)}"${v === value ? " selected" : ""}>${esc(label)}</option>`;
+  let input;
+  switch (f.field_type) {
+    case "long_text":
+      input = `<textarea ${attrs} rows="3" placeholder="Not set">${esc(value)}</textarea>`; break;
+    case "number":
+      input = `<input ${attrs} type="text" inputmode="decimal" placeholder="Not set" value="${esc(value)}">`; break;
+    case "date":
+      input = `<input ${attrs} type="date" value="${esc(value)}">`; break;
+    case "choice": {
+      // An old answer since taken off the list stays, so opening the form
+      // doesn't quietly blank it.
+      const choices = (f.options || []).slice();
+      if (value && !choices.includes(value)) choices.push(value);
+      input = `<select ${attrs}>${option("", "Not set")}${choices.map(c => option(c)).join("")}</select>`; break;
+    }
+    case "yes_no":
+      input = `<select ${attrs}>${option("", "Not set")}${option("Yes")}${option("No")}</select>`; break;
+    default:
+      input = `<input ${attrs} type="text" placeholder="Not set" value="${esc(value)}">`;
+  }
+  return `<div${f.field_type === "long_text" ? ' class="wide"' : ""}>
+    <label for="${esc(id)}">${esc(f.label)}${f.is_required ? ' <span class="req">(required)</span>' : ""}</label>
+    ${input}${f.help_text ? `<small class="note st-help">${esc(f.help_text)}</small>` : ""}</div>`;
+}
+
+document.addEventListener("click", async (event) => {
+  const b = event.target.closest("[data-tool-save], [data-tool-cancel]");
+  if (!b || !toolDraft) return;
+  const d = toolDraft;
+
+  if (b.hasAttribute("data-tool-cancel")) {
+    toolDraft = null;
+    return showView(d.mode === "add" ? "tools" : "tool");
+  }
+
+  const form = b.closest("[data-tool-form]");
+  const say = (text, bad) => speak(b.closest(".row"), text, bad);
+  const tidy = (s) => s.trim().replace(/\s+/g, " ");
+  // Answers to fields that are hidden now are kept, so saving doesn't wipe them.
+  const extra = { ...(d.extra || {}) };
+  form.querySelectorAll("[data-tx]").forEach(el => { extra[el.dataset.tx] = el.value.trim(); });
+  Object.keys(extra).forEach(k => { if (!String(extra[k] || "").trim()) delete extra[k]; });
+  const row = {
+    name: tidy($("tfName").value), part_number: tidy($("tfPart").value),
+    // Line breaks kept: a description can be a short list.
+    description: $("tfDesc").value.trim(),
+    location_id: isOwner() ? $("tfHome").value : d.location_id,
+    quantity: Number($("tfQty").value),
+    extra
+  };
+  Object.assign(d, row);
+
+  // What's still missing, in the order someone would fix it.
+  const problem = !row.name ? "What's the tool called?"
+    : !row.part_number ? "Every tool needs its part number."
+    : !row.location_id ? "Which shop is its home?"
+    : !(Number.isInteger(row.quantity) && row.quantity >= 1 && row.quantity <= 999)
+      ? "The quantity has to be between 1 and 999."
+    : row.description.length > 1000 ? "The description is too long. Keep it under 1,000 characters."
+    : activeToolFields().map(f => {
+        const v = extra[f.id];
+        if (f.is_required && !v) return `${f.label} is required.`;
+        if (f.field_type === "number" && v && !isFinite(Number(v.replace(/,/g, "")))) {
+          return `${f.label} has to be a number.`;
+        }
+        return null;
+      }).find(Boolean);
+  if (problem) return say(problem, true);
+
+  say("Saving…", false);
+  let saved;
+  if (d.mode === "add") {
+    const { data, error } = await db.from("special_tools").insert(row).select("id");
+    if (error) return say(toolSentence(error, row.part_number), true);
+    saved = data && data[0] && data[0].id;
+  } else {
+    // Asked to return the row, because a change the rules don't allow updates
+    // nothing rather than failing.
+    const { data, error } = await db.from("special_tools").update(row).eq("id", d.id).select("id");
+    if (error) return say(toolSentence(error, row.part_number), true);
+    if (!data || !data.length) return say(NOT_YOURS, true);
+    saved = d.id;
+  }
+  await loadTools();
+  toolDraft = null;
+  if (!saved) return showView("tools");
+  openToolId = saved;
+  toolCheckingOut = false;
+  showView("tool");
 });
 
 // ---- special tools: the admin tab
@@ -6841,6 +7532,12 @@ const pageTitle = (id) => (FEATURES.find(f => f.id === id) || COMPANY_PAGES.find
        evaltest: { title: "Forklift Driving Test" },
        inspform: { title: inspDraft ? (inspDraft.stage === "after" ? "After Class" : "New Inspection") : "Inspection" },
        approvals: { title: "Driving Tests to Approve" },
+       requests: { title: "Support Requests" },
+       request: { title: "Request" },
+       newrequest: { title: "New Request" },
+       tools: { title: "Special Tools" },
+       tool: { title: (tools.find(t => t.id === openToolId) || {}).name || "Special Tool" },
+       toolform: { title: toolDraft && toolDraft.mode === "edit" ? "Edit" : "Add a Tool" },
        // What the app's title bar says: the kicker, "AGCO Training Pathway · 2026".
        article: { title: (a => a && (a.kicker || a.title))(trainingArticles.find(a => a.id === openArticleId)) || "Article" } }[id]
   || { title: "" }).title;
@@ -6921,12 +7618,12 @@ function homeStats() {
       sub: "After-class part still to do" });
   } else {
     const open = tickets.filter(t => t.status !== "closed").length;
-    cards.push({ view: "support", icon: "support", label: "Support requests",
+    cards.push({ view: "requests", icon: "support", label: "Support requests",
       value: open ? `${open} open` : "None open", sub: "Across your groups" });
   }
 
   // Each in its Center's colour; payday in the app's Payroll Calendar orange.
-  const accent = (view) => view === "payroll" ? "ember"
+  const accent = (view) => view === "payroll" ? "ember" : view === "requests" ? "slate"
     : (FEATURES.find(f => f.id === view) || {}).accent;
   return cards.map(c => `
     <button class="stat-card cab-glass cab-stripe" data-view="${esc(c.view)}" style="${lit(accent(c.view))}">
