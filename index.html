@@ -1177,11 +1177,9 @@
   .agco-plate-small { font: 700 7.5px var(--font-mono); letter-spacing: .16em; fill: #A3AEB5; }
   .agco-plate-big { font: 700 21px var(--font-cab); fill: #C9CED2; }
   .agco-sign.done .agco-plate { fill: #137026; stroke: #0B4A18; }
-  .agco-sign.credited .agco-plate { fill: #0F4A1C; stroke: #0B3A15; }
   .agco-sign.done .agco-plate-line { stroke: #fff; }
-  .agco-sign.credited .agco-plate-line { stroke: rgba(255,255,255,.6); stroke-dasharray: 3 2.5; }
-  .agco-sign.done .agco-plate-small, .agco-sign.credited .agco-plate-small { fill: rgba(255,255,255,.85); }
-  .agco-sign.done .agco-plate-big, .agco-sign.credited .agco-plate-big { fill: #fff; }
+  .agco-sign.done .agco-plate-small { fill: rgba(255,255,255,.85); }
+  .agco-sign.done .agco-plate-big { fill: #fff; }
   .agco-sign.missing .agco-plate { fill: #CC0033; stroke: #7A0020; }
   .agco-sign.missing .agco-plate-line { stroke: #fff; }
   .agco-sign.missing .agco-plate-small, .agco-sign.missing .agco-plate-big { fill: #fff; }
@@ -1192,11 +1190,9 @@
   .agco-sign.started .agco-plate-line { stroke: #1C1917; }
   .agco-sign.started .agco-plate-small, .agco-sign.started .agco-plate-big { fill: #1C1917; }
   .agco-check { fill: #45FF62; stroke: #1C2226; stroke-width: 1.5; }
-  .agco-sign.credited .agco-check { fill: #2BAC43; }
   .agco-check-mark { fill: none; stroke: #0B2E14; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   .agco-label-level { font: 600 10px var(--font-mono); letter-spacing: .14em; fill: #86929A; }
   .agco-sign.done .agco-label-level { fill: #45FF62; }
-  .agco-sign.credited .agco-label-level { fill: #2BAC43; }
   .agco-sign.started .agco-label-level { fill: #FFAC2A; }
   .agco-label-name { font: 600 14.5px var(--font-cab); letter-spacing: .03em; fill: #fff; }
   .agco-label-status { font: 400 11.5px var(--font); fill: #A3AEB5; }
@@ -1212,14 +1208,12 @@
   .agco-mini { display: grid; place-items: center; width: 40px; height: 32px; flex: none; border-radius: 6px;
     background: #3A454E; color: #C9CED2; font: 700 19px var(--font-cab); box-shadow: inset 0 0 0 2px rgba(255,255,255,.16); }
   .agco-mini.done { background: #137026; color: #fff; box-shadow: inset 0 0 0 2px #fff, inset 0 0 0 3px #137026; }
-  .agco-mini.credited { background: #0F4A1C; color: #fff; }
   .agco-mini.started { background: #E8A317; color: #1C1917; }
   .agco-mini.missing { background: #CC0033; color: #fff; box-shadow: inset 0 0 0 2px #fff, inset 0 0 0 3px #CC0033; }
   .agco-panel[data-state="missing"] .agco-panel-level { color: #FF1A53; }
   .agco-panel .agco-note.required { color: #FFB3C4; }
   .agco-panel-level { font: 600 10.5px var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--cab-detail); }
   .agco-panel[data-state="done"] .agco-panel-level { color: #45FF62; }
-  .agco-panel[data-state="credited"] .agco-panel-level { color: #2BAC43; }
   .agco-panel[data-state="started"] .agco-panel-level { color: #FFAC2A; }
   .agco-panel h2 { margin: 2px 0 0; color: #fff; font: 600 19px/1.2 var(--font-cab); letter-spacing: .03em; text-transform: uppercase; }
   .agco-takes { margin: 0 0 12px; color: var(--cab-sub); font-size: 14px; max-width: 70ch; }
@@ -1239,19 +1233,7 @@
   .agco-courses span { color: var(--cab-detail); font-size: 12.5px; }
   .agco-courses.todo b { color: var(--cab-sub); font-weight: 500; }
   .agco-none { margin: 0; color: var(--cab-detail); font-size: 13.5px; }
-  .agco-options { margin-top: 12px; }
-  .agco-options summary { cursor: pointer; color: var(--cab-sub); font: 600 13.5px var(--font-cab); letter-spacing: .06em;
-    text-transform: uppercase; }
-  .agco-options summary:hover { color: #fff; }
-  .agco-options .agco-courses { margin-top: 6px; }
   .agco-side { display: flex; flex-direction: column; gap: 12px; }
-  details.agco-other { position: relative; padding: 13px 16px 13px 27px; border: 1px solid var(--cab-edge); border-radius: 14px;
-    background: linear-gradient(var(--cab-top), var(--cab-bottom)); color: #fff; box-shadow: 0 4px 14px rgba(20,28,34,.2); }
-  details.agco-other summary { cursor: pointer; list-style: none; display: flex; flex-direction: column; gap: 2px; }
-  details.agco-other summary::-webkit-details-marker { display: none; }
-  details.agco-other summary b { font: 600 16px var(--font-cab); letter-spacing: .04em; text-transform: uppercase; }
-  details.agco-other summary span { color: var(--cab-sub); font-size: 13px; }
-  details.agco-other .agco-courses { margin-top: 8px; }
   .agco-tally { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
   .agco-tally div { padding: 10px 10px 11px; text-align: center; }
   .agco-tally div.zero { opacity: .55; }
@@ -1276,13 +1258,28 @@
   .agco-strip i.on { background: #137026; color: #fff; box-shadow: inset 0 0 0 1.5px #fff, inset 0 0 0 2.5px #137026; }
   .agco-strip i.next { background: #E8A317; color: #1C1917; }
   .agco-strip i.missing { background: #CC0033; color: #fff; box-shadow: inset 0 0 0 1.5px #fff, inset 0 0 0 2.5px #CC0033; }
-  .agco-link-row { display: grid; grid-template-columns: minmax(160px, 1fr) minmax(220px, 2fr) auto; gap: 8px 12px;
-    align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
-  .agco-link-row:first-child { border-top: 0; }
-  .agco-link-row select { margin: 0; }
-  .agco-link-row b { display: block; }
-  .agco-link-row .msg { grid-column: 1 / -1; }
-  @media (max-width: 720px) { .agco-link-row { grid-template-columns: minmax(0, 1fr); } }
+  /* The admin page's ticking: a row per technician, then their courses by level. */
+  .agco-edit-list { display: grid; gap: 6px; }
+  button.agco-edit-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 6px 16px; align-items: center;
+    width: 100%; padding: 10px 12px; text-align: left; white-space: normal; font: inherit; font-weight: 400; color: var(--ink);
+    background: #fff; border: 1px solid var(--line); border-radius: var(--radius-sm); box-shadow: none; }
+  button.agco-edit-row:hover { background: var(--paper); border-color: var(--line-strong); }
+  .agco-edit-row b { display: block; }
+  .agco-edit-signs { display: flex; gap: 4px; }
+  .agco-edit-signs i, .agco-edit-sign { display: inline-grid; place-items: center; width: 24px; height: 20px; border-radius: 4px;
+    font: 700 12px var(--font-cab); font-style: normal; background: #E4E7EA; color: #6B7A86; }
+  .agco-edit-signs i.done, .agco-edit-sign.done { background: #137026; color: #fff; }
+  .agco-edit-signs i.started, .agco-edit-sign.started { background: #E8A317; color: #1C1917; }
+  .agco-edit-signs i.missing, .agco-edit-sign.missing { background: #CC0033; color: #fff; }
+  .agco-edit-go { color: var(--red); font-size: 13px; font-weight: 600; white-space: nowrap; }
+  @media (max-width: 720px) { button.agco-edit-row { grid-template-columns: minmax(0, 1fr); } }
+  h3.agco-editor-name { margin: 6px 0 2px; font: 700 21px var(--font-cab); text-transform: uppercase; letter-spacing: .02em; }
+  fieldset.agco-level-edit { margin: 0 0 12px; padding: 10px 14px 6px; border: 1px solid var(--line); border-radius: var(--radius-sm); }
+  fieldset.agco-level-edit legend { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 0 6px; }
+  fieldset.agco-level-edit legend .note { font-size: 12.5px; }
+  label.agco-course { align-items: flex-start; margin: 0 0 8px; }
+  label.agco-course input { margin-top: 2px; flex: none; }
+  label.agco-course small { display: block; color: var(--muted); font-size: 12px; }
 
   /* Course Report: the classes down the side, the report beside them. On a
      phone the list gives way to the report once a class is picked. */
@@ -2140,35 +2137,27 @@
       <div class="card">
         <h2>AGCO Development Map</h2>
         <div class="drop" id="agcoDrop">
-          Drop AGCO's files here, or
+          Drop AGCO's Technical Training Catalog here, or
           <label for="agcoFile" style="display:inline;color:var(--red);
-                 cursor:pointer;text-decoration:underline">choose files</label>
-          <input id="agcoFile" type="file" class="hidden" multiple accept=".xlsx,.xls,.xml">
+                 cursor:pointer;text-decoration:underline">choose the file</label>
+          <input id="agcoFile" type="file" class="hidden" accept=".xlsx,.xls">
         </div>
-        <p class="note" style="margin-top:12px">Two files from AGCO, together or one at a time — each is
-          recognised by what's inside, so the names don't matter:</p>
-        <ul class="note" style="margin-top:0">
-          <li><b>Technical Training Catalog</b> — the course book. Its LEVEL 1 to LEVEL 6 tabs say what each
-            level is made of.</li>
-          <li><b>Training Completions Report</b> — every AGCO course anyone here has finished. Only service
-            courses count toward the levels.</li>
-        </ul>
-        <p class="note">The report has names but no emails, so each name is matched to a technician on the
-          Training Status roster — publish All employees there first. Only technicians get a map. Nothing changes
-          until you press <b>Publish</b>; each file replaces the last copy of that file.</p>
+        <p class="note" style="margin-top:12px">Its LEVEL 1 to LEVEL 6 tabs are the courses you tick for each technician
+          below; the Level 3 online test-out is added beside the instructor-led Level 3 course. Upload a new copy when
+          AGCO changes its courses — the ticks are kept.</p>
         <div id="agcoResult"></div>
       </div>
-      <div class="card" id="agcoLinksCard">
-        <h2>Names that don't match</h2>
-        <p class="note">When a technician's name in AGCO Academy isn't the one in UKG — a nickname, or a middle name
-          used as the first — pick the name AGCO has for them. A link is kept, so every later upload uses it too, and
-          the maps are rebuilt as soon as you link.</p>
-        <div id="agcoLinks"></div>
+      <div class="card" id="agcoTechCard">
+        <h2>Technicians</h2>
+        <p class="note">Everyone the Training Status roster calls a technician. The Training Manager opens one and
+          ticks the courses they've completed; each tick saves, and their map changes with it. Other owners can look
+          but not tick.</p>
+        <div id="agcoTechs"></div>
       </div>
       <div class="card" id="agcoRulesCard">
         <h2>Level rules</h2>
         <p class="note">What completes a level, where AGCO is likely to change it. Saving rebuilds every map straight
-          away from the saved report — nothing to upload again.</p>
+          away from the ticks.</p>
         <div class="fields">
           <div><label for="agcoLevel5Need">Level 5 is complete after</label>
             <select id="agcoLevel5Need"></select></div>
@@ -2882,7 +2871,7 @@ function showAdmin() {
   renderEvents(); renderOrg(); renderOsrImport(); renderOsrLive(); renderInspectionsAdmin();
   renderCoursesAdmin(); renderSdsAdmin(); renderSdsPending(); renderArticlesAdmin(); renderSkillsAdmin();
   renderNewsAdmin(); renderTsImport(); renderTsLive(); renderHandbook(); renderAgcoImport(); renderAgcoLive();
-  renderAgcoLinks(); renderAgcoRules();
+  renderAgcoTechs(); renderAgcoRules();
   window.scrollTo(0, 0);
 }
 
@@ -11942,10 +11931,10 @@ $("admin").addEventListener("click", async (event) => {
   renderTsImport();
   renderTsLive();
   $("tsResult").innerHTML = `<p class="ok" style="margin-top:12px">Published. The app shows it the next time Training Status is opened.</p>`;
-  // The AGCO maps follow the roster: the same report, matched to the new one.
+  // The AGCO maps follow the roster: a new technician gets one straight away.
   await agcoRebuild();
   renderAgcoLive();
-  renderAgcoLinks();
+  renderAgcoTechs();
 });
 
 // ---------------------------------------------------------------- AGCO development map
@@ -11954,53 +11943,34 @@ $("admin").addEventListener("click", async (event) => {
 // (migration 0073), drawn as a road: a sign for each level, and a tractor
 // where they are. Click a sign for the courses behind it.
 //
-// An owner builds it on the admin page from two AGCO files: the Technical
-// Training Catalog, whose LEVEL tabs say what each level is made of, and the
-// Training Completions Report, every AGCO course anyone here has finished. The
-// report has names but no emails, so each name is matched to a technician on
-// the Training Status roster (tsNameKey, the same rule as the credit report).
-// Only the roster's technicians get a map. The app draws the same map from the
-// same rows (AgcoDevelopmentMapView.swift) and decides nothing itself.
-//
-// SORTING A COURSE INTO A LEVEL — agcoLevelOf below
-//
-//   Only service courses count: the third to fifth letters of AGCO's course
-//   code say what a course is for, and SVC is service. Sales, parts, FUSE and
-//   the business courses aren't on the technician levels.
-//   Top Tech courses are Level 3. Otherwise the first "Level N" in the title,
-//   or, for the older codes that carry it, the digit after SVCTEC.
-//   The 2023 "Level 4 Master" courses count as Level 4, as they were called
-//   when they were taken, though AGCO has since renamed that level Level 6
-//   Expert. The renamed ones read "Level 6 Expert: … (formerly Level 4
-//   Master)", so the first "Level" puts them on Level 6.
+// The courses come from AGCO's Technical Training Catalog, whose LEVEL tabs
+// say what each level is made of; an owner uploads it on the admin page. The
+// Training Manager then ticks, for each technician on the Training Status
+// roster, the catalog courses they've completed (agco_course_marks, migration
+// 0075). Each tick re-works that technician's map and saves it as their row,
+// which is all the app and this page read (AgcoDevelopmentMapView.swift
+// decides nothing).
 //
 // WHEN A LEVEL IS COMPLETE — agcoLevels below
 //
 //   1 and 2  every course on that tab of the catalog
-//   3        Application of Technical Theory, at AGCO or the online test-out
-//   4 and 6  any course at that level
-//   5        as many of its courses as the owner's setting says: any one
-//            today ({ "5": 1 } in agco_catalog.rules, migration 0074), or a
-//            number, or all of them
+//   3        either Application of Technical Theory or its online test-out
+//   4 and 6  any one course at that level
+//   5        as many as the owner's setting says: any one today
+//            ({ "5": 1 } in agco_catalog.rules), a number, or all of them
 //
-//   Levels 1 to 4 below one that's complete count as complete too
-//   ("credited"): AGCO always required them in order, and the report only
-//   goes back so far. Level 5 is different — it only became a step before
-//   Level 6 in 2026 — so it counts only when it's done. Someone with Level 6
-//   and no Level 5 has a red Level 5 sign ("required"), and the tractor stops
-//   short of it.
-//
-// NAMES
-//
-//   The report has names and no emails. An owner can link a technician to the
-//   name AGCO has for them on the admin page (agco_name_links, migration
-//   0074); a link is used before any name is compared.
+//   A level that isn't complete while a higher one is shows red
+//   ("required"): AGCO didn't hold to the order when the levels began, but it
+//   does now. The tractor stops at the first level that isn't complete.
 
-let agcoPeople = [], agcoCatalog = null, agcoRaw = null, agcoError = null, agcoLinks = [];
-let agcoPending = { catalog: null, completions: null };
+let agcoPeople = [], agcoCatalog = null, agcoMarks = [], agcoError = null;
+// A catalog read on the admin page and not yet published.
+let agcoPending = null;
 // Which technician is open, which level's sign was clicked, and the picker's
 // search and shop.
 const agcoState = { person: null, level: null, query: "", store: "all" };
+// The same, for the technician being ticked on the admin page.
+const agcoEdit = { person: null, query: "", store: "all" };
 
 // What each level is, from the Training Center's requirements article.
 const AGCO_LEVELS = [
@@ -12009,28 +11979,30 @@ const AGCO_LEVELS = [
   { level: 2, name: "Online System Foundations",
     takes: "Every Level 2 online course, building on Level 1 with components, operation and an introduction to diagnostics." },
   { level: 3, name: "Advanced Systems Training",
-    takes: "Application of Technical Theory: five days, instructor-led at an AGCO facility — or the online test-out. It counts toward the instructor-led hours." },
+    takes: "Application of Technical Theory — five days, instructor-led at an AGCO facility — or its online test-out. Either one completes Level 3." },
   { level: 4, name: "Machine-Specific Training",
-    takes: "A Level 4 course on a machine you work on: instructor-led and hands-on, at AGCO or here (Fendt tractors, large square balers, windrowers). The 2023 Level 4 Master courses count here." },
+    takes: "A Level 4 course on a machine you work on: instructor-led and hands-on, at AGCO or here (Fendt tractors, large square balers, windrowers)." },
   { level: 5, name: "Advanced Technical Training",
     takes: "One of the two Level 5 courses — Electrical & Hydraulics, or Engines & Powertrains. Four days at an AGCO facility. Required before any Level 6 course." },
   { level: 6, name: "Expert Machine-Specific Training",
     takes: "A Level 6 Expert course: three days of advanced diagnostics, troubleshooting and repair on one machine." }
 ];
 
+// The catalog lists the instructor-led Level 3 course only; the online
+// test-out completes Level 3 just the same, so it's added beside it.
+const AGCO_TEST_OUT = { title: "Level 3: Application of Technical Theory — Online Test-Out", code: "NASVCAGMLPCRTMLP031X" };
+
 async function loadAgco() {
-  const [people, catalog, raw, links] = await Promise.all([
+  const [people, catalog, marks] = await Promise.all([
     db.from("agco_development_people").select("*"),
     db.from("agco_catalog").select("*").eq("id", "current").maybeSingle(),
-    db.from("agco_completions").select("*").eq("id", "current").maybeSingle(),
-    db.from("agco_name_links").select("*")
+    db.from("agco_course_marks").select("*")
   ]);
   agcoError = people.error ? people.error.message : null;
   agcoPeople = (people.data || []).slice().sort((a, b) => (a.store || "").localeCompare(b.store || "")
     || (a.last_name || "").localeCompare(b.last_name || "") || (a.first_name || "").localeCompare(b.first_name || ""));
   agcoCatalog = catalog.error ? null : catalog.data;
-  agcoRaw = raw.error ? null : raw.data;   // owners only
-  agcoLinks = links.error ? [] : links.data || [];   // owners only, from 0074
+  agcoMarks = marks.error ? [] : marks.data || [];   // owners only
 }
 
 const agcoName = (p) => `${p.first_name || ""} ${p.last_name || ""}`.trim();
@@ -12043,10 +12015,23 @@ const agcoShowsButton = () => !agcoError && (agcoPeople.length > 0 || isAdmin())
 const agcoLevelInfo = (n) => ((agcoCatalog && agcoCatalog.levels) || []).find(l => l.level === n)
   || AGCO_LEVELS.find(l => l.level === n) || { level: n, name: `Level ${n}`, takes: "", courses: [] };
 
-// The owner's rules (migration 0074). Today only Level 5: how many of its
-// courses complete it — a number, or "all".
+// The owner's rules. Today only Level 5: how many of its courses complete it
+// — a number, or "all".
 const agcoRules = () => (agcoCatalog && agcoCatalog.rules) || {};
 const agcoLevel5Rule = (rules = agcoRules()) => rules["5"] === "all" ? "all" : Math.max(1, Number(rules["5"]) || 1);
+
+// How many of a level's courses complete it.
+function agcoNeed(level, count, rules = agcoRules()) {
+  if (level <= 2) return count;
+  if (level === 5) { const rule = agcoLevel5Rule(rules); return rule === "all" ? count : Math.min(rule, count); }
+  return Math.min(1, count);
+}
+
+// A course, the same whichever catalog it came from: its AGCO code, or its
+// title for the Level 1 and 2 courses, which the catalog lists without one.
+// The digits stay: "Level 1 … HVAC" and "Level 2 … HVAC" are two courses.
+const agcoCourseKey = (c) => c.code ? String(c.code).toUpperCase()
+  : `t:${String(c.title || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()}`;
 
 // "Electrical & Hydraulics" from "Level 5 Master Professional Technician:
 // Electrical & Hydraulics": what tells one course at a level from another.
@@ -12064,181 +12049,87 @@ function agcoLevel5Takes(courses, rule) {
   return `${lead}${joined ? ` — ${joined}` : ""}. Four days each at an AGCO facility. Required before any Level 6 course.`;
 }
 
-// The catalog's levels with today's words — AGCO_LEVELS, then the owner's
-// rules — so a rebuild picks up a change to either without a new upload.
-const agcoWithRules = (levels, rules = agcoRules()) => levels.map(l => {
+// The catalog's levels as they're published: in order, with the test-out
+// beside the Level 3 course, and today's words — AGCO_LEVELS, then the
+// owner's rules — so a rebuild picks up a change to either without an upload.
+const agcoWithRules = (levels, rules = agcoRules()) => levels.slice().sort((a, b) => a.level - b.level).map(l => {
   const words = AGCO_LEVELS.find(a => a.level === l.level) || {};
-  const level = { ...l, name: words.name || l.name, takes: words.takes || l.takes };
-  return l.level === 5 ? { ...level, takes: agcoLevel5Takes(l.courses, agcoLevel5Rule(rules)) } : level;
+  let courses = l.courses || [];
+  if (l.level === 3 && !courses.some(c => agcoCourseKey(c) === AGCO_TEST_OUT.code || /test.?out/i.test(c.title))) {
+    courses = [...courses, { ...AGCO_TEST_OUT }];
+  }
+  const level = { ...l, courses, name: words.name || l.name, takes: words.takes || l.takes };
+  return l.level === 5 ? { ...level, takes: agcoLevel5Takes(courses, agcoLevel5Rule(rules)) } : level;
 });
 
-// ---- sorting courses ---------------------------------------------------------
+// The levels to tick against: a catalog waiting to publish, else the published one.
+const agcoLevelsNow = () => agcoWithRules((agcoPending && agcoPending.levels)
+  || (agcoCatalog && agcoCatalog.levels) || []);
 
-function agcoLevelOf(title, code) {
-  const name = String(title || ""), id = String(code || "").toUpperCase();
-  if (id && id.slice(2, 5) !== "SVC") return null;
-  if (!id && /\bsales\b/i.test(name)) return null;
-  if (/top\s*tech/i.test(name)) return 3;
-  const m = name.match(/\blevel\s*([1-6])\b/i);
-  if (m) return Number(m[1]);
-  const c = id.match(/SVCTEC([1-6])/);
-  if (c) return Number(c[1]);
-  return id ? 0 : null;
-}
+// ---- working out a map --------------------------------------------------------------
 
-// What a Level 1 or 2 course is about, as a set of words, so the report's
-// "AGCO OEM Hydraulics Course" meets the catalog's "Hydraulics Course".
-const AGCO_STOP = new Set(["agco", "oem", "course", "the", "of", "and", "or", "a", "an", "do", "does",
-  "what", "online"]);
-const AGCO_SAME = { eq: "equipment", equip: "equipment" };
-function agcoTopic(title) {
-  const text = String(title || "").toLowerCase()
-    .replace(/^["\s]*(level\s*\d\s*technical\s*certification|certification\s+technique\s+(de\s+)?niveau\s*\d)\s*:\s*/, "")
-    .replace(/tech connect/g, "techconnect");
-  return new Set(text.replace(/[^a-z]+/g, " ").split(" ")
-    .filter(w => w.length > 1 && !AGCO_STOP.has(w))
-    .map(w => (AGCO_SAME[w] || w).replace(/s$/, "")));
-}
-function agcoAlike(a, b) {
-  let both = 0;
-  a.forEach(w => { if (b.has(w)) both++; });
-  return both / Math.max(1, a.size + b.size - both);
-}
-
-// Each level's state for one technician's courses.
-function agcoLevels(courses, levels, rules = agcoRules()) {
-  const at = (n) => courses.filter(c => c.level === n);
+// Each level's state, from the set of course keys ticked for one technician.
+function agcoLevels(marked, levels, rules = agcoRules()) {
   const out = levels.map(info => {
-    const mine = at(info.level);
-    // Level 5 by the owner's setting. Any one is the same as any course, below;
-    // more than one counts the catalog's courses done, and any older course
-    // at the level that isn't one of them toward a number (not toward "all").
-    const rule = info.level === 5 ? agcoLevel5Rule(rules) : 1;
-    if (rule !== 1) {
-      const catalog = (info.courses || []).map(c => ({ title: c.title, topic: agcoTopic(agcoCourseName(c.title)) }));
-      const got = new Set(), extra = new Set();
-      mine.forEach(c => {
-        const topic = agcoTopic(agcoCourseName(c.title));
-        // An older name that's part of a catalog course's counts as it: the
-        // 2024 "AGCO Engines" course is today's Engines & Powertrains.
-        const inside = (a, b) => a.size > 0 && [...a].every(w => b.has(w));
-        let best = -1, score = 0;
-        catalog.forEach((r, i) => {
-          const s = inside(topic, r.topic) || inside(r.topic, topic) ? 1 : agcoAlike(topic, r.topic);
-          if (s > score) { score = s; best = i; }
-        });
-        if (best >= 0 && score >= 0.75) got.add(best); else extra.add(agcoKey(c.title));
-      });
-      const need = rule === "all" ? catalog.length : rule;
-      const have = rule === "all" ? got.size : got.size + extra.size;
-      return { level: info.level, done: need > 0 && have >= need, started: mine.length > 0,
-        have: Math.min(have, need), need, missing: catalog.filter((r, i) => !got.has(i)).map(r => r.title) };
-    }
-    if (info.level <= 2) {
-      const required = (info.courses || []).map(c => ({ title: c.title, topic: agcoTopic(c.title) }));
-      const got = new Set();
-      mine.forEach(c => {
-        const topic = agcoTopic(c.title);
-        let best = -1, score = 0;
-        required.forEach((r, i) => { const s = agcoAlike(topic, r.topic); if (s > score) { score = s; best = i; } });
-        if (best >= 0 && score >= 0.75) got.add(best);
-      });
-      const need = required.length;
-      return { level: info.level, done: need > 0 && got.size >= need, started: mine.length > 0,
-        have: Math.min(got.size, need), need, missing: required.filter((r, i) => !got.has(i)).map(r => r.title) };
-    }
-    if (info.level === 3) {
-      return { level: 3, started: mine.length > 0,
-        done: mine.some(c => /CRTMLP03/i.test(c.code || "") || /application of technical theory/i.test(c.title)) };
-    }
-    return { level: info.level, done: mine.length > 0, started: mine.length > 0 };
+    const courses = info.courses || [];
+    const done = courses.filter(c => marked.has(agcoCourseKey(c))).length;
+    const need = agcoNeed(info.level, courses.length, rules);
+    return { level: info.level, have: Math.min(done, need), need, started: done > 0,
+      complete: need > 0 && done >= need,
+      missing: courses.filter(c => !marked.has(agcoCourseKey(c))).map(c => c.title) };
   });
-  const top = Math.max(0, ...out.filter(l => l.done).map(l => l.level));
-  // Levels 1 to 4 were always taken in order; Level 5 only since 2026.
-  const credited = (n) => n <= 4 && n < top;
-  const complete = (n) => !!(out.find(l => l.level === n) || {}).done || credited(n);
+  const top = Math.max(0, ...out.filter(l => l.complete).map(l => l.level));
   let reached = 0;
-  while (reached < out.length && complete(reached + 1)) reached++;
+  while (reached < out.length && out[reached].complete) reached++;
   return {
     reached,
     levels: out.map(l => ({
       level: l.level,
-      state: l.done ? "done" : credited(l.level) ? "credited" : l.level < top ? "missing"
-        : l.started ? "started" : "none",
-      ...(l.need !== undefined ? { have: l.have, need: l.need, missing: l.missing } : {})
+      state: l.complete ? "done" : l.level < top ? "missing" : l.started ? "started" : "none",
+      have: l.have, need: l.need, missing: l.complete ? [] : l.missing
     }))
   };
 }
 
-// ---- matching the report to the roster -----------------------------------------
-
-const agcoKey = (name) => tsNameKey(name, "");
-// Looser, like PersonName.matches in the app: any order, a middle name on one
-// side only, single letters ignored.
-const agcoParts = (name) => new Set(agcoKey(name).split(" ").filter(w => w.length > 1));
-function agcoLoose(a, b) {
-  const x = agcoParts(a), y = agcoParts(b);
-  if (!x.size || !y.size) return false;
-  const inside = (p, q) => [...p].every(w => q.has(w));
-  return inside(x, y) || inside(y, x);
+// One technician's row, as the app and the map read it.
+function agcoPersonRow(tech, levels, marks = agcoMarks, rules = agcoRules()) {
+  const mine = marks.filter(m => m.person_key === tech.person_key);
+  const known = new Map(levels.flatMap(l => (l.courses || []).map(c => [agcoCourseKey(c), { level: l.level, title: c.title }])));
+  const courses = mine.filter(m => known.has(m.course_key))
+    .map(m => ({ ...known.get(m.course_key), completed: m.marked_on || "" }))
+    .sort((a, b) => a.level - b.level || a.title.localeCompare(b.title));
+  const { reached, levels: states } = agcoLevels(new Set(mine.map(m => m.course_key)), levels, rules);
+  return { person_key: tech.person_key, email: tech.email || "", first_name: tech.first_name || "",
+    last_name: tech.last_name || "", name_key: tech.name_key || "", store: tech.store || "",
+    reached, levels: states, courses };
 }
 
-// Which AGCO name each technician on the roster is: a link an owner made
-// first, then the same name, then a looser match when it's the only one.
-function agcoMatch(rows, roster, links = agcoLinks) {
-  const byName = new Map();
-  rows.forEach(r => {
-    const key = agcoKey(r.name);
-    if (!key) return;
-    if (!byName.has(key)) byName.set(key, { name: r.name, job: r.job, rows: [] });
-    byName.get(key).rows.push(r);
+const agcoTechs = () => tsPeople.filter(p => p.is_technician).sort((a, b) =>
+  (a.store || "").localeCompare(b.store || "") || (a.last_name || "").localeCompare(b.last_name || ""));
+const agcoTally = (people) => [0, 1, 2, 3, 4, 5, 6].map(n => people.filter(p => p.reached === n).length);
+
+// Every technician's map, published in one step: after a new catalog, a rule
+// change, or a new roster. The ticks stay as they are.
+async function agcoPublishAll(catalogSource) {
+  const levels = agcoLevelsNow();
+  if (!levels.length) return "Upload the Technical Training Catalog first.";
+  const old = (agcoCatalog && agcoCatalog.source) || {};
+  const { error } = await db.rpc("publish_agco_development", {
+    catalog: { levels, source: { catalog: catalogSource || old.catalog || {} } },
+    people: agcoTechs().map(t => agcoPersonRow(t, levels))
   });
-  const techs = roster.filter(p => p.is_technician);
-  const linked = new Map(links.map(l => [l.person_key, agcoKey(l.agco_name)]));
-  // Names spoken for, by a link or by someone's own name, aren't up for a looser match.
-  const spoken = new Set([...techs.map(t => t.name_key).filter(Boolean), ...linked.values()]);
-  const taken = new Set();
-  const matches = techs.map(t => {
-    let found = linked.has(t.person_key) ? byName.get(linked.get(t.person_key)) : null;
-    if (!found && t.name_key) found = byName.get(t.name_key);
-    if (!found) {
-      const full = agcoName(t);
-      const loose = [...byName.entries()].filter(([key, s]) => !spoken.has(key) && agcoLoose(full, s.name));
-      if (loose.length === 1) found = loose[0][1];
-    }
-    if (found) taken.add(agcoKey(found.name));
-    return { tech: t, found, linked: linked.has(t.person_key) };
-  });
-  // AGCO names nobody on the roster was matched to.
-  const spare = [...byName.entries()].filter(([key]) => !taken.has(key)).map(([, s]) => s)
-    .sort((a, b) => a.name.localeCompare(b.name));
-  return { matches, spare };
+  if (error) return error.message;
+  await loadAgco();
+  return null;
 }
 
-// The maps, from the levels, the report and the roster's technicians.
-function agcoBuild(levels, rows, roster, links = agcoLinks, rules = agcoRules()) {
-  const { matches, spare } = agcoMatch(rows, roster, links);
-  const people = matches.map(({ tech: t, found }) => {
-    const seen = new Set();
-    const courses = (found ? found.rows : [])
-      .map(r => ({ level: agcoLevelOf(r.course, r.code), title: r.course, code: r.code || "",
-        completed: r.completed || "", hours: r.hours, grade: r.grade }))
-      .filter(c => c.level !== null)
-      .filter(c => { const k = `${c.title}|${c.completed}`; if (seen.has(k)) return false; seen.add(k); return true; })
-      .sort((a, b) => String(b.completed).localeCompare(String(a.completed)));
-    const { reached, levels: states } = agcoLevels(courses, levels, rules);
-    // Saved without the code, and without a grade or hours AGCO left blank:
-    // the map shows neither code nor blanks, and every technician's row is sent at once.
-    courses.forEach(c => { delete c.code; if (!c.grade) delete c.grade; if (!c.hours) delete c.hours; });
-    return { person_key: t.person_key, email: t.email || "", first_name: t.first_name || "",
-      last_name: t.last_name || "", name_key: t.name_key || "", store: t.store || "",
-      agco_name: found ? found.name : "", reached, levels: states, courses };
-  });
-  const strays = spare.filter(s => /technician/i.test(s.job || "")).map(s => s.name);
-  return { people, strays, unmatched: people.filter(p => !p.agco_name) };
+// After a new roster is published. Returns what went wrong, if anything.
+async function agcoRebuild() {
+  if (!isOwner() || !agcoCatalog || !(agcoCatalog.levels || []).length) return null;
+  return agcoPublishAll();
 }
 
-// ---- reading the files -----------------------------------------------------------
+// ---- reading the catalog -----------------------------------------------------------
 
 const AGCO_CODE = /^[A-Z]{5}[A-Z0-9]{10,20}$/;
 
@@ -12274,102 +12165,41 @@ function agcoCatalogFrom(workbook, file) {
   return { levels, source: { file: file.name, dated } };
 }
 
-// The completions report: AGCO sends an Excel 2003 XML file named .xls, which
-// SheetJS reads like any other. Only service courses are kept.
-function agcoCompletionsFrom(rows, file) {
-  const head = rows.findIndex(r => ["student", "course name", "date completed"]
-    .every(h => (r || []).some(c => tsText(c).toLowerCase() === h)));
-  if (head < 0) return null;
-  const col = (name) => rows[head].findIndex(c => tsText(c).toLowerCase() === name);
-  const at = { date: col("date completed"), name: col("student"), job: col("student job"),
-    course: col("course name"), grade: col("grade"), hours: col("credit hours"), code: col("course id") };
-  const day = (v) => v instanceof Date ? v.toISOString().slice(0, 10)
-    : typeof v === "number" ? excelDate(v) : toISODate(tsText(v));
-  const out = rows.slice(head + 1).map(r => ({
-    name: tsText(r[at.name]), job: tsText(r[at.job]),
-    course: tsText(r[at.course]).replace(/^"+|"+$/g, "").replace(/\s+/g, " "),
-    code: at.code >= 0 ? tsText(r[at.code]).toUpperCase() : "",
-    completed: day(r[at.date]) || "", hours: Number(r[at.hours]) || 0,
-    grade: tsText(r[at.grade])
-  })).filter(r => r.name && r.course && agcoLevelOf(r.course, r.code) !== null);
-  const dates = out.map(r => r.completed).filter(Boolean).sort();
-  return { rows: out, source: { file: file.name, from: dates[0] || "", through: dates[dates.length - 1] || "",
-    students: new Set(out.map(r => agcoKey(r.name))).size } };
-}
-
 async function agcoReadFiles(files) {
   const problems = [];
   for (const file of files) {
     try {
-      const workbook = XLSX.read(await file.arrayBuffer(), { type: "array", cellDates: true });
-      const catalog = agcoCatalogFrom(workbook, file);
-      if (catalog) { agcoPending.catalog = catalog; continue; }
-      const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]],
-        { header: 1, raw: true, defval: "" });
-      const completions = agcoCompletionsFrom(rows, file);
-      if (completions) {
-        if (!completions.rows.length) problems.push(`${file.name}: no AGCO service courses in it.`);
-        else agcoPending.completions = completions;
-        continue;
-      }
-      problems.push(`${file.name}: not the Technical Training Catalog or the Training Completions Report.`);
+      const catalog = agcoCatalogFrom(XLSX.read(await file.arrayBuffer(), { type: "array" }), file);
+      if (catalog) agcoPending = catalog;
+      else problems.push(`${file.name}: not AGCO's Technical Training Catalog — it needs the LEVEL 1 to LEVEL 6 tabs.`);
     } catch (e) {
       problems.push(`${file.name}: couldn't be read (${e.message}).`);
     }
   }
   renderAgcoImport(problems);
-  renderAgcoLinks();
+  renderAgcoTechs();
   renderAgcoRules();
 }
 
 // ---- admin: the AGCO Development tab ----------------------------------------------
 
-function agcoMerged() {
-  return {
-    catalog: agcoPending.catalog || (agcoCatalog && agcoCatalog.levels && agcoCatalog.levels.length
-      ? { levels: agcoCatalog.levels, source: (agcoCatalog.source || {}).catalog || {} } : null),
-    completions: agcoPending.completions || (agcoRaw && (agcoRaw.rows || []).length
-      ? { rows: agcoRaw.rows, source: agcoRaw.source || {} } : null)
-  };
-}
-
-const agcoTally = (people) => [0, 1, 2, 3, 4, 5, 6].map(n => people.filter(p => p.reached === n).length);
-
 function renderAgcoImport(problems = []) {
   const box = $("agcoResult");
   if (!box) return;
-  const pending = ["catalog", "completions"].filter(k => agcoPending[k]);
-  if (!pending.length && !problems.length) { box.innerHTML = ""; return; }
-  const merged = agcoMerged();
-  const roster = tsPeople.filter(p => p.is_technician);
-  const ready = merged.catalog && merged.completions && roster.length;
-  const built = ready ? agcoBuild(agcoWithRules(merged.catalog.levels), merged.completions.rows, tsPeople) : null;
-  const names = (list) => list.map(esc).join(", ");
-
+  if (!agcoPending && !problems.length) { box.innerHTML = ""; return; }
+  const levels = agcoPending ? agcoWithRules(agcoPending.levels) : [];
+  const keys = new Set(levels.flatMap(l => l.courses.map(agcoCourseKey)));
+  const orphaned = new Set(agcoMarks.filter(m => !keys.has(m.course_key)).map(m => m.title)).size;
   box.innerHTML = `${problems.map(p => `<p class="error">${esc(p)}</p>`).join("")}
-    ${pending.length ? `<div class="role" style="margin-top:12px">
+    ${agcoPending ? `<div class="role" style="margin-top:12px">
       <b>Ready to publish</b>
-      <ul class="note" style="margin:6px 0 10px">
-        ${agcoPending.catalog ? `<li><b>Technical Training Catalog</b> — ${esc(agcoPending.catalog.source.file)}${
-          agcoPending.catalog.source.dated ? `, from ${esc(agcoPending.catalog.source.dated)}` : ""}: ${
-          agcoPending.catalog.levels.map(l => `Level ${l.level} ${l.courses.length}`).join(", ")} courses</li>` : ""}
-        ${agcoPending.completions ? `<li><b>Training Completions Report</b> — ${esc(agcoPending.completions.source.file)}:
-          ${agcoPending.completions.rows.length} service course completions by ${agcoPending.completions.source.students} people,
-          ${esc(usDate(agcoPending.completions.source.from) || "")} to ${esc(usDate(agcoPending.completions.source.through) || "")}</li>` : ""}
-      </ul>
-      ${!merged.catalog ? `<p class="error" style="margin:0 0 6px">The Technical Training Catalog is needed too — it says what each level takes.</p>` : ""}
-      ${!merged.completions ? `<p class="error" style="margin:0 0 6px">The Training Completions Report is needed too.</p>` : ""}
-      ${!roster.length ? `<p class="error" style="margin:0 0 6px">Training Status has no technicians yet. Publish All employees
-        on the Training Status tab first — that's who gets a map.</p>` : ""}
-      ${built ? `<p class="note" style="margin:0 0 6px"><b>${built.people.length} technicians</b> on the Training Status roster;
-        <b>${built.people.length - built.unmatched.length}</b> found on the AGCO report.
-        Furthest level reached: ${agcoTally(built.people).map((n, i) => `${i ? `Level ${i}` : "not started"} ${n}`).join(", ")}.</p>
-        ${built.unmatched.length ? `<p class="note" style="margin:0 0 6px">Technicians not found on the AGCO report, so shown as
-          not started: ${names(built.unmatched.map(agcoName))}. A name spelled differently on the two is the usual reason —
-          link them under <b>Names that don't match</b> below.</p>` : ""}
-        ${built.strays.length ? `<p class="note" style="margin:0 0 6px">Technicians on the AGCO report who aren't technicians on
-          the roster, or aren't on it under that name, so left out: ${names(built.strays)}.</p>` : ""}` : ""}
-      <div class="row"><button data-act="agco-publish" ${ready ? "" : "disabled"}>Publish</button>
+      <p class="note" style="margin:6px 0 10px">${esc(agcoPending.source.file)}${agcoPending.source.dated
+        ? `, from ${esc(agcoPending.source.dated)}` : ""}: ${levels.map(l => `Level ${l.level} ${l.courses.length}`).join(", ")}
+        courses, the Level 3 test-out included.</p>
+      ${orphaned ? `<p class="note" style="margin:0 0 10px">${orphaned} ${orphaned === 1 ? "course that's" : "courses that are"} ticked
+        for someone ${orphaned === 1 ? "isn't" : "aren't"} on this catalog. The ticks are kept, but they won't count toward a level
+        until the course is back.</p>` : ""}
+      <div class="row"><button data-act="agco-publish">Publish</button>
         <button class="ghost" data-act="agco-discard">Discard</button><span class="msg"></span></div>
     </div>` : ""}`;
 }
@@ -12382,35 +12212,174 @@ function renderAgcoLive() {
       ? "Run migration 0073_agco_development_map.sql in the SQL editor, then reload this page." : esc(agcoError)}</p>`;
     return;
   }
-  const source = (agcoCatalog && agcoCatalog.source) || {};
+  const source = ((agcoCatalog && agcoCatalog.source) || {}).catalog || {};
   if (!agcoCatalog || !(agcoCatalog.levels || []).length) {
     box.innerHTML = `<p class="note">Nothing published yet.</p>`;
     return;
   }
-  const found = agcoPeople.filter(p => p.agco_name).length;
-  box.innerHTML = `<ul class="note" style="margin:0 0 8px">
-      <li><b>Technical Training Catalog</b>: ${source.catalog && source.catalog.file
-        ? `${esc(source.catalog.file)}${source.catalog.dated ? `, from ${esc(source.catalog.dated)}` : ""}` : "not uploaded yet"}</li>
-      <li><b>Training Completions Report</b>: ${source.completions && source.completions.file
-        ? `${esc(source.completions.file)}, ${esc(usDate(source.completions.from) || "")} to ${esc(usDate(source.completions.through) || "")}`
-        : "not uploaded yet"}</li></ul>
-    <p class="note" style="margin:0 0 10px">Published ${esc(new Date(agcoCatalog.updated_at).toLocaleString())}.
-      ${agcoPeople.length} technicians, ${found} found on the AGCO report.
-      Furthest level reached: ${agcoTally(agcoPeople).map((n, i) => `${i ? `Level ${i}` : "not started"} ${n}`).join(", ")}.</p>
-    <p class="note" style="margin:0 0 10px">Publishing All employees on the Training Status tab rebuilds the maps
-      from the report saved here, so a new technician gets one without uploading this again.</p>
-    ${agcoRaw && (agcoRaw.rows || []).length ? `<div class="row"><button class="ghost" data-act="agco-rebuild">Rebuild the maps</button>
-      <span class="note">From the saved report, against today's roster and links.</span><span class="msg"></span></div>` : ""}`;
+  box.innerHTML = `<p class="note" style="margin:0 0 8px"><b>Technical Training Catalog</b>: ${source.file
+      ? `${esc(source.file)}${source.dated ? `, from ${esc(source.dated)}` : ""}` : "not uploaded yet"}.</p>
+    <p class="note" style="margin:0 0 10px">${agcoPeople.length} technicians have a map. Furthest level reached:
+      ${agcoTally(agcoPeople).map((n, i) => `${i ? `Level ${i}` : "not started"} ${n}`).join(", ")}.</p>
+    <p class="note" style="margin:0 0 10px">Publishing All employees on the Training Status tab gives a new technician
+      a map straight away.</p>
+    <div class="row"><button class="ghost" data-act="agco-rebuild">Rebuild the maps</button>
+      <span class="note">From the ticks, against today's roster.</span><span class="msg"></span></div>`;
 }
+
+// ---- admin: ticking a technician's courses -------------------------------------------
+//
+// Only the Training Manager ticks (migration 0075 holds to it); other owners
+// see the same lists with the boxes greyed out.
+
+const agcoCanTick = () => isTrainingManager();
+const agcoTrainingManager = () => {
+  const holder = personDesignations.find(pd => pd.designation_id === "training_manager");
+  return holder ? ((people.find(p => p.id === holder.person_id) || {}).full_name || "") : "";
+};
+
+const agcoRuleText = (level, count) => level <= 2 ? `Every course · ${count}`
+  : level === 3 ? "Either one"
+  : level === 5 ? (agcoLevel5Rule() === "all" ? (count === 2 ? "Both" : `All ${count}`)
+    : agcoLevel5Rule() === 1 ? (count === 2 ? "Either one" : "Any one") : `Any ${agcoLevel5Rule()} of ${count}`)
+  : "Any one";
+
+function renderAgcoTechs() {
+  const box = $("agcoTechs");
+  if (!box) return;
+  const levels = agcoLevelsNow();
+  const techs = agcoTechs();
+  if (!levels.length || !techs.length) {
+    box.innerHTML = `<p class="note" style="margin:0">${!levels.length ? "Upload the Technical Training Catalog first."
+      : "Publish All employees on the Training Status tab first — its technicians are who get a map."}</p>`;
+    return;
+  }
+  const open = techs.find(t => t.person_key === agcoEdit.person);
+  if (open) { box.innerHTML = agcoEditorHtml(open, levels); return; }
+
+  const stores = [...new Set(techs.map(t => t.store || "No store"))].sort();
+  if (agcoEdit.store !== "all" && !stores.includes(agcoEdit.store)) agcoEdit.store = "all";
+  const q = agcoEdit.query.toLowerCase();
+  const shown = techs.filter(t => (agcoEdit.store === "all" || (t.store || "No store") === agcoEdit.store)
+    && (!q || agcoName(t).toLowerCase().includes(q)));
+  box.innerHTML = `<div class="row" style="margin-bottom:10px">
+      <input class="search" id="agcoEditSearch" placeholder="Search technicians" value="${esc(agcoEdit.query)}" autocomplete="off"
+             aria-label="Search technicians" style="flex:1;max-width:none">
+      <select id="agcoEditStore" style="width:auto;margin:0" aria-label="Shop">${["all", ...stores].map(s =>
+        `<option value="${esc(s)}"${agcoEdit.store === s ? " selected" : ""}>${s === "all" ? "All shops" : esc(s)}</option>`).join("")}</select>
+    </div>
+    <div class="agco-edit-list">${shown.map(t => {
+      const row = agcoPersonRow(t, levels);
+      return `<button type="button" class="agco-edit-row" data-agco-edit="${esc(t.person_key)}">
+        <span><b>${esc(agcoName(t))}</b><span class="note">${esc(t.store || "No store")}</span></span>
+        <span class="agco-edit-signs">${row.levels.map(l => `<i class="${l.state}">${l.level}</i>`).join("")}</span>
+        <span class="agco-edit-go">${agcoCanTick() ? "Tick courses" : "See courses"} &rsaquo;</span>
+      </button>`;
+    }).join("") || `<p class="note">No technician matches that.</p>`}</div>`;
+}
+
+function agcoEditorHtml(tech, levels) {
+  const row = agcoPersonRow(tech, levels);
+  const marks = new Map(agcoMarks.filter(m => m.person_key === tech.person_key).map(m => [m.course_key, m]));
+  const state = (n) => row.levels.find(l => l.level === n) || {};
+  return `<div class="agco-editor" data-agco-tech="${esc(tech.person_key)}">
+    <div class="row" style="justify-content:space-between;margin-bottom:6px">
+      <button type="button" class="ghost" data-agco-edit="">&lsaquo; All technicians</button>
+      <span class="msg"></span>
+    </div>
+    <h3 class="agco-editor-name">${esc(agcoName(tech))}</h3>
+    <p class="note" style="margin:0 0 12px">${esc(tech.store || "No store")} · ${row.reached >= 6 ? "every level complete"
+      : row.reached ? `Level ${row.reached} reached, Level ${row.reached + 1} next` : "Level 1 next"}. ${agcoCanTick()
+      ? "Each tick saves, and the map changes with it."
+      : `Only the Training Manager${agcoTrainingManager() ? ` (${esc(agcoTrainingManager())})` : ""} can tick courses.`}</p>
+    ${levels.map(l => {
+      const s = state(l.level);
+      return `<fieldset class="agco-level-edit">
+        <legend><span class="agco-edit-sign ${s.state}">${l.level}</span><b>${esc(l.name)}</b>
+          <span class="note">${esc(agcoRuleText(l.level, l.courses.length))} · ${s.state === "done" ? "complete"
+            : s.state === "missing" ? "required — a higher level is complete" : `${s.have} of ${s.need}`}</span></legend>
+        ${l.courses.map(c => {
+          const key = agcoCourseKey(c), mark = marks.get(key);
+          return `<label class="check agco-course"><input type="checkbox" data-agco-mark="${esc(key)}" data-level="${l.level}"${
+            mark ? " checked" : ""}${agcoCanTick() ? "" : " disabled"}><span>${esc(c.title)}${mark && mark.marked_on
+            ? `<small>Ticked ${esc(usDate(mark.marked_on))}${mark.marked_by_name ? ` by ${esc(mark.marked_by_name)}` : ""}</small>` : ""}</span></label>`;
+        }).join("")}
+      </fieldset>`;
+    }).join("")}
+  </div>`;
+}
+
+document.addEventListener("click", (event) => {
+  const pick = event.target.closest("[data-agco-edit]");
+  if (!pick) return;
+  agcoEdit.person = pick.dataset.agcoEdit || null;
+  renderAgcoTechs();
+  $("agcoTechCard").scrollIntoView({ block: "start" });
+});
+
+document.addEventListener("input", (event) => {
+  if (event.target.id !== "agcoEditSearch") return;
+  agcoEdit.query = event.target.value;
+  const at = event.target.selectionStart;
+  renderAgcoTechs();
+  $("agcoEditSearch").focus();
+  $("agcoEditSearch").setSelectionRange(at, at);
+});
+
+document.addEventListener("change", async (event) => {
+  if (event.target.id === "agcoEditStore") { agcoEdit.store = event.target.value; return renderAgcoTechs(); }
+  const box = event.target.closest("[data-agco-mark]");
+  if (!box) return;
+  const editor = box.closest("[data-agco-tech]");
+  const tech = agcoTechs().find(t => t.person_key === editor.dataset.agcoTech);
+  const levels = agcoLevelsNow();
+  const level = levels.find(l => l.level === Number(box.dataset.level));
+  const course = level && level.courses.find(c => agcoCourseKey(c) === box.dataset.agcoMark);
+  if (!tech || !course) return;
+  if (!agcoCanTick()) { box.checked = !box.checked; return; }
+  const say = (text, bad) => speak(editor, text, bad);
+  const key = agcoCourseKey(course);
+  box.disabled = true;
+  say("Saving…", false);
+  let error;
+  if (box.checked) {
+    // Who and when are stamped by the database; this copy is for the page until it reloads.
+    const mark = { person_key: tech.person_key, course_key: key, level: level.level, title: course.title };
+    ({ error } = await db.from("agco_course_marks").upsert(mark, { onConflict: "person_key,course_key" }));
+    if (!error) agcoMarks = [...agcoMarks.filter(m => !(m.person_key === tech.person_key && m.course_key === key)),
+      { ...mark, marked_on: todayISO(), marked_by_name: (profile && profile.full_name) || "" }];
+  } else {
+    ({ error } = await db.from("agco_course_marks").delete().eq("person_key", tech.person_key).eq("course_key", key));
+    if (!error) agcoMarks = agcoMarks.filter(m => !(m.person_key === tech.person_key && m.course_key === key));
+  }
+  if (error) {
+    box.checked = !box.checked;
+    box.disabled = false;
+    return say(/does not exist|schema cache/i.test(error.message)
+      ? "Run migration 0075_agco_ticked_courses.sql in the SQL editor first."
+      : error.code === "42501" ? "Only the Training Manager can tick courses." : error.message, true);
+  }
+  // Their map, saved as soon as the tick is — if the catalog is published.
+  if (agcoCatalog && (agcoCatalog.levels || []).length && !agcoPending) {
+    const row = agcoPersonRow(tech, levels);
+    const saved = await db.from("agco_development_people").upsert(row, { onConflict: "person_key" });
+    if (saved.error) { box.disabled = false; return say(`Ticked, but the map wasn't updated: ${saved.error.message}`, true); }
+    agcoPeople = [...agcoPeople.filter(p => p.person_key !== row.person_key), row];
+  }
+  const y = window.scrollY;
+  renderAgcoTechs();
+  renderAgcoLive();
+  window.scrollTo(0, y);
+  speak(document.querySelector("[data-agco-tech]"), box.checked ? "Ticked." : "Unticked.", false);
+});
 
 // ---- admin: the level rules --------------------------------------------------------------
 
 function renderAgcoRules() {
   const select = $("agcoLevel5Need");
   if (!select || document.activeElement === select) return;
-  const merged = agcoMerged();
-  const courses = ((merged.catalog && merged.catalog.levels) || []).find(l => l.level === 5);
-  const n = courses ? courses.courses.length : 2;
+  const five = agcoLevelsNow().find(l => l.level === 5);
+  const n = five ? five.courses.length : 2;
   const rule = agcoLevel5Rule();
   const options = [[1, n === 2 ? "Either one of the two Level 5 courses" : "Any one Level 5 course"]];
   for (let k = 2; k < n; k++) options.push([k, `Any ${k} of the ${n} Level 5 courses`]);
@@ -12429,162 +12398,43 @@ $("admin").addEventListener("click", async (event) => {
   speak(card, "Saving…", false);
   const { data, error } = await db.from("agco_catalog")
     .upsert({ id: "current", rules: { ...agcoRules(), 5: rule } }, { onConflict: "id" }).select("rules");
-  if (error) {
-    button.disabled = false;
-    return speak(card, /rules/i.test(error.message) && /column|schema cache/i.test(error.message)
-      ? "Run migration 0074_agco_name_links.sql in the SQL editor first." : error.message, true);
-  }
+  if (error) { button.disabled = false; return speak(card, error.message, true); }
   if (!data || !data.length) { button.disabled = false; return speak(card, "Not saved — only an owner can change this.", true); }
   if (agcoCatalog) agcoCatalog.rules = data[0].rules; else agcoCatalog = { levels: [], rules: data[0].rules };
-  const problem = agcoPending.completions || agcoPending.catalog ? null : await agcoRebuild();
+  const problem = agcoPending ? null : await agcoRebuild();
   button.disabled = false;
-  renderAgcoImport(); renderAgcoLive(); renderAgcoLinks(); renderAgcoRules();
+  renderAgcoLive(); renderAgcoTechs(); renderAgcoRules();
   if (problem) return speak(card, `Saved, but the maps weren't rebuilt: ${problem}`, true);
   const label = $("agcoLevel5Need").selectedOptions[0].textContent;
-  speak(card, `Saved: ${label}. ${agcoPending.completions || agcoPending.catalog
-    ? "It applies when you publish the files waiting above." : "Every map has been rebuilt."}`, false);
+  speak(card, `Saved: ${label}. ${agcoPending ? "It applies when you publish the catalog waiting above." : "Every map has been rebuilt."}`, false);
 });
 
-// ---- admin: linking names AGCO writes differently -------------------------------------
-
-// The report to match against: the one waiting to publish, else the saved one.
-const agcoRows = () => (agcoPending.completions && agcoPending.completions.rows) || (agcoRaw && agcoRaw.rows) || [];
-const agcoSurname = (name) => agcoKey(name).split(" ").filter(w => w.length > 1).pop() || "";
-
-function renderAgcoLinks() {
-  const box = $("agcoLinks");
-  if (!box) return;
-  const rows = agcoRows();
-  const roster = tsPeople.filter(p => p.is_technician);
-  if (agcoError || !rows.length || !roster.length) {
-    box.innerHTML = `<p class="note" style="margin:0">${agcoError ? "" : !rows.length
-      ? "Upload the Training Completions Report first." : "Publish All employees on the Training Status tab first."}</p>`;
-    return;
-  }
-  const { matches, spare } = agcoMatch(rows, roster);
-  const missing = matches.filter(m => !m.found);
-  const linked = matches.filter(m => m.linked);
-  const byKey = new Map(roster.map(t => [t.person_key, t]));
-  const choices = (tech) => {
-    const surname = agcoSurname(agcoName(tech));
-    const same = spare.filter(s => agcoSurname(s.name) === surname);
-    const rest = spare.filter(s => agcoSurname(s.name) !== surname);
-    const option = (s, pick) => `<option value="${esc(s.name)}"${pick ? " selected" : ""}>${esc(s.name)}${
-      s.job ? ` — ${esc(s.job.replace(/^dealer\s+/i, ""))}` : ""}</option>`;
-    // The only one with the same surname is very likely them, so it's picked;
-    // nothing saves until Link is pressed.
-    return `<option value="">Pick the name AGCO has…</option>`
-      + (same.length ? `<optgroup label="Same last name">${same.map(s => option(s, same.length === 1)).join("")}</optgroup>` : "")
-      + (rest.length ? `<optgroup label="Everyone else on the report">${rest.map(s => option(s, false)).join("")}</optgroup>` : "");
-  };
-  box.innerHTML = `${missing.length ? missing.map(({ tech }) => `<div class="agco-link-row" data-agco-link="${esc(tech.person_key)}">
-      <span><b>${esc(agcoName(tech))}</b><span class="note">${esc(tech.store || "No store")} · not found on the AGCO report</span></span>
-      <select aria-label="The name AGCO has for ${esc(agcoName(tech))}">${choices(tech)}</select>
-      <button type="button" data-act="agco-link">Link</button><span class="msg"></span>
-    </div>`).join("") : `<p class="note" style="margin:0">Every technician on the roster is on the AGCO report.</p>`}
-    ${linked.length ? `<p class="note" style="margin:14px 0 4px"><b>Linked</b></p>
-      ${linked.map(({ tech, found }) => {
-        const link = agcoLinks.find(l => l.person_key === tech.person_key) || {};
-        return `<div class="agco-link-row" data-agco-link="${esc(tech.person_key)}">
-          <span><b>${esc(agcoName(tech))}</b><span class="note">${esc(tech.store || "No store")}</span></span>
-          <span>is <b style="display:inline">${esc(link.agco_name || "")}</b> on the AGCO report${found ? "" : " — not on this report"}</span>
-          <button type="button" class="ghost" data-act="agco-unlink">Unlink</button><span class="msg"></span>
-        </div>`;
-      }).join("")}` : ""}
-    ${agcoLinks.filter(l => !byKey.has(l.person_key)).length ? `<p class="note" style="margin:12px 0 0">
-      ${agcoLinks.filter(l => !byKey.has(l.person_key)).length} older links are for people no longer on the roster as
-      technicians; they're kept in case they come back.</p>` : ""}`;
-}
-
-// Linking or unlinking saves straight away, then rebuilds the maps if
-// they're published — or just the preview, if an upload is waiting.
-$("admin").addEventListener("click", async (event) => {
-  const button = event.target.closest("button[data-act]");
-  if (!button || !["agco-link", "agco-unlink", "agco-rebuild"].includes(button.dataset.act)) return;
-  const row = button.closest(".agco-link-row, .row");
-  const say = (text, bad) => speak(row, text, bad);
-  if (button.dataset.act === "agco-rebuild") {
-    button.disabled = true;
-    say("Rebuilding…", false);
-    const error = await agcoRebuild();
-    button.disabled = false;
-    if (error) return say(error, true);
-    renderAgcoLive(); renderAgcoLinks();
-    return speak(document.querySelector('#agcoLive .row'), "Rebuilt.", false);
-  }
-  const key = row.dataset.agcoLink;
-  if (button.dataset.act === "agco-link") {
-    const name = row.querySelector("select").value;
-    if (!name) return say("Pick the name AGCO has for them first.", true);
-    say("Linking…", false);
-    const { error } = await db.from("agco_name_links").upsert({ person_key: key, agco_name: name }, { onConflict: "person_key" });
-    if (error) return say(/does not exist|schema cache/i.test(error.message)
-      ? "Run migration 0074_agco_name_links.sql in the SQL editor first." : error.message, true);
-  } else {
-    say("Unlinking…", false);
-    const { error } = await db.from("agco_name_links").delete().eq("person_key", key);
-    if (error) return say(error.message, true);
-  }
-  const { data } = await db.from("agco_name_links").select("*");
-  agcoLinks = data || [];
-  if (!agcoPending.completions && !agcoPending.catalog) {
-    const error = await agcoRebuild();
-    if (error) return say(error, true);
-  }
-  renderAgcoImport(); renderAgcoLive(); renderAgcoLinks();
-});
-
-// The catalog and report as they'd be saved, and every technician's map.
-function agcoPublishArgs() {
-  const merged = agcoMerged();
-  if (!merged.catalog || !merged.completions) return null;
-  const levels = agcoWithRules(merged.catalog.levels);
-  const built = agcoBuild(levels, merged.completions.rows, tsPeople);
-  const old = (agcoCatalog && agcoCatalog.source) || {};
-  return {
-    catalog: { levels,
-      source: { catalog: merged.catalog.source || old.catalog || {},
-                completions: { ...(merged.completions.source || old.completions || {}) } } },
-    completions: agcoPending.completions ? { rows: agcoPending.completions.rows, source: agcoPending.completions.source } : null,
-    people: built.people
-  };
-}
-
-// After a new roster is published: the same report, matched to it.
-// Returns what went wrong, if anything.
-async function agcoRebuild() {
-  if (!isOwner() || !agcoCatalog || !agcoRaw || !(agcoRaw.rows || []).length) return null;
-  const args = agcoPublishArgs();
-  if (!args) return null;
-  const { error } = await db.rpc("publish_agco_development", args);
-  if (error) return error.message;
-  await loadAgco();
-  return null;
-}
+// ---- admin: publishing the catalog, and rebuilding ------------------------------------
 
 $("admin").addEventListener("click", async (event) => {
   const button = event.target.closest("button[data-act]");
-  if (!button || !["agco-publish", "agco-discard"].includes(button.dataset.act)) return;
+  if (!button || !["agco-publish", "agco-discard", "agco-rebuild"].includes(button.dataset.act)) return;
   if (button.dataset.act === "agco-discard") {
-    agcoPending = { catalog: null, completions: null };
-    renderAgcoLinks();
+    agcoPending = null;
+    renderAgcoTechs(); renderAgcoRules();
     return renderAgcoImport();
   }
-  const card = button.closest(".role");
-  const args = agcoPublishArgs();
-  if (!args) return speak(card, "Both files are needed before the maps can be published.", true);
+  const box = button.closest(".role, .row");
   button.disabled = true;
-  speak(card, "Publishing…", false);
-  const { error } = await db.rpc("publish_agco_development", args);
+  speak(box, button.dataset.act === "agco-rebuild" ? "Rebuilding…" : "Publishing…", false);
+  const source = agcoPending && agcoPending.source;
+  const problem = await agcoPublishAll(source);
   button.disabled = false;
-  if (error) return speak(card, error.message, true);
-  agcoPending = { catalog: null, completions: null };
-  await loadAgco();
-  renderAgcoImport();
-  renderAgcoLive();
-  renderAgcoLinks();
-  $("agcoResult").innerHTML = `<p class="ok" style="margin-top:12px">Published. ${args.people.length} technicians have a map.
-    It's in the Training Center, in the app and on this page.</p>`;
+  if (problem) return speak(box, problem, true);
+  const published = !!agcoPending;
+  agcoPending = null;
+  renderAgcoImport(); renderAgcoLive(); renderAgcoTechs(); renderAgcoRules();
+  if (published) {
+    $("agcoResult").innerHTML = `<p class="ok" style="margin-top:12px">Published. ${agcoPeople.length} technicians have a map,
+      in the Training Center in the app and on this page.</p>`;
+  } else {
+    speak(document.querySelector("#agcoLive .row"), "Rebuilt.", false);
+  }
 });
 
 $("agcoFile").addEventListener("change", (e) => { agcoReadFiles([...e.target.files]); e.target.value = ""; });
@@ -12650,13 +12500,11 @@ function agcoWrap(text, max = 23) {
   return lines.slice(0, 2);
 }
 
-const AGCO_STATE_TEXT = { done: "Complete", credited: "Credited", missing: "Required", started: "In progress",
-  none: "Not started" };
+const AGCO_STATE_TEXT = { done: "Complete", missing: "Required", started: "In progress", none: "Not started" };
 
 function agcoStatusLine(level) {
-  const counts = level.need ? ` · ${level.have} of ${level.need}` : "";
-  return level.state === "credited" ? "Credited · a higher level is done"
-    : level.state === "missing" ? `Required before any Level ${level.level + 1}`
+  const counts = level.need > 1 ? ` · ${level.have} of ${level.need}` : "";
+  return level.state === "missing" ? `Required before any Level ${level.level + 1}`
     : `${AGCO_STATE_TEXT[level.state] || "Not started"}${counts}`;
 }
 
@@ -12687,7 +12535,7 @@ function agcoMapSvg(person) {
       <rect class="agco-plate-line" x="${sx - 24}" y="${y - 31}" width="48" height="34" rx="5"/>
       <text class="agco-plate-small" x="${sx}" y="${y - 20}" text-anchor="middle">LEVEL</text>
       <text class="agco-plate-big" x="${sx}" y="${y - 1}" text-anchor="middle">${n}</text>
-      ${level.state === "done" || level.state === "credited"
+      ${level.state === "done"
         ? `<circle class="agco-check" cx="${sx + 24}" cy="${y - 32}" r="8"/>
            <path class="agco-check-mark" d="M${sx + 20} ${y - 32}l2.8 2.8 5-5.4"/>`
         : level.state === "missing"
@@ -12739,11 +12587,8 @@ function agcoLevelPanel(person, n) {
   const info = agcoLevelInfo(n);
   const level = (person.levels || []).find(l => l.level === n) || { level: n, state: "none" };
   const courses = (person.courses || []).filter(c => c.level === n);
-  const options = (info.courses || []);
-  const credited = level.state === "credited";
-  const course = (c) => `<li><b>${esc(agcoShort(c.title))}</b>
-    <span>${[usDate(c.completed), c.hours ? `${Number(c.hours).toLocaleString("en-US")} ${Number(c.hours) === 1 ? "hr" : "hrs"}` : "",
-      c.grade ? `Grade ${esc(c.grade)}` : ""].filter(Boolean).map(esc).join(" · ")}</span></li>`;
+  const course = (c) => `<li><b>${esc(agcoShort(c.title))}</b>${c.completed
+    ? `<span>Ticked ${esc(usDate(c.completed))}</span>` : ""}</li>`;
   return `<div class="agco-panel" data-state="${level.state}" id="agcoPanel">
     <div class="agco-panel-head">
       <span class="agco-mini ${level.state}">${n}</span>
@@ -12751,61 +12596,44 @@ function agcoLevelPanel(person, n) {
         <h2>${esc(info.name)}</h2></div>
     </div>
     <p class="agco-takes">${esc(info.takes || (AGCO_LEVELS.find(l => l.level === n) || {}).takes || "")}</p>
-    ${level.need && !credited ? `<div class="agco-meter"><span><i style="width:${Math.round(100 * level.have / Math.max(1, level.need))}%"></i></span>
+    ${level.need > 1 ? `<div class="agco-meter"><span><i style="width:${Math.round(100 * level.have / Math.max(1, level.need))}%"></i></span>
       <b>${level.have} of ${level.need}</b></div>` : ""}
     ${level.state === "missing" ? `<p class="agco-note required">${icon("info", 15)}<span>Level ${n} is required before
-      any Level ${n + 1} course can be taken. AGCO didn't hold to that order when the levels began${n === 5
-      ? ", which is how Level 6 is complete here without it — but Level 5 is still needed." : ". This one is still needed."}</span></p>` : ""}
-    ${credited ? `<p class="agco-note">${icon("info", 15)}<span>Counted as complete because a higher level
-      is. AGCO takes the levels in order, and the report only goes back to ${esc(usDate(((agcoCatalog || {}).source || {}).completions
-      && agcoCatalog.source.completions.from) || "its first date")}.</span></p>` : ""}
+      any Level ${n + 1} course can be taken. AGCO didn't hold to that order when the levels began, so a higher level can be
+      complete without it — but this one is still needed.</span></p>` : ""}
     <div class="agco-sub">Completed${courses.length ? ` · ${courses.length}` : ""}</div>
     ${courses.length ? `<ul class="agco-courses">${courses.map(course).join("")}</ul>`
-      : `<p class="agco-none">Nothing at this level on the AGCO report yet.</p>`}
-    ${level.missing && level.missing.length && !credited ? `<div class="agco-sub">Still to do · ${level.missing.length}</div>
-      <ul class="agco-courses todo">${level.missing.map(t => `<li><b>${esc(agcoShort(t))}</b></li>`).join("")}</ul>` : ""}
-    ${n >= 3 && level.state !== "done" && level.state !== "credited" && options.length ? `<details class="agco-options">
-      <summary>${n === 3 ? "The course" : `Courses at this level · ${options.length}`}</summary>
-      <ul class="agco-courses todo">${options.map(c => `<li><b>${esc(c.title)}</b>${c.code ? `<span>${esc(c.code)}</span>` : ""}</li>`).join("")}</ul>
-    </details>` : ""}
+      : `<p class="agco-none">Nothing at this level is marked complete yet.</p>`}
+    ${level.missing && level.missing.length ? (() => {
+      // "Still to do" when every one is needed; "Any one of these" when not.
+      const left = Math.max(0, (level.need || 0) - (level.have || 0));
+      const heading = left && left < level.missing.length
+        ? `Any ${left === 1 ? "one" : left} of these` : `Still to do · ${level.missing.length}`;
+      return `<div class="agco-sub">${heading}</div>
+        <ul class="agco-courses todo">${level.missing.map(t => `<li><b>${esc(agcoShort(t))}</b></li>`).join("")}</ul>`;
+    })() : ""}
   </div>`;
-}
-
-// AGCO service training that isn't on a level, below the map.
-function agcoOtherHtml(person) {
-  const other = (person.courses || []).filter(c => c.level === 0);
-  if (!other.length) return "";
-  return `<details class="agco-other cab-stripe" style="${lit("steel")}">
-    <summary><b>Other AGCO service training</b><span>${other.length} ${other.length === 1 ? "course" : "courses"} that
-      aren't on a level</span></summary>
-    <ul class="agco-courses">${other.map(c => `<li><b>${esc(c.title)}</b><span>${esc(usDate(c.completed) || "")}</span></li>`).join("")}</ul>
-  </details>`;
 }
 
 function agcoPersonHtml(person, chooser) {
   const reached = person.reached || 0;
   if (agcoState.level === null) agcoState.level = Math.min(6, reached + 1);
-  const source = ((agcoCatalog || {}).source || {}).completions || {};
   const next = reached >= 6 ? "Every level complete" : `Next: Level ${reached + 1} · ${agcoLevelInfo(reached + 1).name}`;
   return `<div class="agco">
     ${chooser ? `<button type="button" class="ghost agco-back" data-agco-person="">${icon("chevronLeft", 15)}All technicians</button>` : ""}
     <div class="agco-summary">
       <div style="${lit("teal")}"><b>${reached ? `Level ${reached}` : "Start"}</b><span>Reached</span></div>
       <div style="${lit("amber")}"><b>${esc(reached >= 6 ? "Expert" : `Level ${reached + 1}`)}</b><span>${reached >= 6 ? "All six" : "Next"}</span></div>
-      <div style="${lit("slate")}"><b>${(person.courses || []).filter(c => c.level > 0).length}</b><span>Level courses</span></div>
+      <div style="${lit("slate")}"><b>${(person.courses || []).length}</b><span>Courses ticked</span></div>
     </div>
     <div class="agco-layout">
       <div class="agco-map-card">
         <div class="agco-map-head"><b>${esc(agcoName(person))}</b><span>${esc(next)}</span></div>
         ${agcoMapSvg(person)}
-        <p class="agco-map-foot">Click a sign for its courses.${source.through
-          ? ` From AGCO's completions report, ${esc(usDate(source.from))} to ${esc(usDate(source.through))}.` : ""}</p>
+        <p class="agco-map-foot">Click a sign for its courses. The Training Manager ticks them off as they're completed.</p>
       </div>
       <div class="agco-side">
         ${agcoLevelPanel(person, agcoState.level)}
-        ${agcoOtherHtml(person)}
-        ${!person.agco_name ? `<p class="agco-note">${icon("info", 15)}<span>No AGCO completions were found for this name, so
-          every level shows as not started. If that's wrong, the name may be spelled differently in AGCO Academy.</span></p>` : ""}
       </div>
     </div>
   </div>`;
@@ -12840,7 +12668,7 @@ function agcoPeopleRows(list) {
   if (!list.length) return `<p class="st-empty">${agcoPeople.length ? "No technician matches that." : "No maps published yet."}</p>`;
   return list.map(p => `<button type="button" class="agco-person cab-card" data-agco-person="${esc(p.person_key)}"
       style="${lit(p.reached >= 6 ? "green" : p.reached ? "teal" : "steel")}">
-    <span class="agco-person-main"><b>${esc(agcoName(p))}</b><span>${esc(p.store || "No store")}${p.agco_name ? "" : " · not on the AGCO report"}</span></span>
+    <span class="agco-person-main"><b>${esc(agcoName(p))}</b><span>${esc(p.store || "No store")}</span></span>
     <span class="agco-gauge" aria-label="Reached ${p.reached ? `Level ${p.reached}` : "the start"}">${[1, 2, 3, 4, 5, 6]
       .map(n => `<i class="${n <= p.reached ? "on" : ""}"></i>`).join("")}</span>
     <span class="agco-person-level">${p.reached ? `L${p.reached}` : "—"}</span>
@@ -12856,7 +12684,7 @@ function agcoMapView() {
   }
   if (!agcoCatalog || !(agcoCatalog.levels || []).length) {
     return hero("AGCO Development Map", blurb) + `<p class="st-empty">Nothing has been published yet. The training department
-      uploads AGCO's catalog and completions report on the admin page.</p>`;
+      uploads AGCO's catalog and ticks each technician's courses on the admin page.</p>`;
   }
   const chooser = isAdmin() && (agcoPeople.length > 1 || !agcoMine());
   const person = agcoPeople.find(p => p.person_key === agcoState.person) || (chooser ? null : agcoMine() || agcoPeople[0]);
@@ -12923,7 +12751,7 @@ function agcoLinkCard() {
     <span><b>AGCO Development Map</b><span>${esc(sub)}</span>
       <span class="agco-strip" aria-hidden="true">${[1, 2, 3, 4, 5, 6].map(n => {
         const state = mine ? ((mine.levels || []).find(l => l.level === n) || {}).state : null;
-        const cls = state === "done" || state === "credited" ? "on" : state === "missing" ? "missing"
+        const cls = state === "done" ? "on" : state === "missing" ? "missing"
           : mine && n === reached + 1 ? "next" : "";
         return `<i class="${cls}">${n}</i>`;
       }).join("")}</span>
