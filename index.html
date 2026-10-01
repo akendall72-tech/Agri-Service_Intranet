@@ -1271,6 +1271,12 @@
   .agco-edit-signs i.done, .agco-edit-sign.done { background: #137026; color: #fff; }
   .agco-edit-signs i.started, .agco-edit-sign.started { background: #E8A317; color: #1C1917; }
   .agco-edit-signs i.missing, .agco-edit-sign.missing { background: #CC0033; color: #fff; }
+  button.agco-course-row { grid-template-columns: auto minmax(0, 1fr) 90px auto; }
+  .agco-course-meter { height: 6px; border-radius: 99px; background: #E4E7EA; overflow: hidden; }
+  .agco-course-meter i { display: block; height: 100%; background: #137026; border-radius: 99px; }
+  @media (max-width: 720px) { button.agco-course-row { grid-template-columns: auto minmax(0, 1fr); }
+    .agco-course-row .agco-course-meter { grid-column: 2; } }
+  .agco-who { display: grid; gap: 2px 18px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
   .agco-added { display: grid; gap: 6px; }
   .agco-added-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center;
     padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius-sm); }
@@ -11990,7 +11996,9 @@ let agcoPending = null;
 // search and shop.
 const agcoState = { person: null, level: null, query: "", store: "all" };
 // The same, for the technician being ticked on the admin page.
-const agcoEdit = { person: null, query: "", store: "all" };
+// By technician or by course, and within each what's open, searched and sorted.
+const agcoEdit = { person: null, query: "", store: "all", mode: "people", course: null, courseQuery: "",
+  courseSort: "level", show: "all" };
 
 // What each level is, from the Training Center's requirements article.
 const AGCO_LEVELS = [
@@ -12277,17 +12285,19 @@ function renderAgcoTechs() {
 
   const stores = [...new Set(techs.map(t => t.store || "No store"))].sort();
   if (agcoEdit.store !== "all" && !stores.includes(agcoEdit.store)) agcoEdit.store = "all";
+  const modes = `<div class="chips" style="margin-bottom:12px">${[["people", "By technician"], ["course", "By course"]].map(([id, label]) =>
+    `<button type="button" class="chip${agcoEdit.mode === id ? " on" : ""}" data-agco-mode="${id}">${label}</button>`).join("")}</div>`;
+  if (agcoEdit.mode === "course") { box.innerHTML = modes + agcoCourseViewHtml(levels, techs, stores); return; }
   const q = agcoEdit.query.toLowerCase();
   const shown = techs.filter(t => (agcoEdit.store === "all" || (t.store || "No store") === agcoEdit.store)
     && (!q || agcoName(t).toLowerCase().includes(q)));
   const rows = techs.map(t => agcoPersonRow(t, levels));
-  box.innerHTML = `<p class="note" style="margin:0 0 10px">${techs.length} technicians. Furthest level reached:
+  box.innerHTML = modes + `<p class="note" style="margin:0 0 10px">${techs.length} technicians. Furthest level reached:
       ${agcoTally(rows).map((n, i) => `${i ? `Level ${i}` : "not started"} ${n}`).join(", ")}.</p>
     <div class="row" style="margin-bottom:10px">
       <input class="search" id="agcoEditSearch" placeholder="Search technicians" value="${esc(agcoEdit.query)}" autocomplete="off"
              aria-label="Search technicians" style="flex:1;max-width:none">
-      <select id="agcoEditStore" style="width:auto;margin:0" aria-label="Shop">${["all", ...stores].map(s =>
-        `<option value="${esc(s)}"${agcoEdit.store === s ? " selected" : ""}>${s === "all" ? "All shops" : esc(s)}</option>`).join("")}</select>
+      ${agcoShopSelect(stores)}
     </div>
     <div class="agco-edit-list">${shown.map(t => {
       const row = rows[techs.indexOf(t)];
@@ -12303,7 +12313,7 @@ function agcoEditorHtml(tech, levels) {
   const row = agcoPersonRow(tech, levels);
   const marks = new Map(agcoMarks.filter(m => m.person_key === tech.person_key).map(m => [m.course_key, m]));
   const state = (n) => row.levels.find(l => l.level === n) || {};
-  return `<div class="agco-editor" data-agco-tech="${esc(tech.person_key)}">
+  return `<div class="agco-editor" data-agco-tech="${esc(tech.person_key)}" data-agco-say>
     <div class="row" style="justify-content:space-between;margin-bottom:6px">
       <button type="button" class="ghost" data-agco-edit="">&lsaquo; All technicians</button>
       <span class="msg"></span>
@@ -12330,7 +12340,85 @@ function agcoEditorHtml(tech, levels) {
   </div>`;
 }
 
+// By course: every course with how many have it ticked, then one course with
+// who has it and who doesn't — ticked from there, for everyone at a class.
+const agcoShopSelect = (stores) => `<select id="agcoEditStore" style="width:auto;margin:0" aria-label="Shop">${
+  ["all", ...stores].map(s => `<option value="${esc(s)}"${agcoEdit.store === s ? " selected" : ""}>${
+    s === "all" ? "All shops" : esc(s)}</option>`).join("")}</select>`;
+
+function agcoCourseViewHtml(levels, techs, stores) {
+  const onRoster = new Set(techs.map(t => t.person_key));
+  const ticks = (key) => agcoMarks.filter(m => m.course_key === key && onRoster.has(m.person_key));
+  const all = levels.flatMap(l => l.courses.map(c => ({ level: l.level, title: c.title, key: agcoCourseKey(c), added: !!c.added })));
+  const open = all.find(c => c.key === agcoEdit.course);
+  if (open) return agcoCourseDetailHtml(open, techs, ticks(open.key), stores);
+
+  const count = new Map(all.map(c => [c.key, ticks(c.key).length]));
+  const q = agcoEdit.courseQuery.toLowerCase();
+  const list = all.filter(c => !q || c.title.toLowerCase().includes(q) || c.key.toLowerCase().includes(q));
+  if (agcoEdit.courseSort === "most") list.sort((a, b) => count.get(b.key) - count.get(a.key) || a.level - b.level);
+  if (agcoEdit.courseSort === "fewest") list.sort((a, b) => count.get(a.key) - count.get(b.key) || a.level - b.level);
+  return `<div class="row" style="margin-bottom:10px">
+      <input class="search" id="agcoCourseSearch" placeholder="Find a course by name or code" value="${esc(agcoEdit.courseQuery)}"
+             autocomplete="off" aria-label="Find a course" style="flex:1;max-width:none">
+      <select id="agcoCourseSort" style="width:auto;margin:0" aria-label="Sort courses">${[["level", "By level"],
+        ["most", "Most ticked first"], ["fewest", "Fewest ticked first"]].map(([v, label]) =>
+        `<option value="${v}"${agcoEdit.courseSort === v ? " selected" : ""}>${label}</option>`).join("")}</select>
+    </div>
+    <div class="agco-edit-list">${list.map(c => {
+      const n = count.get(c.key);
+      return `<button type="button" class="agco-edit-row agco-course-row" data-agco-course="${esc(c.key)}">
+        <span class="agco-edit-sign">${c.level}</span>
+        <span><b>${esc(c.title)}</b><span class="note">${n} of ${techs.length} ticked${c.added ? " · added here" : ""}</span></span>
+        <span class="agco-course-meter" aria-hidden="true"><i style="width:${Math.round(100 * n / Math.max(1, techs.length))}%"></i></span>
+        <span class="agco-edit-go">Who has it &rsaquo;</span>
+      </button>`;
+    }).join("") || `<p class="note">No course matches that.</p>`}</div>`;
+}
+
+function agcoCourseDetailHtml(course, techs, ticks, stores) {
+  const has = new Map(ticks.map(m => [m.person_key, m]));
+  const inShop = techs.filter(t => agcoEdit.store === "all" || (t.store || "No store") === agcoEdit.store);
+  const yes = inShop.filter(t => has.has(t.person_key)), no = inShop.filter(t => !has.has(t.person_key));
+  const shown = agcoEdit.show === "has" ? yes : agcoEdit.show === "not" ? no : inShop;
+  return `<div data-agco-say>
+    <div class="row" style="justify-content:space-between;margin-bottom:6px">
+      <button type="button" class="ghost" data-agco-course="">&lsaquo; All courses</button>
+      <span class="msg"></span>
+    </div>
+    <h3 class="agco-editor-name">${esc(course.title)}</h3>
+    <p class="note" style="margin:0 0 12px">Level ${course.level}${course.added ? " · added here" : ""} · ticked for ${yes.length} of
+      ${inShop.length} technicians${agcoEdit.store === "all" ? "" : ` at ${esc(agcoEdit.store)}`}. ${agcoCanTick()
+      ? "Tick everyone who has completed it; each tick saves, and their map changes with it."
+      : `Only the Training Manager${agcoTrainingManager() ? ` (${esc(agcoTrainingManager())})` : ""} can tick courses.`}</p>
+    <div class="row" style="margin-bottom:10px">
+      <div class="chips" style="margin:0">${[["all", "Everyone", inShop.length], ["has", "Has it", yes.length],
+        ["not", "Hasn't", no.length]].map(([id, label, n]) => `<button type="button" class="chip${agcoEdit.show === id ? " on" : ""}"
+        data-agco-show="${id}">${label} · ${n}</button>`).join("")}</div>
+      ${agcoShopSelect(stores)}
+    </div>
+    <div class="agco-who">${shown.map(t => {
+      const mark = has.get(t.person_key);
+      return `<label class="check agco-course" data-agco-tech="${esc(t.person_key)}"><input type="checkbox"
+          data-agco-mark="${esc(course.key)}" data-level="${course.level}"${mark ? " checked" : ""}${agcoCanTick() ? "" : " disabled"}>
+        <span><b>${esc(agcoName(t))}</b> <span class="note">· ${esc(t.store || "No store")}</span>${mark && mark.marked_on
+          ? `<small>Ticked ${esc(usDate(mark.marked_on))}${mark.marked_by_name ? ` by ${esc(mark.marked_by_name)}` : ""}</small>` : ""}</span></label>`;
+    }).join("") || `<p class="note">${agcoEdit.show === "has" ? "Nobody here has it ticked yet." : "Everyone here has it ticked."}</p>`}</div>
+  </div>`;
+}
+
 document.addEventListener("click", (event) => {
+  const mode = event.target.closest("[data-agco-mode]");
+  if (mode) { agcoEdit.mode = mode.dataset.agcoMode; agcoEdit.person = null; return renderAgcoTechs(); }
+  const course = event.target.closest("[data-agco-course]");
+  if (course) {
+    agcoEdit.course = course.dataset.agcoCourse || null;
+    agcoEdit.show = "all";
+    renderAgcoTechs();
+    return $("agcoTechCard").scrollIntoView({ block: "start" });
+  }
+  const show = event.target.closest("[data-agco-show]");
+  if (show) { agcoEdit.show = show.dataset.agcoShow; return renderAgcoTechs(); }
   const pick = event.target.closest("[data-agco-edit]");
   if (!pick) return;
   agcoEdit.person = pick.dataset.agcoEdit || null;
@@ -12339,20 +12427,24 @@ document.addEventListener("click", (event) => {
 });
 
 document.addEventListener("input", (event) => {
-  if (event.target.id !== "agcoEditSearch") return;
-  agcoEdit.query = event.target.value;
+  const id = event.target.id;
+  if (id !== "agcoEditSearch" && id !== "agcoCourseSearch") return;
+  if (id === "agcoEditSearch") agcoEdit.query = event.target.value; else agcoEdit.courseQuery = event.target.value;
   const at = event.target.selectionStart;
   renderAgcoTechs();
-  $("agcoEditSearch").focus();
-  $("agcoEditSearch").setSelectionRange(at, at);
+  $(id).focus();
+  $(id).setSelectionRange(at, at);
 });
 
 document.addEventListener("change", async (event) => {
   if (event.target.id === "agcoEditStore") { agcoEdit.store = event.target.value; return renderAgcoTechs(); }
+  if (event.target.id === "agcoCourseSort") { agcoEdit.courseSort = event.target.value; return renderAgcoTechs(); }
   const box = event.target.closest("[data-agco-mark]");
   if (!box) return;
-  const editor = box.closest("[data-agco-tech]");
-  const tech = agcoTechs().find(t => t.person_key === editor.dataset.agcoTech);
+  // The technician: the open editor's, or the row's in the course view.
+  const holder = box.closest("[data-agco-tech]");
+  const editor = box.closest("[data-agco-say]");
+  const tech = agcoTechs().find(t => t.person_key === holder.dataset.agcoTech);
   const levels = agcoLevelsNow();
   const level = levels.find(l => l.level === Number(box.dataset.level));
   const course = level && level.courses.find(c => agcoCourseKey(c) === box.dataset.agcoMark);
@@ -12391,7 +12483,7 @@ document.addEventListener("change", async (event) => {
   renderAgcoTechs();
   renderAgcoLive();
   window.scrollTo(0, y);
-  speak(document.querySelector("[data-agco-tech]"), box.checked ? "Ticked." : "Unticked.", false);
+  speak(document.querySelector("#agcoTechs [data-agco-say]"), `${box.checked ? "Ticked" : "Unticked"} for ${agcoName(tech)}.`, false);
 });
 
 // ---- admin: the level rules --------------------------------------------------------------
