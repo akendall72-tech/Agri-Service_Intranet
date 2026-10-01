@@ -11967,10 +11967,12 @@ $("admin").addEventListener("click", async (event) => {
 //   Only service courses count: the third to fifth letters of AGCO's course
 //   code say what a course is for, and SVC is service. Sales, parts, FUSE and
 //   the business courses aren't on the technician levels.
-//   "Level 4 Master" is what Level 6 Expert was called until 2024 — AGCO's own
-//   titles say "(formerly Level 4 Master)" — so it counts as Level 6.
-//   Top Tech courses are Level 3. Otherwise "Level N" in the title, or, for
-//   the older codes that carry it, the digit after SVCTEC.
+//   Top Tech courses are Level 3. Otherwise the first "Level N" in the title,
+//   or, for the older codes that carry it, the digit after SVCTEC.
+//   The 2023 "Level 4 Master" courses count as Level 4, as they were called
+//   when they were taken, though AGCO has since renamed that level Level 6
+//   Expert. The renamed ones read "Level 6 Expert: … (formerly Level 4
+//   Master)", so the first "Level" puts them on Level 6.
 //
 // WHEN A LEVEL IS COMPLETE — agcoLevels below
 //
@@ -12009,11 +12011,11 @@ const AGCO_LEVELS = [
   { level: 3, name: "Advanced Systems Training",
     takes: "Application of Technical Theory: five days, instructor-led at an AGCO facility — or the online test-out. It counts toward the instructor-led hours." },
   { level: 4, name: "Machine-Specific Training",
-    takes: "A Level 4 course on a machine you work on: instructor-led and hands-on, at AGCO or here (Fendt tractors, large square balers, windrowers)." },
+    takes: "A Level 4 course on a machine you work on: instructor-led and hands-on, at AGCO or here (Fendt tractors, large square balers, windrowers). The 2023 Level 4 Master courses count here." },
   { level: 5, name: "Advanced Technical Training",
     takes: "One of the two Level 5 courses — Electrical & Hydraulics, or Engines & Powertrains. Four days at an AGCO facility. Required before any Level 6 course." },
   { level: 6, name: "Expert Machine-Specific Training",
-    takes: "A Level 6 Expert course: three days of advanced diagnostics, troubleshooting and repair on one machine. Formerly Level 4 Master." }
+    takes: "A Level 6 Expert course: three days of advanced diagnostics, troubleshooting and repair on one machine." }
 ];
 
 async function loadAgco() {
@@ -12062,9 +12064,13 @@ function agcoLevel5Takes(courses, rule) {
   return `${lead}${joined ? ` — ${joined}` : ""}. Four days each at an AGCO facility. Required before any Level 6 course.`;
 }
 
-// The catalog's levels with the owner's rules worked into their words.
-const agcoWithRules = (levels, rules = agcoRules()) => levels.map(l => l.level === 5
-  ? { ...l, takes: agcoLevel5Takes(l.courses, agcoLevel5Rule(rules)) } : l);
+// The catalog's levels with today's words — AGCO_LEVELS, then the owner's
+// rules — so a rebuild picks up a change to either without a new upload.
+const agcoWithRules = (levels, rules = agcoRules()) => levels.map(l => {
+  const words = AGCO_LEVELS.find(a => a.level === l.level) || {};
+  const level = { ...l, name: words.name || l.name, takes: words.takes || l.takes };
+  return l.level === 5 ? { ...level, takes: agcoLevel5Takes(l.courses, agcoLevel5Rule(rules)) } : level;
+});
 
 // ---- sorting courses ---------------------------------------------------------
 
@@ -12073,11 +12079,10 @@ function agcoLevelOf(title, code) {
   if (id && id.slice(2, 5) !== "SVC") return null;
   if (!id && /\bsales\b/i.test(name)) return null;
   if (/top\s*tech/i.test(name)) return 3;
-  if (/level\s*4\s*master/i.test(name)) return 6;
   const m = name.match(/\blevel\s*([1-6])\b/i);
   if (m) return Number(m[1]);
   const c = id.match(/SVCTEC([1-6])/);
-  if (c) return c[1] === "4" ? 6 : Number(c[1]);
+  if (c) return Number(c[1]);
   return id ? 0 : null;
 }
 
