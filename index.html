@@ -1271,6 +1271,10 @@
   .agco-edit-signs i.done, .agco-edit-sign.done { background: #137026; color: #fff; }
   .agco-edit-signs i.started, .agco-edit-sign.started { background: #E8A317; color: #1C1917; }
   .agco-edit-signs i.missing, .agco-edit-sign.missing { background: #CC0033; color: #fff; }
+  .agco-added { display: grid; gap: 6px; }
+  .agco-added-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center;
+    padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius-sm); }
+  .agco-added-row b { display: block; font-weight: 600; }
   .agco-edit-go { color: var(--red); font-size: 13px; font-weight: 600; white-space: nowrap; }
   @media (max-width: 720px) { button.agco-edit-row { grid-template-columns: minmax(0, 1fr); } }
   h3.agco-editor-name { margin: 6px 0 2px; font: 700 21px var(--font-cab); text-transform: uppercase; letter-spacing: .02em; }
@@ -2143,9 +2147,29 @@
           <input id="agcoFile" type="file" class="hidden" accept=".xlsx,.xls">
         </div>
         <p class="note" style="margin-top:12px">Its LEVEL 1 to LEVEL 6 tabs are the courses you tick for each technician
-          below; the Level 3 online test-out is added beside the instructor-led Level 3 course. Upload a new copy when
-          AGCO changes its courses — the ticks are kept.</p>
+          below, with any you add underneath. Upload a new copy when AGCO changes its courses — the ticks, and the
+          courses added here, are kept.</p>
+        <div id="agcoLive"></div>
         <div id="agcoResult"></div>
+      </div>
+      <div class="card" id="agcoAddedCard">
+        <h2>Courses added here</h2>
+        <p class="note">Courses that count toward a level but aren't on AGCO's catalog — the Level 3 online test-out,
+          or a new class before AGCO lists it. They're ticked like any other. A course added to Level 1 or 2 is one
+          more that everyone needs to complete that level.</p>
+        <div id="agcoAdded"></div>
+        <div class="fields" style="margin-top:12px">
+          <div><label for="agcoAddLevel">Level</label>
+            <select id="agcoAddLevel">
+              <option value="1">Level 1</option><option value="2">Level 2</option><option value="3">Level 3</option>
+              <option value="4">Level 4</option><option value="5">Level 5</option><option value="6">Level 6</option>
+            </select></div>
+          <div><label for="agcoAddCode">AGCO course code (optional)</label>
+            <input id="agcoAddCode" class="mono" type="text" maxlength="40" placeholder="NASVC…" autocomplete="off"></div>
+          <div class="wide"><label for="agcoAddTitle">Course name</label>
+            <input id="agcoAddTitle" type="text" maxlength="200" placeholder="As AGCO names it" autocomplete="off"></div>
+        </div>
+        <div class="row"><button data-act="agco-add-course">Add course</button><span class="msg"></span></div>
       </div>
       <div class="card" id="agcoTechCard">
         <h2>Technicians</h2>
@@ -2163,10 +2187,6 @@
             <select id="agcoLevel5Need"></select></div>
         </div>
         <div class="row"><button data-act="agco-rules">Save</button><span class="msg"></span></div>
-      </div>
-      <div class="card">
-        <h2>Published now</h2>
-        <div id="agcoLive"></div>
       </div>
     </section>
 
@@ -2871,7 +2891,7 @@ function showAdmin() {
   renderEvents(); renderOrg(); renderOsrImport(); renderOsrLive(); renderInspectionsAdmin();
   renderCoursesAdmin(); renderSdsAdmin(); renderSdsPending(); renderArticlesAdmin(); renderSkillsAdmin();
   renderNewsAdmin(); renderTsImport(); renderTsLive(); renderHandbook(); renderAgcoImport(); renderAgcoLive();
-  renderAgcoTechs(); renderAgcoRules();
+  renderAgcoTechs(); renderAgcoRules(); renderAgcoAdded();
   window.scrollTo(0, 0);
 }
 
@@ -11988,10 +12008,6 @@ const AGCO_LEVELS = [
     takes: "A Level 6 Expert course: three days of advanced diagnostics, troubleshooting and repair on one machine." }
 ];
 
-// The catalog lists the instructor-led Level 3 course only; the online
-// test-out completes Level 3 just the same, so it's added beside it.
-const AGCO_TEST_OUT = { title: "Level 3: Application of Technical Theory — Online Test-Out", code: "NASVCAGMLPCRTMLP031X" };
-
 async function loadAgco() {
   const [people, catalog, marks] = await Promise.all([
     db.from("agco_development_people").select("*"),
@@ -12049,18 +12065,24 @@ function agcoLevel5Takes(courses, rule) {
   return `${lead}${joined ? ` — ${joined}` : ""}. Four days each at an AGCO facility. Required before any Level 6 course.`;
 }
 
-// The catalog's levels as they're published: in order, with the test-out
-// beside the Level 3 course, and today's words — AGCO_LEVELS, then the
-// owner's rules — so a rebuild picks up a change to either without an upload.
-const agcoWithRules = (levels, rules = agcoRules()) => levels.slice().sort((a, b) => a.level - b.level).map(l => {
-  const words = AGCO_LEVELS.find(a => a.level === l.level) || {};
-  let courses = l.courses || [];
-  if (l.level === 3 && !courses.some(c => agcoCourseKey(c) === AGCO_TEST_OUT.code || /test.?out/i.test(c.title))) {
-    courses = [...courses, { ...AGCO_TEST_OUT }];
-  }
-  const level = { ...l, courses, name: words.name || l.name, takes: words.takes || l.takes };
-  return l.level === 5 ? { ...level, takes: agcoLevel5Takes(courses, agcoLevel5Rule(rules)) } : level;
-});
+// Courses an owner added on the admin page — the Level 3 online test-out, a
+// class AGCO hasn't listed yet (migration 0076). Kept apart from the
+// catalog's own, so a new catalog keeps them.
+const agcoAdded = () => (agcoCatalog && agcoCatalog.added_courses) || [];
+
+// The levels as they're used: in order, the catalog's courses with the added
+// ones after them (marked added), and today's words — AGCO_LEVELS, then the
+// owner's rules — so a change to either needs no new upload.
+const agcoWithRules = (levels, rules = agcoRules(), added = agcoAdded()) =>
+  levels.slice().sort((a, b) => a.level - b.level).map(l => {
+    const words = AGCO_LEVELS.find(a => a.level === l.level) || {};
+    const own = (l.courses || []).filter(c => !c.added);
+    const keys = new Set(own.map(agcoCourseKey));
+    const courses = [...own, ...added.filter(c => c.level === l.level && !keys.has(agcoCourseKey(c)))
+      .map(c => ({ title: c.title, code: c.code || "", added: true }))];
+    const level = { ...l, courses, name: words.name || l.name, takes: words.takes || l.takes };
+    return l.level === 5 ? { ...level, takes: agcoLevel5Takes(courses, agcoLevel5Rule(rules)) } : level;
+  });
 
 // The levels to tick against: a catalog waiting to publish, else the published one.
 const agcoLevelsNow = () => agcoWithRules((agcoPending && agcoPending.levels)
@@ -12115,7 +12137,9 @@ async function agcoPublishAll(catalogSource) {
   if (!levels.length) return "Upload the Technical Training Catalog first.";
   const old = (agcoCatalog && agcoCatalog.source) || {};
   const { error } = await db.rpc("publish_agco_development", {
-    catalog: { levels, source: { catalog: catalogSource || old.catalog || {} } },
+    // Saved with the catalog's own courses only; the added ones live apart.
+    catalog: { levels: levels.map(l => ({ ...l, courses: l.courses.filter(c => !c.added) })),
+               source: { catalog: catalogSource || old.catalog || {} } },
     people: agcoTechs().map(t => agcoPersonRow(t, levels))
   });
   if (error) return error.message;
@@ -12195,7 +12219,7 @@ function renderAgcoImport(problems = []) {
       <b>Ready to publish</b>
       <p class="note" style="margin:6px 0 10px">${esc(agcoPending.source.file)}${agcoPending.source.dated
         ? `, from ${esc(agcoPending.source.dated)}` : ""}: ${levels.map(l => `Level ${l.level} ${l.courses.length}`).join(", ")}
-        courses, the Level 3 test-out included.</p>
+        courses${agcoAdded().length ? `, with the ${agcoAdded().length} added here` : ""}.</p>
       ${orphaned ? `<p class="note" style="margin:0 0 10px">${orphaned} ${orphaned === 1 ? "course that's" : "courses that are"} ticked
         for someone ${orphaned === 1 ? "isn't" : "aren't"} on this catalog. The ticks are kept, but they won't count toward a level
         until the course is back.</p>` : ""}
@@ -12213,18 +12237,12 @@ function renderAgcoLive() {
     return;
   }
   const source = ((agcoCatalog && agcoCatalog.source) || {}).catalog || {};
-  if (!agcoCatalog || !(agcoCatalog.levels || []).length) {
-    box.innerHTML = `<p class="note">Nothing published yet.</p>`;
-    return;
-  }
-  box.innerHTML = `<p class="note" style="margin:0 0 8px"><b>Technical Training Catalog</b>: ${source.file
-      ? `${esc(source.file)}${source.dated ? `, from ${esc(source.dated)}` : ""}` : "not uploaded yet"}.</p>
-    <p class="note" style="margin:0 0 10px">${agcoPeople.length} technicians have a map. Furthest level reached:
-      ${agcoTally(agcoPeople).map((n, i) => `${i ? `Level ${i}` : "not started"} ${n}`).join(", ")}.</p>
-    <p class="note" style="margin:0 0 10px">Publishing All employees on the Training Status tab gives a new technician
-      a map straight away.</p>
-    <div class="row"><button class="ghost" data-act="agco-rebuild">Rebuild the maps</button>
-      <span class="note">From the ticks, against today's roster.</span><span class="msg"></span></div>`;
+  const levels = agcoWithRules((agcoCatalog && agcoCatalog.levels) || []);
+  box.innerHTML = `<p class="note" style="margin:0"><b>In use:</b> ${levels.length
+    ? `${esc(source.file || "Technical Training Catalog")}${source.dated ? `, from ${esc(source.dated)}` : ""} —
+       ${levels.map(l => `Level ${l.level} ${l.courses.length}`).join(", ")} courses${agcoAdded().length
+         ? `, the ${agcoAdded().length} added here included` : ""}.`
+    : "no catalog yet."}</p>`;
 }
 
 // ---- admin: ticking a technician's courses -------------------------------------------
@@ -12262,14 +12280,17 @@ function renderAgcoTechs() {
   const q = agcoEdit.query.toLowerCase();
   const shown = techs.filter(t => (agcoEdit.store === "all" || (t.store || "No store") === agcoEdit.store)
     && (!q || agcoName(t).toLowerCase().includes(q)));
-  box.innerHTML = `<div class="row" style="margin-bottom:10px">
+  const rows = techs.map(t => agcoPersonRow(t, levels));
+  box.innerHTML = `<p class="note" style="margin:0 0 10px">${techs.length} technicians. Furthest level reached:
+      ${agcoTally(rows).map((n, i) => `${i ? `Level ${i}` : "not started"} ${n}`).join(", ")}.</p>
+    <div class="row" style="margin-bottom:10px">
       <input class="search" id="agcoEditSearch" placeholder="Search technicians" value="${esc(agcoEdit.query)}" autocomplete="off"
              aria-label="Search technicians" style="flex:1;max-width:none">
       <select id="agcoEditStore" style="width:auto;margin:0" aria-label="Shop">${["all", ...stores].map(s =>
         `<option value="${esc(s)}"${agcoEdit.store === s ? " selected" : ""}>${s === "all" ? "All shops" : esc(s)}</option>`).join("")}</select>
     </div>
     <div class="agco-edit-list">${shown.map(t => {
-      const row = agcoPersonRow(t, levels);
+      const row = rows[techs.indexOf(t)];
       return `<button type="button" class="agco-edit-row" data-agco-edit="${esc(t.person_key)}">
         <span><b>${esc(agcoName(t))}</b><span class="note">${esc(t.store || "No store")}</span></span>
         <span class="agco-edit-signs">${row.levels.map(l => `<i class="${l.state}">${l.level}</i>`).join("")}</span>
@@ -12409,32 +12430,100 @@ $("admin").addEventListener("click", async (event) => {
   speak(card, `Saved: ${label}. ${agcoPending ? "It applies when you publish the catalog waiting above." : "Every map has been rebuilt."}`, false);
 });
 
-// ---- admin: publishing the catalog, and rebuilding ------------------------------------
+// ---- admin: courses added to the catalog -------------------------------------------
+
+function renderAgcoAdded() {
+  const box = $("agcoAdded");
+  if (!box) return;
+  const added = agcoAdded().slice().sort((a, b) => a.level - b.level || a.title.localeCompare(b.title));
+  box.innerHTML = added.length ? `<div class="agco-added">${added.map(c => {
+      const key = agcoCourseKey(c);
+      const ticked = agcoMarks.filter(m => m.course_key === key).length;
+      return `<div class="agco-added-row" data-agco-added="${esc(key)}">
+        <span class="agco-edit-sign done">${c.level}</span>
+        <span><b>${esc(c.title)}</b><span class="note">${c.code ? `${esc(c.code)} · ` : ""}${ticked
+          ? `ticked for ${ticked} ${ticked === 1 ? "technician" : "technicians"}` : "not ticked for anyone yet"}</span></span>
+        <button type="button" class="ghost" data-act="agco-remove-course">Remove</button>
+      </div>`;
+    }).join("")}</div>` : `<p class="note" style="margin:0">None yet.</p>`;
+}
+
+// Saves the added courses, then re-works every map, since a level's courses changed.
+async function agcoSaveAdded(list, where) {
+  const { data, error } = await db.from("agco_catalog")
+    .upsert({ id: "current", added_courses: list }, { onConflict: "id" }).select("added_courses");
+  if (error) {
+    return speak(where, /added_courses/i.test(error.message)
+      ? "Run migration 0076_agco_added_courses.sql in the SQL editor first." : error.message, true);
+  }
+  if (!data || !data.length) return speak(where, "Not saved — only an owner can change the catalog.", true);
+  if (agcoCatalog) agcoCatalog.added_courses = data[0].added_courses;
+  else agcoCatalog = { levels: [], added_courses: data[0].added_courses };
+  const problem = agcoPending ? null : await agcoRebuild();
+  renderAgcoAdded(); renderAgcoImport(); renderAgcoLive(); renderAgcoTechs(); renderAgcoRules();
+  return problem;
+}
+
+$("admin").addEventListener("click", async (event) => {
+  const button = event.target.closest('button[data-act="agco-add-course"], button[data-act="agco-remove-course"]');
+  if (!button) return;
+  const card = $("agcoAddedCard");
+  const say = (text, bad) => speak(card, text, bad);
+
+  if (button.dataset.act === "agco-remove-course") {
+    const key = button.closest("[data-agco-added]").dataset.agcoAdded;
+    const course = agcoAdded().find(c => agcoCourseKey(c) === key);
+    if (!course) return;
+    const ticked = agcoMarks.filter(m => m.course_key === key).length;
+    if (!confirm(`Remove "${course.title}" from Level ${course.level}?` + (ticked
+      ? `\n\nIt's ticked for ${ticked} ${ticked === 1 ? "technician" : "technicians"}. The ticks are kept, but won't count `
+        + "toward the level unless the course is added back." : ""))) return;
+    button.disabled = true;
+    const problem = await agcoSaveAdded(agcoAdded().filter(c => agcoCourseKey(c) !== key), card);
+    if (problem) return say(`Removed, but the maps weren't rebuilt: ${problem}`, true);
+    return say(`Removed "${course.title}". Every map has been rebuilt.`, false);
+  }
+
+  const level = Number($("agcoAddLevel").value);
+  const title = $("agcoAddTitle").value.trim().replace(/\s+/g, " ");
+  const code = $("agcoAddCode").value.trim().toUpperCase();
+  if (!title) return say("Type the course's name, as AGCO names it.", true);
+  if (code && !AGCO_CODE.test(code)) return say("That doesn't look like an AGCO course code — leave it blank if you don't have one.", true);
+  const course = { level, title, ...(code ? { code } : {}) };
+  const key = agcoCourseKey(course);
+  // One course, one level: the same course twice would count twice.
+  const clash = agcoLevelsNow().find(l => l.courses.some(c => agcoCourseKey(c) === key));
+  if (clash) return say(`That course is already on Level ${clash.level}.`, true);
+  button.disabled = true;
+  say("Adding…", false);
+  const problem = await agcoSaveAdded([...agcoAdded(), course], card);
+  button.disabled = false;
+  if (problem) return say(`Added, but the maps weren't rebuilt: ${problem}`, true);
+  $("agcoAddTitle").value = "";
+  $("agcoAddCode").value = "";
+  say(`Added to Level ${level}. ${level <= 2 ? "Everyone now needs it to complete that level. " : ""}Every map has been rebuilt.`, false);
+});
+
+// ---- admin: publishing the catalog ------------------------------------------------------
 
 $("admin").addEventListener("click", async (event) => {
   const button = event.target.closest("button[data-act]");
-  if (!button || !["agco-publish", "agco-discard", "agco-rebuild"].includes(button.dataset.act)) return;
+  if (!button || !["agco-publish", "agco-discard"].includes(button.dataset.act)) return;
   if (button.dataset.act === "agco-discard") {
     agcoPending = null;
     renderAgcoTechs(); renderAgcoRules();
     return renderAgcoImport();
   }
-  const box = button.closest(".role, .row");
+  const box = button.closest(".role");
   button.disabled = true;
-  speak(box, button.dataset.act === "agco-rebuild" ? "Rebuilding…" : "Publishing…", false);
-  const source = agcoPending && agcoPending.source;
-  const problem = await agcoPublishAll(source);
+  speak(box, "Publishing…", false);
+  const problem = await agcoPublishAll(agcoPending.source);
   button.disabled = false;
   if (problem) return speak(box, problem, true);
-  const published = !!agcoPending;
   agcoPending = null;
   renderAgcoImport(); renderAgcoLive(); renderAgcoTechs(); renderAgcoRules();
-  if (published) {
-    $("agcoResult").innerHTML = `<p class="ok" style="margin-top:12px">Published. ${agcoPeople.length} technicians have a map,
-      in the Training Center in the app and on this page.</p>`;
-  } else {
-    speak(document.querySelector("#agcoLive .row"), "Rebuilt.", false);
-  }
+  $("agcoResult").innerHTML = `<p class="ok" style="margin-top:12px">Published. ${agcoPeople.length} technicians have a map,
+    in the Training Center in the app and on this page.</p>`;
 });
 
 $("agcoFile").addEventListener("change", (e) => { agcoReadFiles([...e.target.files]); e.target.value = ""; });
