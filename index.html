@@ -1196,6 +1196,12 @@
   .agco-sign.started .agco-label-level { fill: #FFAC2A; }
   .agco-label-name { font: 600 14.5px var(--font-cab); letter-spacing: .03em; fill: #fff; }
   .agco-label-status { font: 400 11.5px var(--font); fill: #A3AEB5; }
+  .agco-haystack-head { font: 600 9.5px var(--font-mono); letter-spacing: .16em; fill: #E3C25A; }
+  .agco-ground { stroke: rgba(227,194,90,.35); stroke-width: 1.5; }
+  .agco-bale rect { fill: url(#agcoStraw); stroke: #8F6B1E; stroke-width: 1; }
+  .agco-twine { stroke: #7A5A14; stroke-width: 1.4; opacity: .75; }
+  .agco-bale-label { font: 700 9.5px var(--font-cab); letter-spacing: .02em; fill: #3B2A07; }
+  .agco-bale-label.long { font-size: 8px; }
   .agco-halo { fill: rgba(69,255,98,.12); stroke: rgba(69,255,98,.6); stroke-width: 1.5; }
   @media (prefers-reduced-motion: no-preference) {
     .agco-halo { animation: agco-pulse 2.4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
@@ -2194,6 +2200,14 @@
         </div>
         <div class="row"><button data-act="agco-rules">Save</button><span class="msg"></span></div>
       </div>
+      <div class="card" id="agcoBalesCard">
+        <h2>Haystack labels</h2>
+        <p class="note">Everyone who reaches the flag gets a haystack under it, a bale for each Level 6 course they've
+          completed. These are the words on the bales — a machine in a word or two. Leave one blank for the automatic
+          label; a new Level 6 course gets one of those until you change it.</p>
+        <div class="fields" id="agcoBaleLabels"></div>
+        <div class="row"><button data-act="agco-bales">Save labels</button><span class="msg"></span></div>
+      </div>
     </section>
 
     <!-- Training status -->
@@ -2897,7 +2911,7 @@ function showAdmin() {
   renderEvents(); renderOrg(); renderOsrImport(); renderOsrLive(); renderInspectionsAdmin();
   renderCoursesAdmin(); renderSdsAdmin(); renderSdsPending(); renderArticlesAdmin(); renderSkillsAdmin();
   renderNewsAdmin(); renderTsImport(); renderTsLive(); renderHandbook(); renderAgcoImport(); renderAgcoLive();
-  renderAgcoTechs(); renderAgcoRules(); renderAgcoAdded();
+  renderAgcoTechs(); renderAgcoRules(); renderAgcoAdded(); renderAgcoBales();
   window.scrollTo(0, 0);
 }
 
@@ -12061,6 +12075,35 @@ const agcoCourseKey = (c) => c.code ? String(c.code).toUpperCase()
 // Electrical & Hydraulics": what tells one course at a level from another.
 const agcoCourseName = (title) => String(title || "").replace(/\(.*?\)/g, "").replace(/^[^:]*:\s*/, "").trim();
 
+// ---- the haystack's labels
+//
+// Someone with every level complete gets a haystack under the flag: a bale for
+// each Level 6 course ticked, labelled with its machine in a word or two.
+// These are the catalog's Level 6 courses today. Anything else is shortened
+// the same way, and an owner can change any label on the admin page
+// (agco_catalog.rules.bales, by course).
+const AGCO_BALES = {
+  "fendt track tractors": "Fendt Track", "fendt wheel tractors": "Fendt Wheel",
+  "fendt 900 series rogator": "Rogator 900", "fendt momentum planter": "Momentum",
+  "ideal combines": "IDEAL", "gleaner combines": "Gleaner",
+  "mf commercial round balers 4100v": "MF 4100V", "mf square balers": "MF Square",
+  "mf rb146 156 round balers": "RB146/156", "mf windrowers": "MF Windrower",
+  "massey ferguson compact tractors series": "MF Compact", "massey ferguson hhp series": "MF 5S–8S",
+  "mf r500 sprayer": "MF R500", "terragator c series": "TerraGator C"
+};
+function agcoBaleAuto(title) {
+  const name = agcoCourseName(title);
+  const known = AGCO_BALES[name.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()];
+  if (known) return known;
+  const words = name.replace(/massey ferguson/ig, "MF").replace(/\b(series|expert|technician|commercial)\b/ig, "")
+    .replace(/\s+/g, " ").trim().split(" ").filter(Boolean);
+  let label = "";
+  for (const word of words) { if (label && `${label} ${word}`.length > 14) break; label = label ? `${label} ${word}` : word; }
+  return label || "Level 6";
+}
+const agcoBaleLabel = (course, rules = agcoRules()) =>
+  String((rules.bales || {})[agcoCourseKey(course)] || "").trim() || agcoBaleAuto(course.title);
+
 // What Level 5 takes, in words that follow the setting.
 function agcoLevel5Takes(courses, rule) {
   const names = (courses || []).map(c => agcoCourseName(c.title)).filter(Boolean);
@@ -12124,9 +12167,13 @@ function agcoLevels(marked, levels, rules = agcoRules()) {
 // One technician's row, as the app and the map read it.
 function agcoPersonRow(tech, levels, marks = agcoMarks, rules = agcoRules()) {
   const mine = marks.filter(m => m.person_key === tech.person_key);
-  const known = new Map(levels.flatMap(l => (l.courses || []).map(c => [agcoCourseKey(c), { level: l.level, title: c.title }])));
+  const known = new Map(levels.flatMap(l => (l.courses || []).map(c => [agcoCourseKey(c), { level: l.level, course: c }])));
   const courses = mine.filter(m => known.has(m.course_key))
-    .map(m => ({ ...known.get(m.course_key), completed: m.marked_on || "" }))
+    .map(m => {
+      const { level, course } = known.get(m.course_key);
+      return { level, title: course.title, completed: m.marked_on || "",
+        ...(level === 6 ? { bale: agcoBaleLabel(course, rules) } : {}) };
+    })
     .sort((a, b) => a.level - b.level || a.title.localeCompare(b.title));
   const { reached, levels: states } = agcoLevels(new Set(mine.map(m => m.course_key)), levels, rules);
   return { person_key: tech.person_key, email: tech.email || "", first_name: tech.first_name || "",
@@ -12211,6 +12258,7 @@ async function agcoReadFiles(files) {
   renderAgcoImport(problems);
   renderAgcoTechs();
   renderAgcoRules();
+  renderAgcoBales();
 }
 
 // ---- admin: the AGCO Development tab ----------------------------------------------
@@ -12522,6 +12570,44 @@ $("admin").addEventListener("click", async (event) => {
   speak(card, `Saved: ${label}. ${agcoPending ? "It applies when you publish the catalog waiting above." : "Every map has been rebuilt."}`, false);
 });
 
+// ---- admin: the haystack's labels -----------------------------------------------------
+
+function renderAgcoBales() {
+  const box = $("agcoBaleLabels");
+  if (!box || box.contains(document.activeElement)) return;
+  const six = agcoLevelsNow().find(l => l.level === 6);
+  const bales = agcoRules().bales || {};
+  box.innerHTML = six && six.courses.length ? six.courses.map((c, i) => `<div>
+      <label for="agcoBale${i}">${esc(agcoCourseName(c.title) || c.title)}</label>
+      <input id="agcoBale${i}" type="text" maxlength="16" data-agco-bale="${esc(agcoCourseKey(c))}"
+             placeholder="${esc(agcoBaleAuto(c.title))}" value="${esc(bales[agcoCourseKey(c)] || "")}" autocomplete="off">
+    </div>`).join("") : `<p class="note" style="margin:0">Upload the Technical Training Catalog first.</p>`;
+}
+
+$("admin").addEventListener("click", async (event) => {
+  const button = event.target.closest('button[data-act="agco-bales"]');
+  if (!button) return;
+  const card = $("agcoBalesCard");
+  // Only the ones that say something other than the automatic label are kept.
+  const bales = {};
+  card.querySelectorAll("[data-agco-bale]").forEach(input => {
+    const value = input.value.trim().replace(/\s+/g, " ");
+    if (value && value !== input.placeholder) bales[input.dataset.agcoBale] = value;
+  });
+  button.disabled = true;
+  speak(card, "Saving…", false);
+  const { data, error } = await db.from("agco_catalog")
+    .upsert({ id: "current", rules: { ...agcoRules(), bales } }, { onConflict: "id" }).select("rules");
+  if (error) { button.disabled = false; return speak(card, error.message, true); }
+  if (!data || !data.length) { button.disabled = false; return speak(card, "Not saved — only an owner can change this.", true); }
+  if (agcoCatalog) agcoCatalog.rules = data[0].rules; else agcoCatalog = { levels: [], rules: data[0].rules };
+  const problem = agcoPending ? null : await agcoRebuild();
+  button.disabled = false;
+  renderAgcoBales();
+  if (problem) return speak(card, `Saved, but the maps weren't rebuilt: ${problem}`, true);
+  speak(card, "Saved. Every haystack has the new labels.", false);
+});
+
 // ---- admin: courses added to the catalog -------------------------------------------
 
 function renderAgcoAdded() {
@@ -12552,7 +12638,7 @@ async function agcoSaveAdded(list, where) {
   if (agcoCatalog) agcoCatalog.added_courses = data[0].added_courses;
   else agcoCatalog = { levels: [], added_courses: data[0].added_courses };
   const problem = agcoPending ? null : await agcoRebuild();
-  renderAgcoAdded(); renderAgcoImport(); renderAgcoLive(); renderAgcoTechs(); renderAgcoRules();
+  renderAgcoAdded(); renderAgcoImport(); renderAgcoLive(); renderAgcoTechs(); renderAgcoRules(); renderAgcoBales();
   return problem;
 }
 
@@ -12613,7 +12699,7 @@ $("admin").addEventListener("click", async (event) => {
   button.disabled = false;
   if (problem) return speak(box, problem, true);
   agcoPending = null;
-  renderAgcoImport(); renderAgcoLive(); renderAgcoTechs(); renderAgcoRules();
+  renderAgcoImport(); renderAgcoLive(); renderAgcoTechs(); renderAgcoRules(); renderAgcoBales();
   $("agcoResult").innerHTML = `<p class="ok" style="margin-top:12px">Published. ${agcoPeople.length} technicians have a map,
     in the Training Center in the app and on this page.</p>`;
 });
@@ -12689,6 +12775,50 @@ function agcoStatusLine(level) {
     : `${AGCO_STATE_TEXT[level.state] || "Not started"}${counts}`;
 }
 
+// The haystack: a pyramid, five bales at most to a row, the oldest at the bottom.
+const AGCO_BALE = { w: 64, h: 28, gap: 4, rise: 31 };
+function agcoStackRows(n) {
+  const rows = [];
+  let left = n;
+  while (left > 15) { rows.push(5); left -= 5; }
+  let size = 1;
+  while (size * (size + 1) / 2 < left) size++;
+  while (left > 0) { const take = Math.min(size, left); rows.push(take); left -= take; size = Math.max(1, size - 1); }
+  return rows;
+}
+const agcoHaystackHeight = (n) => n ? 44 + agcoStackRows(n).length * AGCO_BALE.rise + 16 : 0;
+const agcoBales = (person) => (person.reached || 0) < 6 ? [] : (person.courses || []).filter(c => c.level === 6)
+  .sort((a, b) => String(a.completed).localeCompare(String(b.completed)) || a.title.localeCompare(b.title));
+
+function agcoHaystackSvg(bales, top) {
+  if (!bales.length) return "";
+  const rows = agcoStackRows(bales.length);
+  const ground = top + agcoHaystackHeight(bales.length) - 16;
+  let next = 0;
+  const stack = rows.map((count, r) => {
+    const width = count * AGCO_BALE.w + (count - 1) * AGCO_BALE.gap;
+    const y = ground - AGCO_BALE.h - r * AGCO_BALE.rise;
+    return Array.from({ length: count }, (_, k) => {
+      const bale = bales[next++];
+      const x = AGCO_MAP.width / 2 - width / 2 + k * (AGCO_BALE.w + AGCO_BALE.gap);
+      const label = bale.bale || agcoBaleAuto(bale.title);
+      return `<g class="agco-bale"><title>${esc(bale.title)}</title>
+        <rect x="${x}" y="${y}" width="${AGCO_BALE.w}" height="${AGCO_BALE.h}" rx="3"/>
+        <line class="agco-twine" x1="${x + 9}" y1="${y + 2}" x2="${x + 9}" y2="${y + AGCO_BALE.h - 2}"/>
+        <line class="agco-twine" x1="${x + AGCO_BALE.w - 9}" y1="${y + 2}" x2="${x + AGCO_BALE.w - 9}" y2="${y + AGCO_BALE.h - 2}"/>
+        <text class="agco-bale-label${label.length > 11 ? " long" : ""}" x="${x + AGCO_BALE.w / 2}" y="${y + AGCO_BALE.h / 2 + 3}"
+              text-anchor="middle">${esc(label)}</text>
+      </g>`;
+    }).join("");
+  }).join("");
+  return `<g class="agco-haystack">
+    <text class="agco-haystack-head" x="${AGCO_MAP.width / 2}" y="${top + 24}" text-anchor="middle">THE HAYSTACK · ${bales.length}
+      LEVEL 6 ${bales.length === 1 ? "COURSE" : "COURSES"}</text>
+    <line class="agco-ground" x1="36" y1="${ground}" x2="${AGCO_MAP.width - 36}" y2="${ground}"/>
+    ${stack}
+  </g>`;
+}
+
 function agcoMapSvg(person) {
   const reached = person.reached || 0;
   const states = Object.fromEntries((person.levels || []).map(l => [l.level, l]));
@@ -12729,12 +12859,18 @@ function agcoMapSvg(person) {
   }).join("");
 
   const [fx, fy] = AGCO_MAP.finish;
-  return `<svg class="agco-map" viewBox="0 0 ${AGCO_MAP.width} ${AGCO_MAP.height}" role="img"
-      aria-label="Road map of AGCO's six training levels. ${esc(agcoName(person))} has reached ${reached ? `Level ${reached}` : "the start"}.">
+  const bales = agcoBales(person);
+  const height = AGCO_MAP.height + agcoHaystackHeight(bales.length);
+  return `<svg class="agco-map" viewBox="0 0 ${AGCO_MAP.width} ${height}" role="img"
+      aria-label="Road map of AGCO's six training levels. ${esc(agcoName(person))} has reached ${reached ? `Level ${reached}` : "the start"}${
+      bales.length ? `, with ${bales.length} Level 6 ${bales.length === 1 ? "course" : "courses"} in the haystack` : ""}.">
     <defs>
       <pattern id="agcoGrid" width="24" height="24" patternUnits="userSpaceOnUse">
         <path d="M24 0H0V24" fill="none" stroke="rgba(255,255,255,.045)" stroke-width="1"/>
       </pattern>
+      <linearGradient id="agcoStraw" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#EDCF72"/><stop offset="1" stop-color="#C99A35"/>
+      </linearGradient>
     </defs>
     <rect width="100%" height="100%" fill="url(#agcoGrid)"/>
     <path class="agco-road-edge" d="${road}"/>
@@ -12752,6 +12888,7 @@ function agcoMapSvg(person) {
     </g>
     <text class="agco-finish" x="${fx - 18}" y="${fy + 30}" text-anchor="end">EXPERT TECHNICIAN</text>
     ${signs}
+    ${agcoHaystackSvg(bales, AGCO_MAP.height - 8)}
     <g class="agco-tractor" transform="translate(${tx} ${ty})">
       <circle class="agco-halo" r="25"/>
       <g transform="translate(-26 -19)">${AGCO_TRACTOR}</g>
