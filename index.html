@@ -2546,7 +2546,7 @@
           requirement, for everyone: the credits report carries its own figure per person, but it
           lags behind AGCO, so this is what counts.</p>
         <div class="row">
-          <input type="number" id="tsGoalInput" min="1" max="100" step="1" value="60"
+          <input type="number" id="tsGoalInput" min="1" max="100" step="1" value="65"
                  style="width:88px;margin:0" aria-label="Goal percent">
           <span>% of technicians with</span>
           <input type="number" id="tsHoursInput" min="1" max="200" step="0.5" value="24"
@@ -12567,10 +12567,10 @@ let tsState = { tab: "summary", filter: "all", store: null, everyone: false, yea
 let tsPending = { employees: null, credits: null, history: null };
 
 // The dealer metric: the share of technicians who need 24+ AGCO hours. AGCO
-// sets it, so it's a setting owners change on the admin page (60% by default).
+// sets it, so it's a setting owners change on the admin page (65% by default).
 const tsGoalPercent = () => {
   const value = Number(tsSources && tsSources.goal_percent);
-  return value > 0 && value <= 100 ? value : 60;
+  return value > 0 && value <= 100 ? value : 65;
 };
 
 // The hours a technician needs. AGCO's credits report states it per person
@@ -12931,7 +12931,7 @@ function tsBody(model) {
   }
 }
 
-// The bar with the 60% line on it.
+// The bar with the goal's line on it.
 function tsMeter(pct, projected = null) {
   return `<div class="ts-meter" role="img" aria-label="${tsPct(pct)} of technicians, goal ${tsGoalPercent()}%">
     ${projected !== null && projected > pct ? `<i class="ts-proj" style="width:${Math.min(100, projected * 100)}%"></i>` : ""}
