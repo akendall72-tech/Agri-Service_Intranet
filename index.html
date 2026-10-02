@@ -473,16 +473,72 @@
   .cert dl { display: grid; gap: 12px; margin: 18px 0 0; }
   .cert dt { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
   .cert dd { margin: 2px 0 0; font-weight: 600; }
-  .crane-alert { max-width: 560px; border-radius: var(--radius); padding: 16px 18px; margin-bottom: 20px;
-                 border: 1px solid; display: flex; gap: 14px; align-items: flex-start; }
-  .crane-alert.caution { background: var(--caution-soft); border-color: #EBC98A; }
-  .crane-alert.removed { background: var(--red-soft); border-color: #F0B7C4; }
-  .crane-alert svg { flex: 0 0 26px; width: 26px; height: 26px; }
-  .crane-alert.caution svg { color: var(--caution); }
-  .crane-alert.removed svg { color: var(--red); }
-  .crane-alert b { display: block; font-size: 16px; margin-bottom: 2px; }
-  .crane-alert p { margin: 0; color: var(--ink-2); }
-  .crane-alert q { display: block; margin-top: 6px; color: var(--muted); font-style: italic; }
+  /* ---- Crane Center, in the Cab look like the app's: steel, its tile's
+     colour. A lift plan's stripe says where it stands. ---- */
+  .crane { --accent: var(--lit-steel); max-width: 900px; }
+  .crane-alert { --tint: var(--lit-amber); position: relative; display: flex; gap: 14px; align-items: flex-start;
+    max-width: 620px; margin-bottom: 18px; padding: 14px 18px 15px 27px; color: #fff; border-radius: 14px;
+    border: 1px solid color-mix(in srgb, var(--tint) 45%, var(--cab-edge));
+    background: linear-gradient(color-mix(in srgb, var(--tint) 11%, transparent), color-mix(in srgb, var(--tint) 11%, transparent)),
+      linear-gradient(var(--cab-top), var(--cab-bottom));
+    box-shadow: 0 4px 14px rgba(20,28,34,.2); }
+  .crane-alert.removed { --tint: var(--lit-red); }
+  .crane-alert::before, .plan-card::before { content: ""; position: absolute; left: 10px; top: 12px; bottom: 12px;
+    width: 3px; border-radius: 3px; background: var(--tint, var(--accent));
+    box-shadow: 0 0 7px color-mix(in srgb, var(--tint, var(--accent)) 65%, transparent); }
+  .crane-alert svg { flex: 0 0 24px; width: 24px; height: 24px; color: var(--tint); margin-top: 1px; }
+  .crane-alert b { display: block; margin-bottom: 3px; font: 600 17px/1.2 var(--font-cab); letter-spacing: .04em;
+    text-transform: uppercase; }
+  .crane-alert p { margin: 0; color: var(--cab-sub); font-size: 14px; }
+  .crane-alert q { display: block; margin-top: 6px; color: var(--cab-detail); font-style: italic; font-size: 13.5px; }
+  .crane-list { display: grid; gap: 10px; }
+  .crane-empty { margin: 0 2px; color: var(--cab-heading); font-size: 14px; }
+  .plan-card { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 16px;
+    align-items: center; padding: 14px 16px 15px 27px; color: #fff; border: 1px solid var(--cab-edge);
+    border-radius: 14px; background: linear-gradient(var(--cab-top), var(--cab-bottom));
+    box-shadow: 0 4px 14px rgba(20,28,34,.2); }
+  .plan-card.submitted { --tint: var(--lit-amber); }
+  .plan-card.changes_requested { --tint: var(--lit-red); }
+  .plan-card.approved { --tint: var(--lit-deep); }
+  .plan-card .cab-tag { --accent: var(--tint); }
+  .plan-main { display: flex; flex-direction: column; gap: 5px; min-width: 0; align-items: flex-start; }
+  .plan-title { font: 600 17px/1.25 var(--font-cab); letter-spacing: .03em; text-transform: uppercase; }
+  .plan-meta { display: flex; flex-wrap: wrap; gap: 4px 14px; color: var(--cab-sub); font-size: 13px; }
+  .plan-meta span { display: inline-flex; align-items: center; gap: 5px; }
+  .plan-meta svg { color: var(--cab-detail); }
+  .plan-note { color: var(--cab-sub); font-size: 13.5px; }
+  .plan-note b { color: var(--tint); font: 600 10.5px var(--font-mono); letter-spacing: .12em; text-transform: uppercase;
+    margin-right: 6px; }
+  .plan-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+  .plan-actions button { display: inline-flex; align-items: center; gap: 6px; padding: 7px 13px; border-radius: 9px;
+    font: 600 13px var(--font-cab); letter-spacing: .05em; text-transform: uppercase; box-shadow: none; white-space: nowrap; }
+  .plan-actions button.approve { background: #137026; border: 1px solid #137026; color: #fff; }
+  .plan-actions button.approve:hover { background: #1A8A31; border-color: #1A8A31; }
+  .plan-actions button.quiet, .crane-table button.quiet { background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.22); color: #fff; }
+  .plan-actions button.quiet:hover, .crane-table button.quiet:hover { background: rgba(255,255,255,.12);
+    border-color: rgba(255,255,255,.35); }
+  @media (max-width: 640px) { .plan-card { grid-template-columns: minmax(0, 1fr); }
+    .plan-actions { justify-content: flex-start; } }
+  .crane-scroll { overflow-x: auto; border-radius: 14px; }
+  .crane-table { color: #fff; border: 1px solid var(--cab-edge); border-radius: 14px; overflow: hidden;
+    background: linear-gradient(var(--cab-top), var(--cab-bottom)); box-shadow: 0 4px 14px rgba(20,28,34,.2); }
+  .crane .crane-table thead th { background: rgba(0,0,0,.2); color: var(--cab-sub); padding: 10px 14px;
+    font: 600 10.5px var(--font-mono); letter-spacing: .12em; border-bottom: 1px solid rgba(255,255,255,.1); }
+  .crane .crane-table tbody td { padding: 11px 14px; font-size: 13.5px; color: var(--cab-sub);
+    border-bottom: 1px solid rgba(255,255,255,.07); vertical-align: middle; }
+  .crane .crane-table tbody tr:hover { background: rgba(255,255,255,.04); }
+  .crane .crane-table tbody tr:last-child td { border-bottom: 0; }
+  .crane-table .who { color: #fff; font-weight: 600; }
+  .crane-table .why { display: block; margin-top: 3px; font-size: 12.5px; color: var(--cab-detail); }
+  .crane-table .cab-tag.ok { --accent: var(--lit-green); }
+  .crane-table .cab-tag.off { color: #fff; background: #CC0033; border-color: #CC0033; box-shadow: 0 0 10px rgba(204,0,51,.5); }
+  .crane-table .cab-tag.none { --accent: var(--cab-detail); }
+  .crane-table button.quiet { padding: 6px 12px; border-radius: 9px; font: 600 12.5px var(--font-cab);
+    letter-spacing: .05em; text-transform: uppercase; box-shadow: none; }
+  .crane-table .where { display: none; }
+  @media (max-width: 640px) { .crane-table .loc { display: none; } .crane-table .where { display: block; }
+    .crane .crane-table thead th, .crane .crane-table tbody td { padding-left: 12px; padding-right: 12px; } }
 
   .ticket { border: 1px solid var(--line); border-radius: var(--radius); background: var(--card);
             margin-bottom: 10px; box-shadow: var(--shadow); }
@@ -2699,6 +2755,7 @@ const ICONS = {
   trash: '<path d="M4 7h16M10 11v6M14 11v6"/><path d="m6 7 1 13h10l1-13M9 7V4h6v3"/>',
   chevronDown: '<path d="m6 9 6 6 6-6"/>',
   chevronLeft: '<path d="m15 6-6 6 6 6"/>',
+  camera: '<path d="M4 8h3l2-3h6l2 3h3v11H4Z"/><circle cx="12" cy="13" r="3.5"/>',
   map: '<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Z"/><path d="M9 4v14M15 6v14"/>',
   settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/>'
 };
@@ -4836,7 +4893,7 @@ function craneCard() {
   }
   if (status.kind === "removed") {
     return `<div class="crane-alert removed">${warnIcon}<div>
-      <b>Crane &amp; Rigging Qualification removed</b>
+      <b>Qualification removed</b>
       <p>${esc(status.change.changed_by_name)} removed it on ${esc(new Date(status.change.changed_at).toLocaleDateString())}.
         Speak to your location admin.</p>
       ${status.change.reason ? `<q>${esc(status.change.reason)}</q>` : ""}</div></div>`;
@@ -4857,30 +4914,34 @@ function craneAdminSection() {
     .sort((a, b) => (a.r.store || "").localeCompare(b.r.store || "") || a.r.last_name.localeCompare(b.r.last_name));
   const counts = { qualified: 0, removed: 0, none: 0 };
   tsPeople.forEach(r => { counts[craneStatus(r).kind]++; });
-  const filters = [["all", "All"], ["qualified", `Qualified ${counts.qualified}`],
-    ["removed", `Removed ${counts.removed}`], ["none", `Not taken ${counts.none}`]];
-  return `<div class="card" id="craneAdmin"><h2>Crane &amp; rigging qualifications</h2>
-    <p class="note">${isOwner() ? "Everyone" : "Everyone at your location"}. Qualified means ${craneCourse()} is on
+  const filters = [["all", "All", tsPeople.length], ["qualified", "Qualified", counts.qualified],
+    ["removed", "Removed", counts.removed], ["none", "Not taken", counts.none]];
+  return `<section id="craneAdmin">
+    <div class="group-title">Crane qualifications</div>
+    <p class="osr-desc">${isOwner() ? "Everyone" : "Everyone at your location"}. Qualified means ${esc(craneCourse())} is on
       their training history. You can remove a qualification, with a reason, and restore it — only for someone
       who has taken the course, and never your own.</p>
-    <div class="chips">${filters.map(([id, label]) =>
-      `<button class="chip${craneFilter === id ? " on" : ""}" data-crane-filter="${id}">${label}</button>`).join("")}</div>
-    <div style="overflow-x:auto"><table>
-      <thead><tr><th>Name</th>${isOwner() ? "<th>Location</th>" : ""}<th>Status</th><th></th></tr></thead>
+    <div class="cab-pills">${filters.map(([id, label, n]) =>
+      `<button type="button" class="cab-pill${craneFilter === id ? " on" : ""}" data-crane-filter="${id}">${label}<span>${n}</span></button>`).join("")}</div>
+    <div class="crane-scroll"><table class="crane-table">
+      <thead><tr><th>Name</th>${isOwner() ? `<th class="loc">Location</th>` : ""}<th>Status</th><th></th></tr></thead>
       <tbody>${rows.map(({ r, st }) => `<tr>
-        <td><b>${esc(r.first_name)} ${esc(r.last_name)}</b><div class="note">${esc((r.job || "").replace(/^\d+\s*-\s*/, ""))}</div></td>
-        ${isOwner() ? `<td>${esc(r.store || "-")}</td>` : ""}
-        <td>${st.kind === "qualified" ? `<span class="badge b-current">Qualified</span>
-              <div class="note">${esc(newsDate(st.completion.completed))}</div>`
-          : st.kind === "removed" ? `<span class="badge b-expired">Removed</span>
-              <div class="note">by ${esc(st.change.changed_by_name)}, ${esc(new Date(st.change.changed_at).toLocaleDateString())}:
-              ${esc(st.change.reason)}</div>`
-          : `<span class="badge b-none">Not taken</span>`}</td>
-        <td style="white-space:nowrap">${r.person_key === myKey || st.kind === "none" ? ""
-          : st.kind === "qualified" ? `<button class="pdf" data-crane="remove" data-key="${esc(r.person_key)}">Remove</button>`
-          : `<button class="pdf" data-crane="restore" data-key="${esc(r.person_key)}">Restore</button>`}</td>
-      </tr>`).join("") || `<tr><td colspan="4" class="note">Nobody here.</td></tr>`}</tbody>
-    </table></div></div>`;
+        <td><span class="who">${esc(r.first_name)} ${esc(r.last_name)}</span>
+          <span class="why">${esc((r.job || "").replace(/^\d+\s*-\s*/, ""))}</span>
+          ${isOwner() ? `<span class="why where">${esc(r.store || "-")}</span>` : ""}</td>
+        ${isOwner() ? `<td class="loc">${esc(r.store || "-")}</td>` : ""}
+        <td>${st.kind === "qualified" ? `<span class="cab-tag ok">Qualified</span>
+              <span class="why">${esc(newsDate(st.completion.completed))}</span>`
+          : st.kind === "removed" ? `<span class="cab-tag off">Removed</span>
+              <span class="why">by ${esc(st.change.changed_by_name)}, ${esc(new Date(st.change.changed_at).toLocaleDateString())}:
+              ${esc(st.change.reason)}</span>`
+          : `<span class="cab-tag none">Not taken</span>`}</td>
+        <td style="white-space:nowrap;text-align:right">${r.person_key === myKey || st.kind === "none" ? ""
+          : st.kind === "qualified" ? `<button type="button" class="quiet" data-crane="remove" data-key="${esc(r.person_key)}">Remove</button>`
+          : `<button type="button" class="quiet" data-crane="restore" data-key="${esc(r.person_key)}">Restore</button>`}</td>
+      </tr>`).join("") || `<tr><td colspan="4">Nobody here.</td></tr>`}</tbody>
+    </table></div>
+  </section>`;
 }
 
 function redrawCrane() {
@@ -4921,54 +4982,50 @@ function riggingView() {
   const mine = plans.filter(p => p.created_by === me.id);
   const others = plans.filter(p => p.created_by !== me.id);
 
-  const list = (rows, empty) => rows.length
-    ? rows.map(planRow).join("")
-    : `<p class="note">${empty}</p>`;
+  // A heading, then a card per plan — as the app lays out its lift plans.
+  const group = (title, rows, empty) => `<div class="group-title">${title}${rows.length
+      ? ` <span style="margin-left:auto;order:2">${rows.length}</span>` : ""}</div>
+    ${rows.length ? `<div class="crane-list">${rows.map(planRow).join("")}</div>` : `<p class="crane-empty">${empty}</p>`}`;
 
   return hero("Crane Center",
       "Your crane and rigging qualification, lift plans you've submitted, and the ones waiting on you.")
+    + `<div class="crane">`
     + craneCard()
-    + (isAdmin() ? `<div class="card"><h2>Waiting on you</h2>
-        ${list(others.filter(p => p.status === "submitted"),
-               "Nothing to approve right now.")}</div>` : "")
-    + `<div class="card"><h2>Your plans</h2>
-        ${list(mine,
-          "You haven't submitted a lift plan yet. Plans are written in the app.")}</div>`
-    + (isAdmin() ? `<div class="card"><h2>Everything else at your shop</h2>
-        ${list(others.filter(p => p.status !== "submitted"),
-               "Nothing else here.")}</div>` : "")
-    + craneAdminSection();
+    + (isAdmin() ? group("Waiting on you", others.filter(p => p.status === "submitted"),
+        "Nothing to approve right now.") : "")
+    + group("Your plans", mine, "You haven't submitted a lift plan yet. Plans are written in the app.")
+    + (isAdmin() ? group("Everything else at your shop", others.filter(p => p.status !== "submitted"),
+        "Nothing else here.") : "")
+    + craneAdminSection()
+    + `</div>`;
 }
 
 function planRow(plan) {
-  const [label, cls] = planBadge(plan);
   const reviewable = isAdmin() && plan.status === "submitted" && plan.created_by !== me.id;
+  const photos = (plan.photo_paths || []).length;
 
-  return `<div class="task">
-    <span class="well ${plan.status === "approved" ? "green" : "red"}"
-          style="width:38px;height:38px;flex:0 0 38px">${icon("rigging", 20)}</span>
-    <span>
-      <b>${esc(plan.job_description || "Untitled lift")}</b><br>
-      <span class="note">${fmtDate((plan.lift_date || "").slice(0, 10))}
-        · ${esc(plan.location || "no site")}${plan.created_by === me.id
-          ? "" : " · " + esc(plan.created_by_name || "unknown")}</span>
-      <br><span class="badge ${cls}">${label}</span>${(plan.photo_paths || []).length
-        ? ` <span class="note">· ${plan.photo_paths.length} photo${plan.photo_paths.length === 1 ? "" : "s"} in the PDF</span>` : ""}
-      ${plan.review_note ? `<br><span class="note">Note: ${esc(plan.review_note)}</span>` : ""}
-    </span>
-    <span style="margin-left:auto;display:flex;gap:8px;align-items:center">
-      ${reviewable ? `<button class="green" data-approve="${esc(plan.id)}">Approve</button>
-         <button class="ghost" data-return="${esc(plan.id)}">Request changes</button>` : ""}
-      <button class="pdf" data-plan="${esc(plan.id)}">PDF</button>
-    </span>
+  return `<div class="plan-card ${esc(plan.status || "")}">
+    <div class="plan-main">
+      <span class="cab-tag">${planLabel(plan)}</span>
+      <span class="plan-title">${esc(plan.job_description || "Untitled lift")}</span>
+      <span class="plan-meta">
+        <span>${icon("calendar", 13)}${fmtDate((plan.lift_date || "").slice(0, 10))}</span>
+        <span>${icon("pin", 13)}${esc(plan.location || "No site")}</span>
+        ${plan.created_by === me.id ? "" : `<span>${icon("person", 13)}${esc(plan.created_by_name || "Unknown")}</span>`}
+        ${photos ? `<span>${icon("camera", 13)}${photos} photo${photos === 1 ? "" : "s"} in the PDF</span>` : ""}
+      </span>
+      ${plan.review_note ? `<span class="plan-note"><b>Note</b>${esc(plan.review_note)}</span>` : ""}
+    </div>
+    <div class="plan-actions">
+      ${reviewable ? `<button type="button" class="approve" data-approve="${esc(plan.id)}">Approve</button>
+         <button type="button" class="quiet" data-return="${esc(plan.id)}">Request changes</button>` : ""}
+      <button type="button" class="quiet" data-plan="${esc(plan.id)}">${icon("doc", 14)}PDF</button>
+    </div>
   </div>`;
 }
 
-function planBadge(plan) {
-  return { submitted: ["Awaiting approval", "b-expiring"],
-           changes_requested: ["Changes requested", "b-expired"],
-           approved: ["Approved", "b-current"] }[plan.status] || ["-", "b-none"];
-}
+const planLabel = (plan) => ({ submitted: "Awaiting approval", changes_requested: "Changes requested",
+  approved: "Approved" })[plan.status] || "—";
 
 $("view").addEventListener("click", async (event) => {
   const approve = event.target.closest("[data-approve]");
