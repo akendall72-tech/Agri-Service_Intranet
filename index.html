@@ -564,11 +564,6 @@
             justify-content: center; flex: 0 0 40px; }
 
   /* ------------------------------------------------------------------ events & inspections */
-  .ev-company  { background: var(--red-soft); color: var(--red-dark); }
-  .ev-training { background: var(--green-soft); color: #137026; }
-  .ev-customer { background: #E4EEF6; color: #2F6690; }
-  .ev-safety   { background: var(--caution-soft); color: #92590A; }
-  .ev-holiday  { background: #EEEBF5; color: #6B5B95; }
   a.join { background: var(--red); color: #fff; padding: 8px 14px; border-radius: 8px;
     font-weight: 700; text-decoration: none; }
   a.join:hover { background: var(--red-dark, #B4041E); }
@@ -576,18 +571,6 @@
   .evdot.ev-company { background: var(--red); } .evdot.ev-training { background: #137026; }
   .evdot.ev-customer { background: #2F6690; } .evdot.ev-safety { background: var(--caution); }
   .evdot.ev-holiday { background: #6B5B95; }
-  .evcard > summary { display: flex; gap: 14px; align-items: flex-start; }
-  .evcard { border-left-width: 4px; }
-  .ev-company-edge { border-left-color: var(--red); }
-  .ev-training-edge { border-left-color: #137026; }
-  .ev-customer-edge { border-left-color: #2F6690; }
-  .ev-safety-edge { border-left-color: var(--caution); }
-  .ev-holiday-edge { border-left-color: #6B5B95; }
-  .evdate { width: 50px; flex: 0 0 50px; text-align: center; background: var(--paper);
-            border: 1px solid var(--line); border-radius: 10px; padding: 5px 0; line-height: 1.1; }
-  .evdate small { display: block; font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
-                  color: var(--muted); }
-  .evdate b { font-size: 19px; }
   .insp-photos { display: flex; flex-wrap: wrap; gap: 8px; }
   .insp-photo { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted);
                 margin: 0; font-weight: 400; }
@@ -797,6 +780,8 @@
        Cab.lit() in the app. Blue is picked by hand there too. */
     --lit-red: #FF1A53; --lit-ember: #FF6728; --lit-amber: #FFAC2A; --lit-green: #45FF62;
     --lit-deep: #2BAC43; --lit-slate: #5AB0FF; --lit-steel: #A5B9C9; --lit-teal: #3ED3C6;
+    /* The Event Center's holidays: the app's muted violet, lit the same way. */
+    --lit-violet: #9C8FE0;
     --lit-muted: #C9CED2;
     --font-cab: "Roboto Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
     --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -1172,6 +1157,98 @@
   button.st-out { gap: 7px; }
   .st-checkout { padding: 14px 16px 12px; border-radius: 12px; background: #fff; }
   .st-checkout p.note { margin: -4px 0 10px; }
+
+  /* ---- The Event Center: a slate card per event, lit in its kind's colour
+     (EVENT_ACCENT), and each event's own page with Who's going (0077). ---- */
+  .ev { max-width: 860px; }
+  .ev .group-title .ev-count { margin-left: auto; order: 2; font-size: 11px; letter-spacing: .06em; }
+  .ev-list { display: grid; gap: 10px; }
+  button.ev-row { display: flex; align-items: flex-start; justify-content: flex-start; gap: 14px;
+    padding: 13px 16px 14px 27px; }
+  .ev-date { flex: 0 0 48px; width: 48px; height: 54px; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; line-height: 1.05; border-radius: 10px; background: rgba(255,255,255,.06);
+    border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
+  .ev-date small { color: var(--accent); font: 600 10px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
+  .ev-date b { font: 700 24px var(--font-cab); color: #fff; }
+  .ev-main { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+  .ev-main > b { font: 600 17px/1.2 var(--font-cab); letter-spacing: .04em; text-transform: uppercase; color: #fff;
+    text-wrap: pretty; }
+  .ev-meta { display: inline-flex; align-items: flex-start; gap: 6px; color: var(--cab-sub); font-size: 13px; }
+  .ev-meta svg { margin-top: 2px; }
+  .ev-meta svg, .ev-line svg { flex: none; color: var(--cab-detail); }
+  .ev .ev-online, .ev .ev-online svg { color: var(--lit-slate); font-weight: 600; }
+  .ev-chev { align-self: center; color: var(--cab-detail); font-size: 24px; line-height: 1; }
+  .ev .cab-tag.ev-going { --accent: var(--lit-green); }
+  .ev .cab-tag.ev-quiet { color: var(--cab-sub); border-color: rgba(255,255,255,.25); }
+
+  .ev-card { position: relative; padding: 14px 18px 15px 27px; color: #fff; border: 1px solid var(--cab-edge);
+    border-radius: 14px; background: linear-gradient(var(--cab-top), var(--cab-bottom));
+    box-shadow: 0 4px 14px rgba(20,28,34,.2); }
+  .ev-card::before { content: ""; position: absolute; left: 10px; top: 12px; bottom: 12px; width: 3px; border-radius: 3px;
+    background: var(--accent); box-shadow: 0 0 7px color-mix(in srgb, var(--accent) 65%, transparent); }
+  .ev-note b { font: 600 18px var(--font-cab); letter-spacing: .04em; text-transform: uppercase; }
+  .ev-note p { margin: 4px 0 0; color: var(--cab-sub); }
+  .ev-detail > .group-title, .ev-detail section > .group-title { margin-top: 24px; }
+  .ev-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .ev-lines { display: flex; flex-direction: column; gap: 7px; }
+  .ev-line { display: flex; align-items: flex-start; gap: 9px; color: var(--cab-sub); font-size: 14px; }
+  .ev-line svg { margin-top: 2px; }
+  .ev-line.strong { color: #fff; font-size: 15px; font-weight: 500; }
+  .ev-line.strong svg { color: var(--accent); }
+  a.ev-join { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 14px; padding: 12px;
+    border-radius: 10px; font: 700 16px var(--font-cab); letter-spacing: .05em; text-transform: uppercase; }
+  .ev-actions { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 14px; padding-top: 12px;
+    border-top: 1px solid rgba(255,255,255,.09); }
+  .ev-actions:empty { display: none; }
+  .ev .ev-link { margin: 0; padding: 0; height: auto; background: none; border: 0; box-shadow: none; color: var(--accent);
+    font: 600 14px var(--font-cab); letter-spacing: .07em; text-transform: uppercase; text-decoration: none; cursor: pointer; }
+  .ev .ev-link:hover { background: none; text-decoration: underline; }
+  .ev-about p { margin: 0 0 10px; color: rgba(255,255,255,.92); font-size: 15px; max-width: 70ch; }
+  .ev-about p:last-child { margin: 0; }
+  .ev-foot { margin: 10px 2px 0; color: var(--cab-heading); font-size: 13px; max-width: 75ch; }
+
+  .ev-status { display: flex; gap: 12px; align-items: flex-start; }
+  .ev-status > svg { flex: none; margin-top: 1px; color: var(--accent); }
+  .ev-status b { display: block; font: 600 18px var(--font-cab); letter-spacing: .05em; text-transform: uppercase; }
+  .ev-status span span { color: var(--cab-sub); font-size: 13.5px; }
+  .ev-status.in > svg, .ev-status.in b { color: var(--lit-green); }
+  .ev button.ev-signup { width: 100%; margin: 14px 0 0; padding: 12px; border-radius: 10px;
+    font: 700 16px var(--font-cab); letter-spacing: .05em; text-transform: uppercase; }
+  .ev button.ev-quiet-btn, .ev button.ev-remove, .ev .ev-result button { background: rgba(255,255,255,.06); color: #fff;
+    border: 1px solid rgba(255,255,255,.22); box-shadow: none; font: 600 13px var(--font-cab); letter-spacing: .06em;
+    text-transform: uppercase; }
+  .ev button.ev-quiet-btn:hover, .ev button.ev-remove:hover, .ev .ev-result button:hover {
+    background: rgba(255,255,255,.13); border-color: rgba(255,255,255,.35); }
+  .ev button.ev-quiet-btn { width: 100%; margin: 14px 0 0; padding: 10px; border-radius: 10px; font-size: 14px; }
+  .ev button.ev-remove, .ev .ev-result button { margin: 0; padding: 5px 11px; border-radius: 9px; }
+  .ev .ev-result button { color: var(--lit-green); border-color: color-mix(in srgb, var(--lit-green) 45%, transparent); }
+  .ev-going-card .msg { display: block; margin-top: 8px; }
+  .ev-going-card .msg:empty { display: none; }
+  .ev-going-card .msg.ok { color: var(--lit-green); }
+  .ev-going-card .msg.error { color: #FF8A9E; }
+  .ev-people { list-style: none; margin: 14px 0 0; padding: 0; border-top: 1px solid rgba(255,255,255,.09); }
+  .ev-people li { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,.07); }
+  .ev-people li:last-child { border-bottom: 0; padding-bottom: 0; }
+  .ev-initials { flex: 0 0 32px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+    border-radius: 50%; font: 700 12px var(--font-cab); background: color-mix(in srgb, var(--accent) 28%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 60%, transparent); }
+  .ev-who { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; }
+  .ev-who b { font: 600 16px var(--font-cab); letter-spacing: .02em; }
+  .ev-who small { flex-basis: 100%; color: var(--cab-detail); font-size: 12.5px; }
+  .ev-empty { margin: 12px 0 0; color: var(--cab-sub); font-size: 14px; }
+  .ev-add { margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.09); }
+  .ev-add label { display: block; margin-bottom: 6px; color: var(--cab-sub); font: 600 10.5px var(--font-mono);
+    letter-spacing: .12em; text-transform: uppercase; }
+  .ev-add input.search { width: 100%; max-width: none; padding: 9px 12px; border-radius: var(--radius-sm); font: inherit;
+    font-size: 14.5px; color: #fff; background-color: rgba(0,0,0,.25); border: 1px solid rgba(255,255,255,.18); }
+  .ev-add input.search::placeholder { color: var(--cab-detail); }
+  .ev-add input.search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
+  .ev-results { margin-top: 4px; }
+  .ev-result { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,.07); }
+  .ev-result b { display: block; font: 600 15px var(--font-cab); letter-spacing: .02em; }
+  .ev-result small { color: var(--cab-detail); font-size: 12.5px; }
+  .ev-hint { margin: 8px 0 0; color: var(--cab-detail); font-size: 13px; }
   .st-history { padding-top: 6px; padding-bottom: 6px; }
   .st-past { display: flex; flex-direction: column; gap: 2px; padding: 10px 0; }
   .st-past + .st-past { border-top: 1px solid var(--line); }
@@ -2396,6 +2473,15 @@
               <option value="yes">Yes</option>
               <option value="no">No — keep as a draft</option>
             </select></div>
+          <div class="wide"><label>Sign-up</label>
+            <select data-e="enrollment">
+              <option value="none">No sign-up — a calendar entry and nothing more</option>
+              <option value="open">Open enrollment — anyone signs themselves up from the event</option>
+              <option value="private">Private enrollment — only owners add people</option>
+            </select>
+            <p class="note" style="margin:-6px 0 0">Who's going shows on the event's page in the Event Center
+              and the app. Owners add and take off people there. Switching back to No sign-up hides the
+              list without emptying it.</p></div>
           <div class="wide"><label class="check">
             <input type="checkbox" data-e="all_day"> All day, or several whole days
           </label></div>
@@ -2549,6 +2635,9 @@ let payroll = [], holidays = [], directory = [], sharedLogins = [];
 let allSharedTasks = [];
 // Admins get drafts back as well; the Event Center view filters them out.
 let companyEvents = [], eventsError = null;
+// Who's going (0077): every list this person can see, and the event open in
+// the Event Center.
+let eventAttendees = [], openEventId = null;
 // Every shop with all its columns, switched-off ones included. `locations`
 // above stays a plain id -> name lookup for showing names.
 let allLocations = [];
@@ -2756,6 +2845,9 @@ const ICONS = {
   chevronDown: '<path d="m6 9 6 6 6-6"/>',
   chevronLeft: '<path d="m15 6-6 6 6 6"/>',
   camera: '<path d="M4 8h3l2-3h6l2 3h3v11H4Z"/><circle cx="12" cy="13" r="3.5"/>',
+  video: '<rect x="3" y="6.5" width="12.5" height="11" rx="2"/><path d="m15.5 10.5 5-3v9l-5-3Z"/>',
+  userPlus: '<circle cx="10" cy="8" r="4"/><path d="M3 20.5c.8-3.7 3.6-6 7-6 1.6 0 3 .5 4.2 1.3M18.5 14v6M15.5 17h6"/>',
+  lock: '<rect x="5" y="11" width="14" height="9.5" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
   map: '<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Z"/><path d="M9 4v14M15 6v14"/>',
   settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/>'
 };
@@ -2929,7 +3021,7 @@ function showView(name) {
   host.classList.remove("hidden");
   setMode("app", ["openseat", "myclasses", "catalog", "article", "skills", "trainingstatus", "coursereport", "agcomap"].includes(name) ? "training"
     : name === "newspost" ? "news" : name === "payroll" ? "hr" : ["certreport", "evaltest", "approvals"].includes(name) ? "forklift" : name === "inspform" ? "inspection"
-    : SUPPORT_PAGES.includes(name) ? "support" : name);
+    : SUPPORT_PAGES.includes(name) ? "support" : name === "event" ? "events" : name);
   document.body.dataset.page = "view";
   if (name !== "evaltest") { evalAgreed = null; evalNotice = ""; }
   if (name !== "tool") toolCheckingOut = false;
@@ -2937,6 +3029,7 @@ function showView(name) {
     ${name === "newspost" ? `<button data-view="news">News</button><span>/</span>` : ""}
     ${["certreport", "evaltest", "approvals"].includes(name) ? `<button data-view="forklift">Forklift Center</button><span>/</span>` : ""}
     ${name === "inspform" ? `<button data-view="inspection">Inspection Center</button><span>/</span>` : ""}
+    ${name === "event" ? `<button data-view="events">Event Center</button><span>/</span>` : ""}
     ${SUPPORT_PAGES.includes(name) ? `<button data-view="support">Support Center</button><span>/</span>` : ""}
     ${["request", "newrequest"].includes(name) ? `<button data-view="requests">Support Requests</button><span>/</span>` : ""}
     ${["tool", "toolform"].includes(name) ? `<button data-view="tools">Special Tools</button><span>/</span>` : ""}
@@ -2977,6 +3070,7 @@ document.addEventListener("click", (event) => {
   if (tile && tile.dataset.article) openArticleId = tile.dataset.article;
   if (tile && tile.dataset.news) openNewsId = tile.dataset.news;
   if (tile && tile.dataset.ticket) openTicketId = tile.dataset.ticket;
+  if (tile && tile.dataset.event) openEventId = tile.dataset.event;
   if (tile && tile.dataset.tool) { openToolId = tile.dataset.tool; toolNotice = ""; }
   if (tile) return showView(tile.dataset.view);
   if (event.target.closest("[data-home]")) return showHome();
@@ -3054,6 +3148,7 @@ const VIEWS = {
   inspection: () => inspectionView(),
 
   events: () => eventsView(),
+  event: () => eventView(),
 
   openseat: () => openSeatView(),
   catalog: () => catalogView(),
@@ -5761,6 +5856,9 @@ function renderEvents() {
                 eventOnlineLabel(e))}${e.meeting_url ? "" : " — link not added yet"}</div>`
             : e.location_name || e.address ? `<div class="note">${esc(
               [e.location_name, e.address].filter(Boolean).join(" · "))}</div>` : ""}
+          ${eventTakesSignups(e) ? `<div class="note">${e.enrollment === "open" ? "Open enrollment" : "Private enrollment"}
+            · ${eventGoing(e).length} on the list ·
+            <button type="button" class="linkish" data-view="event" data-event="${esc(e.id)}">Open Who's going</button></div>` : ""}
         </div>
         <div class="row" style="gap:6px">
           <button class="pdf" data-act="edit-event">Edit</button>
@@ -5815,6 +5913,7 @@ function fillEventForm(e, { copy = false } = {}) {
   set("link_url", e && e.link_url);
   set("meeting_url", e && e.meeting_url);
   set("is_published", !e || e.is_published ? "yes" : "no");
+  set("enrollment", (e && e.enrollment) || "none");
   editor.querySelector('[data-e="is_online"]').checked = !!(e && e.is_online);
   setOnline(!!(e && e.is_online));
 
@@ -5951,6 +6050,7 @@ $("admin").addEventListener("click", async (event) => {
     // The database refuses a joining link on an event not marked online, so
     // don't send one: unticking the box clears the link rather than failing.
     meeting_url: isOnline ? (meetingURL || null) : null,
+    enrollment: get("enrollment") || "none",
     is_published: get("is_published") === "yes"
   };
 
@@ -5979,12 +6079,44 @@ $("admin").addEventListener("click", async (event) => {
 });
 
 async function loadEvents() {
-  const { data, error } = await db.from("events").select("*").order("starts_at");
-  eventsError = error ? error.message : null;
-  companyEvents = data || [];
+  const [ev, att] = await Promise.all([
+    db.from("events").select("*").order("starts_at"),
+    loadAttendeesQuery()
+  ]);
+  eventsError = ev.error ? ev.error.message : null;
+  companyEvents = ev.data || [];
+  eventAttendees = att.data || [];
+}
+
+// Only the lists of events this person can see come back, and none for an
+// event that takes no sign-ups — the database's rule, not the page's.
+const loadAttendeesQuery = () => db.from("event_attendees")
+  .select("event_id,person_id,person_name,added_by,added_by_name,added_at");
+
+async function loadAttendees() {
+  const { data, error } = await loadAttendeesQuery();
+  if (!error) eventAttendees = data || [];
+  return error;
 }
 
 // ---- the Event Center, for everyone ----------------------------------------
+//
+// In the Cab look, as the app's Events tab: a slate card per event, lit in its
+// kind's colour, that opens the event's own page. An event that takes sign-ups
+// (0077) shows who's going there, with Sign me up on an open one; owners add
+// and take off people from the same place.
+
+// Each kind's colour, lit for the slate, as Cab.lit(category.color) in the app.
+const EVENT_ACCENT = { company: "red", training: "deep", customer: "slate", safety: "amber", holiday: "violet" };
+const eventAccent = (e) => lit(EVENT_ACCENT[e.category] || "red");
+
+const eventGoing = (e) => eventAttendees.filter(a => a.event_id === e.id)
+  .sort((a, b) => (a.person_name || "").localeCompare(b.person_name || ""));
+const eventIsMine = (e) => eventAttendees.some(a => a.event_id === e.id && a.person_id === me.id);
+const eventTakesSignups = (e) => e.enrollment === "open" || e.enrollment === "private";
+
+// The venue's date of an event, for the calendar-page block.
+const eventDay = (e) => dateOnly(isoToWall(e.starts_at, e.timezone || "America/Boise").slice(0, 10));
 
 function eventsView() {
   const upcoming = companyEvents
@@ -5995,61 +6127,226 @@ function eventsView() {
     "What's coming up across the company, and how to take part.");
 
   if (eventsError) {
-    return head + `<div class="card"><p class="error">Events couldn't be loaded.
-      Try again in a minute.</p></div>`;
+    return head + `<div class="ev"><div class="ev-card ev-note" style="${lit("red")}"><b>Events couldn't be loaded</b>
+      <p>Try again in a minute.</p></div></div>`;
   }
   if (!upcoming.length) {
-    return head + `<div class="card" style="text-align:center;border-style:dashed;padding:34px 24px">
-      <b style="font-size:20px;display:block;margin-bottom:6px">Nothing coming up</b>
-      <span class="note">New events show up here as soon as they're posted.</span></div>`;
+    return head + `<div class="ev"><div class="ev-card ev-note" style="${lit("red")}"><b>Nothing coming up</b>
+      <p>New events show up here as soon as they're posted.</p></div></div>`;
   }
 
-  let month = "";
-  return head + upcoming.map(e => {
-    const zone = e.timezone || "America/Boise";
-    const ymd = isoToWall(e.starts_at, zone).slice(0, 10);
-    const d = dateOnly(ymd);
-    const label = d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-    const divider = label !== month ? `<div class="group-title">${esc(label)}</div>` : "";
-    month = label;
+  // A heading per month, with how many are in it.
+  const months = [];
+  upcoming.forEach(e => {
+    const label = eventDay(e).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+    if (!months.length || months[months.length - 1].label !== label) months.push({ label, events: [] });
+    months[months.length - 1].events.push(e);
+  });
 
-    const where = [e.location_name, e.address].filter(Boolean).join(" · ");
-    const maps = e.address || e.location_name;
-    return divider + `
-      <details class="ticket evcard ev-${esc(e.category)}-edge">
-        <summary>
-          <span class="evdate"><small>${esc(d.toLocaleDateString("en-US", { weekday: "short" }))}</small>
-            <b>${d.getDate()}</b></span>
-          <span style="flex:1">
-            <b style="font-size:16px;display:block">${esc(e.title)}</b>
-            <span class="note">${esc(eventWhen(e))}</span>
-            ${eventOnlineLabel(e)
-              ? `<span class="note" style="display:block;color:var(--slate,#2F5D7C);font-weight:600">
-                  ${esc(eventOnlineLabel(e))}</span>`
-              : where ? `<span class="note" style="display:block">${esc(where)}</span>` : ""}
-          </span>
-        </summary>
-        <div class="inner">
-          <span class="badge ev-${esc(e.category)}">${esc(
-            (EVENT_CATEGORIES.find(c => c[0] === e.category) || ["", "Company"])[1])}</span>
-          ${e.details ? `<p style="white-space:pre-wrap">${esc(e.details)}</p>` : ""}
-          ${e.contact ? `<p class="note">Contact: ${esc(e.contact)}</p>` : ""}
-          <div class="row" style="margin-top:12px">
-            ${e.meeting_url && /^https?:\/\//i.test(e.meeting_url)
-              ? `<a class="join" href="${esc(e.meeting_url)}" target="_blank"
-                    rel="noopener">Join the meeting &nearr;</a>` : ""}
-            <button data-ics="${esc(e.id)}">Add to my calendar</button>
-            ${maps ? `<a href="https://maps.google.com/?q=${encodeURIComponent(maps)}"
-                         target="_blank" rel="noopener">Directions &nearr;</a>` : ""}
-            ${e.link_url && /^https?:\/\//i.test(e.link_url)
-              ? `<a href="${esc(e.link_url)}" target="_blank" rel="noopener">More information &nearr;</a>` : ""}
-          </div>
-          <p class="note" style="margin-top:8px">Downloads a calendar file. Open it and
-            Outlook adds the event to your calendar.</p>
-        </div>
-      </details>`;
-  }).join("");
+  return head + `<div class="ev">` + months.map(m => `
+    <div class="group-title">${esc(m.label)}<span class="ev-count">${m.events.length} ${m.events.length === 1 ? "event" : "events"}</span></div>
+    <div class="ev-list">${m.events.map(eventRowHtml).join("")}</div>`).join("") + `</div>`;
 }
+
+function eventRowHtml(e) {
+  const d = eventDay(e);
+  const tag = eventIsMine(e) && eventTakesSignups(e) ? `<span class="cab-tag ev-going">Going</span>`
+    : e.enrollment === "open" ? `<span class="cab-tag">Open sign-up</span>` : "";
+  const online = eventOnlineLabel(e);
+  return `<button type="button" class="cab-card ev-row" data-view="event" data-event="${esc(e.id)}"
+      style="${eventAccent(e)}">
+    <span class="ev-date"><small>${esc(d.toLocaleDateString("en-US", { weekday: "short" }))}</small><b>${d.getDate()}</b></span>
+    <span class="ev-main">
+      ${tag}
+      <b>${esc(e.title)}</b>
+      <span class="ev-meta">${icon("clock", 13)}${esc(eventWhen(e))}</span>
+      ${online ? `<span class="ev-meta ev-online">${icon("video", 13)}${esc(online)}</span>`
+        : e.location_name ? `<span class="ev-meta">${icon("pin", 13)}${esc(e.location_name)}</span>` : ""}
+    </span>
+    <span class="ev-chev" aria-hidden="true">&rsaquo;</span>
+  </button>`;
+}
+
+// One event: when and where, Who's going if it takes sign-ups, then what it is.
+function eventView() {
+  const e = companyEvents.find(x => x.id === openEventId);
+  if (!e) {
+    return hero("Event") + `<div class="ev"><div class="ev-card ev-note" style="${lit("red")}"><b>This event isn't on the calendar any more</b>
+      <p><button type="button" class="ghost" data-view="events">Back to the Event Center</button></p></div></div>`;
+  }
+  const online = eventOnlineLabel(e);
+  const join = e.meeting_url && /^https?:\/\//i.test(e.meeting_url) ? e.meeting_url : null;
+  const maps = e.address || e.location_name;
+  const kind = (EVENT_CATEGORIES.find(c => c[0] === e.category) || ["", "Company"])[1];
+  const past = eventIsPast(e);
+
+  return hero(e.title, eventWhen(e)) + `<div class="ev ev-detail" style="${eventAccent(e)}">
+    <div class="ev-card">
+      <div class="ev-tags"><span class="cab-tag">${esc(kind)}</span>
+        ${eventTakesSignups(e) ? `<span class="cab-tag ev-quiet">${e.enrollment === "open" ? "Open sign-up" : "Private list"}</span>` : ""}
+        ${e.is_published ? "" : `<span class="cab-tag ev-quiet">Draft — only admins see it</span>`}</div>
+      <div class="ev-lines">
+        <span class="ev-line strong">${icon("calendar", 15)}${esc(eventWhen(e))}</span>
+        ${online ? `<span class="ev-line strong ev-online">${icon("video", 15)}${esc(online)}${
+          join ? " — attend from anywhere" : " — the joining link hasn't been added yet"}</span>` : ""}
+        ${e.location_name ? `<span class="ev-line">${icon("pin", 15)}${esc(e.location_name)}</span>` : ""}
+        ${e.address ? `<span class="ev-line">${icon("map", 15)}${esc(e.address)}</span>` : ""}
+      </div>
+      ${join && !past ? `<a class="join ev-join" href="${esc(join)}" target="_blank" rel="noopener">${icon("video", 16)}Join the meeting</a>` : ""}
+      <div class="ev-actions">
+        ${past ? "" : `<button type="button" class="ev-link" data-ics="${esc(e.id)}">Add to my calendar &rsaquo;</button>`}
+        ${maps ? `<a class="ev-link" href="https://maps.google.com/?q=${encodeURIComponent(maps)}" target="_blank" rel="noopener">Directions &nearr;</a>` : ""}
+        ${e.link_url && /^https?:\/\//i.test(e.link_url)
+          ? `<a class="ev-link" href="${esc(e.link_url)}" target="_blank" rel="noopener">More information &nearr;</a>` : ""}
+      </div>
+    </div>
+
+    ${eventTakesSignups(e) ? eventGoingHtml(e) : ""}
+
+    ${e.details || e.contact ? `<div class="group-title">About it</div>
+      <div class="ev-card ev-about">
+        ${e.details ? `<p>${esc(e.details).replace(/\n/g, "<br>")}</p>` : ""}
+        ${e.contact ? `<span class="ev-line">${icon("person", 15)}Questions? ${esc(e.contact)}</span>` : ""}
+      </div>` : ""}
+
+    <p class="ev-foot">${past ? "This event has already happened."
+      : "Add to my calendar downloads a calendar file. Open it and Outlook adds the event to your calendar."}</p>
+  </div>`;
+}
+
+// "Signed up Sep 28", or "Added by Andrew Kendall, Sep 28".
+function attendeeHow(a) {
+  const day = new Date(a.added_at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  if (a.added_by && a.added_by === a.person_id) return `Signed up ${day}`;
+  return a.added_by_name ? `Added by ${a.added_by_name}, ${day}` : `Added ${day}`;
+}
+
+// Who's going: your place on the list, the button, the list itself, and for
+// an owner, adding people. Redrawn on its own after every change.
+function eventGoingHtml(e) {
+  const going = eventGoing(e);
+  const mine = going.find(a => a.person_id === me.id);
+  const past = eventIsPast(e);
+  const open = e.enrollment === "open";
+  const [title, line] = mine
+    ? [past ? "You went" : "You're going",
+       attendeeHow(mine) + (open && !past && mine.added_by === mine.person_id
+         ? ". You can take yourself off until it's over." : ".")]
+    : open
+      ? [past ? "Sign-ups closed" : "Open enrollment",
+         past ? "This event is over, so the list can't change." : "Anyone can sign up. You're not on the list yet."]
+      : ["Private enrollment", "An owner puts people on this list. Ask the training department if you should be on it."];
+
+  return `<section id="evGoing" data-event-box="${esc(e.id)}">
+    <div class="group-title">Who's going<span class="ev-count">${going.length} ${going.length === 1 ? "person" : "people"}</span></div>
+    <div class="ev-card ev-going-card">
+      <div class="ev-status${mine ? " in" : ""}">${icon(mine ? "checkCircle" : open ? "userPlus" : "lock", 20)}
+        <span><b>${title}</b><span>${esc(line)}</span></span></div>
+      ${open && !past ? (mine
+        ? `<button type="button" class="ev-quiet-btn" data-ev-act="leave">Take me off the list</button>`
+        : `<button type="button" class="ev-signup" data-ev-act="signup">Sign me up</button>`) : ""}
+      <span class="msg"></span>
+      ${going.length ? `<ul class="ev-people">${going.map(a => `<li>
+          <span class="ev-initials">${esc(initials(a.person_name || "?"))}</span>
+          <span class="ev-who"><b>${esc(a.person_name || "Someone")}</b>${a.person_id === me.id ? `<span class="cab-tag ev-going">You</span>` : ""}
+            <small>${esc(attendeeHow(a))}</small></span>
+          ${isOwner() ? `<button type="button" class="ev-remove" data-ev-act="remove" data-person="${esc(a.person_id)}"
+              title="Take ${esc(a.person_name || "them")} off the list">Take off</button>` : ""}
+        </li>`).join("")}</ul>`
+        : `<p class="ev-empty">${isOwner() ? "Nobody yet. Add people below."
+            : open ? "Nobody yet. Be the first." : "Nobody yet."}</p>`}
+      ${isOwner() ? `<div class="ev-add">
+          <label for="evAddSearch">Add people</label>
+          <input id="evAddSearch" type="search" class="search" data-ev-search placeholder="Search by name or shop" autocomplete="off">
+          <div class="ev-results" id="evAddResults">${eventCandidatesHtml(e, "")}</div>
+        </div>` : ""}
+    </div>
+    <p class="ev-foot">${open
+      ? "Open enrollment: anyone can sign themselves up, or take themselves off, until it's over." + (isOwner() ? " Owners can add or take off anyone." : "")
+      : "Private enrollment: only owners put people on this list or take them off."}</p>
+  </section>`;
+}
+
+// Everyone with an account who hasn't left and isn't on the list yet, for an
+// owner to add. Owners read every profile (0021), so `people` is everyone.
+function eventCandidatesHtml(e, query) {
+  const on = new Set(eventGoing(e).map(a => a.person_id));
+  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+  const matches = people
+    .filter(p => !p.deactivated_at && !on.has(p.id))
+    .filter(p => {
+      const hay = `${p.full_name || ""} ${p.email || ""} ${locations[p.location_id] || ""}`.toLowerCase();
+      return words.every(w => hay.includes(w));
+    })
+    .sort((a, b) => (a.full_name || a.email || "").localeCompare(b.full_name || b.email || ""));
+  if (!words.length) return `<p class="ev-hint">Type a name or a shop to find people.</p>`;
+  if (!matches.length) return `<p class="ev-hint">Nobody matches${on.size ? " who isn't already on the list" : ""}.</p>`;
+  return matches.slice(0, 8).map(p => `<div class="ev-result">
+      <span><b>${esc(p.full_name || p.email)}</b><small>${esc(locations[p.location_id] || "")}</small></span>
+      <button type="button" data-ev-act="add" data-person="${esc(p.id)}">Add</button>
+    </div>`).join("") + (matches.length > 8 ? `<p class="ev-hint">${matches.length - 8} more — keep typing.</p>` : "");
+}
+
+function redrawGoing(message, isError) {
+  const box = $("evGoing");
+  const e = companyEvents.find(x => x.id === openEventId);
+  if (!box || !e) return;
+  const query = ($("evAddSearch") || {}).value || "";
+  box.outerHTML = eventGoingHtml(e);
+  if (query && $("evAddSearch")) {
+    $("evAddSearch").value = query;
+    $("evAddResults").innerHTML = eventCandidatesHtml(e, query);
+  }
+  // The row lists count too.
+  if (message) speak($("evGoing"), message, isError);
+}
+
+$("view").addEventListener("input", (event) => {
+  if (!event.target.matches("[data-ev-search]")) return;
+  const e = companyEvents.find(x => x.id === openEventId);
+  if (e) $("evAddResults").innerHTML = eventCandidatesHtml(e, event.target.value);
+});
+
+$("view").addEventListener("click", async (event) => {
+  const button = event.target.closest("button[data-ev-act]");
+  if (!button) return;
+  const e = companyEvents.find(x => x.id === openEventId);
+  if (!e) return;
+  const act = button.dataset.evAct;
+  const person = act === "signup" || act === "leave" ? me.id : button.dataset.person;
+  const who = act === "add" ? (people.find(p => p.id === person) || {}).full_name
+    : (eventGoing(e).find(a => a.person_id === person) || {}).person_name;
+
+  if (act === "leave" && !confirm("Take yourself off the list? You can sign up again until the event is over.")) return;
+  if (act === "remove" && !confirm(`Take ${who || "them"} off the list?`)) return;
+
+  button.disabled = true;
+  let error = null, refused = false;
+  if (act === "signup" || act === "add") {
+    ({ error } = await db.from("event_attendees").insert({ event_id: e.id, person_id: person }));
+    // Already on it, from another tab: nothing went wrong.
+    if (error && error.code === "23505") error = null;
+  } else {
+    const res = await db.from("event_attendees").delete()
+      .eq("event_id", e.id).eq("person_id", person).select("event_id");
+    error = res.error;
+    refused = !error && !(res.data || []).length;
+  }
+  const loadError = await loadAttendees();
+  button.disabled = false;
+
+  if (error || refused) {
+    const rule = act === "signup" ? "Sign-ups for this event have closed."
+      : act === "leave" ? "Sign-ups for this event have closed, so the list can't change. Ask an owner."
+      : "Only an owner can change this list.";
+    return redrawGoing(error && !/row-level/i.test(error.message) ? error.message : rule, true);
+  }
+  redrawGoing(loadError ? "Saved, but the list couldn't be reloaded. Refresh the page to see it." : {
+    signup: "You're on the list.", leave: "You're off the list.",
+    add: `${who || "They"} ${who ? "is" : "are"} on the list.`, remove: `${who || "They"} ${who ? "is" : "are"} off the list.`
+  }[act], !!loadError);
+  if (act === "add" && $("evAddSearch")) $("evAddSearch").focus();
+});
 
 // "Online · Teams", or "Online" before the link exists. Matches
 // CompanyEvent.onlineLabel in the app so both call it the same thing.
@@ -7830,6 +8127,7 @@ const pageTitle = (id) => (FEATURES.find(f => f.id === id) || COMPANY_PAGES.find
        inspform: { title: inspDraft ? (inspDraft.stage === "after" ? "After Class" : "New Inspection") : "Inspection" },
        approvals: { title: "Driving Tests to Approve" },
        requests: { title: "Support Requests" },
+       event: { title: (companyEvents.find(e => e.id === openEventId) || {}).title || "Event" },
        request: { title: "Request" },
        newrequest: { title: "New Request" },
        tools: { title: "Special Tools" },
