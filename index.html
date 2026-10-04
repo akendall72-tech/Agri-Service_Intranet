@@ -874,6 +874,9 @@
   .sd-choice-edit input[type=radio] { width: 18px; height: 18px; margin: 0; accent-color: #137026; flex: none; }
   .sd-choice-edit span { flex: none; width: 16px; font-weight: 600; color: var(--muted); }
   .sd-choice-edit input[type=text] { margin: 0; }
+  .sd-tf-edit { display: flex; flex-wrap: wrap; gap: 6px 22px; }
+  .sd-tf-edit .check { margin: 0; }
+  .sd-tf-edit input { accent-color: #137026; }
   label.sd-file { cursor: pointer; display: inline-flex; align-items: center; }
   .task .sd-tick { flex: none; width: 18px; height: 18px; margin-top: 2px; border-radius: 4px; border: 2px solid var(--line-strong);
     display: grid; place-items: center; font-size: 12px; font-weight: 700; color: #fff; }
@@ -6742,7 +6745,8 @@ $("view").addEventListener("click", (event) => {
 
 // ---- the Safety Desk (migration 0080) ---------------------------------------------
 //
-// A Safety Brief a month: an OSHA document to read and multiple-choice questions
+// A Safety Brief a month: an OSHA document to read and questions about it —
+// multiple choice with four answers, or true or false —
 // about it, for everyone. Opening a brief starts its reading time on the server,
 // and the questions open when it's up; the server marks the answers, and keeps
 // the right ones out of reach until someone has passed. Tries are unlimited.
@@ -6778,6 +6782,9 @@ const deskBriefs = () => safetyBriefs.filter(b => b.is_published && b.month <= b
 const briefMonthTitle = (b) => dateOnly(b.month).toLocaleDateString("en-US", { month: "long", year: "numeric" });
 const briefResult = (b, person) => safetyResults.find(r => r.brief_id === b.id && r.person_id === person);
 const briefNeeded = (b) => Math.min(b.pass_mark || 4, (b.questions || []).length);
+// True or false is a question whose two answers are True and False.
+const sdIsTrueFalse = (q) => q.kind === "truefalse"
+  || ((q.choices || []).length === 2 && q.choices[0] === "True" && q.choices[1] === "False");
 const briefParagraphs = (b) => (b.body || "").split(/\n\s*\n/).map(s => s.trim()).filter(Boolean);
 const briefDay = (iso) => new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
@@ -6936,12 +6943,12 @@ function renderBriefQuestions() {
     return briefTick();
   }
   const all = briefPicks.filter(x => x !== undefined && x !== null).length === n;
-  box.innerHTML = notice + `<p class="sd-sum">${n} multiple-choice questions. Get ${briefNeeded(b)} right to pass.</p>
+  box.innerHTML = notice + `<p class="sd-sum">${n} questions. Get ${briefNeeded(b)} right to pass.</p>
     <form id="sdForm">${(b.questions || []).map((q, i) => `<fieldset class="sd-q">
       <legend><small>Question ${i + 1} of ${n}</small>${esc(q.q)}</legend>
       ${(q.choices || []).map((c, j) => `<label class="sd-choice${briefPicks[i] === j ? " on" : ""}">
         <input type="radio" name="sdq${i}" value="${j}" data-sd-q="${i}"${briefPicks[i] === j ? " checked" : ""}>
-        <span class="sd-letter">${"ABCDEF"[j]}</span><span>${esc(c)}</span></label>`).join("")}
+        <span class="sd-letter">${sdIsTrueFalse(q) ? "TF"[j] : "ABCDEF"[j]}</span><span>${esc(c)}</span></label>`).join("")}
     </fieldset>`).join("")}
       <button type="submit" class="sd-submit" id="sdSubmit"${all ? "" : " disabled"}>${all ? "Hand in my answers" : `Answer all ${n} to hand in`}</button>
       <span class="msg"></span>
@@ -7050,7 +7057,7 @@ function sdBlankDraft() {
   const next = new Date(); next.setDate(1); next.setMonth(next.getMonth() + 1);
   return { id: null, month: `${next.getFullYear()}-${pad2(next.getMonth() + 1)}`, title: "", summary: "", body: "",
     document_path: null, document_name: null, read_minutes: 3, pass_mark: 4, is_published: false,
-    questions: Array.from({ length: 5 }, () => ({ q: "", choices: ["", "", "", ""] })), answers: [null, null, null, null, null] };
+    questions: Array.from({ length: 5 }, () => ({ q: "", kind: "choice", choices: ["", "", "", ""] })), answers: [null, null, null, null, null] };
 }
 
 function renderSafetyAdmin() {
@@ -7065,7 +7072,7 @@ function renderSafetyAdmin() {
   const monthly = allSharedTasks.filter(t => (t.cadence || "weekly") === "monthly");
   const linked = allSharedTasks.find(t => t.ticked_by === "safety_brief");
   box.innerHTML = `<h2>Safety Desk</h2>
-    <p class="note">A Safety Brief a month: an OSHA document to read and multiple-choice questions about it. Everyone sees a
+    <p class="note">A Safety Brief a month: an OSHA document to read and questions about it. Everyone sees a
       published brief from the 1st of its month, so next month's can be written ahead. The questions open a few minutes after
       someone starts reading, and tries are unlimited.</p>
     <div class="row"><button data-sd-act="new">New Safety Brief</button><span class="msg"></span></div>
@@ -7117,12 +7124,19 @@ function renderSdEditor() {
       <div><label for="sdPass">Right answers to pass</label><input id="sdPass" type="number" min="1" max="10" data-sdf="pass_mark" value="${d.pass_mark}"></div>
     </div>
     <h3 style="margin:18px 0 6px">Questions</h3>
-    <p class="note" style="margin:0 0 10px">Multiple choice, four answers each. Pick the right one with its circle.</p>
+    <p class="note" style="margin:0 0 10px">Multiple choice with four answers, or true or false. Pick the right answer with its
+      circle.</p>
     ${d.questions.map((q, i) => `<div class="role sd-q-edit">
-      <div class="row" style="margin:0 0 6px"><b>Question ${i + 1}</b>${d.questions.length > 1
-        ? `<button type="button" class="pdf" style="margin-left:auto" data-sd-remove-q="${i}">Remove</button>` : ""}</div>
-      <input type="text" maxlength="400" data-sdq="${i}" value="${esc(q.q)}" placeholder="The question">
-      ${q.choices.map((c, j) => `<div class="sd-choice-edit">
+      <div class="row" style="margin:0 0 6px"><b>Question ${i + 1}</b>
+        <select data-sdk="${i}" aria-label="Kind of question" style="width:auto;margin:0">
+          <option value="choice"${q.kind === "truefalse" ? "" : " selected"}>Multiple choice</option>
+          <option value="truefalse"${q.kind === "truefalse" ? " selected" : ""}>True or false</option></select>
+        ${d.questions.length > 1 ? `<button type="button" class="pdf" style="margin-left:auto" data-sd-remove-q="${i}">Remove</button>` : ""}</div>
+      <input type="text" maxlength="400" data-sdq="${i}" value="${esc(q.q)}" placeholder="${q.kind === "truefalse"
+        ? "A statement that's true or false" : "The question"}">
+      ${q.kind === "truefalse" ? `<div class="sd-tf-edit">${["True", "False"].map((c, j) => `<label class="check">
+          <input type="radio" name="sdAnswer${i}" data-sda="${i}" value="${j}"${d.answers[i] === j ? " checked" : ""}> ${c} is right</label>`).join("")}</div>`
+      : q.choices.map((c, j) => `<div class="sd-choice-edit">
         <input type="radio" name="sdAnswer${i}" data-sda="${i}" value="${j}" aria-label="Answer ${"ABCD"[j]} is right"${d.answers[i] === j ? " checked" : ""}>
         <span>${"ABCD"[j]}</span>
         <input type="text" maxlength="300" data-sdc="${i}:${j}" value="${esc(c)}" placeholder="Answer ${"ABCD"[j]}"></div>`).join("")}
@@ -7152,6 +7166,18 @@ $("admin").addEventListener("change", (event) => {
   if (!sdDraft || !$("sdEditor") || !$("sdEditor").contains(event.target)) return;
   const t = event.target;
   if (t.dataset.sda !== undefined) sdDraft.answers[Number(t.dataset.sda)] = Number(t.value);
+  // Switching kind: true or false has its two answers fixed; multiple choice
+  // gets back whatever four answers it had.
+  if (t.dataset.sdk !== undefined) {
+    const i = Number(t.dataset.sdk), q = sdDraft.questions[i];
+    if (t.value === "truefalse" && q.kind !== "truefalse") {
+      q.saved = q.choices; q.kind = "truefalse"; q.choices = ["True", "False"];
+      if (sdDraft.answers[i] > 1) sdDraft.answers[i] = null;
+    } else if (t.value === "choice" && q.kind === "truefalse") {
+      q.kind = "choice"; q.choices = q.saved || ["", "", "", ""]; sdDraft.answers[i] = null;
+    }
+    return renderSdEditor();
+  }
   if (t.dataset.sdf === "is_published") sdDraft.is_published = t.value === "yes";
   if (t.id === "sdPdfFile" && t.files[0]) {
     if (t.files[0].type !== "application/pdf") return speak($("sdEditor"), "That isn't a PDF.", true);
@@ -7167,7 +7193,9 @@ $("admin").addEventListener("click", async (event) => {
     const key = (safetyKeys.find(k => k.brief_id === b.id) || {}).answers || [];
     sdPdfFile = null;
     sdDraft = { ...JSON.parse(JSON.stringify(b)), month: b.month.slice(0, 7),
-      questions: (b.questions || []).map(q => ({ q: q.q || "", choices: [0, 1, 2, 3].map(j => (q.choices || [])[j] || "") })),
+      questions: (b.questions || []).map(q => sdIsTrueFalse(q)
+        ? { q: q.q || "", kind: "truefalse", choices: ["True", "False"] }
+        : { q: q.q || "", kind: "choice", choices: [0, 1, 2, 3].map(j => (q.choices || [])[j] || "") }),
       answers: (b.questions || []).map((_, i) => key[i] ?? null) };
     renderSdEditor();
     return $("sdEditor").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -7186,7 +7214,7 @@ $("admin").addEventListener("click", async (event) => {
     return $("sdEditor").scrollIntoView({ behavior: "smooth", block: "start" });
   }
   if (act === "cancel") { sdDraft = null; sdPdfFile = null; return renderSdEditor(); }
-  if (act === "add-q") { sdDraft.questions.push({ q: "", choices: ["", "", "", ""] }); sdDraft.answers.push(null); return renderSdEditor(); }
+  if (act === "add-q") { sdDraft.questions.push({ q: "", kind: "choice", choices: ["", "", "", ""] }); sdDraft.answers.push(null); return renderSdEditor(); }
   if (act === "remove-pdf") { sdDraft.document_path = null; sdDraft.document_name = null; sdPdfFile = null; return renderSdEditor(); }
   if (act === "reminder") return saveSdReminder(button);
   if (act === "delete") return deleteSdBrief();
@@ -7214,7 +7242,7 @@ async function saveSdBrief(button) {
     : !d.title.trim() ? "The brief needs a title."
     : !d.questions.length ? "Add at least one question."
     : d.questions.some(q => !q.q.trim()) ? "Every question needs its wording."
-    : d.questions.some(q => q.choices.some(c => !c.trim())) ? "Every question needs all four answers."
+    : d.questions.some(q => q.kind !== "truefalse" && q.choices.some(c => !c.trim())) ? "Every multiple-choice question needs all four answers."
     : d.answers.some(a => a === null || a === undefined) ? "Pick the right answer for every question."
     : d.is_published && !d.document_path && !sdPdfFile && !(d.body || "").trim() ? "Add the PDF or some text to read before it shows."
     : !(d.read_minutes >= 0 && d.read_minutes <= 30) ? "The reading time has to be between 0 and 30 minutes."
@@ -7235,7 +7263,9 @@ async function saveSdBrief(button) {
   const row = { month: `${d.month}-01`, title: d.title.trim(), summary: (d.summary || "").trim() || null,
     body: (d.body || "").trim() || null, document_path: path || null, document_name: path ? name : null,
     read_minutes: d.read_minutes, pass_mark: d.pass_mark, is_published: !!d.is_published,
-    questions: d.questions.map(q => ({ q: q.q.trim(), choices: q.choices.map(c => c.trim()) })) };
+    questions: d.questions.map(q => q.kind === "truefalse"
+      ? { q: q.q.trim(), kind: "truefalse", choices: ["True", "False"] }
+      : { q: q.q.trim(), kind: "choice", choices: q.choices.map(c => c.trim()) }) };
   const saved = d.id ? await db.from("safety_briefs").update(row).eq("id", d.id).select("id")
     : await db.from("safety_briefs").insert(row).select("id");
   if (saved.error || !(saved.data || []).length) {
