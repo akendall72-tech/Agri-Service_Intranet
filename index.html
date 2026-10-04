@@ -766,6 +766,119 @@
     .osr-email, button.osr-request { flex: 1; }
   }
 
+  /* ---- The Safety Desk: Cab cards in the Safety Center's ember. ---- */
+  .sd { max-width: 860px; }
+  .sd .group-title .sd-count { margin-left: auto; order: 2; font-size: 11px; letter-spacing: .06em; }
+  .sd-list { display: grid; gap: 10px; }
+  .sd-card { position: relative; padding: 14px 18px 15px 27px; color: #fff; border: 1px solid var(--cab-edge);
+    border-radius: 14px; background: linear-gradient(var(--cab-top), var(--cab-bottom)); box-shadow: 0 4px 14px rgba(20,28,34,.2);
+    margin-bottom: 10px; }
+  .sd-card::before { content: ""; position: absolute; left: 10px; top: 12px; bottom: 12px; width: 3px; border-radius: 3px;
+    background: var(--accent); box-shadow: 0 0 7px color-mix(in srgb, var(--accent) 65%, transparent); }
+  .sd-note b { font: 600 18px var(--font-cab); letter-spacing: .04em; text-transform: uppercase; }
+  .sd-note p { margin: 4px 0 0; color: var(--cab-sub); }
+  button.sd-current { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 14px 18px 15px 27px; }
+  button.sd-current.due { background: linear-gradient(color-mix(in srgb, var(--accent) 12%, transparent), color-mix(in srgb, var(--accent) 12%, transparent)),
+    linear-gradient(var(--cab-top), var(--cab-bottom)); border-color: color-mix(in srgb, var(--accent) 55%, var(--cab-edge)); }
+  .sd-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .sd .cab-tag.sd-ok { --accent: var(--lit-green); }
+  .sd .cab-tag.sd-warn { --accent: var(--lit-amber); }
+  .sd .cab-tag.sd-due { --accent: var(--lit-red); }
+  .sd .cab-tag.sd-quiet { color: var(--cab-sub); border-color: rgba(255,255,255,.25); }
+  .sd-current > b { font: 600 21px/1.2 var(--font-cab); letter-spacing: .04em; text-transform: uppercase; text-wrap: pretty; }
+  .sd-sum { color: var(--cab-sub); font-size: 14px; }
+  .sd-meta { color: var(--cab-detail); font-size: 13px; }
+  .sd-meta.ok { color: var(--lit-green); }
+  .sd-go { color: var(--accent); font: 600 14px var(--font-cab); letter-spacing: .07em; text-transform: uppercase; text-decoration: none; }
+  a.sd-go[aria-disabled] { opacity: .5; pointer-events: none; }
+  button.sd-row { display: flex; align-items: center; justify-content: flex-start; gap: 14px; padding: 12px 16px 12px 27px; }
+  .sd-month { flex: 0 0 50px; height: 46px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    line-height: 1.05; border-radius: 10px; background: rgba(255,255,255,.06); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
+  .sd-month small { color: var(--accent); font: 600 10.5px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
+  .sd-month b { font: 700 16px var(--font-cab); }
+  .sd-main { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+  .sd-main > b { font: 600 17px/1.2 var(--font-cab); letter-spacing: .04em; text-transform: uppercase; }
+  .sd-chev { color: var(--cab-detail); font-size: 24px; line-height: 1; }
+  .sd-foot { margin: 10px 2px 0; color: var(--cab-heading); font-size: 13px; max-width: 75ch; }
+
+  .sd-passed { display: flex; gap: 12px; align-items: center; --accent: var(--lit-green); }
+  .sd-passed svg { color: var(--lit-green); flex: none; }
+  .sd-passed b { display: block; font: 600 20px var(--font-cab); letter-spacing: .06em; text-transform: uppercase; color: var(--lit-green); }
+  .sd-passed span span { color: var(--cab-sub); font-size: 14px; }
+  .sd-doc-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 10px; }
+  .sd-doc-head svg { color: var(--accent); }
+  .sd-doc-head b { font: 600 16px var(--font-cab); letter-spacing: .03em; }
+  .sd-doc-head .sd-go { margin-left: auto; }
+  .sd-doc iframe { display: block; width: 100%; height: min(78vh, 900px); border: 0; border-radius: 8px; background: #fff; }
+  .sd-body p { margin: 0 0 12px; font-size: 15.5px; line-height: 1.6; color: rgba(255,255,255,.94); max-width: 70ch; }
+  .sd-body p:last-child { margin: 0; }
+  .sd-review { --accent: var(--lit-green); }
+  .sd-review.wrong { --accent: var(--lit-red); }
+  .sd-review > b { display: block; font-size: 15px; margin-bottom: 8px; }
+  .sd-review ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; }
+  .sd-review li { display: flex; align-items: center; gap: 8px; color: var(--cab-sub); font-size: 14px; }
+  .sd-review li i { flex: none; width: 18px; font-style: normal; font-weight: 700; text-align: center; }
+  .sd-review li.key { color: #fff; } .sd-review li.key i { color: var(--lit-green); }
+  .sd-review li.miss i { color: var(--lit-red); }
+  .sd-review .cab-tag { --accent: var(--cab-sub); }
+
+  .sd-notice { margin: 0 0 12px; color: var(--lit-amber); font-weight: 600; font-size: 14px; }
+  .sd-wait { display: flex; align-items: center; gap: 16px; }
+  .sd-wait b { display: block; font: 600 17px var(--font-cab); letter-spacing: .06em; text-transform: uppercase; }
+  .sd-ring { --p: 0%; flex: none; width: 70px; height: 70px; border-radius: 50%; display: grid; place-items: center;
+    background: conic-gradient(var(--accent) var(--p), rgba(255,255,255,.1) 0); }
+  .sd-ring b { width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; background: var(--cab-bottom);
+    font: 700 15px var(--font-mono) !important; letter-spacing: 0 !important; }
+  .sd-q { border: 0; margin: 0 0 16px; padding: 0; }
+  .sd-q legend { padding: 0; margin-bottom: 8px; font-size: 15.5px; font-weight: 600; color: #fff; }
+  .sd-q legend small { display: block; color: var(--accent); font: 600 11px var(--font-mono); letter-spacing: .12em;
+    text-transform: uppercase; margin-bottom: 3px; }
+  .sd-choice { display: flex; align-items: center; gap: 10px; margin: 0 0 6px; padding: 9px 10px; border-radius: 10px; cursor: pointer;
+    background: rgba(255,255,255,.03); color: var(--cab-sub); font-size: 15px; font-weight: 400; }
+  .sd-choice:hover { background: rgba(255,255,255,.07); }
+  .sd-choice.on { background: color-mix(in srgb, var(--accent) 16%, transparent); color: #fff; }
+  .sd-choice input { position: absolute; opacity: 0; pointer-events: none; }
+  .sd-choice input:focus-visible + .sd-letter { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .sd-letter { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+    font: 700 13px var(--font-mono); border: 1px solid rgba(255,255,255,.22); }
+  .sd-choice.on .sd-letter { background: var(--accent); border-color: var(--accent); color: var(--cab-top); }
+  .sd button.sd-submit { width: 100%; padding: 12px; border-radius: 10px; font: 700 16px var(--font-cab); letter-spacing: .05em;
+    text-transform: uppercase; }
+  .sd-questions .msg:empty { display: none; }
+
+  .sd-summary .sd-label { color: var(--cab-sub); font: 600 10.5px var(--font-mono); letter-spacing: .12em; text-transform: uppercase; }
+  .sd-summary select { max-width: 100%; margin: 4px 0 10px; background: rgba(0,0,0,.25); color: #fff; border-color: rgba(255,255,255,.18); }
+  .sd-big { display: flex; align-items: baseline; gap: 8px; }
+  .sd-big b { font: 700 36px var(--font-cab); }
+  .sd-big span { color: var(--cab-sub); }
+  .sd-meter { height: 8px; margin-top: 8px; border-radius: 999px; background: rgba(255,255,255,.1); }
+  .sd-meter i { display: block; height: 100%; border-radius: 999px; background: var(--accent); }
+  .sd-people { padding-top: 6px; padding-bottom: 6px; }
+  .sd-person { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid rgba(255,255,255,.07); }
+  .sd-person:first-child { border-top: 0; }
+  .sd-person i { flex: none; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--lit-red); }
+  .sd-person i.ok { background: var(--lit-green); border-color: var(--lit-green); }
+  .sd-person i.warn { background: var(--lit-amber); border-color: var(--lit-amber); }
+  .sd-person b { display: block; font: 600 15.5px var(--font-cab); letter-spacing: .02em; }
+  .sd-person small { color: var(--cab-detail); font-size: 12.5px; }
+
+  /* Admin: writing the briefs (the plain admin look). */
+  .sd-admin-list { margin-top: 12px; }
+  #sdEditor input[type=month] { width: 100%; padding: 9px 12px; border: 1px solid var(--line-strong);
+    border-radius: var(--radius-sm); font: inherit; font-size: 14.5px; color: var(--ink); background: #fff; margin-bottom: 12px; }
+  .sd-admin-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 12px 14px; }
+  .sd-reminder { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .sd-q-edit { padding: 12px 14px; margin-bottom: 10px; }
+  .sd-q-edit > input { margin-bottom: 8px; }
+  .sd-choice-edit { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .sd-choice-edit input[type=radio] { width: 18px; height: 18px; margin: 0; accent-color: #137026; flex: none; }
+  .sd-choice-edit span { flex: none; width: 16px; font-weight: 600; color: var(--muted); }
+  .sd-choice-edit input[type=text] { margin: 0; }
+  label.sd-file { cursor: pointer; display: inline-flex; align-items: center; }
+  .task .sd-tick { flex: none; width: 18px; height: 18px; margin-top: 2px; border-radius: 4px; border: 2px solid var(--line-strong);
+    display: grid; place-items: center; font-size: 12px; font-weight: 700; color: #fff; }
+  .task .sd-tick.on { background: #137026; border-color: #137026; }
+
   /* ------------------------------------------------------------------ the Mock Schedule (admin)
      A year's classes on a calendar, coloured by level (MOCK_COLOR), with how far
      the plan gets toward AGCO's dealer metric. Admin page, so the plain look. */
@@ -1781,6 +1894,7 @@
       <button data-tab="courses"><i data-icon="training"></i><span>Course Catalog</span></button>
       <button data-tab="articles"><i data-icon="doc"></i><span>Training Articles</span></button>
       <button data-tab="skillsadmin"><i data-icon="training"></i><span>Skills</span></button>
+      <button data-tab="safetydesk"><i data-icon="safety"></i><span>Safety Desk</span></button>
       <button data-tab="sds"><i data-icon="safety"></i><span>Safety Data Sheets</span></button>
       <button data-tab="handbook"><i data-icon="briefcase"></i><span>Employee Handbook</span></button>
       <button data-tab="reminders"><i data-icon="reminders"></i><span>Reminders</span></button>
@@ -2613,6 +2727,12 @@
       </div>
     </section>
 
+    <!-- The Safety Desk's briefs: drawn by renderSafetyAdmin -->
+    <section id="tab-safetydesk" class="hidden">
+      <div class="card" id="sdAdminList"></div>
+      <div class="card hidden" id="sdEditor"></div>
+    </section>
+
     <!-- The Mock Schedule: drawn by renderMockSchedule -->
     <section id="tab-mock" class="hidden">
       <div id="mockSchedule"></div>
@@ -2919,7 +3039,7 @@ async function loadAll() {
     db.from("locations").select("*").order("sort_order"),
     db.from("forklift_certifications").select("*"),
     db.from("lift_plans").select("*").order("submitted_at", { ascending: false }),
-    db.from("profiles").select("id,full_name,email,role,location_id,groups,deactivated_at"),
+    db.from("profiles").select("id,full_name,email,role,location_id,groups,deactivated_at,created_at"),
     db.from("support_roles").select("*, support_people(*)").order("sort_order"),
     db.from("weekly_tasks").select("*").eq("is_active", true).order("sort_order"),
     db.from("personal_tasks").select("*").is("archived_at", null),
@@ -2961,7 +3081,7 @@ async function loadAll() {
   trainingReportsError = trr.error ? trr.error.message : null;
   await Promise.all([loadEvents(), loadInspections(), loadCourses(), loadSds(),
     loadArticles(), loadSkills(), loadNews(), loadTrainingStatus(), loadCrane(), loadCompanyDocs(), loadTools(),
-    loadAgco(), loadMockSchedules()]);
+    loadAgco(), loadMockSchedules(), loadSafetyDesk()]);
 
   // Only your own profile comes back for most people — that policy is the
   // point — so the page reads it out of the list rather than asking twice.
@@ -3087,6 +3207,8 @@ const FORKLIFT_LINKS = [
 ];
 
 const SAFETY_LINKS = [
+  { title: "Safety Desk", sub: "This month's Safety Brief: read it, then answer a few questions. Everyone, every month.",
+    tint: "ember", icon: "doc", view: "safetydesk" },
   { title: "Safety Report", sub: "Report an incident, near miss, or hazard.", tint: "ember", icon: "megaphone",
     url: "https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=82pjZGDa0ES1EhOSwxioxkNHkm4Go2RPtJFaiGf2dyZURVhQOU5XRzRQVUFSQkRBWkdaNzlDNjc0VS4u" },
   // The app signs into GotSafety for you. A browser can't do that across
@@ -3189,7 +3311,8 @@ function showView(name) {
   host.classList.remove("hidden");
   setMode("app", ["openseat", "myclasses", "catalog", "article", "skills", "trainingstatus", "coursereport", "agcomap"].includes(name) ? "training"
     : name === "newspost" ? "news" : name === "payroll" ? "hr" : ["certreport", "evaltest", "approvals"].includes(name) ? "forklift" : name === "inspform" ? "inspection"
-    : SUPPORT_PAGES.includes(name) ? "support" : name === "event" ? "events" : name);
+    : SUPPORT_PAGES.includes(name) ? "support" : name === "event" ? "events" : SAFETY_PAGES.includes(name) ? "safety" : name);
+  if (name !== "safetybrief" && briefTimer) { clearInterval(briefTimer); briefTimer = null; }
   document.body.dataset.page = "view";
   if (name !== "evaltest") { evalAgreed = null; evalNotice = ""; }
   if (name !== "tool") toolCheckingOut = false;
@@ -3198,6 +3321,8 @@ function showView(name) {
     ${["certreport", "evaltest", "approvals"].includes(name) ? `<button data-view="forklift">Forklift Center</button><span>/</span>` : ""}
     ${name === "inspform" ? `<button data-view="inspection">Inspection Center</button><span>/</span>` : ""}
     ${name === "event" ? `<button data-view="events">Event Center</button><span>/</span>` : ""}
+    ${SAFETY_PAGES.includes(name) ? `<button data-view="safety">Safety Center</button><span>/</span>` : ""}
+    ${["safetybrief", "safetyreport"].includes(name) ? `<button data-view="safetydesk">Safety Desk</button><span>/</span>` : ""}
     ${SUPPORT_PAGES.includes(name) ? `<button data-view="support">Support Center</button><span>/</span>` : ""}
     ${["request", "newrequest"].includes(name) ? `<button data-view="requests">Support Requests</button><span>/</span>` : ""}
     ${["tool", "toolform"].includes(name) ? `<button data-view="tools">Special Tools</button><span>/</span>` : ""}
@@ -3229,7 +3354,7 @@ function showAdmin() {
   renderEvents(); renderOrg(); renderOsrImport(); renderOsrLive(); renderInspectionsAdmin();
   renderCoursesAdmin(); renderSdsAdmin(); renderSdsPending(); renderArticlesAdmin(); renderSkillsAdmin();
   renderNewsAdmin(); renderTsImport(); renderTsLive(); renderHandbook(); renderAgcoImport(); renderAgcoLive();
-  renderAgcoTechs(); renderAgcoRules(); renderAgcoAdded(); renderAgcoBales(); renderMockSchedule();
+  renderAgcoTechs(); renderAgcoRules(); renderAgcoAdded(); renderAgcoBales(); renderMockSchedule(); renderSafetyAdmin();
   window.scrollTo(0, 0);
 }
 
@@ -3239,6 +3364,7 @@ document.addEventListener("click", (event) => {
   if (tile && tile.dataset.news) openNewsId = tile.dataset.news;
   if (tile && tile.dataset.ticket) openTicketId = tile.dataset.ticket;
   if (tile && tile.dataset.event) openEventId = tile.dataset.event;
+  if (tile && tile.dataset.brief) openBriefId = tile.dataset.brief;
   if (tile && tile.dataset.tool) { openToolId = tile.dataset.tool; toolNotice = ""; }
   if (tile) return showView(tile.dataset.view);
   if (event.target.closest("[data-home]")) return showHome();
@@ -3317,6 +3443,9 @@ const VIEWS = {
 
   events: () => eventsView(),
   event: () => eventView(),
+  safetydesk: () => safetyDeskView(),
+  safetybrief: () => safetyBriefView(),
+  safetyreport: () => safetyReportView(),
 
   openseat: () => openSeatView(),
   catalog: () => catalogView(),
@@ -4993,7 +5122,7 @@ function visibleTasks() {
   const shared = sharedTasks
     .filter(t => !hiddenTasks.includes(t.id))
     .map(t => ({ id: t.id, kind: "weekly", title: t.title, detail: t.detail,
-                 cadence: t.cadence || "weekly",
+                 cadence: t.cadence || "weekly", ticksItself: t.ticked_by === "safety_brief",
                  done: done(t.id, t.cadence || "weekly") }));
 
   const personal = personalTasks
@@ -5008,7 +5137,18 @@ function remindersView() {
   const items = visibleTasks();
   const outstanding = items.filter(t => !t.done).length;
 
-  const list = items.map(t => `
+  // Passing the month's Safety Brief ticks that reminder; it can't be ticked
+  // by hand (0080), so it links to the Safety Desk instead of a box.
+  const list = items.map(t => t.ticksItself ? `
+    <div class="task">
+      <span class="sd-tick${t.done ? " on" : ""}" aria-label="${t.done ? "Done" : "Not done yet"}">${t.done ? "✓" : ""}</span>
+      <span>
+        <b class="${t.done ? "done" : ""}">${esc(t.title)}</b>
+        ${t.detail ? `<br><span class="note">${esc(t.detail)}</span>` : ""}
+        <br><button type="button" class="linkish" data-view="safetydesk">${t.done
+          ? "Done: you passed this month's Safety Brief" : "Ticks itself when you pass this month's Safety Brief. Open the Safety Desk"} &rsaquo;</button>
+      </span>
+    </div>` : `
     <div class="task">
       <input type="checkbox" data-task="${esc(t.id)}" data-kind="${t.kind}"
              data-cadence="${t.cadence}" ${t.done ? "checked" : ""}>
@@ -6599,6 +6739,533 @@ $("view").addEventListener("click", (event) => {
   const e = companyEvents.find(x => x.id === button.dataset.ics);
   if (e) downloadICS(e);
 });
+
+// ---- the Safety Desk (migration 0080) ---------------------------------------------
+//
+// A Safety Brief a month: an OSHA document to read and multiple-choice questions
+// about it, for everyone. Opening a brief starts its reading time on the server,
+// and the questions open when it's up; the server marks the answers, and keeps
+// the right ones out of reach until someone has passed. Tries are unlimited.
+// Results: your own, your location's for an admin, everyone's for an owner —
+// the database's rule. Owners write the briefs on the admin page.
+
+let safetyBriefs = [], safetyResults = [], safetyKeys = [], safetyError = null;
+let openBriefId = null, safetyReportBrief = null, safetyReportFilter = "notpassed";
+let briefReadyAt = null, briefTimer = null, briefPicks = [], briefNotice = "", briefStartProblem = "", briefFor = null;
+let sdDraft = null, sdPdfFile = null;
+
+const SAFETY_PAGES = ["safetydesk", "safetybrief", "safetyreport"];
+
+async function loadSafetyDesk() {
+  const [b, r, k] = await Promise.all([
+    db.from("safety_briefs").select("*").order("month", { ascending: false }),
+    db.from("safety_brief_results").select("*"),
+    db.from("safety_brief_keys").select("*")       // owners only; nothing for anyone else
+  ]);
+  safetyError = b.error ? b.error.message : null;
+  safetyBriefs = b.data || [];
+  safetyResults = r.data || [];
+  safetyKeys = k.data || [];
+}
+
+// This month as the database counts it: Mountain time.
+function briefThisMonth() {
+  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: "America/Boise",
+    year: "numeric", month: "2-digit" }).formatToParts(new Date()).map(p => [p.type, p.value]));
+  return `${parts.year}-${parts.month}-01`;
+}
+const deskBriefs = () => safetyBriefs.filter(b => b.is_published && b.month <= briefThisMonth());
+const briefMonthTitle = (b) => dateOnly(b.month).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+const briefResult = (b, person) => safetyResults.find(r => r.brief_id === b.id && r.person_id === person);
+const briefNeeded = (b) => Math.min(b.pass_mark || 4, (b.questions || []).length);
+const briefParagraphs = (b) => (b.body || "").split(/\n\s*\n/).map(s => s.trim()).filter(Boolean);
+const briefDay = (iso) => new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+function briefStatusTag(r) {
+  if (r && r.passed_at) return `<span class="cab-tag sd-ok">Passed</span>`;
+  if (r && r.tries) return `<span class="cab-tag sd-warn">Not passed yet</span>`;
+  if (r) return `<span class="cab-tag sd-warn">Started</span>`;
+  return `<span class="cab-tag sd-due">Not taken</span>`;
+}
+
+function safetyDeskView() {
+  const head = hero("Safety Desk",
+    "This month's Safety Brief, and every one before it. Everyone takes the brief each month: read it, then answer its questions.");
+  if (safetyError) {
+    return head + `<div class="sd" style="${lit("ember")}"><div class="sd-card sd-note"><b>The Safety Desk couldn't be loaded</b>
+      <p>${/does not exist|relation/i.test(safetyError) ? "Migration 0080 hasn't been run yet." : "Try again in a minute."}</p></div></div>`;
+  }
+  const list = deskBriefs(), month = briefThisMonth();
+  const current = list.find(b => b.month === month);
+  const past = list.filter(b => b.month < month);
+  const passedPast = past.filter(b => (briefResult(b, me.id) || {}).passed_at).length;
+  const monthName = dateOnly(month).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+
+  const currentCard = current ? (() => {
+    const r = briefResult(current, me.id);
+    const n = (current.questions || []).length;
+    return `<button type="button" class="cab-card sd-current${r && r.passed_at ? "" : " due"}" data-view="safetybrief" data-brief="${esc(current.id)}">
+      <span class="sd-tags">${briefStatusTag(r)}<span class="cab-tag sd-quiet">${n} questions</span></span>
+      <b>${esc(current.title)}</b>
+      ${current.summary ? `<span class="sd-sum">${esc(current.summary)}</span>` : ""}
+      <span class="sd-meta${r && r.passed_at ? " ok" : ""}">${r && r.passed_at
+        ? `Passed ${esc(briefDay(r.passed_at))} · ${r.score} of ${n} right`
+        : `Read it, then answer ${n} questions. They open ${current.read_minutes} minute${current.read_minutes === 1 ? "" : "s"} after you start.`}</span>
+      <span class="sd-go">${r && r.passed_at ? "Look back over it" : r ? "Carry on" : "Start this month's brief"} &rsaquo;</span>
+    </button>`;
+  })() : `<div class="sd-card sd-note"><b>This month's brief isn't up yet</b>
+      <p>The training department puts up a new Safety Brief each month. Check back soon.</p></div>`;
+
+  const report = isAdmin() && list.length ? (() => {
+    const b = current || list[0];
+    const passed = safetyResults.filter(r => r.brief_id === b.id && r.passed_at).length;
+    return `<div class="group-title">Who's taken it</div>
+      <button type="button" class="cab-card sd-row" data-view="safetyreport">
+        <span class="sd-main"><b>Safety Brief report</b>
+          <span class="sd-sum">${esc(briefMonthTitle(b))}: ${passed} passed so far. See who has and hasn't, ${isOwner() ? "everywhere" : "at your location"}.</span></span>
+        <span class="sd-chev">&rsaquo;</span></button>`;
+  })() : "";
+
+  return head + `<div class="sd" style="${lit("ember")}">
+    <div class="group-title">This month<span class="sd-count">${esc(monthName)}</span></div>
+    ${currentCard}
+    ${report}
+    ${past.length ? `<div class="group-title">Your record<span class="sd-count">${passedPast} of ${past.length} passed</span></div>
+      <div class="sd-list">${past.map(b => {
+        const r = briefResult(b, me.id), d = dateOnly(b.month);
+        return `<button type="button" class="cab-card sd-row" data-view="safetybrief" data-brief="${esc(b.id)}">
+          <span class="sd-month"><small>${esc(d.toLocaleDateString("en-US", { month: "short" }))}</small><b>${d.getFullYear()}</b></span>
+          <span class="sd-main"><b>${esc(b.title)}</b>${briefStatusTag(r)}</span>
+          <span class="sd-chev">&rsaquo;</span></button>`;
+      }).join("")}</div>` : ""}
+    <p class="sd-foot">Tries are unlimited: anyone who doesn't pass reads it again and has another go.</p>
+  </div>`;
+}
+
+function safetyBriefView() {
+  const b = safetyBriefs.find(x => x.id === openBriefId);
+  if (!b) {
+    return hero("Safety Brief") + `<div class="sd" style="${lit("ember")}"><div class="sd-card sd-note"><b>This brief isn't available</b>
+      <p><button type="button" class="ghost" data-view="safetydesk">Back to the Safety Desk</button></p></div></div>`;
+  }
+  if (briefFor !== b.id) { briefFor = b.id; briefPicks = []; briefNotice = ""; briefStartProblem = ""; briefReadyAt = null; }
+  const r = briefResult(b, me.id), n = (b.questions || []).length;
+  const passed = r && r.passed_at;
+  setTimeout(() => beginBrief(b));
+
+  return hero(b.title, `Safety Brief · ${briefMonthTitle(b)}${b.summary ? ` · ${b.summary}` : ""}`)
+    + `<div class="sd sd-brief" style="${lit("ember")}">
+      ${passed ? `<div class="sd-card sd-passed">${icon("checkCircle", 26)}<span><b>Passed</b>
+        <span>${esc(new Date(r.passed_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }))} · ${r.score} of ${n} right${r.tries > 1 ? ` · ${r.tries} tries` : ""}</span></span></div>` : ""}
+      ${b.document_path || briefParagraphs(b).length ? `<div class="group-title">Read</div>` : ""}
+      ${b.document_path ? `<div class="sd-card sd-doc">
+          <div class="sd-doc-head">${icon("doc", 20)}<b>${esc(b.document_name || "The document")}</b>
+            <a id="sdPdfLink" class="sd-go" target="_blank" rel="noopener" href="#" aria-disabled="true">Open it in a new tab &nearr;</a></div>
+          <iframe id="sdPdf" title="${esc(b.document_name || "Safety Brief document")}"></iframe>
+        </div>` : ""}
+      ${briefParagraphs(b).length ? `<div class="sd-card sd-body">${briefParagraphs(b).map(p =>
+          `<p>${esc(p).replace(/\n/g, "<br>")}</p>`).join("")}</div>` : ""}
+      ${passed && Array.isArray(r.picks) && Array.isArray(r.key)
+        ? `<div class="group-title">Your answers<span class="sd-count">${r.score} of ${n}</span></div>
+           ${(b.questions || []).map((q, i) => `<div class="sd-card sd-review ${r.picks[i] === r.key[i] ? "right" : "wrong"}">
+             <b>${i + 1}. ${esc(q.q)}</b>
+             <ul>${(q.choices || []).map((c, j) => `<li class="${j === r.key[i] ? "key" : j === r.picks[i] ? "miss" : ""}">
+               <i>${j === r.key[i] ? "✓" : j === r.picks[i] ? "✕" : ""}</i>${esc(c)}${j === r.picks[i] ? ` <span class="cab-tag">Yours</span>` : ""}</li>`).join("")}</ul>
+           </div>`).join("")}`
+        : passed ? "" : `<div class="group-title">Questions<span class="sd-count">${n}</span></div>
+           <div class="sd-card sd-questions" id="sdQuestions"></div>`}
+    </div>`;
+}
+
+// After the page is drawn: the PDF's link, and the reading time.
+async function beginBrief(b) {
+  if (b.document_path && $("sdPdf")) {
+    const { data } = await db.storage.from("safety-briefs").createSignedUrl(b.document_path, 3600);
+    if (data && data.signedUrl && $("sdPdf")) {
+      $("sdPdf").src = data.signedUrl;
+      $("sdPdfLink").href = data.signedUrl;
+      $("sdPdfLink").removeAttribute("aria-disabled");
+    }
+  }
+  const r = briefResult(b, me.id);
+  if (r && r.passed_at) return;
+  renderBriefQuestions();
+  if (briefReadyAt === null) {
+    const { data, error } = await db.rpc("start_safety_brief", { brief: b.id });
+    if (error) {
+      briefStartProblem = error.message.includes("available") ? "This brief isn't available."
+        : "The questions couldn't be opened. Reload the page and try again.";
+    } else {
+      briefReadyAt = Date.now() + (data.seconds_left || 0) * 1000;
+      if (!briefResult(b, me.id)) await loadSafetyDesk();
+    }
+  }
+  renderBriefQuestions();
+  clearInterval(briefTimer);
+  briefTimer = setInterval(briefTick, 1000);
+}
+
+function briefTick() {
+  const left = briefReadyAt === null ? 0 : Math.max(0, Math.ceil((briefReadyAt - Date.now()) / 1000));
+  const clock = $("sdClock");
+  if (!$("sdQuestions")) { clearInterval(briefTimer); briefTimer = null; return; }
+  if (left > 0 && clock) {
+    clock.textContent = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}`;
+    const b = safetyBriefs.find(x => x.id === openBriefId);
+    const total = Math.max(1, ((b && b.read_minutes) || 3) * 60);
+    $("sdRing").style.setProperty("--p", `${(1 - left / total) * 100}%`);
+  } else if (left === 0 && clock) {
+    clearInterval(briefTimer); briefTimer = null;
+    renderBriefQuestions();
+  }
+}
+
+function renderBriefQuestions() {
+  const box = $("sdQuestions");
+  const b = safetyBriefs.find(x => x.id === openBriefId);
+  if (!box || !b) return;
+  const n = (b.questions || []).length;
+  const left = briefReadyAt === null ? null : Math.max(0, Math.ceil((briefReadyAt - Date.now()) / 1000));
+  const notice = briefNotice ? `<p class="sd-notice">${esc(briefNotice)}</p>` : "";
+  if (briefStartProblem) { box.innerHTML = notice + `<p class="sd-sum">${esc(briefStartProblem)}</p>`; return; }
+  if (left === null) { box.innerHTML = `<p class="sd-sum">Opening…</p>`; return; }
+  if (left > 0) {
+    box.innerHTML = notice + `<div class="sd-wait"><span class="sd-ring" id="sdRing"><b id="sdClock"></b></span>
+      <span><b>The questions open soon</b><span class="sd-sum">Take the time to read it through. The questions open when the timer
+        runs out.</span></span></div>`;
+    return briefTick();
+  }
+  const all = briefPicks.filter(x => x !== undefined && x !== null).length === n;
+  box.innerHTML = notice + `<p class="sd-sum">${n} multiple-choice questions. Get ${briefNeeded(b)} right to pass.</p>
+    <form id="sdForm">${(b.questions || []).map((q, i) => `<fieldset class="sd-q">
+      <legend><small>Question ${i + 1} of ${n}</small>${esc(q.q)}</legend>
+      ${(q.choices || []).map((c, j) => `<label class="sd-choice${briefPicks[i] === j ? " on" : ""}">
+        <input type="radio" name="sdq${i}" value="${j}" data-sd-q="${i}"${briefPicks[i] === j ? " checked" : ""}>
+        <span class="sd-letter">${"ABCDEF"[j]}</span><span>${esc(c)}</span></label>`).join("")}
+    </fieldset>`).join("")}
+      <button type="submit" class="sd-submit" id="sdSubmit"${all ? "" : " disabled"}>${all ? "Hand in my answers" : `Answer all ${n} to hand in`}</button>
+      <span class="msg"></span>
+    </form>`;
+}
+
+$("view").addEventListener("change", (event) => {
+  const radio = event.target.closest("[data-sd-q]");
+  if (!radio) return;
+  const b = safetyBriefs.find(x => x.id === openBriefId);
+  briefPicks[Number(radio.dataset.sdQ)] = Number(radio.value);
+  radio.closest("fieldset").querySelectorAll(".sd-choice").forEach(l =>
+    l.classList.toggle("on", l.querySelector("input").checked));
+  const n = (b.questions || []).length, all = briefPicks.filter(x => x !== undefined && x !== null).length === n;
+  const button = $("sdSubmit");
+  button.disabled = !all;
+  button.textContent = all ? "Hand in my answers" : `Answer all ${n} to hand in`;
+});
+
+$("view").addEventListener("submit", async (event) => {
+  if (event.target.id !== "sdForm") return;
+  event.preventDefault();
+  const b = safetyBriefs.find(x => x.id === openBriefId);
+  const button = $("sdSubmit");
+  button.disabled = true;
+  button.textContent = "Marking…";
+  const { data, error } = await db.rpc("submit_safety_brief", { brief: b.id, picks: briefPicks.slice(0, (b.questions || []).length) });
+  if (error) {
+    briefNotice = /every question/i.test(error.message) ? "Answer every question." : error.message;
+    return renderBriefQuestions();
+  }
+  if (data.too_soon) {
+    briefReadyAt = Date.now() + (data.seconds_left || 60) * 1000;
+    briefNotice = "The questions aren't open yet. Keep reading.";
+    renderBriefQuestions();
+    briefTimer = setInterval(briefTick, 1000);
+    return;
+  }
+  await loadSafetyDesk();
+  if (data.passed) {
+    // The database ticked the reminder that ticks itself; show it ticked here too.
+    sharedTasks.filter(t => t.ticked_by === "safety_brief").forEach(t => {
+      if (!completions.some(c => c.task_id === t.id && c.week_start === b.month)) completions.push({ task_id: t.id, week_start: b.month });
+    });
+    briefNotice = "";
+    return showView("safetybrief");
+  }
+  briefNotice = `${data.score} of ${data.total} right — you need ${data.needed}. Read it through again, then have another go.`;
+  renderBriefQuestions();
+  $("sdQuestions").scrollIntoView({ behavior: "smooth", block: "start" });
+});
+
+function safetyReportView() {
+  const list = deskBriefs();
+  const head = hero("Safety Brief Report", isOwner() ? "Who has and hasn't taken each month's Safety Brief, everywhere."
+    : "Who has and hasn't taken each month's Safety Brief at your location.");
+  if (!list.length) return head + `<div class="sd" style="${lit("ember")}"><div class="sd-card sd-note"><b>No Safety Briefs yet</b></div></div>`;
+  const b = list.find(x => x.id === safetyReportBrief) || list.find(x => x.month === briefThisMonth()) || list[0];
+  const n = (b.questions || []).length;
+  // Everyone with an account by the end of that month.
+  const end = new Date(dateOnly(b.month)); end.setMonth(end.getMonth() + 1);
+  const expected = people.filter(p => !p.deactivated_at && (!p.created_at || new Date(p.created_at) < end));
+  const res = (p) => briefResult(b, p.id);
+  const passed = expected.filter(p => (res(p) || {}).passed_at);
+  const filters = [["notpassed", "Not passed", expected.length - passed.length], ["passed", "Passed", passed.length],
+    ["everyone", "Everyone", expected.length]];
+  const shown = expected.filter(p => safetyReportFilter === "everyone"
+    || (safetyReportFilter === "passed") === !!(res(p) || {}).passed_at);
+  const shops = {};
+  shown.forEach(p => { const s = locations[p.location_id] || "No shop set"; (shops[s] = shops[s] || []).push(p); });
+  const share = expected.length ? passed.length / expected.length : 0;
+  const line = (r) => !r ? "Not started"
+    : r.passed_at ? `Passed ${briefDay(r.passed_at)} · ${r.score} of ${n}`
+    : r.tries ? `Not passed yet · ${r.tries} ${r.tries === 1 ? "try" : "tries"}, last ${r.last_score} of ${n}`
+    : `Started ${briefDay(r.started_at)}, not answered`;
+
+  return head + `<div class="sd" style="${lit("ember")}">
+    <div class="sd-card sd-summary">
+      <label for="sdReportMonth" class="sd-label">Month</label>
+      <select id="sdReportMonth">${list.map(x => `<option value="${esc(x.id)}"${x.id === b.id ? " selected" : ""}>${esc(briefMonthTitle(x))} · ${esc(x.title)}</option>`).join("")}</select>
+      <div class="sd-big"><b>${passed.length}</b><span>of ${expected.length} passed · ${Math.round(share * 100)}%</span></div>
+      <div class="sd-meter"><i style="width:${share * 100}%"></i></div>
+    </div>
+    <div class="cab-pills">${filters.map(([id, label, count]) => `<button type="button" class="cab-pill${safetyReportFilter === id ? " on" : ""}"
+      data-sd-filter="${id}">${label}<span>${count}</span></button>`).join("")}</div>
+    ${Object.keys(shops).sort().map(shop => `<div class="group-title">${esc(shop)}<span class="sd-count">${shops[shop].length}</span></div>
+      <div class="sd-card sd-people">${shops[shop].sort((x, y) => (x.full_name || "").localeCompare(y.full_name || "")).map(p => {
+        const r = res(p);
+        return `<div class="sd-person"><i class="${r && r.passed_at ? "ok" : r ? "warn" : "due"}"></i>
+          <span><b>${esc(p.full_name || p.email || "No name yet")}</b><small>${esc(line(r))}</small></span></div>`;
+      }).join("")}</div>`).join("") || `<p class="sd-foot">${safetyReportFilter === "notpassed" ? "Everyone has passed it." : "Nobody to show."}</p>`}
+  </div>`;
+}
+
+$("view").addEventListener("click", (event) => {
+  const pill = event.target.closest("[data-sd-filter]");
+  if (pill) { safetyReportFilter = pill.dataset.sdFilter; return showView("safetyreport"); }
+});
+$("view").addEventListener("change", (event) => {
+  if (event.target.id === "sdReportMonth") { safetyReportBrief = event.target.value; showView("safetyreport"); }
+});
+
+// ---- admin: writing the briefs -----------------------------------------------------
+
+function sdBlankDraft() {
+  const next = new Date(); next.setDate(1); next.setMonth(next.getMonth() + 1);
+  return { id: null, month: `${next.getFullYear()}-${pad2(next.getMonth() + 1)}`, title: "", summary: "", body: "",
+    document_path: null, document_name: null, read_minutes: 3, pass_mark: 4, is_published: false,
+    questions: Array.from({ length: 5 }, () => ({ q: "", choices: ["", "", "", ""] })), answers: [null, null, null, null, null] };
+}
+
+function renderSafetyAdmin() {
+  const box = $("sdAdminList");
+  if (!box) return;
+  if (safetyError) {
+    box.innerHTML = `<h2>Safety Desk</h2><p class="error">Couldn't load the Safety Briefs (${esc(safetyError)}). If that says a
+      table doesn't exist, run migration 0080_safety_desk.sql, then reload this page.</p>`;
+    return;
+  }
+  const month = briefThisMonth();
+  const monthly = allSharedTasks.filter(t => (t.cadence || "weekly") === "monthly");
+  const linked = allSharedTasks.find(t => t.ticked_by === "safety_brief");
+  box.innerHTML = `<h2>Safety Desk</h2>
+    <p class="note">A Safety Brief a month: an OSHA document to read and multiple-choice questions about it. Everyone sees a
+      published brief from the 1st of its month, so next month's can be written ahead. The questions open a few minutes after
+      someone starts reading, and tries are unlimited.</p>
+    <div class="row"><button data-sd-act="new">New Safety Brief</button><span class="msg"></span></div>
+    <div class="sd-admin-list">${safetyBriefs.map(b => {
+      const passed = safetyResults.filter(r => r.brief_id === b.id && r.passed_at).length;
+      const state = !b.is_published ? `<span class="badge b-none">Draft — nobody sees it</span>`
+        : b.month > month ? `<span class="badge b-warn">Shows from ${esc(dateOnly(b.month).toLocaleDateString("en-US", { month: "long", day: "numeric" }))}</span>`
+        : `<span class="badge b-ok">Showing</span>`;
+      return `<div class="role sd-admin-row"><div><b>${esc(briefMonthTitle(b))}</b> · ${esc(b.title)} ${state}
+          <div class="note">${(b.questions || []).length} questions · pass ${briefNeeded(b)} · questions open after ${b.read_minutes} min
+            ${b.document_name ? ` · ${esc(b.document_name)}` : ""} · ${passed} passed</div></div>
+        <button class="pdf" data-sd-edit="${esc(b.id)}">Edit</button></div>`;
+    }).join("") || `<p class="note">No Safety Briefs yet.</p>`}</div>
+    <div class="sd-reminder">
+      <label for="sdReminder"><b>The reminder that ticks itself</b></label>
+      <p class="note" style="margin:2px 0 8px">A monthly shared reminder that's ticked for each person when they pass that month's
+        brief. Nobody can tick it by hand; tapping it opens the Safety Desk.</p>
+      <div class="row"><select id="sdReminder" style="max-width:360px;margin:0"><option value="">None</option>${monthly.map(t =>
+        `<option value="${esc(t.id)}"${linked && linked.id === t.id ? " selected" : ""}>${esc(t.title)}${t.is_active === false ? " (switched off)" : ""}</option>`).join("")}</select>
+        <button class="ghost" data-sd-act="reminder">Save</button><span class="msg"></span></div>
+    </div>`;
+  renderSdEditor();
+}
+
+function renderSdEditor() {
+  const box = $("sdEditor");
+  if (!box) return;
+  box.classList.toggle("hidden", !sdDraft);
+  if (!sdDraft) { box.innerHTML = ""; return; }
+  const d = sdDraft;
+  box.innerHTML = `<h2>${d.id ? "Edit the Safety Brief" : "New Safety Brief"}</h2>
+    <div class="fields">
+      <div><label for="sdMonth">Month</label><input id="sdMonth" type="month" data-sdf="month" value="${esc(d.month)}"></div>
+      <div><label for="sdPublished">Showing</label><select id="sdPublished" data-sdf="is_published">
+        <option value="no"${d.is_published ? "" : " selected"}>No — keep as a draft</option>
+        <option value="yes"${d.is_published ? " selected" : ""}>Yes, from the 1st of its month</option></select></div>
+      <div class="wide"><label for="sdTitle">Title</label><input id="sdTitle" type="text" maxlength="160" data-sdf="title"
+        value="${esc(d.title)}" placeholder="Hearing Conservation in the Shop"></div>
+      <div class="wide"><label for="sdSummary">One line about it (optional)</label><input id="sdSummary" type="text" maxlength="400"
+        data-sdf="summary" value="${esc(d.summary || "")}"></div>
+      <div class="wide"><label>The OSHA document (PDF)</label>
+        <div class="row" style="margin:0">${d.document_name ? `<span>${esc(d.document_name)}</span>
+            <button type="button" class="pdf" data-sd-act="remove-pdf">Remove</button>` : `<span class="note">None yet</span>`}
+          <label class="pdf sd-file">${d.document_name ? "Replace" : "Choose a PDF"}<input type="file" accept="application/pdf" id="sdPdfFile" class="hidden"></label>
+          ${sdPdfFile ? `<span class="note">New: ${esc(sdPdfFile.name)} — saved with the brief</span>` : ""}</div></div>
+      <div class="wide"><label for="sdBody">Text to read (optional, with or instead of the PDF)</label>
+        <textarea id="sdBody" rows="6" data-sdf="body" placeholder="Leave a blank line between paragraphs.">${esc(d.body || "")}</textarea></div>
+      <div><label for="sdRead">Questions open after (minutes)</label><input id="sdRead" type="number" min="0" max="30" data-sdf="read_minutes" value="${d.read_minutes}"></div>
+      <div><label for="sdPass">Right answers to pass</label><input id="sdPass" type="number" min="1" max="10" data-sdf="pass_mark" value="${d.pass_mark}"></div>
+    </div>
+    <h3 style="margin:18px 0 6px">Questions</h3>
+    <p class="note" style="margin:0 0 10px">Multiple choice, four answers each. Pick the right one with its circle.</p>
+    ${d.questions.map((q, i) => `<div class="role sd-q-edit">
+      <div class="row" style="margin:0 0 6px"><b>Question ${i + 1}</b>${d.questions.length > 1
+        ? `<button type="button" class="pdf" style="margin-left:auto" data-sd-remove-q="${i}">Remove</button>` : ""}</div>
+      <input type="text" maxlength="400" data-sdq="${i}" value="${esc(q.q)}" placeholder="The question">
+      ${q.choices.map((c, j) => `<div class="sd-choice-edit">
+        <input type="radio" name="sdAnswer${i}" data-sda="${i}" value="${j}" aria-label="Answer ${"ABCD"[j]} is right"${d.answers[i] === j ? " checked" : ""}>
+        <span>${"ABCD"[j]}</span>
+        <input type="text" maxlength="300" data-sdc="${i}:${j}" value="${esc(c)}" placeholder="Answer ${"ABCD"[j]}"></div>`).join("")}
+    </div>`).join("")}
+    ${d.questions.length < 10 ? `<button type="button" class="ghost" data-sd-act="add-q">Add a question</button>` : ""}
+    <div class="row" style="margin-top:16px"><button data-sd-act="save">${d.id ? "Save changes" : "Save the brief"}</button>
+      <button class="ghost" data-sd-act="cancel">Cancel</button>
+      ${d.id ? `<button class="ghost" data-sd-act="delete" style="margin-left:auto">Delete</button>` : ""}
+      <span class="msg"></span></div>`;
+}
+
+$("admin").addEventListener("input", (event) => {
+  if (!sdDraft || !$("sdEditor") || !$("sdEditor").contains(event.target)) return;
+  const t = event.target;
+  if (t.dataset.sdf) {
+    const f = t.dataset.sdf;
+    sdDraft[f] = f === "read_minutes" || f === "pass_mark" ? Number(t.value) : f === "is_published" ? t.value === "yes" : t.value;
+  } else if (t.dataset.sdq !== undefined) {
+    sdDraft.questions[Number(t.dataset.sdq)].q = t.value;
+  } else if (t.dataset.sdc) {
+    const [i, j] = t.dataset.sdc.split(":").map(Number);
+    sdDraft.questions[i].choices[j] = t.value;
+  }
+});
+
+$("admin").addEventListener("change", (event) => {
+  if (!sdDraft || !$("sdEditor") || !$("sdEditor").contains(event.target)) return;
+  const t = event.target;
+  if (t.dataset.sda !== undefined) sdDraft.answers[Number(t.dataset.sda)] = Number(t.value);
+  if (t.dataset.sdf === "is_published") sdDraft.is_published = t.value === "yes";
+  if (t.id === "sdPdfFile" && t.files[0]) {
+    if (t.files[0].type !== "application/pdf") return speak($("sdEditor"), "That isn't a PDF.", true);
+    sdPdfFile = t.files[0];
+    renderSdEditor();
+  }
+});
+
+$("admin").addEventListener("click", async (event) => {
+  const edit = event.target.closest("[data-sd-edit]");
+  if (edit) {
+    const b = safetyBriefs.find(x => x.id === edit.dataset.sdEdit);
+    const key = (safetyKeys.find(k => k.brief_id === b.id) || {}).answers || [];
+    sdPdfFile = null;
+    sdDraft = { ...JSON.parse(JSON.stringify(b)), month: b.month.slice(0, 7),
+      questions: (b.questions || []).map(q => ({ q: q.q || "", choices: [0, 1, 2, 3].map(j => (q.choices || [])[j] || "") })),
+      answers: (b.questions || []).map((_, i) => key[i] ?? null) };
+    renderSdEditor();
+    return $("sdEditor").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  const removeQ = event.target.closest("[data-sd-remove-q]");
+  if (removeQ && sdDraft) {
+    const i = Number(removeQ.dataset.sdRemoveQ);
+    sdDraft.questions.splice(i, 1); sdDraft.answers.splice(i, 1);
+    return renderSdEditor();
+  }
+  const button = event.target.closest("[data-sd-act]");
+  if (!button) return;
+  const act = button.dataset.sdAct;
+  if (act === "new") {
+    sdDraft = sdBlankDraft(); sdPdfFile = null; renderSdEditor();
+    return $("sdEditor").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  if (act === "cancel") { sdDraft = null; sdPdfFile = null; return renderSdEditor(); }
+  if (act === "add-q") { sdDraft.questions.push({ q: "", choices: ["", "", "", ""] }); sdDraft.answers.push(null); return renderSdEditor(); }
+  if (act === "remove-pdf") { sdDraft.document_path = null; sdDraft.document_name = null; sdPdfFile = null; return renderSdEditor(); }
+  if (act === "reminder") return saveSdReminder(button);
+  if (act === "delete") return deleteSdBrief();
+  if (act === "save") return saveSdBrief(button);
+});
+
+async function saveSdReminder(button) {
+  const card = button.closest(".sd-reminder");
+  const chosen = $("sdReminder").value || null;
+  button.disabled = true;
+  const off = await db.from("weekly_tasks").update({ ticked_by: null }).eq("ticked_by", "safety_brief").select("id");
+  const on = !off.error && chosen ? await db.from("weekly_tasks").update({ ticked_by: "safety_brief" }).eq("id", chosen).select("id") : { data: [] };
+  button.disabled = false;
+  const error = off.error || on.error;
+  if (error) return speak(card, error.message, true);
+  if (chosen && !(on.data || []).length) return speak(card, "Not saved — only an owner can change reminders.", true);
+  allSharedTasks.forEach(t => { t.ticked_by = t.id === chosen ? "safety_brief" : null; });
+  sharedTasks.forEach(t => { t.ticked_by = t.id === chosen ? "safety_brief" : null; });
+  speak(card, chosen ? "Saved. It now ticks itself when someone passes that month's brief." : "Saved. No reminder ticks itself.", false);
+}
+
+async function saveSdBrief(button) {
+  const box = $("sdEditor"), d = sdDraft;
+  const problem = !/^\d{4}-\d{2}$/.test(d.month || "") ? "Pick the month it's for."
+    : !d.title.trim() ? "The brief needs a title."
+    : !d.questions.length ? "Add at least one question."
+    : d.questions.some(q => !q.q.trim()) ? "Every question needs its wording."
+    : d.questions.some(q => q.choices.some(c => !c.trim())) ? "Every question needs all four answers."
+    : d.answers.some(a => a === null || a === undefined) ? "Pick the right answer for every question."
+    : d.is_published && !d.document_path && !sdPdfFile && !(d.body || "").trim() ? "Add the PDF or some text to read before it shows."
+    : !(d.read_minutes >= 0 && d.read_minutes <= 30) ? "The reading time has to be between 0 and 30 minutes."
+    : !(d.pass_mark >= 1 && d.pass_mark <= 10) ? "Right answers to pass has to be between 1 and 10."
+    : null;
+  if (problem) return speak(box, problem, true);
+  button.disabled = true;
+  speak(box, "Saving…", false);
+
+  let path = d.document_path, name = d.document_name;
+  const before = d.id ? (safetyBriefs.find(b => b.id === d.id) || {}).document_path : null;
+  if (sdPdfFile) {
+    path = `${crypto.randomUUID()}.pdf`;
+    name = sdPdfFile.name;
+    const up = await db.storage.from("safety-briefs").upload(path, sdPdfFile, { contentType: "application/pdf" });
+    if (up.error) { button.disabled = false; return speak(box, `The PDF didn't upload: ${up.error.message}`, true); }
+  }
+  const row = { month: `${d.month}-01`, title: d.title.trim(), summary: (d.summary || "").trim() || null,
+    body: (d.body || "").trim() || null, document_path: path || null, document_name: path ? name : null,
+    read_minutes: d.read_minutes, pass_mark: d.pass_mark, is_published: !!d.is_published,
+    questions: d.questions.map(q => ({ q: q.q.trim(), choices: q.choices.map(c => c.trim()) })) };
+  const saved = d.id ? await db.from("safety_briefs").update(row).eq("id", d.id).select("id")
+    : await db.from("safety_briefs").insert(row).select("id");
+  if (saved.error || !(saved.data || []).length) {
+    button.disabled = false;
+    const msg = saved.error && /duplicate|unique/i.test(saved.error.message)
+      ? `There's already a Safety Brief for ${dateOnly(row.month).toLocaleDateString("en-US", { month: "long", year: "numeric" })}.`
+      : saved.error ? saved.error.message : "Not saved — only an owner can write Safety Briefs.";
+    return speak(box, msg, true);
+  }
+  const id = saved.data[0].id;
+  const key = await db.from("safety_brief_keys").upsert({ brief_id: id, answers: d.answers }, { onConflict: "brief_id" });
+  if (key.error) { button.disabled = false; return speak(box, `The brief saved, but its answers didn't: ${key.error.message}`, true); }
+  if (before && before !== path) await db.storage.from("safety-briefs").remove([before]);
+  sdDraft = null; sdPdfFile = null;
+  await loadSafetyDesk();
+  renderSafetyAdmin();
+  speak($("sdAdminList"), "Saved.", false);
+}
+
+async function deleteSdBrief() {
+  const d = sdDraft, b = safetyBriefs.find(x => x.id === d.id);
+  const passed = safetyResults.filter(r => r.brief_id === d.id && r.passed_at).length;
+  if (!confirm(`Delete the ${briefMonthTitle(b)} Safety Brief?${passed ? ` ${passed} people's results for it go too.` : ""}`)) return;
+  const { data, error } = await db.from("safety_briefs").delete().eq("id", d.id).select("id");
+  if (error || !(data || []).length) return speak($("sdEditor"), error ? error.message : "Not deleted — only an owner can.", true);
+  if (b.document_path) await db.storage.from("safety-briefs").remove([b.document_path]);
+  sdDraft = null;
+  await loadSafetyDesk();
+  renderSafetyAdmin();
+}
 
 // ---- admin: the Mock Schedule (owners, migration 0078) ----------------------------
 //
@@ -9104,6 +9771,8 @@ const pageTitle = (id) => (FEATURES.find(f => f.id === id) || COMPANY_PAGES.find
        approvals: { title: "Driving Tests to Approve" },
        requests: { title: "Support Requests" },
        event: { title: (companyEvents.find(e => e.id === openEventId) || {}).title || "Event" },
+       safetydesk: { title: "Safety Desk" }, safetyreport: { title: "Safety Brief Report" },
+       safetybrief: { title: (safetyBriefs.find(b => b.id === openBriefId) || {}).title || "Safety Brief" },
        request: { title: "Request" },
        newrequest: { title: "New Request" },
        tools: { title: "Special Tools" },
@@ -15279,7 +15948,7 @@ document.querySelectorAll(".tabs button[data-tab]").forEach(btn => {
     document.querySelectorAll(".tabs button[data-tab]").forEach(b =>
       b.classList.toggle("active", b === btn));
     ["certs", "plans", "people", "support", "payroll", "tools",
-      "directory", "logins", "reminders", "events", "org", "openseat", "inspections", "courses", "articles", "skillsadmin", "sds", "news", "trainingstatus", "handbook", "agco", "mock"].forEach(name =>
+      "directory", "logins", "reminders", "events", "org", "openseat", "inspections", "courses", "articles", "skillsadmin", "sds", "news", "trainingstatus", "handbook", "agco", "mock", "safetydesk"].forEach(name =>
       $("tab-" + name).classList.toggle("hidden", name !== btn.dataset.tab));
     $("adminTitle").textContent = btn.textContent.trim();
     document.body.classList.remove("nav-open");
