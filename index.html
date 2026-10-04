@@ -5148,8 +5148,13 @@ function remindersView() {
       <span>
         <b class="${t.done ? "done" : ""}">${esc(t.title)}</b>
         ${t.detail ? `<br><span class="note">${esc(t.detail)}</span>` : ""}
-        <br><button type="button" class="linkish" data-view="safetydesk">${t.done
-          ? "Done: you passed this month's Safety Brief" : "Ticks itself when you pass this month's Safety Brief. Open the Safety Desk"} &rsaquo;</button>
+        <br>${(() => {
+          // Straight to this month's brief, or the Safety Desk if it isn't up yet.
+          const current = deskBriefs().find(x => x.month === briefThisMonth());
+          return `<button type="button" class="linkish" ${current ? `data-view="safetybrief" data-brief="${esc(current.id)}"`
+            : `data-view="safetydesk"`}>${t.done ? "Done: you passed this month's Safety Brief"
+            : current ? "Open this month's Safety Brief. It ticks itself when you pass" : "Open the Safety Desk. It ticks itself when you pass this month's brief"} &rsaquo;</button>`;
+        })()}
       </span>
     </div>` : `
     <div class="task">
