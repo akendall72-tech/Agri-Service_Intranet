@@ -2159,7 +2159,6 @@
       <button data-tab="courses"><i data-icon="training"></i><span>Course Catalog</span></button>
       <button data-tab="articles"><i data-icon="doc"></i><span>Training Articles</span></button>
       <button data-tab="skillsadmin"><i data-icon="training"></i><span>Skills</span></button>
-      <button data-tab="sds"><i data-icon="safety"></i><span>Safety Data Sheets</span></button>
       <button data-tab="handbook"><i data-icon="briefcase"></i><span>Employee Handbook</span></button>
       <button data-tab="reminders"><i data-icon="reminders"></i><span>Reminders</span></button>
       <button data-tab="support"><i data-icon="support"></i><span>Support Center</span></button>
@@ -2198,6 +2197,9 @@
       <div class="nav-group">Equipment</div>
       <button data-tab="certs"><i data-icon="forklift"></i><span>Forklift Certifications</span><b class="nav-count" data-sx-count="certs"></b></button>
       <button data-tab="plans"><i data-icon="rigging"></i><span>Lift Plans</span><b class="nav-count" data-sx-count="plans"></b></button>
+
+      <div class="nav-group">Reference</div>
+      <button data-tab="sds"><i data-icon="safety"></i><span>Safety Data Sheets</span></button>
     </nav>
   </aside>
   <div class="scrim" id="scrim"></div>
@@ -3657,8 +3659,8 @@ function showAdmin() {
   window.scrollTo(0, 0);
 }
 
-// The Safety dashboard: forklift certifications, lift plans, Safety Reports
-// and the Safety Desk, for Safety Managers. It shares the admin workspace and
+// The Safety dashboard: forklift certifications, lift plans, Safety Reports,
+// the Safety Desk and the safety data sheets, for Safety Managers. It shares the admin workspace and
 // its handlers, with its own sidebar and a dashboard at the front.
 let adminTab = "people", safetyTab = "safetyoverview";
 
@@ -3670,7 +3672,7 @@ function showSafety(tab) {
   setMode("safety");
   document.body.dataset.page = "safety";
   evalAgreed = null; evalNotice = "";
-  renderCerts(); renderEvalForm(); renderPlans(); renderSafetyAdmin();
+  renderCerts(); renderEvalForm(); renderPlans(); renderSafetyAdmin(); renderSdsAdmin(); renderSdsPending();
   renderSafetyReportAdmin(); renderSafetyReportsAdmin(); renderSafetyOverview();
   document.querySelector(`#safetyNav [data-tab="${tab || safetyTab}"]`).click();
   window.scrollTo(0, 0);
