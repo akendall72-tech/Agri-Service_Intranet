@@ -867,6 +867,7 @@
   #sdEditor input[type=month] { width: 100%; padding: 9px 12px; border: 1px solid var(--line-strong);
     border-radius: var(--radius-sm); font: inherit; font-size: 14.5px; color: var(--ink); background: #fff; margin-bottom: 12px; }
   .sd-admin-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 12px 14px; }
+  .sd-admin-acts { display: flex; gap: 6px; flex: none; }
   .sd-reminder { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
   .sd-q-edit { padding: 12px 14px; margin-bottom: 10px; }
   .sd-q-edit > input { margin-bottom: 8px; }
@@ -7089,17 +7090,33 @@ function renderSafetyAdmin() {
       return `<div class="role sd-admin-row"><div><b>${esc(briefMonthTitle(b))}</b> · ${esc(b.title)} ${state}
           <div class="note">${(b.questions || []).length} questions · pass ${briefNeeded(b)} · questions open after ${b.read_minutes} min
             ${b.document_name ? ` · ${esc(b.document_name)}` : ""} · ${passed} passed</div></div>
-        <button class="pdf" data-sd-edit="${esc(b.id)}">Edit</button></div>`;
+        <span class="sd-admin-acts"><button class="pdf" data-sd-reuse="${esc(b.id)}" title="Copy it to another month">Reuse</button>
+          <button class="pdf" data-sd-edit="${esc(b.id)}">Edit</button></span></div>`;
     }).join("") || `<p class="note">No Safety Briefs yet.</p>`}</div>
     <div class="sd-reminder">
       <label for="sdReminder"><b>The reminder that ticks itself</b></label>
       <p class="note" style="margin:2px 0 8px">A monthly shared reminder that's ticked for each person when they pass that month's
-        brief. Nobody can tick it by hand; tapping it opens the Safety Desk.</p>
+        brief. Nobody can tick it by hand; tapping it opens this month's brief.</p>
       <div class="row"><select id="sdReminder" style="max-width:360px;margin:0"><option value="">None</option>${monthly.map(t =>
         `<option value="${esc(t.id)}"${linked && linked.id === t.id ? " selected" : ""}>${esc(t.title)}${t.is_active === false ? " (switched off)" : ""}</option>`).join("")}</select>
         <button class="ghost" data-sd-act="reminder">Save</button><span class="msg"></span></div>
     </div>`;
   renderSdEditor();
+}
+
+// A reused brief shares its PDF, so a file only goes once no other brief uses it.
+const sdPdfInUse = (path, exceptId) => safetyBriefs.some(b => b.id !== exceptId && b.document_path === path);
+
+// The first month from next month on with no brief yet, for a reused one.
+function sdNextFreeMonth() {
+  const taken = new Set(safetyBriefs.map(b => b.month.slice(0, 7)));
+  const d = dateOnly(briefThisMonth());
+  for (let i = 1; i <= 48; i++) {
+    const m = new Date(d.getFullYear(), d.getMonth() + i, 1);
+    const key = `${m.getFullYear()}-${pad2(m.getMonth() + 1)}`;
+    if (!taken.has(key)) return key;
+  }
+  return briefThisMonth().slice(0, 7);
 }
 
 function renderSdEditor() {
@@ -7108,7 +7125,10 @@ function renderSdEditor() {
   box.classList.toggle("hidden", !sdDraft);
   if (!sdDraft) { box.innerHTML = ""; return; }
   const d = sdDraft;
-  box.innerHTML = `<h2>${d.id ? "Edit the Safety Brief" : "New Safety Brief"}</h2>
+  box.innerHTML = `<h2>${d.id ? "Edit the Safety Brief" : d.reusedFrom ? "Reuse a Safety Brief" : "New Safety Brief"}</h2>
+    ${d.reusedFrom ? `<p class="note" style="margin:-4px 0 12px">A copy of the ${esc(d.reusedFrom)} brief, with its reading and
+      questions. Pick the month it's for and change anything you like. Everyone takes it fresh; who passed in ${esc(d.reusedFrom)}
+      stays with that one. It starts as a draft.</p>` : ""}
     <div class="fields">
       <div><label for="sdMonth">Month</label><input id="sdMonth" type="month" data-sdf="month" value="${esc(d.month)}"></div>
       <div><label for="sdPublished">Showing</label><select id="sdPublished" data-sdf="is_published">
@@ -7192,9 +7212,13 @@ $("admin").addEventListener("change", (event) => {
 });
 
 $("admin").addEventListener("click", async (event) => {
-  const edit = event.target.closest("[data-sd-edit]");
+  // Edit a brief, or reuse it: the same reading and questions, copied to another
+  // month as a draft. Everyone takes the copy fresh; the old month's results
+  // stay with the old brief. The copy shares the PDF file.
+  const edit = event.target.closest("[data-sd-edit], [data-sd-reuse]");
   if (edit) {
-    const b = safetyBriefs.find(x => x.id === edit.dataset.sdEdit);
+    const reuse = edit.dataset.sdReuse !== undefined;
+    const b = safetyBriefs.find(x => x.id === (reuse ? edit.dataset.sdReuse : edit.dataset.sdEdit));
     const key = (safetyKeys.find(k => k.brief_id === b.id) || {}).answers || [];
     sdPdfFile = null;
     sdDraft = { ...JSON.parse(JSON.stringify(b)), month: b.month.slice(0, 7),
@@ -7202,6 +7226,7 @@ $("admin").addEventListener("click", async (event) => {
         ? { q: q.q || "", kind: "truefalse", choices: ["True", "False"] }
         : { q: q.q || "", kind: "choice", choices: [0, 1, 2, 3].map(j => (q.choices || [])[j] || "") }),
       answers: (b.questions || []).map((_, i) => key[i] ?? null) };
+    if (reuse) Object.assign(sdDraft, { id: null, month: sdNextFreeMonth(), is_published: false, reusedFrom: briefMonthTitle(b) });
     renderSdEditor();
     return $("sdEditor").scrollIntoView({ behavior: "smooth", block: "start" });
   }
@@ -7283,7 +7308,7 @@ async function saveSdBrief(button) {
   const id = saved.data[0].id;
   const key = await db.from("safety_brief_keys").upsert({ brief_id: id, answers: d.answers }, { onConflict: "brief_id" });
   if (key.error) { button.disabled = false; return speak(box, `The brief saved, but its answers didn't: ${key.error.message}`, true); }
-  if (before && before !== path) await db.storage.from("safety-briefs").remove([before]);
+  if (before && before !== path && !sdPdfInUse(before, d.id)) await db.storage.from("safety-briefs").remove([before]);
   sdDraft = null; sdPdfFile = null;
   await loadSafetyDesk();
   renderSafetyAdmin();
@@ -7296,7 +7321,7 @@ async function deleteSdBrief() {
   if (!confirm(`Delete the ${briefMonthTitle(b)} Safety Brief?${passed ? ` ${passed} people's results for it go too.` : ""}`)) return;
   const { data, error } = await db.from("safety_briefs").delete().eq("id", d.id).select("id");
   if (error || !(data || []).length) return speak($("sdEditor"), error ? error.message : "Not deleted — only an owner can.", true);
-  if (b.document_path) await db.storage.from("safety-briefs").remove([b.document_path]);
+  if (b.document_path && !sdPdfInUse(b.document_path, b.id)) await db.storage.from("safety-briefs").remove([b.document_path]);
   sdDraft = null;
   await loadSafetyDesk();
   renderSafetyAdmin();
