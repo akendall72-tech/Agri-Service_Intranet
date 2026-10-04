@@ -592,7 +592,7 @@
     .brand-name { font-size: 14px; white-space: nowrap; }
     .brand-mark { width: 28px; height: 28px; flex-basis: 28px; }
     .topbar-right { gap: 8px; }
-    #adminBtn { display: none !important; }   /* it's in the menu */
+    #adminBtn, #safetyBtn { display: none !important; }   /* they're in the menu */
     #signOut { padding: 6px 10px; font-size: 13px; }
     .who-avatar { width: 30px; height: 30px; flex-basis: 30px; font-size: 12px; }
     .stat-cards { grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -961,6 +961,154 @@
   .srd-wait svg { flex: none; color: var(--lit-amber); margin-top: 1px; }
   .srd-wait button.linkish { color: var(--lit-amber); text-decoration: underline; font-weight: 700; }
   .srl-tags .cab-tag.srl-quiet { --accent: var(--lit-amber); }
+
+  /* ---- The Safety dashboard: Safety Managers' own side of the admin page. Cab, in ember. ---- */
+  .btn-safety { border-color: color-mix(in srgb, var(--ember, #E8531D) 45%, var(--line-strong)); }
+  .safety-mode .btn-safety { background: linear-gradient(var(--cab-top), var(--cab-bottom)); color: #fff; border-color: var(--cab-edge); }
+  .safety-mode .sidebar .tabs button.active { background: color-mix(in srgb, var(--lit-ember) 14%, #fff); color: #9A3412; }
+  .safety-mode .sidebar .tabs button.active svg { color: #C2410C; }
+  .nav-count:empty { display: none; }
+  body.safety-mode #admin .page-head { position: relative; overflow: hidden; margin-bottom: 18px; padding: 18px 24px 18px 30px;
+    border-radius: 16px; border: 1px solid var(--cab-edge); background:
+      radial-gradient(120% 160% at 100% 0%, color-mix(in srgb, var(--lit-ember) 26%, transparent), transparent 55%),
+      linear-gradient(var(--cab-top), var(--cab-bottom)); box-shadow: 0 6px 18px rgba(20,28,34,.22); }
+  body.safety-mode #admin .page-head::before { content: ""; position: absolute; left: 12px; top: 14px; bottom: 14px; width: 4px;
+    border-radius: 4px; background: var(--lit-ember); box-shadow: 0 0 10px color-mix(in srgb, var(--lit-ember) 70%, transparent); }
+  body.safety-mode #admin .page-head .eyebrow { color: var(--lit-ember); font: 600 12px var(--font-mono); letter-spacing: .18em; }
+  body.safety-mode #admin .page-head h1 { color: #fff; font: 700 30px/1.1 var(--font-cab); letter-spacing: .03em; text-transform: uppercase; }
+
+  .sx { display: grid; gap: 14px; color: #fff; }
+  .sx h2, .sx h3, .sx h4 { color: inherit; }
+  .sx-hero { position: relative; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 20px 24px; border-radius: 16px; border: 1px solid var(--cab-edge); overflow: hidden;
+    background: radial-gradient(90% 140% at 0% 100%, color-mix(in srgb, var(--lit-amber) 16%, transparent), transparent 60%),
+      linear-gradient(135deg, #2A333A, #1B2227); box-shadow: 0 6px 18px rgba(20,28,34,.22); }
+  .sx-kicker { color: var(--lit-amber); font: 600 11.5px var(--font-mono); letter-spacing: .16em; text-transform: uppercase; }
+  #admin .sx-hero h2 { margin: 6px 0 4px; color: #fff; font: 700 34px/1.05 var(--font-cab); letter-spacing: .03em; text-transform: uppercase; text-wrap: balance; }
+  .sx-hero p { margin: 0; color: var(--cab-sub); font-size: 15px; max-width: 60ch; }
+  button.sx-injury { display: grid; justify-items: center; gap: 2px; min-width: 190px; margin: 0; padding: 12px 18px; height: auto;
+    border-radius: 14px; border: 1px solid color-mix(in srgb, var(--lit-green) 40%, transparent); box-shadow: none;
+    background: rgba(0,0,0,.28); color: #fff; cursor: pointer; }
+  button.sx-injury:hover { background: rgba(0,0,0,.4); }
+  .sx-injury b { font: 700 56px/1 var(--font-cab); color: var(--lit-green); text-shadow: 0 0 18px color-mix(in srgb, var(--lit-green) 55%, transparent);
+    font-variant-numeric: tabular-nums; }
+  .sx-injury span { color: var(--cab-sub); font: 600 11px/1.35 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; text-align: center;
+    max-width: 20ch; white-space: normal; }
+
+  .sx-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+  button.sx-tile { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; margin: 0; height: auto;
+    padding: 13px 14px 14px 25px; text-align: left; white-space: normal; border-radius: 14px; border: 1px solid var(--cab-edge);
+    background: linear-gradient(var(--cab-top), var(--cab-bottom)); color: #fff; box-shadow: 0 4px 14px rgba(20,28,34,.2);
+    font-weight: 400; cursor: pointer; transition: transform .12s ease, box-shadow .12s ease; }
+  button.sx-tile::before { content: ""; position: absolute; left: 10px; top: 12px; bottom: 12px; width: 3px; border-radius: 3px;
+    background: var(--accent); box-shadow: 0 0 7px color-mix(in srgb, var(--accent) 65%, transparent); }
+  button.sx-tile:hover { transform: translateY(-1px); box-shadow: 0 8px 22px rgba(20,28,34,.28); background: linear-gradient(#313B42, #262E34); }
+  button.sx-tile:focus-visible, .sx button:focus-visible { outline: 2px solid var(--accent, var(--lit-ember)); outline-offset: 2px; }
+  button.sx-tile[data-sx-go=""] { cursor: default; transform: none; }
+  button.sx-tile.hot { background: linear-gradient(color-mix(in srgb, var(--accent) 16%, transparent), color-mix(in srgb, var(--accent) 6%, transparent)),
+    linear-gradient(var(--cab-top), var(--cab-bottom)); border-color: color-mix(in srgb, var(--accent) 55%, var(--cab-edge)); }
+  .sx-tile-label { color: var(--cab-sub); font: 600 10.5px var(--font-mono); letter-spacing: .12em; text-transform: uppercase; }
+  .sx-tile-value { font: 700 38px/1.05 var(--font-cab); letter-spacing: .01em; font-variant-numeric: tabular-nums; }
+  .sx-tile.hot .sx-tile-value, .sx-tile.good .sx-tile-value { color: var(--accent); }
+  .sx-tile-value small { font-size: 20px; margin-left: 1px; }
+  .sx-tile-sub { color: var(--cab-detail); font-size: 12.5px; line-height: 1.35; }
+
+  .sx-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .sx-wide { grid-column: span 2; }
+  .sx-panel { position: relative; min-width: 0; padding: 16px 18px 18px 27px; border-radius: 16px; border: 1px solid var(--cab-edge);
+    background: linear-gradient(var(--cab-top), var(--cab-bottom)); box-shadow: 0 4px 14px rgba(20,28,34,.2); color: #fff; }
+  .sx-panel::before { content: ""; position: absolute; left: 11px; top: 16px; bottom: 16px; width: 3px; border-radius: 3px;
+    background: var(--accent); box-shadow: 0 0 7px color-mix(in srgb, var(--accent) 65%, transparent); }
+  .sx-panel header { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
+  .sx-panel h3 { margin: 0; font: 700 19px var(--font-cab); letter-spacing: .05em; text-transform: uppercase; }
+  .sx-panel header span { color: var(--cab-detail); font: 500 11.5px var(--font-mono); letter-spacing: .06em; }
+  .sx-panel h4 { margin: 16px 0 8px; color: var(--accent); font: 600 10.5px var(--font-mono); letter-spacing: .14em; text-transform: uppercase; }
+  .sx-split > div > h4:first-child { margin-top: 0; }
+  button.sx-link { margin: 0 0 0 auto; padding: 0; height: auto; border: 0; background: none; box-shadow: none; color: var(--accent);
+    font: 600 13px var(--font-cab); letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
+  button.sx-link:hover { background: none; text-decoration: underline; }
+  .sx-split { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+  .sx-split.three { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr); }
+  .sx-sub { margin: 4px 0 10px; color: var(--cab-sub); font-size: 13.5px; }
+  .sx-empty { margin: 4px 0; color: var(--cab-sub); font-size: 14px; }
+  .sx-clear { display: flex; align-items: center; gap: 8px; color: var(--lit-green); }
+  .sx-clear svg { flex: none; }
+
+  .sx-chart { display: flex; align-items: stretch; gap: 6px; height: 160px; padding-top: 4px; }
+  .sx-col { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; }
+  .sx-val { color: var(--cab-sub); font: 600 11px var(--font-mono); min-height: 13px; }
+  .sx-stack { display: flex; flex-direction: column; width: 70%; min-height: 2px; border-radius: 4px 4px 1px 1px; overflow: hidden;
+    background: rgba(255,255,255,.06); }
+  .sx-stack i { display: block; background: var(--lit-ember); box-shadow: inset 0 1px 0 rgba(255,255,255,.25); }
+  .sx-stack i.w { background: var(--lit-amber); }
+  .sx-col small { color: var(--cab-detail); font: 500 10px var(--font-mono); letter-spacing: .04em; text-transform: uppercase; }
+  .sx-legend { display: flex; gap: 14px; margin-top: 8px; color: var(--cab-detail); font: 500 11px var(--font-mono); }
+  .sx-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .sx-legend i { width: 10px; height: 10px; border-radius: 2px; background: var(--lit-ember); }
+  .sx-legend i.w { background: var(--lit-amber); }
+
+  .sx-rank { display: grid; gap: 8px; }
+  .sx-rank-row { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto; align-items: center; gap: 10px; font-size: 13.5px; }
+  .sx-rank-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: rgba(255,255,255,.92); }
+  .sx-rank-label em { font-style: normal; margin-right: 6px; }
+  .sx-rank-bar { height: 8px; border-radius: 99px; background: rgba(255,255,255,.08); }
+  .sx-rank-bar i { display: block; height: 100%; border-radius: 99px; background: var(--accent); }
+  .sx-rank-row b { font: 700 15px var(--font-cab); min-width: 2ch; text-align: right; font-variant-numeric: tabular-nums; }
+
+  .sx-queue { display: grid; gap: 6px; }
+  button.sx-queue-row { display: flex; align-items: center; gap: 12px; width: 100%; margin: 0; height: auto; padding: 10px 12px;
+    text-align: left; white-space: normal; border-radius: 10px; border: 1px solid rgba(255,255,255,.08);
+    background: rgba(255,255,255,.04); color: #fff; box-shadow: none; font-weight: 400; cursor: pointer; }
+  button.sx-queue-row:hover { background: color-mix(in srgb, var(--lit-amber) 12%, transparent); border-color: color-mix(in srgb, var(--lit-amber) 40%, transparent); }
+  .sx-queue-emoji { flex: none; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 9px; background: rgba(0,0,0,.25); font-size: 17px; }
+  .sx-queue-main { flex: 1; min-width: 0; display: grid; gap: 2px; }
+  .sx-queue-main b { font: 600 16px/1.2 var(--font-cab); letter-spacing: .03em; text-transform: uppercase; }
+  .sx-queue-main small { color: var(--cab-detail); font-size: 12.5px; }
+  .sx-flag { flex: none; padding: 2px 8px; border-radius: 99px; background: color-mix(in srgb, var(--lit-amber) 20%, transparent);
+    color: var(--lit-amber); font: 600 10px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
+  .sx-go { flex: none; color: var(--lit-amber); font: 600 13px var(--font-cab); letter-spacing: .06em; text-transform: uppercase; }
+  button.sx-more { justify-self: start; margin: 2px 0 0; padding: 0; height: auto; border: 0; background: none; box-shadow: none;
+    color: var(--lit-amber); font: 600 13px var(--font-cab); letter-spacing: .06em; text-transform: uppercase; cursor: pointer; }
+
+  .sx-attn { display: grid; gap: 6px; }
+  button.sx-attn-row { display: flex; align-items: center; gap: 10px; width: 100%; margin: 0; height: auto; padding: 9px 11px; text-align: left;
+    white-space: normal; border-radius: 10px; border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.04); color: #fff;
+    box-shadow: none; font-weight: 500; font-size: 14px; cursor: pointer; }
+  button.sx-attn-row:hover { background: rgba(255,255,255,.09); }
+  .sx-attn-row svg { flex: none; color: var(--lit-amber); }
+  .sx-attn-row.red svg, .sx-attn-row.red .sx-go { color: var(--lit-red); }
+  .sx-attn-row > span:nth-of-type(1) { flex: 1; }
+
+  .sx-ring { --p: 0%; width: 112px; height: 112px; margin: 6px auto 14px; border-radius: 50%; display: grid; place-items: center;
+    background: conic-gradient(var(--accent) var(--p), rgba(255,255,255,.1) 0); box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 25%, transparent); }
+  .sx-ring b { width: 92px; height: 92px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--cab-bottom);
+    font: 700 30px var(--font-cab); }
+  .sx-ring small { font-size: 15px; }
+  .sx-shops { display: grid; gap: 7px; }
+  .sx-shop { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; align-items: center; gap: 10px; font-size: 13px; }
+  .sx-shop > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: rgba(255,255,255,.9); }
+  .sx-meter { height: 7px; border-radius: 99px; background: rgba(255,255,255,.08); }
+  .sx-meter i { display: block; height: 100%; border-radius: 99px; background: var(--accent); }
+  .sx-shop b { font: 600 12px var(--font-mono); color: var(--cab-sub); }
+
+  .sx-trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center; }
+  .sx-trio div { padding: 10px 6px; border-radius: 10px; background: rgba(0,0,0,.22); }
+  .sx-trio b { display: block; font: 700 28px/1 var(--font-cab); color: var(--lit-green); }
+  .sx-trio .amber b { color: var(--lit-amber); } .sx-trio .red b { color: var(--lit-red); }
+  .sx-trio span { color: var(--cab-detail); font: 600 10px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
+  .sx-list { display: grid; }
+  .sx-list > div { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0;
+    border-top: 1px solid rgba(255,255,255,.07); font-size: 14px; }
+  .sx-list > div:first-child { border-top: 0; }
+  .sx-list span { min-width: 0; }
+  .sx-list small { display: block; color: var(--cab-detail); font-size: 12px; }
+  .sx-list b { flex: none; font: 600 14px var(--font-cab); color: var(--lit-amber); letter-spacing: .03em; }
+  .sx-reports { margin-bottom: 16px; }
+
+  @media (max-width: 1180px) { .sx-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .sx-split.three { grid-template-columns: 1fr 1fr; }
+    .sx-split.three > div:first-child { grid-column: 1 / -1; } }
+  @media (max-width: 760px) { .sx-grid { grid-template-columns: 1fr; } .sx-wide { grid-column: auto; }
+    .sx-split, .sx-split.three { grid-template-columns: 1fr; } #admin .sx-hero h2 { font-size: 27px; } button.sx-injury { width: 100%; } }
 
   /* Admin: approving Safety Reports (the plain admin look). */
   .srr-tabs { margin: 10px 0 12px; }
@@ -1989,6 +2137,7 @@
     </div>
     <div class="topbar-right">
       <button id="adminBtn" class="btn-secondary hidden">Admin</button>
+      <button id="safetyBtn" class="btn-secondary btn-safety hidden">Safety</button>
       <div class="who" id="who"></div>
       <button id="signOut" class="ghost hidden">Sign out</button>
     </div>
@@ -2001,11 +2150,8 @@
       <button class="nav-item" data-home><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5m6-6-6 6 6 6"/></svg><span>Back to the app</span></button>
 
       <div class="nav-group">Records</div>
-      <button data-tab="certs" class="active"><i data-icon="forklift"></i><span>Forklift Certifications</span></button>
-      <button data-tab="plans"><i data-icon="rigging"></i><span>Lift Plans</span></button>
       <button data-tab="inspections"><i data-icon="inspection"></i><span>Inspections</span></button>
-      <button data-tab="safetyreports"><i data-icon="megaphone"></i><span>Safety Reports</span></button>
-      <button data-tab="people"><i data-icon="people"></i><span>People</span></button>
+      <button data-tab="people" class="active"><i data-icon="people"></i><span>People</span></button>
 
       <div class="nav-group">App content</div>
       <button data-tab="news"><i data-icon="news"></i><span>News</span></button>
@@ -2013,8 +2159,6 @@
       <button data-tab="courses"><i data-icon="training"></i><span>Course Catalog</span></button>
       <button data-tab="articles"><i data-icon="doc"></i><span>Training Articles</span></button>
       <button data-tab="skillsadmin"><i data-icon="training"></i><span>Skills</span></button>
-      <button data-tab="safetydesk"><i data-icon="safety"></i><span>Safety Desk</span></button>
-      <button data-tab="safetyreportform"><i data-icon="megaphone"></i><span>Safety Report Form</span></button>
       <button data-tab="sds"><i data-icon="safety"></i><span>Safety Data Sheets</span></button>
       <button data-tab="handbook"><i data-icon="briefcase"></i><span>Employee Handbook</span></button>
       <button data-tab="reminders"><i data-icon="reminders"></i><span>Reminders</span></button>
@@ -2034,6 +2178,26 @@
 
       <div class="nav-group">Setup</div>
       <button data-tab="org"><i data-icon="building"></i><span>Groups &amp; Shops</span></button>
+    </nav>
+
+    <!-- The Safety dashboard: Safety Managers only. Its tabs share the admin
+         workspace below, so they keep the admin page's handlers. -->
+    <nav id="safetyNav" class="tabs hidden" aria-label="Safety">
+      <button class="nav-item" data-home><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5m6-6-6 6 6 6"/></svg><span>Back to the app</span></button>
+
+      <div class="nav-group">Dashboard</div>
+      <button data-tab="safetyoverview" data-title="Safety Dashboard" class="active"><i data-icon="safety"></i><span>Overview</span></button>
+
+      <div class="nav-group">Safety Reports</div>
+      <button data-tab="safetyreports" data-title="Safety Reports"><i data-icon="megaphone"></i><span>Reports</span><b class="nav-count" data-sx-count="reports"></b></button>
+      <button data-tab="safetyreportform" data-title="Safety Report Form"><i data-icon="pencil"></i><span>Report Form</span></button>
+
+      <div class="nav-group">Training</div>
+      <button data-tab="safetydesk"><i data-icon="doc"></i><span>Safety Desk</span></button>
+
+      <div class="nav-group">Equipment</div>
+      <button data-tab="certs"><i data-icon="forklift"></i><span>Forklift Certifications</span><b class="nav-count" data-sx-count="certs"></b></button>
+      <button data-tab="plans"><i data-icon="rigging"></i><span>Lift Plans</span><b class="nav-count" data-sx-count="plans"></b></button>
     </nav>
   </aside>
   <div class="scrim" id="scrim"></div>
@@ -2066,12 +2230,17 @@
   <div id="admin" class="hidden">
 
     <div class="page-head">
-      <div class="eyebrow">Admin</div>
-      <h1 id="adminTitle">Forklift Certifications</h1>
+      <div class="eyebrow" id="adminEyebrow">Admin</div>
+      <h1 id="adminTitle">People</h1>
     </div>
 
+    <!-- The Safety dashboard's front page: drawn by renderSafetyOverview -->
+    <section id="tab-safetyoverview" class="hidden">
+      <div id="sxOverview"></div>
+    </section>
+
     <!-- Certifications -->
-    <section id="tab-certs">
+    <section id="tab-certs" class="hidden">
       <div class="card">
         <h2>Import certifications</h2>
         <div class="drop" id="drop">
@@ -2161,7 +2330,7 @@
     </section>
 
     <!-- People -->
-    <section id="tab-people" class="hidden">
+    <section id="tab-people">
       <div class="card">
         <h2>People</h2>
         <div class="row" style="margin-bottom:12px">
@@ -2855,6 +3024,7 @@
 
     <!-- Approving Safety Reports: drawn by renderSafetyReportsAdmin -->
     <section id="tab-safetyreports" class="hidden">
+      <div id="sxReportStats"></div>
       <div id="srrAdmin"></div>
     </section>
 
@@ -3130,6 +3300,7 @@ document.addEventListener("visibilitychange", async () => {
   if (!data.session) signInRanOut();
 });
 $("adminBtn").onclick = () => document.body.classList.contains("admin-mode") ? showHome() : showAdmin();
+$("safetyBtn").onclick = () => document.body.classList.contains("safety-mode") ? showHome() : showSafety();
 $("wordmark").onclick = () => { if (me) showHome(); };
 
 async function start() {
@@ -3157,6 +3328,7 @@ async function start() {
     `<span class="who-text"><b>${esc(name)}</b><small>${esc(
       locations[profile && profile.location_id] || "No location set")}</small></span>`;
   $("adminBtn").classList.toggle("hidden", !isOwner());
+  $("safetyBtn").classList.toggle("hidden", !isSafetyManager());
 
   showHome();
 }
@@ -3474,8 +3646,6 @@ function showAdmin() {
   setMode("admin");
   document.body.dataset.page = "admin";
   evalAgreed = null; evalNotice = "";
-  const activeTab = document.querySelector("#adminNav button.active");
-  if (activeTab) $("adminTitle").textContent = activeTab.textContent.trim();
   renderCerts(); renderEvalForm(); renderPlans(); renderPeople(); renderSupport(); renderToolsAdmin();
   renderPayroll(); renderDirectory(); renderLogins(); renderSharedReminders();
   renderEvents(); renderOrg(); renderOsrImport(); renderOsrLive(); renderInspectionsAdmin();
@@ -3483,6 +3653,26 @@ function showAdmin() {
   renderNewsAdmin(); renderTsImport(); renderTsLive(); renderHandbook(); renderAgcoImport(); renderAgcoLive();
   renderAgcoTechs(); renderAgcoRules(); renderAgcoAdded(); renderAgcoBales(); renderMockSchedule(); renderSafetyAdmin();
   renderSafetyReportAdmin(); renderSafetyReportsAdmin();
+  document.querySelector(`#adminNav [data-tab="${adminTab}"]`).click();
+  window.scrollTo(0, 0);
+}
+
+// The Safety dashboard: forklift certifications, lift plans, Safety Reports
+// and the Safety Desk, for Safety Managers. It shares the admin workspace and
+// its handlers, with its own sidebar and a dashboard at the front.
+let adminTab = "people", safetyTab = "safetyoverview";
+
+function showSafety(tab) {
+  if (!isSafetyManager()) return showHome();
+  $("home").classList.add("hidden");
+  $("view").classList.add("hidden");
+  $("admin").classList.remove("hidden");
+  setMode("safety");
+  document.body.dataset.page = "safety";
+  evalAgreed = null; evalNotice = "";
+  renderCerts(); renderEvalForm(); renderPlans(); renderSafetyAdmin();
+  renderSafetyReportAdmin(); renderSafetyReportsAdmin(); renderSafetyOverview();
+  document.querySelector(`#safetyNav [data-tab="${tab || safetyTab}"]`).click();
   window.scrollTo(0, 0);
 }
 
@@ -3547,7 +3737,7 @@ const VIEWS = {
       + linkGrid(SAFETY_LINKS.map(linkCard).join("")
         + linkCard(isSafetyManager()
           ? { title: "Safety Reports", tint: "amber", icon: "reminders", view: "safetyreportlist",
-              sub: `Every report sent.${(n => n ? ` ${n} waiting for approval on the admin page.` : " Approve them on the admin page and everyone can read them.")(srReports.filter(srPending).length)}` }
+              sub: `Every report sent.${(n => n ? ` ${n} waiting for approval on the Safety dashboard.` : " Approve them on the Safety dashboard and everyone can read them.")(srReports.filter(srPending).length)}` }
           : { title: "Safety Reports", tint: "amber", icon: "reminders", view: "safetyreportlist",
               sub: "Reports from across the company, approved by the Safety Manager: what happened and what we learned." }))
       + sdsSectionHtml();
@@ -7061,9 +7251,7 @@ $("view").addEventListener("click", (event) => {
   if (act && act.dataset.srAct === "pdf") return srDownloadPdf(srReports.find(r => r.id === openSafetyReportId));
   if (act && act.dataset.srAct === "review") {
     srrOpenId = openSafetyReportId;
-    showAdmin();
-    document.querySelector('#adminNav [data-tab="safetyreports"]').click();
-    return;
+    return showSafety("safetyreports");
   }
   const report = event.target.closest("[data-sr-report]");
   if (report) openSafetyReportId = report.dataset.srReport;
@@ -7134,7 +7322,7 @@ function srQuestions() {
 function safetyReportListView() {
   const manager = isSafetyManager();
   const head = hero("Safety Reports", manager
-    ? "Every report sent, waiting or approved. Sort and filter by any question; approve them on the admin page."
+    ? "Every report sent, waiting or approved. Sort and filter by any question; approve them on the Safety dashboard."
     : "Reports from across the company, approved by the Safety Manager. Sort and filter by any question.");
   if (!srReports.length) return head + `<div class="srl" style="${lit("ember")}"><p class="srf-note">${manager ? "No reports yet."
     : "No reports have been approved yet. They show here once the Safety Manager approves them."}</p></div>`;
@@ -7235,7 +7423,7 @@ function safetyReportOneView() {
   return hero(srTitle(r), [a.kind ? srShortKind(a.kind) : "", `Sent ${new Date(r.created_at).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })}`].filter(Boolean).join(" · "))
     + `<div class="srl srd" style="${lit("ember")}">
     ${srPending(r) ? `<div class="srf-card srd-wait">${icon("clock", 18)}<span>${manager
-      ? `Waiting for approval. <button type="button" class="linkish" data-sr-act="review">Edit and approve it on the admin page</button>; then everyone can read it.`
+      ? `Waiting for approval. <button type="button" class="linkish" data-sr-act="review">Edit and approve it on the Safety dashboard</button>; then everyone can read it.`
       : "Waiting for the Safety Manager to approve it. Only you and they can see it until then."}</span></div>` : ""}
     ${manager ? `<div class="srd-acts"><button type="button" data-sr-act="pdf">${icon("doc", 16)}Download the PDF</button><span class="msg"></span></div>` : ""}
     <div class="srf-card srd-facts">
@@ -7478,6 +7666,7 @@ const srrShared = (r, path) => `approved/${r.id}/${path.split("/").pop()}`;
 function renderSafetyReportsAdmin() {
   const box = $("srrAdmin");
   if (!box) return;
+  renderSafetyReportStats(); renderSafetyOverview();
   if (srFormError) {
     box.innerHTML = `<div class="card"><p class="error">${/does not exist|schema cache/i.test(srFormError)
       ? "Run migration 0082_safety_reports.sql in the SQL editor, then reload this page." : esc(srFormError)}</p></div>`;
@@ -7673,6 +7862,279 @@ $("admin").addEventListener("click", async (event) => {
     await loadSafetyReportData();
     renderSafetyReportsAdmin();
   }
+});
+
+// ---- the Safety dashboard's front page -------------------------------------------
+//
+// Everything safety on one screen, Safety Reports first: what's waiting for
+// approval, the days since a work-related injury, the reports by month, type
+// and shop, then this month's Safety Brief, forklift cards running out and
+// lift plans waiting. Every number opens the tab behind it. In the Cab look.
+
+const SX_DAY = 86400000;
+const sxNum = (n) => Number(n || 0).toLocaleString();
+const sxIncident = (r) => { const d = (r.answers || {}).date; return d ? dateOnly(d) : new Date(r.created_at); };
+const sxKind = (r) => (r.answers || {}).kind || "";
+const sxEmoji = (kind) => { const first = kind.split(" ")[0]; return /[A-Za-z]/.test(first) ? "" : first; };
+
+// Reports by month for the last twelve, split into approved and waiting.
+function sxMonths(reports) {
+  const now = new Date(), months = [];
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push({ key: `${d.getFullYear()}-${pad2(d.getMonth() + 1)}`, label: d.toLocaleDateString("en-US", { month: "short" }),
+      year: d.getFullYear(), approved: 0, waiting: 0 });
+  }
+  reports.forEach(r => {
+    const m = months.find(x => x.key === String(r.created_at).slice(0, 7));
+    if (m) srPending(r) ? m.waiting++ : m.approved++;
+  });
+  return months;
+}
+
+function sxBarsHtml(months) {
+  const top = Math.max(1, ...months.map(m => m.approved + m.waiting));
+  return `<div class="sx-chart" role="img" aria-label="Reports sent each month for the last twelve months">
+    ${months.map(m => {
+      const total = m.approved + m.waiting;
+      return `<div class="sx-col" title="${esc(m.label)} ${m.year}: ${total} report${total === 1 ? "" : "s"}${m.waiting ? `, ${m.waiting} waiting` : ""}">
+        <span class="sx-val">${total || ""}</span>
+        <span class="sx-stack" style="height:${Math.round(total / top * 100)}%">
+          ${m.waiting ? `<i class="w" style="flex:${m.waiting}"></i>` : ""}${m.approved ? `<i style="flex:${m.approved}"></i>` : ""}
+        </span>
+        <small>${esc(m.label.slice(0, 3))}</small>
+      </div>`;
+    }).join("")}
+  </div>
+  <div class="sx-legend"><span><i></i>Approved</span><span><i class="w"></i>Waiting</span></div>`;
+}
+
+// Horizontal bars: [label, count, emoji?].
+function sxRankHtml(rows, empty) {
+  if (!rows.length) return `<p class="sx-empty">${esc(empty)}</p>`;
+  const top = Math.max(...rows.map(r => r[1]));
+  return `<div class="sx-rank">${rows.map(([label, n, emoji]) => `<div class="sx-rank-row">
+      <span class="sx-rank-label">${emoji ? `<em>${emoji}</em>` : ""}${esc(label)}</span>
+      <span class="sx-rank-bar"><i style="width:${Math.max(4, n / top * 100)}%"></i></span><b>${n}</b></div>`).join("")}</div>`;
+}
+
+function sxByType(reports) {
+  const tally = {};
+  reports.forEach(r => { const k = sxKind(r); if (!k) return;
+    const short = srShortKind(k) || k; (tally[short] = tally[short] || [short, 0, sxEmoji(k)])[1]++; });
+  return Object.values(tally).sort((a, b) => b[1] - a[1]);
+}
+
+function sxByShop(reports) {
+  const tally = {};
+  reports.forEach(r => { const w = (r.answers || {}).where; if (!w) return;
+    const label = w === "N/A" ? "Not at a shop" : w; (tally[label] = tally[label] || [label, 0])[1]++; });
+  return Object.values(tally).sort((a, b) => b[1] - a[1]);
+}
+
+// Days since the last work-related injury anyone reported, by its incident date.
+function sxInjuryFree(reports) {
+  const injuries = reports.filter(r => /work-related injury/i.test(sxKind(r))).map(sxIncident).sort((a, b) => b - a);
+  if (injuries.length) return { days: Math.max(0, Math.floor((Date.now() - injuries[0]) / SX_DAY)), since: injuries[0], any: true };
+  const first = reports.map(r => new Date(r.created_at)).sort((a, b) => a - b)[0];
+  return { days: first ? Math.floor((Date.now() - first) / SX_DAY) : 0, since: first || null, any: false };
+}
+
+function sxBrief() {
+  const b = deskBriefs().find(x => x.month === briefThisMonth());
+  if (!b) return null;
+  const end = new Date(dateOnly(b.month)); end.setMonth(end.getMonth() + 1);
+  const expected = people.filter(p => !p.deactivated_at && (!p.created_at || new Date(p.created_at) < end));
+  const passed = expected.filter(p => (briefResult(b, p.id) || {}).passed_at);
+  const shops = {};
+  expected.forEach(p => { const s = locations[p.location_id] || "No shop set";
+    const t = shops[s] = shops[s] || { shop: s, expected: 0, passed: 0 }; t.expected++;
+    if ((briefResult(b, p.id) || {}).passed_at) t.passed++; });
+  return { brief: b, expected: expected.length, passed: passed.length, shops: Object.values(shops).sort((x, y) => x.shop.localeCompare(y.shop)) };
+}
+
+function sxForklift() {
+  const rows = certsPerPerson().map(r => ({ r, cls: certStatusNow(r)[1] }));
+  const days = (r) => Math.round((new Date(r.expiration_date) - new Date()) / SX_DAY);
+  return {
+    certified: rows.filter(x => x.cls === "b-current").length,
+    expiring: rows.filter(x => x.cls === "b-expiring").sort((a, b) => String(a.r.expiration_date).localeCompare(String(b.r.expiration_date)))
+      .map(x => ({ name: x.r.operator_name || x.r.email || "Someone", days: days(x.r) })),
+    expired: rows.filter(x => x.cls === "b-expired").length,
+    waiting: pendingTests().length
+  };
+}
+
+function renderSafetyNavCounts() {
+  const set = (key, n) => { const el = document.querySelector(`#safetyNav [data-sx-count="${key}"]`); if (el) el.textContent = n || ""; };
+  const f = sxForklift();
+  set("reports", srReports.filter(srPending).length);
+  set("certs", f.expiring.length + f.expired);
+  set("plans", plans.filter(p => p.status === "submitted").length);
+}
+
+function sxTile(label, value, sub, opts = {}) {
+  return `<button type="button" class="sx-tile${opts.hot ? " hot" : ""}${opts.good ? " good" : ""}" data-sx-go="${opts.go || ""}" style="${lit(opts.lit || "ember")}">
+    <span class="sx-tile-label">${esc(label)}</span>
+    <b class="sx-tile-value">${value}</b>
+    <span class="sx-tile-sub">${sub}</span>
+  </button>`;
+}
+
+function sxQueueHtml(waiting, limit) {
+  if (!waiting.length) return `<p class="sx-empty sx-clear">${icon("checkCircle", 18)} Nothing waiting. Every report has been approved.</p>`;
+  const day = (iso) => new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return `<div class="sx-queue">${waiting.slice(0, limit).map(r => {
+    const a = r.answers || {}, k = sxKind(r);
+    return `<button type="button" class="sx-queue-row" data-sx-review="${esc(r.id)}">
+      <span class="sx-queue-emoji">${sxEmoji(k) || "•"}</span>
+      <span class="sx-queue-main"><b>${esc(srTitle(r))}</b>
+        <small>${esc([srShortKind(k), a.where === "N/A" ? "Not at a shop" : a.where, r.reporter_name, day(r.created_at)].filter(Boolean).join(" · "))}</small></span>
+      ${a.follow_up === true ? `<span class="sx-flag">Follow up</span>` : ""}
+      <span class="sx-go">Review &rsaquo;</span>
+    </button>`;
+  }).join("")}${waiting.length > limit ? `<button type="button" class="sx-more" data-sx-go="safetyreports">All ${waiting.length} waiting &rsaquo;</button>` : ""}</div>`;
+}
+
+function renderSafetyOverview() {
+  const box = $("sxOverview");
+  if (!box) return;
+  renderSafetyNavCounts();
+  const reports = srReports, waiting = reports.filter(srPending);
+  const now = Date.now();
+  const inDays = (r, from, to) => { const t = new Date(r.created_at).getTime(); return t >= now - from * SX_DAY && t < now - to * SX_DAY; };
+  const last30 = reports.filter(r => inDays(r, 30, 0)).length, prior30 = reports.filter(r => inDays(r, 60, 30)).length;
+  const year = reports.filter(r => inDays(r, 365, 0));
+  const nearMisses = reports.filter(r => inDays(r, 90, 0) && /near miss/i.test(sxKind(r))).length;
+  const follow = waiting.filter(r => (r.answers || {}).follow_up === true).length;
+  const injury = sxInjuryFree(reports);
+  const brief = sxBrief(), fork = sxForklift();
+  const liftWaiting = plans.filter(p => p.status === "submitted");
+  const delta = last30 - prior30;
+  const briefPct = brief && brief.expected ? Math.round(brief.passed / brief.expected * 100) : 0;
+  const today = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+
+  const attention = [
+    waiting.length && [`${waiting.length} Safety Report${waiting.length === 1 ? "" : "s"} to approve`, "safetyreports", "megaphone", "amber"],
+    follow && [`${follow} asking for a follow-up`, "safetyreports", "phone", "amber"],
+    liftWaiting.length && [`${liftWaiting.length} lift plan${liftWaiting.length === 1 ? "" : "s"} waiting for approval`, "plans", "rigging", "amber"],
+    fork.expired && [`${fork.expired} forklift card${fork.expired === 1 ? "" : "s"} expired`, "certs", "forklift", "red"],
+    fork.expiring.length && [`${fork.expiring.length} forklift card${fork.expiring.length === 1 ? "" : "s"} expiring within 60 days`, "certs", "forklift", "amber"],
+    brief && brief.expected - brief.passed && [`${brief.expected - brief.passed} still to pass this month's Safety Brief`, "safetydesk", "doc", "amber"],
+    !brief && ["This month's Safety Brief isn't up yet", "safetydesk", "doc", "red"]
+  ].filter(Boolean);
+
+  box.innerHTML = `<div class="sx">
+    <section class="sx-hero">
+      <div class="sx-hero-text">
+        <span class="sx-kicker">${esc(today)}</span>
+        <h2>${attention.length ? `${attention.length} thing${attention.length === 1 ? "" : "s"} need${attention.length === 1 ? "s" : ""} you` : "All clear"}</h2>
+        <p>${attention.length ? esc(attention.slice(0, 2).map(a => a[0]).join(" · ")) : "Nothing waiting on the Safety Manager today."}</p>
+      </div>
+      <button type="button" class="sx-injury${injury.any ? "" : " clean"}" data-sx-go="safetyreports"
+        title="${injury.any ? `Last work-related injury reported on ${injury.since.toLocaleDateString()}` : "No work-related injury has been reported"}">
+        <b>${sxNum(injury.days)}</b>
+        <span>${injury.any ? "days since a work-related injury" : "days with no work-related injury reported"}</span>
+      </button>
+    </section>
+
+    <div class="sx-tiles">
+      ${sxTile("To approve", sxNum(waiting.length), waiting.length ? `${follow ? `${follow} want a follow-up` : "Safety Reports waiting"}` : "Nothing waiting", { go: "safetyreports", hot: waiting.length > 0, lit: "amber" })}
+      ${sxTile("Reports · 30 days", sxNum(last30), `${delta === 0 ? "Same as" : delta > 0 ? `${delta} more than` : `${-delta} fewer than`} the 30 before`, { go: "safetyreports" })}
+      ${sxTile("Near misses · 90 days", sxNum(nearMisses), "Every one is a lesson caught early", { go: "safetyreports" })}
+      ${sxTile("Safety Brief", brief ? `${briefPct}<small>%</small>` : "—", brief ? `${brief.passed} of ${brief.expected} passed this month` : "This month's isn't up yet", { go: "safetydesk", lit: brief && briefPct >= 90 ? "green" : "ember", good: brief && briefPct >= 90 })}
+      ${sxTile("Forklift cards", sxNum(fork.certified), `${fork.expiring.length} expiring · ${fork.expired} expired`, { go: "certs", lit: fork.expired ? "red" : "green", hot: fork.expired > 0 })}
+      ${sxTile("Lift plans", sxNum(liftWaiting.length), liftWaiting.length ? "Waiting for approval" : "Nothing waiting", { go: "plans", lit: "slate", hot: liftWaiting.length > 0 })}
+    </div>
+
+    <div class="sx-grid">
+      <section class="sx-panel sx-wide" style="${lit("ember")}">
+        <header><h3>Safety Reports</h3><span>Last 12 months · ${sxNum(year.length)} sent</span>
+          <button type="button" class="sx-link" data-sx-go="safetyreports">Open &rsaquo;</button></header>
+        <div class="sx-split">
+          <div>${sxBarsHtml(sxMonths(reports))}</div>
+          <div><h4>By type</h4>${sxRankHtml(sxByType(year).slice(0, 6), "No reports in the last year.")}</div>
+        </div>
+        <h4>Waiting for approval</h4>
+        ${sxQueueHtml(waiting, 4)}
+      </section>
+
+      <section class="sx-panel" style="${lit("amber")}">
+        <header><h3>Needs attention</h3></header>
+        ${attention.length ? `<div class="sx-attn">${attention.map(([text, go, ic, tone]) => `<button type="button" class="sx-attn-row ${tone}" data-sx-go="${go}">
+          ${icon(ic, 18)}<span>${esc(text)}</span><span class="sx-go">&rsaquo;</span></button>`).join("")}</div>`
+          : `<p class="sx-empty sx-clear">${icon("checkCircle", 18)} All clear.</p>`}
+        <h4>Where reports come from</h4>
+        ${sxRankHtml(sxByShop(year).slice(0, 6), "No reports in the last year.")}
+      </section>
+
+      <section class="sx-panel" style="${lit(brief && briefPct >= 90 ? "green" : "ember")}">
+        <header><h3>Safety Desk</h3><button type="button" class="sx-link" data-sx-go="safetydesk">Open &rsaquo;</button></header>
+        ${brief ? `<p class="sx-sub">${esc(briefMonthTitle(brief.brief))} · ${esc(brief.brief.title)}</p>
+          <div class="sx-ring" style="--p:${briefPct}%"><b>${briefPct}<small>%</small></b></div>
+          <div class="sx-shops">${brief.shops.map(t => { const pct = t.expected ? Math.round(t.passed / t.expected * 100) : 0;
+            return `<div class="sx-shop"><span>${esc(t.shop)}</span><span class="sx-meter"><i style="width:${pct}%"></i></span><b>${t.passed}/${t.expected}</b></div>`; }).join("")}</div>`
+          : `<p class="sx-empty">This month's Safety Brief isn't up yet. Write one, or reuse an old one.</p>`}
+      </section>
+
+      <section class="sx-panel" style="${lit(fork.expired ? "red" : "green")}">
+        <header><h3>Forklift cards</h3><button type="button" class="sx-link" data-sx-go="certs">Open &rsaquo;</button></header>
+        <div class="sx-trio"><div><b>${sxNum(fork.certified)}</b><span>Certified</span></div>
+          <div class="amber"><b>${sxNum(fork.expiring.length)}</b><span>Expiring</span></div>
+          <div class="red"><b>${sxNum(fork.expired)}</b><span>Expired</span></div></div>
+        ${fork.expiring.length ? `<h4>Running out soonest</h4><div class="sx-list">${fork.expiring.slice(0, 5).map(x =>
+          `<div><span>${esc(x.name)}</span><b>${x.days} day${x.days === 1 ? "" : "s"}</b></div>`).join("")}</div>`
+          : `<p class="sx-empty">Nobody's card runs out in the next 60 days.</p>`}
+        ${fork.waiting ? `<p class="sx-sub">${fork.waiting} driving test${fork.waiting === 1 ? "" : "s"} waiting for the Training Manager.</p>` : ""}
+      </section>
+
+      <section class="sx-panel" style="${lit("slate")}">
+        <header><h3>Lift plans</h3><button type="button" class="sx-link" data-sx-go="plans">Open &rsaquo;</button></header>
+        ${liftWaiting.length ? `<div class="sx-list">${liftWaiting.slice(0, 5).map(p => `<div><span>${esc(p.job_description || "Untitled lift")}
+          <small>${esc([p.created_by_name, locations[p.location_id]].filter(Boolean).join(" · "))}</small></span>
+          <b>${p.percent_capacity == null ? "" : Math.round(p.percent_capacity) + "%"}</b></div>`).join("")}</div>`
+          : `<p class="sx-empty sx-clear">${icon("checkCircle", 18)} No lift plans waiting.</p>`}
+        <p class="sx-sub">${sxNum(plans.filter(p => p.status === "approved").length)} approved · ${sxNum(plans.length)} in all</p>
+      </section>
+    </div>
+  </div>`;
+}
+
+// The Safety Reports tab opens with the same picture, larger.
+function renderSafetyReportStats() {
+  const box = $("sxReportStats");
+  if (!box) return;
+  if (!isSafetyManager() || !srReports.length) { box.innerHTML = ""; return; }
+  const reports = srReports, waiting = reports.filter(srPending);
+  const year = reports.filter(r => Date.now() - new Date(r.created_at) < 365 * SX_DAY);
+  const injury = sxInjuryFree(reports);
+  box.innerHTML = `<div class="sx sx-reports">
+    <div class="sx-tiles">
+      ${sxTile("To approve", sxNum(waiting.length), "Waiting for a Safety Manager", { hot: waiting.length > 0, lit: "amber" })}
+      ${sxTile("Approved", sxNum(reports.length - waiting.length), "In the Safety Center for everyone", { lit: "green" })}
+      ${sxTile("Follow-ups asked", sxNum(year.filter(r => (r.answers || {}).follow_up === true).length), "In the last 12 months", {})}
+      ${sxTile("Injury-free", sxNum(injury.days), "days since a work-related injury", { lit: "green", good: true })}
+    </div>
+    <section class="sx-panel" style="${lit("ember")}">
+      <header><h3>The last 12 months</h3><span>${sxNum(year.length)} reports</span></header>
+      <div class="sx-split three">
+        <div>${sxBarsHtml(sxMonths(reports))}</div>
+        <div><h4>By type</h4>${sxRankHtml(sxByType(year), "No reports in the last year.")}</div>
+        <div><h4>By shop</h4>${sxRankHtml(sxByShop(year), "No reports in the last year.")}</div>
+      </div>
+    </section>
+  </div>`;
+}
+
+$("admin").addEventListener("click", (event) => {
+  const review = event.target.closest("[data-sx-review]");
+  if (review) {
+    srrOpenId = review.dataset.sxReview;
+    renderSafetyReportsAdmin();
+    return document.querySelector('#safetyNav [data-tab="safetyreports"]').click();
+  }
+  const go = event.target.closest("[data-sx-go]");
+  if (go && go.dataset.sxGo) document.querySelector(`#safetyNav [data-tab="${go.dataset.sxGo}"]`).click();
 });
 
 // ---- the Safety Desk (migration 0080) ---------------------------------------------
@@ -10787,19 +11249,25 @@ function renderAppNav(active) {
     + COMPANY_PAGES.map(p => navButton(p.id, p.title, p.icon,
         p.id === "news" ? newsUnseenCount() : 0, "data-view")).join("")
     + (isOwner() ? `<div class="nav-group">Manage</div>
-        <button class="nav-item" data-open-admin>${icon("settings", 18)}<span>Admin</span></button>` : "");
+        <button class="nav-item" data-open-admin>${icon("settings", 18)}<span>Admin</span></button>` : "")
+    + (isSafetyManager() ? `<button class="nav-item" data-open-safety>${icon("safety", 18)}<span>Safety</span>${
+        (n => n ? `<span class="nav-count">${n}</span>` : "")(srReports.filter(srPending).length)}</button>` : "");
   document.querySelectorAll("#appNav [data-nav]").forEach(b =>
     b.classList.toggle("active", b.dataset.nav === active));
 }
 
 function setMode(mode, active) {
-  const admin = mode === "admin";
+  const admin = mode === "admin", safety = mode === "safety";
   document.body.classList.toggle("admin-mode", admin);
-  $("appNav").classList.toggle("hidden", admin);
+  document.body.classList.toggle("safety-mode", safety);
+  $("appNav").classList.toggle("hidden", admin || safety);
   $("adminNav").classList.toggle("hidden", !admin);
-  $("brandSub").textContent = admin ? "Admin" : "Team Portal";
+  $("safetyNav").classList.toggle("hidden", !safety);
+  $("brandSub").textContent = admin ? "Admin" : safety ? "Safety" : "Team Portal";
+  $("adminEyebrow").textContent = safety ? "Safety" : "Admin";
   $("adminBtn").textContent = admin ? "Exit admin" : "Admin";
-  if (!admin) renderAppNav(active);
+  $("safetyBtn").textContent = safety ? "Exit safety" : "Safety";
+  if (!admin && !safety) renderAppNav(active);
   document.body.classList.remove("nav-open");
 }
 
@@ -10808,6 +11276,12 @@ $("scrim").onclick = () => document.body.classList.remove("nav-open");
 
 document.addEventListener("click", (event) => {
   if (event.target.closest("[data-open-admin]")) showAdmin();
+  if (event.target.closest("[data-open-safety]")) showSafety();
+});
+
+// Icons in the Safety dashboard's sidebar, the same way.
+document.querySelectorAll("#safetyNav i[data-icon]").forEach(el => {
+  el.outerHTML = icon(el.dataset.icon, 18);
 });
 
 // Icons in the admin sidebar are filled in once, from the same set as the rest.
@@ -16938,9 +17412,10 @@ document.querySelectorAll(".tabs button[data-tab]").forEach(btn => {
     document.querySelectorAll(".tabs button[data-tab]").forEach(b =>
       b.classList.toggle("active", b === btn));
     ["certs", "plans", "people", "support", "payroll", "tools",
-      "directory", "logins", "reminders", "events", "org", "openseat", "inspections", "courses", "articles", "skillsadmin", "sds", "news", "trainingstatus", "handbook", "agco", "mock", "safetydesk", "safetyreportform", "safetyreports"].forEach(name =>
+      "directory", "logins", "reminders", "events", "org", "openseat", "inspections", "courses", "articles", "skillsadmin", "sds", "news", "trainingstatus", "handbook", "agco", "mock", "safetydesk", "safetyreportform", "safetyreports", "safetyoverview"].forEach(name =>
       $("tab-" + name).classList.toggle("hidden", name !== btn.dataset.tab));
-    $("adminTitle").textContent = btn.textContent.trim();
+    $("adminTitle").textContent = btn.dataset.title || btn.querySelector("span").textContent.trim();
+    if (btn.closest("#safetyNav")) safetyTab = btn.dataset.tab; else adminTab = btn.dataset.tab;
     document.body.classList.remove("nav-open");
     window.scrollTo(0, 0);
   };
