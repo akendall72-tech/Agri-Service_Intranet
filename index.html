@@ -957,6 +957,24 @@
   .srd-photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
   .srd-photos img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 10px; background: var(--cab-bottom); }
   @media (max-width: 560px) { .srd-facts { grid-template-columns: 1fr; } }
+  .srd-wait { display: flex; align-items: flex-start; gap: 10px; --accent: var(--lit-amber); font-size: 14.5px; font-weight: 600; }
+  .srd-wait svg { flex: none; color: var(--lit-amber); margin-top: 1px; }
+  .srd-wait button.linkish { color: var(--lit-amber); text-decoration: underline; font-weight: 700; }
+  .srl-tags .cab-tag.srl-quiet { --accent: var(--lit-amber); }
+
+  /* Admin: approving Safety Reports (the plain admin look). */
+  .srr-tabs { margin: 10px 0 12px; }
+  .srr-list { display: grid; gap: 8px; }
+  .srr-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 12px 14px; margin: 0; }
+  .srr-row .note { margin: 3px 0 0; }
+  .srr-photos { display: flex; flex-wrap: wrap; gap: 10px; }
+  .srr-photo { display: grid; gap: 4px; width: 150px; margin: 0; font-weight: 500; cursor: pointer; }
+  .srr-photo img { width: 150px; height: 112px; object-fit: cover; border-radius: 8px; background: var(--canvas); border: 1px solid var(--line); }
+  .srr-photo span { display: flex; align-items: center; gap: 6px; font-size: 13.5px; }
+  .srr-photo input { width: auto; margin: 0; }
+  .srr-original { margin-top: 12px; padding: 10px 14px; border: 1px dashed var(--line-strong); border-radius: var(--radius-sm); }
+  .srr-original summary { cursor: pointer; font-weight: 600; }
+  .srr-original p { margin: 8px 0 0; font-size: 14px; }
 
   /* Admin: writing the briefs (the plain admin look). */
   .sd-admin-list { margin-top: 12px; }
@@ -1986,6 +2004,7 @@
       <button data-tab="certs" class="active"><i data-icon="forklift"></i><span>Forklift Certifications</span></button>
       <button data-tab="plans"><i data-icon="rigging"></i><span>Lift Plans</span></button>
       <button data-tab="inspections"><i data-icon="inspection"></i><span>Inspections</span></button>
+      <button data-tab="safetyreports"><i data-icon="megaphone"></i><span>Safety Reports</span></button>
       <button data-tab="people"><i data-icon="people"></i><span>People</span></button>
 
       <div class="nav-group">App content</div>
@@ -1995,7 +2014,7 @@
       <button data-tab="articles"><i data-icon="doc"></i><span>Training Articles</span></button>
       <button data-tab="skillsadmin"><i data-icon="training"></i><span>Skills</span></button>
       <button data-tab="safetydesk"><i data-icon="safety"></i><span>Safety Desk</span></button>
-      <button data-tab="safetyreportform"><i data-icon="megaphone"></i><span>Safety Report</span></button>
+      <button data-tab="safetyreportform"><i data-icon="megaphone"></i><span>Safety Report Form</span></button>
       <button data-tab="sds"><i data-icon="safety"></i><span>Safety Data Sheets</span></button>
       <button data-tab="handbook"><i data-icon="briefcase"></i><span>Employee Handbook</span></button>
       <button data-tab="reminders"><i data-icon="reminders"></i><span>Reminders</span></button>
@@ -2834,6 +2853,11 @@
       <div class="card hidden" id="sdEditor"></div>
     </section>
 
+    <!-- Approving Safety Reports: drawn by renderSafetyReportsAdmin -->
+    <section id="tab-safetyreports" class="hidden">
+      <div id="srrAdmin"></div>
+    </section>
+
     <!-- The Safety Report form's questions: drawn by renderSafetyReportAdmin -->
     <section id="tab-safetyreportform" class="hidden">
       <div id="srAdmin"></div>
@@ -3458,7 +3482,7 @@ function showAdmin() {
   renderCoursesAdmin(); renderSdsAdmin(); renderSdsPending(); renderArticlesAdmin(); renderSkillsAdmin();
   renderNewsAdmin(); renderTsImport(); renderTsLive(); renderHandbook(); renderAgcoImport(); renderAgcoLive();
   renderAgcoTechs(); renderAgcoRules(); renderAgcoAdded(); renderAgcoBales(); renderMockSchedule(); renderSafetyAdmin();
-  renderSafetyReportAdmin();
+  renderSafetyReportAdmin(); renderSafetyReportsAdmin();
   window.scrollTo(0, 0);
 }
 
@@ -3521,8 +3545,11 @@ const VIEWS = {
     setTimeout(renderSdsView);
     return hero("Safety Center", "Report what you see, keep your safety training current, and find the safety data sheet for any product.")
       + linkGrid(SAFETY_LINKS.map(linkCard).join("")
-        + (isSafetyManager() ? linkCard({ title: "Safety Reports", sub: `Every report sent in${srReports.length ? ` (${srReports.length})` : ""}. For the Safety Manager.`,
-            tint: "amber", icon: "reminders", view: "safetyreportlist" }) : ""))
+        + linkCard(isSafetyManager()
+          ? { title: "Safety Reports", tint: "amber", icon: "reminders", view: "safetyreportlist",
+              sub: `Every report sent.${(n => n ? ` ${n} waiting for approval on the admin page.` : " Approve them on the admin page and everyone can read them.")(srReports.filter(srPending).length)}` }
+          : { title: "Safety Reports", tint: "amber", icon: "reminders", view: "safetyreportlist",
+              sub: "Reports from across the company, approved by the Safety Manager: what happened and what we learned." }))
       + sdsSectionHtml();
   },
 
@@ -6871,7 +6898,7 @@ $("view").addEventListener("click", (event) => {
 
 let srForm = null, srFormError = null, srReports = [], srEmployees = null;
 let srPicked = {}, srPhotos = {}, srSent = false, srNotice = "";
-let srSort = "sent", srAscending = false, srFilters = {}, srQuery = "", openSafetyReportId = null;
+let srSort = "sent", srAscending = false, srFilters = {}, srQuery = "", srStatus = null, openSafetyReportId = null;
 
 const SR_TYPES = [["text", "Short answer"], ["long_text", "Long answer"], ["date", "Date"], ["choice", "Pick one"],
   ["yes_no", "Yes or no"], ["people", "People (from All Employees)"], ["location", "Shop (starts at theirs)"], ["photos", "Photos"]];
@@ -6879,14 +6906,28 @@ const SR_TYPES = [["text", "Short answer"], ["long_text", "Long answer"], ["date
 const isSafetyManager = () => isOwner() && personDesignations.some(pd =>
   pd.person_id === me.id && pd.designation_id === "safety_manager");
 
+// The table gives your own reports, or every one for the Safety Manager; the
+// log gives the approved ones everyone reads, without who sent them (0085).
 async function loadSafetyReportData() {
-  const [form, reports] = await Promise.all([
+  const [form, reports, log] = await Promise.all([
     db.from("safety_report_form").select("*").eq("id", "current").maybeSingle(),
-    db.from("safety_reports").select("*").order("created_at", { ascending: false }).limit(1000)
+    db.from("safety_reports").select("*").order("created_at", { ascending: false }).limit(1000),
+    db.rpc("safety_report_log")
   ]);
   srFormError = form.error ? form.error.message : null;
   srForm = form.data || null;
-  srReports = reports.data || [];
+  const own = reports.data || [], seen = new Set(own.map(r => r.id));
+  srReports = own.concat((log.data || []).filter(r => !seen.has(r.id)))
+    .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+}
+
+const srPending = (r) => (r.status || "pending") !== "approved";
+// The originals for the Safety Manager and the sender; the shared copies on a
+// report from the log, whose answers leave the originals out.
+function srPhotoPaths(r) {
+  const a = r.answers || {};
+  const originals = (r.fields_snapshot || []).filter(f => f.type === "photos").flatMap(f => Array.isArray(a[f.id]) ? a[f.id] : []);
+  return originals.length ? originals : (r.shared_photos || []);
 }
 
 const srFields = () => ((srForm && srForm.fields) || []).filter(f => f.active !== false);
@@ -7018,6 +7059,12 @@ $("view").addEventListener("click", (event) => {
   const act = event.target.closest("[data-sr-act]");
   if (act && act.dataset.srAct === "another") { srSent = false; srPicked = {}; srPhotos = {}; srNotice = ""; return showView("safetyform"); }
   if (act && act.dataset.srAct === "pdf") return srDownloadPdf(srReports.find(r => r.id === openSafetyReportId));
+  if (act && act.dataset.srAct === "review") {
+    srrOpenId = openSafetyReportId;
+    showAdmin();
+    document.querySelector('#adminNav [data-tab="safetyreports"]').click();
+    return;
+  }
   const report = event.target.closest("[data-sr-report]");
   if (report) openSafetyReportId = report.dataset.srReport;
 });
@@ -7085,11 +7132,16 @@ function srQuestions() {
 }
 
 function safetyReportListView() {
-  const head = hero("Safety Reports", "Every report sent, newest first. Sort and filter by any question.");
-  if (!isSafetyManager()) return head + `<div class="srl" style="${lit("ember")}"><p class="srf-note">Only the Safety Manager sees every report.</p></div>`;
+  const manager = isSafetyManager();
+  const head = hero("Safety Reports", manager
+    ? "Every report sent, waiting or approved. Sort and filter by any question; approve them on the admin page."
+    : "Reports from across the company, approved by the Safety Manager. Sort and filter by any question.");
+  if (!srReports.length) return head + `<div class="srl" style="${lit("ember")}"><p class="srf-note">${manager ? "No reports yet."
+    : "No reports have been approved yet. They show here once the Safety Manager approves them."}</p></div>`;
   const qs = srQuestions();
   const sortable = qs.filter(f => !["photos", "long_text", "people"].includes(f.type));
-  const filterable = qs.filter(f => ["choice", "location", "yes_no"].includes(f.type));
+  // Whether someone asked to be followed up is between them and the Safety Manager.
+  const filterable = qs.filter(f => ["choice", "location", "yes_no"].includes(f.type) && (manager || f.id !== "follow_up"));
   const words = srQuery.toLowerCase().split(/\s+/).filter(Boolean);
   const value = (r) => {
     if (srSort === "sent") return r.created_at;
@@ -7097,7 +7149,8 @@ function safetyReportListView() {
     if (!f) return r.created_at;
     return f.type === "date" ? String((r.answers || {})[f.id] || "") : srDisplay(r, f).toLowerCase();
   };
-  const shown = srReports.filter(r => Object.entries(srFilters).every(([id, v]) => {
+  const shown = srReports.filter(r => (!srStatus || (srStatus === "waiting") === srPending(r))
+    && Object.entries(srFilters).every(([id, v]) => {
       const f = qs.find(x => x.id === id); return !f || srDisplay(r, f) === v; })
     && words.every(w => [r.reporter_name, ...(r.fields_snapshot || []).map(f => srDisplay(r, f))].join(" ").toLowerCase().includes(w)))
     .sort((a, b) => { const x = value(a), y = value(b);
@@ -7111,6 +7164,9 @@ function safetyReportListView() {
     <div class="srl-bar">
       <label class="srl-ctl">Sort by <select id="srSort"><option value="sent"${srSort === "sent" ? " selected" : ""}>Date sent</option>
         ${sortable.map(f => `<option value="${esc(f.id)}"${srSort === f.id ? " selected" : ""}>${esc(f.label)}</option>`).join("")}</select></label>
+      ${manager ? `<label class="srl-ctl">Status <select id="srStatus"><option value="">Any</option>
+        <option value="waiting"${srStatus === "waiting" ? " selected" : ""}>Waiting for approval</option>
+        <option value="approved"${srStatus === "approved" ? " selected" : ""}>Approved</option></select></label>` : ""}
       <label class="srl-ctl"><select id="srOrder"><option value="desc"${srAscending ? "" : " selected"}>${isDate ? "Newest first" : "Z to A"}</option>
         <option value="asc"${srAscending ? " selected" : ""}>${isDate ? "Oldest first" : "A to Z"}</option></select></label>
       ${filterable.map(f => {
@@ -7123,8 +7179,10 @@ function safetyReportListView() {
     <div class="group-title">${shown.length === srReports.length ? "Reports" : "Matching"}<span class="srl-count">${shown.length} of ${srReports.length}</span></div>
     <div class="srl-list">${shown.map(r => {
       const a = r.answers || {};
-      return `<button type="button" class="cab-card srl-row${a.follow_up === true ? " follow" : ""}" data-view="safetyreportone" data-sr-report="${esc(r.id)}">
-        <span class="srl-tags">${a.kind ? `<span class="cab-tag">${esc(srShortKind(a.kind))}</span>` : ""}${a.follow_up === true ? `<span class="cab-tag srl-follow">Follow up</span>` : ""}</span>
+      return `<button type="button" class="cab-card srl-row${srPending(r) ? " follow" : ""}" data-view="safetyreportone" data-sr-report="${esc(r.id)}">
+        <span class="srl-tags">${srPending(r) ? `<span class="cab-tag srl-follow">${manager ? "To approve" : "Waiting for approval"}</span>` : ""}${
+          a.kind ? `<span class="cab-tag">${esc(srShortKind(a.kind))}</span>` : ""}${
+          manager && a.follow_up === true ? `<span class="cab-tag srl-quiet">Follow up</span>` : ""}</span>
         <b>${esc(srTitle(r))}</b>
         <span class="srl-meta">${[a.date ? dateOnly(a.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "",
           a.where || "", r.reporter_name].filter(Boolean).map(esc).join(" · ")}</span>
@@ -7137,6 +7195,7 @@ $("view").addEventListener("change", (event) => {
   const t = event.target;
   if (t.id === "srSort") { srSort = t.value; return showView("safetyreportlist"); }
   if (t.id === "srOrder") { srAscending = t.value === "asc"; return showView("safetyreportlist"); }
+  if (t.id === "srStatus") { srStatus = t.value || null; return showView("safetyreportlist"); }
   if (t.dataset.srFilter !== undefined) { if (t.value) srFilters[t.dataset.srFilter] = t.value; else delete srFilters[t.dataset.srFilter]; return showView("safetyreportlist"); }
 });
 $("view").addEventListener("input", (event) => {
@@ -7150,10 +7209,22 @@ $("view").addEventListener("input", (event) => {
 function safetyReportOneView() {
   const r = srReports.find(x => x.id === openSafetyReportId);
   if (!r) return hero("Safety Report") + `<div class="srl" style="${lit("ember")}"><p class="srf-note">This report isn't in the list any more.</p></div>`;
-  const a = r.answers || {}, shop = srShop(r.reporter_location);
+  const a = r.answers || {}, shop = srShop(r.reporter_location), manager = isSafetyManager();
   const inHeader = new Set(["kind", "title", "date", "where", "follow_up"]);
   const rest = (r.fields_snapshot || []).filter(f => !inHeader.has(f.id) && f.type !== "photos");
-  const photoPaths = (r.fields_snapshot || []).filter(f => f.type === "photos").flatMap(f => Array.isArray(a[f.id]) ? a[f.id] : []);
+  const photoPaths = srPhotoPaths(r);
+  const day = (iso) => new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  // Who sent it isn't on a report from the log; whether they asked for a
+  // follow-up is for the Safety Manager.
+  const facts = [
+    r.reporter_name ? ["Reported by", [r.reporter_name, manager ? r.reporter_email : ""].filter(Boolean).join(" · ")] : null,
+    r.reporter_name ? ["Reporter's shop", shop || "—"] : null,
+    ["Incident date", a.date ? dateOnly(a.date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "—"],
+    ["Where it happened", a.where ? (a.where === "N/A" ? "Not at a location" : a.where) : "—"],
+    ["Type of report", a.kind || "—"],
+    manager ? ["Follow-up requested", a.follow_up === true ? "Yes — please follow up" : a.follow_up === false ? "No" : "—"] : null,
+    manager && !srPending(r) ? ["Approved", [day(r.approved_at), r.approved_by_name].filter(Boolean).join(" by ")] : null
+  ].filter(Boolean);
   setTimeout(async () => {
     for (const [i, path] of photoPaths.entries()) {
       const { data } = await db.storage.from("safety-report-photos").createSignedUrl(path, 3600);
@@ -7163,13 +7234,12 @@ function safetyReportOneView() {
   });
   return hero(srTitle(r), [a.kind ? srShortKind(a.kind) : "", `Sent ${new Date(r.created_at).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })}`].filter(Boolean).join(" · "))
     + `<div class="srl srd" style="${lit("ember")}">
-    <div class="srd-acts"><button type="button" data-sr-act="pdf">${icon("doc", 16)}Download the PDF</button><span class="msg"></span></div>
+    ${srPending(r) ? `<div class="srf-card srd-wait">${icon("clock", 18)}<span>${manager
+      ? `Waiting for approval. <button type="button" class="linkish" data-sr-act="review">Edit and approve it on the admin page</button>; then everyone can read it.`
+      : "Waiting for the Safety Manager to approve it. Only you and they can see it until then."}</span></div>` : ""}
+    ${manager ? `<div class="srd-acts"><button type="button" data-sr-act="pdf">${icon("doc", 16)}Download the PDF</button><span class="msg"></span></div>` : ""}
     <div class="srf-card srd-facts">
-      ${[["Reported by", [r.reporter_name, r.reporter_email].filter(Boolean).join(" · ")], ["Reporter's shop", shop || "—"],
-         ["Incident date", a.date ? dateOnly(a.date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "—"],
-         ["Where it happened", a.where ? (a.where === "N/A" ? "Not at a location" : a.where) : "—"],
-         ["Type of report", a.kind || "—"], ["Follow-up requested", a.follow_up === true ? "Yes — please follow up" : a.follow_up === false ? "No" : "—"]]
-        .map(([k, v]) => `<div${k === "Follow-up requested" && a.follow_up === true ? ` class="hot"` : ""}><span>${k}</span><b>${esc(v)}</b></div>`).join("")}
+      ${facts.map(([k, v]) => `<div${k === "Follow-up requested" && a.follow_up === true ? ` class="hot"` : ""}><span>${k}</span><b>${esc(v)}</b></div>`).join("")}
     </div>
     ${rest.length ? `<div class="group-title">The report</div>${rest.map(f => {
       const v = srDisplay(r, f);
@@ -7248,7 +7318,7 @@ async function srDownloadPdf(r) {
     doc.text(t.toUpperCase(), M, y + 10); y += 16; doc.setFillColor(...red); doc.rect(M, y, 36, 2, "F"); y += 12; };
   if (rest.length) { section("The report"); rest.forEach(f => answer(f.label, srDisplay(r, f))); }
 
-  const paths = (r.fields_snapshot || []).filter(f => f.type === "photos").flatMap(f => Array.isArray(a[f.id]) ? a[f.id] : []);
+  const paths = srPhotoPaths(r);
   if (paths.length) {
     const cellW = (CW - 12) / 2, cellH = cellW * 0.75;
     ensure(cellH + 44); section("Photos");
@@ -7389,6 +7459,219 @@ $("admin").addEventListener("click", async (event) => {
     order.sort((x, y) => x.n - y.n || x.i - y.i);
     speak(card, "Saving…", false);
     return srSaveForm(order.map(o => o.f), card, "Saved. It's live in the app and on the web page.");
+  }
+});
+
+// ---- admin: approving the reports (migration 0085) -------------------------------
+//
+// A report waits here until a Safety Manager approves it. They can tidy the
+// wording first, and pick which photos everyone sees: those are copied under
+// approved/<report id>/, because the originals sit under the sender's own id.
+// The first edit keeps the sender's own words in original_answers, shown here.
+// Approved, it joins the Safety Reports everyone reads, without who sent it.
+
+let srrOpenId = null, srrShowing = "waiting";
+
+const SRR_BUCKET = "safety-report-photos";
+const srrShared = (r, path) => `approved/${r.id}/${path.split("/").pop()}`;
+
+function renderSafetyReportsAdmin() {
+  const box = $("srrAdmin");
+  if (!box) return;
+  if (srFormError) {
+    box.innerHTML = `<div class="card"><p class="error">${/does not exist|schema cache/i.test(srFormError)
+      ? "Run migration 0082_safety_reports.sql in the SQL editor, then reload this page." : esc(srFormError)}</p></div>`;
+    return;
+  }
+  if (!isSafetyManager()) {
+    box.innerHTML = `<div class="card"><h2>Safety Reports</h2><p class="note">Only a Safety Manager approves reports. Approved
+      ones are in the Safety Center for everyone, without who sent them.</p></div>`;
+    return;
+  }
+  const r = srReports.find(x => x.id === srrOpenId);
+  if (r) return renderSrrEditor(box, r);
+  if (srReports.length && !("status" in srReports[0])) {
+    box.innerHTML = `<div class="card"><p class="error">Run migration 0085_safety_report_approval.sql in the SQL editor, then reload
+      this page.</p></div>`;
+    return;
+  }
+  const waiting = srReports.filter(srPending), approved = srReports.filter(x => !srPending(x));
+  const list = srrShowing === "approved" ? approved : waiting;
+  const day = (iso) => new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  box.innerHTML = `<div class="card">
+    <h2>Safety Reports</h2>
+    <p class="note">Every report waits here for a Safety Manager. <b>Review</b> one to read it, tidy the wording if it needs it, choose
+      which photos to share, and <b>Approve</b>. Approved reports are in the Safety Center for everyone to read, without the
+      sender's name, email or shop. Their own words are always kept.</p>
+    <div class="row srr-tabs">
+      <button class="${srrShowing === "waiting" ? "" : "ghost"}" data-srr-show="waiting">Waiting for approval (${waiting.length})</button>
+      <button class="${srrShowing === "approved" ? "" : "ghost"}" data-srr-show="approved">Approved (${approved.length})</button>
+      <span class="msg"></span>
+    </div>
+    <div class="srr-list">${list.map(x => {
+      const a = x.answers || {};
+      return `<div class="role srr-row"><div>
+          <b>${esc(srTitle(x))}</b>${a.kind ? ` <span class="badge b-none">${esc(srShortKind(a.kind))}</span>` : ""}${
+            a.follow_up === true ? ` <span class="badge b-expiring">Follow up</span>` : ""}
+          <div class="note">${esc(x.reporter_name || "—")}${x.reporter_location ? ` · ${esc(srShop(x.reporter_location))}` : ""} · sent ${esc(day(x.created_at))}${
+            srPending(x) ? "" : ` · approved ${esc(day(x.approved_at))}${x.approved_by_name ? ` by ${esc(x.approved_by_name)}` : ""}`}${
+            x.edited_at ? " · edited" : ""}</div></div>
+        <button class="pdf" data-srr-open="${esc(x.id)}">Review</button></div>`;
+    }).join("") || `<p class="note">${srrShowing === "approved" ? "Nothing approved yet." : "Nothing waiting. Every report has been approved."}</p>`}</div>
+  </div>`;
+}
+
+// One answer, as a box to edit.
+function srrInput(r, f) {
+  const a = (r.answers || {})[f.id];
+  const name = `data-srr-field="${esc(f.id)}"`;
+  if (f.type === "long_text") return `<textarea ${name} rows="5">${esc(a ?? "")}</textarea>`;
+  if (f.type === "date") return `<input type="date" ${name} value="${esc(a ?? "")}">`;
+  if (f.type === "yes_no") return `<select ${name}><option value="">—</option>
+    <option value="yes"${a === true ? " selected" : ""}>Yes</option><option value="no"${a === false ? " selected" : ""}>No</option></select>`;
+  if (f.type === "people") return `<textarea ${name} rows="3" placeholder="One name per line">${esc(Array.isArray(a) ? a.join("\n") : (a ?? ""))}</textarea>`;
+  if (f.type === "choice" || f.type === "location") {
+    const options = f.type === "location"
+      ? allLocations.map(l => l.name).concat(["N/A"])
+      : (((srForm && srForm.fields) || []).find(q => q.id === f.id) || {}).options || [];
+    const all = a && !options.includes(a) ? [a, ...options] : options;
+    return `<select ${name}><option value="">—</option>${all.map(o =>
+      `<option${o === a ? " selected" : ""}>${esc(o)}</option>`).join("")}</select>`;
+  }
+  return `<input type="text" ${name} value="${esc(a ?? "")}">`;
+}
+
+function renderSrrEditor(box, r) {
+  const fields = (r.fields_snapshot || []).filter(f => f.type !== "photos");
+  const photos = srPhotoPaths(r);
+  const original = r.original_answers;
+  const sharedNow = new Set(r.shared_photos || []);
+  const show = (answers, f) => srDisplay({ ...r, answers }, f);
+  box.innerHTML = `<div class="card srr-editor" data-srr-report="${esc(r.id)}">
+    <div class="row" style="justify-content:space-between;align-items:flex-start">
+      <div><h2 style="margin:0">${esc(srTitle(r))}</h2>
+        <p class="note" style="margin:4px 0 0">${srPending(r) ? `<span class="badge b-expiring">Waiting for approval</span>`
+          : `<span class="badge b-current">Approved</span> ${esc(new Date(r.approved_at).toLocaleDateString())}${r.approved_by_name ? ` by ${esc(r.approved_by_name)}` : ""}`}
+          &nbsp;Sent by <b>${esc(r.reporter_name || "—")}</b>${r.reporter_email ? ` (${esc(r.reporter_email)})` : ""}${
+          r.reporter_location ? `, ${esc(srShop(r.reporter_location))}` : ""}, ${esc(new Date(r.created_at).toLocaleString())}.
+          Only Safety Managers see who sent it.</p></div>
+      <button class="ghost" data-srr-act="back">Back to the list</button>
+    </div>
+    <div class="fields" style="margin-top:14px">${fields.map(f => `<div class="${["long_text", "people"].includes(f.type) ? "wide" : ""}">
+      <label>${esc(f.label)}</label>${srrInput(r, f)}</div>`).join("")}</div>
+    ${photos.length ? `<label style="display:block;margin-top:4px">Photos to share with everyone</label>
+      <p class="note" style="margin:2px 0 8px">Untick any that show a face, an injury, or anything else that shouldn't be shared. The
+        Safety Manager keeps every photo either way.</p>
+      <div class="srr-photos">${photos.map((path, i) => `<label class="srr-photo">
+        <img data-srr-img="${i}" alt="Photo ${i + 1}">
+        <span><input type="checkbox" data-srr-photo="${esc(path)}"${srPending(r) || sharedNow.has(srrShared(r, path)) ? " checked" : ""}> Share</span>
+      </label>`).join("")}</div>` : ""}
+    ${original ? `<details class="srr-original"><summary>Their own words, before ${esc(r.edited_by_name || "a Safety Manager")} edited it</summary>
+      ${fields.map(f => `<p><b>${esc(f.label)}</b><br>${esc(show(original, f) || "—").replace(/\n/g, "<br>")}</p>`).join("")}</details>` : ""}
+    <div class="row" style="margin-top:14px">
+      ${srPending(r) ? `<button data-srr-act="approve">Approve</button><button class="ghost" data-srr-act="save">Save changes</button>`
+        : `<button data-srr-act="save">Save changes</button><button class="ghost" data-srr-act="unapprove">Move back to waiting</button>`}
+      <button class="ghost" data-srr-act="delete" style="margin-left:auto">Delete</button><span class="msg"></span>
+    </div>
+  </div>`;
+  setTimeout(async () => {
+    for (const [i, path] of photos.entries()) {
+      const { data } = await db.storage.from(SRR_BUCKET).createSignedUrl(path, 3600);
+      const img = box.querySelector(`[data-srr-img="${i}"]`);
+      if (img && data && data.signedUrl) img.src = data.signedUrl;
+    }
+  });
+}
+
+// The edited answers, from the boxes. An answer cleared is taken out.
+function srrAnswers(box, r) {
+  const answers = { ...(r.answers || {}) };
+  for (const f of (r.fields_snapshot || []).filter(x => x.type !== "photos")) {
+    const el = box.querySelector(`[data-srr-field="${CSS.escape(f.id)}"]`);
+    if (!el) continue;
+    let v = el.value.trim();
+    if (f.type === "yes_no") v = v === "yes" ? true : v === "no" ? false : null;
+    else if (f.type === "people") { v = v.split("\n").map(n => n.trim()).filter(Boolean); if (!v.length) v = null; }
+    else if (!v) v = null;
+    if (v === null) delete answers[f.id]; else answers[f.id] = v;
+  }
+  return answers;
+}
+
+// Copies the chosen photos where everyone can read them, after clearing out
+// the last lot. Returns the copies' paths, or throws.
+async function srrSharePhotos(box, r) {
+  if ((r.shared_photos || []).length) await db.storage.from(SRR_BUCKET).remove(r.shared_photos);
+  const chosen = [...box.querySelectorAll("[data-srr-photo]:checked")].map(c => c.dataset.srrPhoto);
+  const copies = [];
+  for (const path of chosen) {
+    const to = srrShared(r, path);
+    const { error } = await db.storage.from(SRR_BUCKET).copy(path, to);
+    if (error) throw new Error(`A photo couldn't be shared: ${error.message}`);
+    copies.push(to);
+  }
+  return copies;
+}
+
+async function srrSave(button, approve) {
+  const box = button.closest("[data-srr-report]"), row = button.closest(".row");
+  const r = srReports.find(x => x.id === box.dataset.srrReport);
+  if (!r) return;
+  const answers = srrAnswers(box, r);
+  const required = new Set(((srForm && srForm.fields) || []).filter(f => f.required).map(f => f.id));
+  const missing = (r.fields_snapshot || []).filter(f => f.type !== "photos" && required.has(f.id) && answers[f.id] === undefined);
+  if (approve && missing.length) return speak(row, `Fill in ${missing.map(f => f.label.replace(/[?.:]+$/, "")).join("; ")} before approving.`, true);
+  const goingLive = approve || !srPending(r);
+  row.querySelectorAll("button").forEach(b => b.disabled = true);
+  speak(row, approve ? "Approving…" : "Saving…", false);
+  try {
+    const change = { answers };
+    if (approve) change.status = "approved";
+    if (goingLive) change.shared_photos = await srrSharePhotos(box, r);
+    const { data, error } = await db.from("safety_reports").update(change).eq("id", r.id).select("id");
+    if (error) throw error;
+    if (!(data || []).length) throw new Error("Not saved — only a Safety Manager can change reports.");
+  } catch (e) {
+    row.querySelectorAll("button").forEach(b => b.disabled = false);
+    return speak(row, e.message, true);
+  }
+  await loadSafetyReportData();
+  if (approve) { srrOpenId = null; srrShowing = "waiting"; }
+  renderSafetyReportsAdmin();
+  if (approve) speak($("srrAdmin").querySelector(".srr-tabs"), "Approved. Everyone can read it in the Safety Center now.", false);
+  else speak($("srrAdmin").querySelector("[data-srr-report] .row:last-child"), "Saved.", false);
+}
+
+$("admin").addEventListener("click", async (event) => {
+  const show = event.target.closest("[data-srr-show]");
+  if (show) { srrShowing = show.dataset.srrShow; return renderSafetyReportsAdmin(); }
+  const open = event.target.closest("[data-srr-open]");
+  if (open) { srrOpenId = open.dataset.srrOpen; renderSafetyReportsAdmin(); return window.scrollTo(0, 0); }
+  const button = event.target.closest("[data-srr-act]");
+  if (!button) return;
+  const act = button.dataset.srrAct;
+  if (act === "back") { srrOpenId = null; return renderSafetyReportsAdmin(); }
+  if (act === "approve") return srrSave(button, true);
+  if (act === "save") return srrSave(button, false);
+  const box = button.closest("[data-srr-report]"), row = button.closest(".row");
+  const r = srReports.find(x => x.id === box.dataset.srrReport);
+  if (act === "unapprove") {
+    const { data, error } = await db.from("safety_reports").update({ status: "pending" }).eq("id", r.id).select("id");
+    if (error || !(data || []).length) return speak(row, error ? error.message : "Not saved.", true);
+    if ((r.shared_photos || []).length) await db.storage.from(SRR_BUCKET).remove(r.shared_photos);
+    await loadSafetyReportData();
+    renderSafetyReportsAdmin();
+    return speak($("srrAdmin").querySelector("[data-srr-report] .row:last-child"), "Moved back to waiting. Nobody else can see it now.", false);
+  }
+  if (act === "delete") {
+    if (!confirm("Delete this report for good, photos and all? This can't be undone.")) return;
+    const { data, error } = await db.from("safety_reports").delete().eq("id", r.id).select("id");
+    if (error || !(data || []).length) return speak(row, error ? error.message : "Not deleted — only a Safety Manager can delete reports.", true);
+    const files = (r.shared_photos || []).concat(srPhotoPaths(r).filter(p => !p.startsWith("approved/")));
+    if (files.length) await db.storage.from(SRR_BUCKET).remove(files);
+    srrOpenId = null;
+    await loadSafetyReportData();
+    renderSafetyReportsAdmin();
   }
 });
 
@@ -7728,8 +8011,8 @@ function renderSafetyAdmin() {
     <div class="sd-admin-list">${safetyBriefs.map(b => {
       const passed = safetyResults.filter(r => r.brief_id === b.id && r.passed_at).length;
       const state = !b.is_published ? `<span class="badge b-none">Draft — nobody sees it</span>`
-        : b.month > month ? `<span class="badge b-warn">Shows from ${esc(dateOnly(b.month).toLocaleDateString("en-US", { month: "long", day: "numeric" }))}</span>`
-        : `<span class="badge b-ok">Showing</span>`;
+        : b.month > month ? `<span class="badge b-expiring">Shows from ${esc(dateOnly(b.month).toLocaleDateString("en-US", { month: "long", day: "numeric" }))}</span>`
+        : `<span class="badge b-current">Showing</span>`;
       return `<div class="role sd-admin-row"><div><b>${esc(briefMonthTitle(b))}</b> · ${esc(b.title)} ${state}
           <div class="note">${(b.questions || []).length} questions · pass ${briefNeeded(b)} · questions open after ${b.read_minutes} min
             ${b.document_name ? ` · ${esc(b.document_name)}` : ""} · ${passed} passed</div></div>
@@ -16655,7 +16938,7 @@ document.querySelectorAll(".tabs button[data-tab]").forEach(btn => {
     document.querySelectorAll(".tabs button[data-tab]").forEach(b =>
       b.classList.toggle("active", b === btn));
     ["certs", "plans", "people", "support", "payroll", "tools",
-      "directory", "logins", "reminders", "events", "org", "openseat", "inspections", "courses", "articles", "skillsadmin", "sds", "news", "trainingstatus", "handbook", "agco", "mock", "safetydesk", "safetyreportform"].forEach(name =>
+      "directory", "logins", "reminders", "events", "org", "openseat", "inspections", "courses", "articles", "skillsadmin", "sds", "news", "trainingstatus", "handbook", "agco", "mock", "safetydesk", "safetyreportform", "safetyreports"].forEach(name =>
       $("tab-" + name).classList.toggle("hidden", name !== btn.dataset.tab));
     $("adminTitle").textContent = btn.textContent.trim();
     document.body.classList.remove("nav-open");
