@@ -3513,7 +3513,7 @@ const FORKLIFT_LINKS = [
 const SAFETY_LINKS = [
   { title: "Safety Desk", sub: "This month's Safety Brief: read it, then answer a few questions. Everyone, every month.",
     tint: "ember", icon: "doc", view: "safetydesk" },
-  { title: "Safety Report", sub: "Report an incident, near miss, hazard or idea. It goes to the Safety Manager.",
+  { title: "Submit a Safety Report", sub: "Report an incident, near miss, hazard or idea. It goes to the Safety Manager.",
     tint: "ember", icon: "megaphone", view: "safetyform" }
 ];
 
@@ -3738,9 +3738,9 @@ const VIEWS = {
     return hero("Safety Center", "Report what you see, keep your safety training current, and find the safety data sheet for any product.")
       + linkGrid(SAFETY_LINKS.map(linkCard).join("")
         + linkCard(isSafetyManager()
-          ? { title: "Safety Reports", tint: "amber", icon: "reminders", view: "safetyreportlist",
+          ? { title: "View a Safety Report", tint: "amber", icon: "reminders", view: "safetyreportlist",
               sub: `Every report sent.${(n => n ? ` ${n} waiting for approval on the Safety dashboard.` : " Approve them on the Safety dashboard and everyone can read them.")(srReports.filter(srPending).length)}` }
-          : { title: "Safety Reports", tint: "amber", icon: "reminders", view: "safetyreportlist",
+          : { title: "View a Safety Report", tint: "amber", icon: "reminders", view: "safetyreportlist",
               sub: "Reports from across the company, approved by the Safety Manager: what happened and what we learned." }))
       + sdsSectionHtml();
   },
