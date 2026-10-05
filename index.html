@@ -592,7 +592,7 @@
     .brand-name { font-size: 14px; white-space: nowrap; }
     .brand-mark { width: 28px; height: 28px; flex-basis: 28px; }
     .topbar-right { gap: 8px; }
-    #adminBtn, #safetyBtn { display: none !important; }   /* they're in the menu */
+    #adminBtn, #safetyBtn, #trainingBtn { display: none !important; }   /* they're in the menu */
     #signOut { padding: 6px 10px; font-size: 13px; }
     .who-avatar { width: 30px; height: 30px; flex-basis: 30px; font-size: 12px; }
     .stat-cards { grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -1122,6 +1122,106 @@
   a.sd-mail:hover { background: var(--red-dark); text-decoration: none; }
   a.sd-mail:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
   table.sd-missing td, table.sd-missing th { font-size: 13.5px; }
+
+  /* ---- The Training dashboard: Training Managers' side of the page. Cab, in teal. ---- */
+  .btn-training { border-color: color-mix(in srgb, var(--lit-teal) 45%, var(--line-strong)); }
+  .training-mode .btn-training { background: linear-gradient(var(--cab-top), var(--cab-bottom)); color: #fff; border-color: var(--cab-edge); }
+  .training-mode .sidebar .tabs button.active { background: color-mix(in srgb, var(--lit-teal) 16%, #fff); color: #0F5E57; }
+  .training-mode .sidebar .tabs button.active svg { color: #0F766E; }
+  .nav-count.tx-stale { background: #D97706; }
+  body.training-mode #admin .page-head { position: relative; overflow: hidden; margin-bottom: 18px; padding: 18px 24px 18px 30px;
+    border-radius: 16px; border: 1px solid var(--cab-edge); background:
+      radial-gradient(120% 160% at 100% 0%, color-mix(in srgb, var(--lit-teal) 24%, transparent), transparent 55%),
+      linear-gradient(var(--cab-top), var(--cab-bottom)); box-shadow: 0 6px 18px rgba(20,28,34,.22); }
+  body.training-mode #admin .page-head::before { content: ""; position: absolute; left: 12px; top: 14px; bottom: 14px; width: 4px;
+    border-radius: 4px; background: var(--lit-teal); box-shadow: 0 0 10px color-mix(in srgb, var(--lit-teal) 70%, transparent); }
+  body.training-mode #admin .page-head .eyebrow { color: var(--lit-teal); font: 600 12px var(--font-mono); letter-spacing: .18em; }
+  body.training-mode #admin .page-head h1 { color: #fff; font: 700 30px/1.1 var(--font-cab); letter-spacing: .03em; text-transform: uppercase; }
+
+  .tx .sx-panel:not([style]) { --accent: var(--lit-teal); }
+  .sx-full { grid-column: 1 / -1; }
+  .tx-hero { background: radial-gradient(90% 140% at 0% 100%, color-mix(in srgb, var(--lit-teal) 16%, transparent), transparent 60%),
+      linear-gradient(135deg, #2A333A, #1B2227); }
+  .tx-hero .sx-kicker { color: var(--lit-teal); }
+  .tx-hero p b { color: var(--lit-amber); } .tx-hero p b.ok { color: var(--lit-green); }
+  .tx-gauge { --p: 0%; --g: 65; position: relative; flex: none; width: 156px; height: 156px; border-radius: 50%;
+    background: conic-gradient(var(--lit-amber) var(--p), rgba(255,255,255,.1) 0);
+    box-shadow: 0 0 22px color-mix(in srgb, var(--lit-amber) 25%, transparent); display: grid; place-items: center; }
+  .tx-gauge.ok { background: conic-gradient(var(--lit-green) var(--p), rgba(255,255,255,.1) 0);
+    box-shadow: 0 0 22px color-mix(in srgb, var(--lit-green) 30%, transparent); }
+  .tx-gauge::after { content: ""; position: absolute; inset: 15px; border-radius: 50%; background: radial-gradient(#252D33, #1B2227); }
+  .tx-gauge-goal { position: absolute; inset: 0; transform: rotate(calc(var(--g) * 3.6deg)); z-index: 2; pointer-events: none; }
+  .tx-gauge-goal::before { content: ""; position: absolute; left: 50%; top: -5px; width: 3px; height: 26px; margin-left: -1.5px;
+    border-radius: 2px; background: #fff; box-shadow: 0 0 8px rgba(255,255,255,.9); }
+  .tx-gauge b { position: relative; z-index: 1; margin-top: -10px; font: 700 46px/1 var(--font-cab); color: #fff; font-variant-numeric: tabular-nums; }
+  .tx-gauge b small { font-size: 22px; }
+  .tx-gauge span { position: absolute; z-index: 1; bottom: 40px; color: var(--cab-sub); font: 600 10.5px var(--font-mono); letter-spacing: .12em; text-transform: uppercase; }
+
+  .tx-chart { display: grid; gap: 8px; }
+  .tx-plot { position: relative; display: flex; align-items: stretch; gap: 12px; height: 190px; padding-top: 18px;
+    border-bottom: 1px solid rgba(255,255,255,.15); }
+  .tx-goal { position: absolute; left: 0; right: 0; z-index: 2; border-top: 2px dashed rgba(255,255,255,.75); pointer-events: none; }
+  .tx-goal span { position: absolute; right: 0; top: -19px; padding: 1px 6px; border-radius: 4px; background: rgba(0,0,0,.5);
+    color: #fff; font: 600 10.5px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
+  button.tx-col { position: relative; flex: 1; min-width: 0; margin: 0; padding: 0; height: auto; border: 0; border-radius: 6px 6px 0 0;
+    background: rgba(255,255,255,.04); box-shadow: none; cursor: pointer; }
+  button.tx-col:hover, button.tx-col.on { background: rgba(255,255,255,.1); }
+  button.tx-col i { position: absolute; left: 18%; right: 18%; bottom: 0; border-radius: 5px 5px 0 0; background: var(--lit-amber);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.3); transition: height .3s ease; }
+  button.tx-col i.ok { background: var(--lit-green); }
+  .tx-val { position: absolute; left: 0; right: 0; text-align: center; color: #fff; font: 700 14px var(--font-cab); }
+  .tx-labels { display: flex; gap: 12px; }
+  .tx-labels button { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 1px;
+    margin: 0; padding: 2px 0; height: auto; border: 0; background: none; box-shadow: none;
+    color: rgba(255,255,255,.88); font: 600 12px/1.25 var(--font-cab); letter-spacing: .04em; text-transform: uppercase; text-align: center;
+    overflow-wrap: anywhere; cursor: pointer; }
+  .tx-labels button.on { color: var(--lit-teal); }
+  .tx-labels em { display: block; font: 500 10.5px var(--font-mono); color: var(--cab-detail); letter-spacing: 0; text-transform: none; font-style: normal; }
+
+  .tx-uploads { display: grid; gap: 6px; }
+  button.tx-upload { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; margin: 0; height: auto;
+    padding: 8px 11px; text-align: left; white-space: normal; border-radius: 10px; border: 1px solid rgba(255,255,255,.08);
+    background: rgba(255,255,255,.04); color: #fff; box-shadow: none; font-weight: 400; cursor: pointer; }
+  button.tx-upload:hover { background: rgba(255,255,255,.09); }
+  .tx-upload span { min-width: 0; display: grid; }
+  .tx-upload b { font-size: 14px; font-weight: 600; }
+  .tx-upload small { color: var(--cab-detail); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tx-upload em { flex: none; font: 600 12px var(--font-mono); color: var(--lit-green); font-style: normal; }
+  .tx-upload.stale { border-color: color-mix(in srgb, var(--lit-amber) 45%, transparent); }
+  .tx-upload.stale em { color: var(--lit-amber); }
+
+  .sx-panel header select.tx-store { width: auto; margin: 0 0 0 auto; padding: 5px 10px; border-radius: 999px; font-size: 13px;
+    background: rgba(0,0,0,.3); color: #fff; border: 1px solid rgba(255,255,255,.2); }
+  .sx-panel header select.tx-store option { color: var(--ink); background: #fff; }
+  .tx-who { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+  .tx-who h4 { margin-top: 0; }
+  .tx-who-list { display: grid; gap: 4px; max-height: 560px; overflow-y: auto; padding-right: 4px; }
+  .tx-who-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(60px, 120px) 54px; align-items: center; gap: 10px;
+    padding: 7px 10px; border-radius: 9px; background: rgba(255,255,255,.035); }
+  .tx-who-row:has(.tx-plan) { grid-template-columns: auto minmax(0, 1fr) minmax(60px, 110px) 54px 70px; }
+  .tx-who-row.planned { background: color-mix(in srgb, var(--lit-teal) 12%, transparent); }
+  .tx-who-name { min-width: 0; display: grid; }
+  .tx-who-name b { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tx-who-name small { color: var(--cab-detail); font-size: 12px; }
+  .tx-bar { height: 7px; border-radius: 99px; background: rgba(255,255,255,.09); }
+  .tx-bar i { display: block; height: 100%; border-radius: 99px; background: var(--lit-amber); }
+  .tx-bar i.ok { background: var(--lit-green); }
+  .tx-hrs { text-align: right; font: 700 15px var(--font-cab); font-variant-numeric: tabular-nums; }
+  .tx-hrs small { font-size: 11px; color: var(--cab-detail); font-weight: 500; }
+  .tx-need { text-align: right; color: var(--lit-amber); font: 600 11px var(--font-mono); text-transform: uppercase; letter-spacing: .04em; }
+  .tx-who-row.planned .tx-need { color: var(--lit-teal); }
+  .tx-plan { display: inline-flex; align-items: center; gap: 5px; margin: 0; padding: 3px 8px; border-radius: 99px; cursor: pointer;
+    border: 1px solid rgba(255,255,255,.2); color: var(--cab-sub); font: 600 10.5px var(--font-mono); letter-spacing: .06em; text-transform: uppercase; }
+  .tx-plan input { width: auto; margin: 0; accent-color: var(--lit-teal); }
+  .tx-plan:has(input:checked) { border-color: var(--lit-teal); color: var(--lit-teal); }
+  .tx-plan:has(input:focus-visible) { outline: 2px solid var(--lit-teal); outline-offset: 2px; }
+  .tx-mock { display: grid; gap: 4px; }
+  .tx-mock b { font: 700 40px/1 var(--font-cab); color: var(--lit-amber); }
+  .tx-mock b.ok { color: var(--lit-green); }
+  .tx-mock span { color: var(--cab-sub); font-size: 14px; }
+  @media (max-width: 900px) { .tx-who { grid-template-columns: 1fr; } }
+  @media (max-width: 760px) { .tx-gauge { width: 140px; height: 140px; } .sx-full { grid-column: auto; }
+    .tx-who-row:has(.tx-plan) { grid-template-columns: auto minmax(0, 1fr) 50px 64px; } .tx-who-row:has(.tx-plan) .tx-bar { display: none; } }
 
   /* Admin: approving Safety Reports (the plain admin look). */
   .srr-tabs { margin: 10px 0 12px; }
@@ -2150,6 +2250,7 @@
     </div>
     <div class="topbar-right">
       <button id="adminBtn" class="btn-secondary hidden">Admin</button>
+      <button id="trainingBtn" class="btn-secondary btn-training hidden">Training</button>
       <button id="safetyBtn" class="btn-secondary btn-safety hidden">Safety</button>
       <div class="who" id="who"></div>
       <button id="signOut" class="ghost hidden">Sign out</button>
@@ -2171,7 +2272,6 @@
       <button data-tab="events"><i data-icon="events"></i><span>Events</span></button>
       <button data-tab="courses"><i data-icon="training"></i><span>Course Catalog</span></button>
       <button data-tab="articles"><i data-icon="doc"></i><span>Training Articles</span></button>
-      <button data-tab="skillsadmin"><i data-icon="training"></i><span>Skills</span></button>
       <button data-tab="handbook"><i data-icon="briefcase"></i><span>Employee Handbook</span></button>
       <button data-tab="reminders"><i data-icon="reminders"></i><span>Reminders</span></button>
       <button data-tab="support"><i data-icon="support"></i><span>Support Center</span></button>
@@ -2181,15 +2281,30 @@
       <button data-tab="payroll"><i data-icon="calendar"></i><span>Payroll</span></button>
       <button data-tab="directory"><i data-icon="phone"></i><span>Who Does What</span></button>
       <button data-tab="tools"><i data-icon="wrench"></i><span>Special Tools</span></button>
-      <button data-tab="openseat"><i data-icon="training"></i><span>Open Seat Report</span></button>
-      <button data-tab="trainingstatus"><i data-icon="training"></i><span>Training Status</span></button>
-      <button data-tab="agco"><i data-icon="training"></i><span>AGCO Development</span></button>
+
+      <div class="nav-group">Setup</div>
+      <button data-tab="org"><i data-icon="building"></i><span>Groups &amp; Shops</span></button>
+    </nav>
+
+    <!-- The Training dashboard: Training Managers only. Like Safety, its tabs
+         share the admin workspace below. -->
+    <nav id="trainingNav" class="tabs hidden" aria-label="Training">
+      <button class="nav-item" data-home><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5m6-6-6 6 6 6"/></svg><span>Back to the app</span></button>
+
+      <div class="nav-group">Dashboard</div>
+      <button data-tab="trainingoverview" data-title="Training Dashboard"><i data-icon="training"></i><span>Overview</span></button>
 
       <div class="nav-group">Planning</div>
       <button data-tab="mock"><i data-icon="calendarCheck"></i><span>Mock Schedule</span></button>
 
-      <div class="nav-group">Setup</div>
-      <button data-tab="org"><i data-icon="building"></i><span>Groups &amp; Shops</span></button>
+      <div class="nav-group">Development</div>
+      <button data-tab="agco" data-title="AGCO Development"><i data-icon="level"></i><span>AGCO Development</span></button>
+      <button data-tab="skillsadmin"><i data-icon="level"></i><span>Skills</span></button>
+
+      <div class="nav-group">Uploads</div>
+      <button data-tab="trainingstatus" data-title="Training Status uploads"><i data-icon="people"></i><span>Training Status</span><b class="nav-count tx-stale" data-tx-count="trainingstatus"></b></button>
+      <button data-tab="openseat" data-title="Open Seat Report uploads"><i data-icon="calendar"></i><span>Open Seat Report</span><b class="nav-count tx-stale" data-tx-count="openseat"></b></button>
+      <button data-tab="agcocatalog" data-title="AGCO Catalog upload"><i data-icon="doc"></i><span>AGCO Catalog</span><b class="nav-count tx-stale" data-tx-count="agcocatalog"></b></button>
     </nav>
 
     <!-- The Safety dashboard: Safety Managers only. Its tabs share the admin
@@ -2248,6 +2363,11 @@
       <div class="eyebrow" id="adminEyebrow">Admin</div>
       <h1 id="adminTitle">People</h1>
     </div>
+
+    <!-- The Training dashboard's front page: drawn by renderTrainingOverview -->
+    <section id="tab-trainingoverview" class="hidden">
+      <div id="txOverview"></div>
+    </section>
 
     <!-- The Safety dashboard's front page: drawn by renderSafetyOverview -->
     <section id="tab-safetyoverview" class="hidden">
@@ -2863,9 +2983,10 @@
     </section>
 
     <!-- AGCO Development Map -->
-    <section id="tab-agco" class="hidden">
+    <!-- AGCO's Technical Training Catalog, uploaded: one of the Training page's uploads -->
+    <section id="tab-agcocatalog" class="hidden">
       <div class="card">
-        <h2>AGCO Development Map</h2>
+        <h2>AGCO Technical Training Catalog</h2>
         <div class="drop" id="agcoDrop">
           Drop AGCO's Technical Training Catalog here, or
           <label for="agcoFile" style="display:inline;color:var(--red);
@@ -2873,11 +2994,14 @@
           <input id="agcoFile" type="file" class="hidden" accept=".xlsx,.xls">
         </div>
         <p class="note" style="margin-top:12px">Its LEVEL 1 to LEVEL 6 tabs are the courses you tick for each technician
-          below, with any you add underneath. Upload a new copy when AGCO changes its courses — the ticks, and the
-          courses added here, are kept.</p>
+          on the AGCO Development tab, with any added there. Upload a new copy when AGCO changes its courses — the ticks,
+          and the courses added, are kept.</p>
         <div id="agcoLive"></div>
         <div id="agcoResult"></div>
       </div>
+    </section>
+
+    <section id="tab-agco" class="hidden">
       <div class="card" id="agcoAddedCard">
         <h2>Courses added here</h2>
         <p class="note">Courses that count toward a level but aren't on AGCO's catalog — the Level 3 online test-out,
@@ -3317,6 +3441,7 @@ document.addEventListener("visibilitychange", async () => {
 });
 $("adminBtn").onclick = () => document.body.classList.contains("admin-mode") ? showHome() : showAdmin();
 $("safetyBtn").onclick = () => document.body.classList.contains("safety-mode") ? showHome() : showSafety();
+$("trainingBtn").onclick = () => document.body.classList.contains("training-mode") ? showHome() : showTraining();
 $("wordmark").onclick = () => { if (me) showHome(); };
 
 async function start() {
@@ -3345,6 +3470,7 @@ async function start() {
       locations[profile && profile.location_id] || "No location set")}</small></span>`;
   $("adminBtn").classList.toggle("hidden", !isOwner());
   $("safetyBtn").classList.toggle("hidden", !isSafetyManager());
+  $("trainingBtn").classList.toggle("hidden", !isTrainingManager());
 
   showHome();
 }
@@ -3676,7 +3802,26 @@ function showAdmin() {
 // The Safety dashboard: forklift certifications, lift plans, Safety Reports,
 // the Safety Desk and the safety data sheets, for Safety Managers. It shares the admin workspace and
 // its handlers, with its own sidebar and a dashboard at the front.
-let adminTab = "people", safetyTab = "safetyoverview";
+let adminTab = "people", safetyTab = "safetyoverview", trainingTab = "trainingoverview";
+
+// The Training dashboard: the 24-hour metric and who has it, the planning, the
+// Mock Schedule, AGCO Development and Skills, with the uploads that keep them
+// current grouped together. For Training Managers; it shares the admin
+// workspace and its handlers, like Safety.
+function showTraining(tab) {
+  if (!isTrainingManager()) return showHome();
+  $("home").classList.add("hidden");
+  $("view").classList.add("hidden");
+  $("admin").classList.remove("hidden");
+  setMode("training");
+  document.body.dataset.page = "training";
+  evalAgreed = null; evalNotice = "";
+  renderMockSchedule(); renderSkillsAdmin(); renderTsImport(); renderTsLive(); renderOsrImport(); renderOsrLive();
+  renderAgcoImport(); renderAgcoLive(); renderAgcoTechs(); renderAgcoRules(); renderAgcoAdded(); renderAgcoBales();
+  renderTrainingOverview();
+  document.querySelector(`#trainingNav [data-tab="${tab || trainingTab}"]`).click();
+  window.scrollTo(0, 0);
+}
 
 function showSafety(tab) {
   if (!isSafetyManager()) return showHome();
@@ -7880,6 +8025,211 @@ $("admin").addEventListener("click", async (event) => {
   }
 });
 
+// ---- the Training dashboard's front page -----------------------------------------
+//
+// The dealer metric first: the share of technicians with 24+ AGCO hours
+// against AGCO's 65%, how many more it takes, and each shop's share. Then who
+// has it and who doesn't, where ticking someone plans them to get there (the
+// same plan as Training Status's Planning tab, saved to this account). Then
+// the Mock Schedule's year, AGCO Development by level, and how fresh each
+// upload is. Every number opens the tab behind it. The Cab look, in teal.
+
+let txStore = "all";
+
+// When each upload was made, as far as the files say. Older than a month and
+// it's worth a fresh one.
+function txUploads() {
+  const src = tsSources || {};
+  const when = (text) => { const d = text ? new Date(text) : null; return d && !isNaN(d) ? d : null; };
+  const block = (label, b, tab) => {
+    const date = b && (when(b.exported) || when(b.uploaded_at));
+    return { label, tab, file: b && b.file, date, text: b && b.exported ? `Exported ${b.exported}` : b && b.file ? "Uploaded" : "Not uploaded yet",
+      missing: !(b && (b.file || b.exported)) };
+  };
+  const osr = trainingReports.internal, osrAgco = trainingReports.agco;
+  const catalog = ((agcoCatalog && agcoCatalog.source) || {}).catalog || {};
+  const rows = [
+    block("All employees", src.employees, "trainingstatus"),
+    block(src.credits && src.credits.format === "rules" ? "Credit Rules" : "Credits All Time", src.credits, "trainingstatus"),
+    block("OLT and ILT", src.history, "trainingstatus"),
+    { label: "Open Seat Report", tab: "openseat", date: osr ? new Date(osr.updated_at) : null,
+      text: osr ? `Published ${new Date(osr.updated_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : "Not published yet", missing: !osr },
+    { label: "AGCO sessions", tab: "openseat", date: osrAgco ? new Date(osrAgco.updated_at) : null,
+      text: osrAgco ? `Published ${new Date(osrAgco.updated_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : "Not published yet", missing: !osrAgco },
+    { label: "AGCO Catalog", tab: "agcocatalog", date: when(catalog.dated) || (agcoCatalog && agcoCatalog.updated_at ? new Date(agcoCatalog.updated_at) : null),
+      text: catalog.file ? `${catalog.file}${catalog.dated ? `, ${catalog.dated}` : ""}` : "Not uploaded yet", missing: !catalog.file, slow: true }
+  ];
+  // The catalog changes a few times a year; the rest weekly or monthly.
+  rows.forEach(r => { r.days = r.date ? Math.floor((Date.now() - r.date) / SX_DAY) : null;
+    r.stale = r.missing || (r.days !== null && r.days > (r.slow ? 180 : 30)); });
+  return rows;
+}
+
+function renderTrainingNavCounts(uploads) {
+  ["trainingstatus", "openseat", "agcocatalog"].forEach(tab => {
+    const el = document.querySelector(`#trainingNav [data-tx-count="${tab}"]`);
+    if (el) el.textContent = uploads.some(u => u.tab === tab && u.stale) ? "!" : "";
+  });
+}
+
+// Each shop's share against the goal: columns, with the goal drawn across.
+function txShopChart(m) {
+  const goal = tsGoalPercent();
+  const shops = m.stores.map(store => {
+    const techs = m.techs.filter(t => t.store === store);
+    return { store, total: techs.length, met: techs.filter(t => t.met).length };
+  }).filter(s => s.total);
+  const on = (s) => txStore === s.store ? " on" : "";
+  return `<div class="tx-chart" role="img" aria-label="Share of technicians with ${tsRequiredHours()}+ hours at each location, goal ${goal}%">
+    <div class="tx-plot">
+      <i class="tx-goal" style="bottom:${goal}%"><span>Goal ${goal}%</span></i>
+      ${shops.map(s => { const pct = s.met / s.total * 100;
+        return `<button type="button" class="tx-col${on(s)}" data-tx-store="${esc(s.store)}" title="${esc(s.store)}: ${s.met} of ${s.total} (${Math.round(pct)}%)">
+          <i class="${pct >= goal ? "ok" : ""}" style="height:${Math.max(1.5, pct)}%"></i>
+          <span class="tx-val" style="bottom:calc(${Math.max(1.5, pct)}% + 4px)">${Math.round(pct)}%</span></button>`; }).join("")}
+    </div>
+    <div class="tx-labels">${shops.map(s => `<button type="button" class="${on(s).trim()}" data-tx-store="${esc(s.store)}">${esc(s.store)}<em>${s.met} of ${s.total}</em></button>`).join("")}</div>
+  </div>`;
+}
+
+function txWhoRow(t, planning) {
+  const pct = t.hours === null ? 0 : Math.min(100, t.hours / t.required * 100);
+  const need = Math.max(0, t.required - (t.hours || 0));
+  return `<div class="tx-who-row${planning && tsPlan.has(t.key) ? " planned" : ""}">
+    ${planning ? `<label class="tx-plan" title="Plan to get ${esc(t.first)} to ${t.required} hours"><input type="checkbox" data-ts-plan="${esc(t.key)}"${
+      tsPlan.has(t.key) ? " checked" : ""}><span>Plan</span></label>` : ""}
+    <span class="tx-who-name"><b>${esc(t.name)}</b><small>${esc(t.store)}${t.epa609 ? "" : " · no EPA 609"}</small></span>
+    <span class="tx-bar"><i class="${t.met ? "ok" : ""}" style="width:${pct}%"></i></span>
+    <span class="tx-hrs">${t.hours === null ? "—" : `${t.hours}<small> hrs</small>`}</span>
+    ${planning ? `<span class="tx-need">${tsPlan.has(t.key) ? "Planned" : `needs ${need}`}</span>` : ""}
+  </div>`;
+}
+
+function renderTrainingOverview() {
+  const box = $("txOverview");
+  if (!box) return;
+  const uploads = txUploads();
+  renderTrainingNavCounts(uploads);
+  if (trainingStatusError) {
+    box.innerHTML = `<div class="card"><p class="error">${esc(trainingStatusError)}</p></div>`;
+    return;
+  }
+  const m = tsModel();
+  if (!m.techs.length) {
+    box.innerHTML = `<div class="sx"><section class="sx-hero"><div class="sx-hero-text"><span class="sx-kicker">Training dashboard</span>
+      <h2>No technicians yet</h2><p>Upload the UKG reports under Uploads → Training Status, and this fills in.</p></div>
+      <button type="button" class="sx-link" data-tx-go="trainingstatus">Upload them &rsaquo;</button></section></div>`;
+    return;
+  }
+  const goal = tsGoalPercent(), need = tsRequiredHours(), plan = tsPlanNumbers(m);
+  const pctNow = m.pct * 100, metGoal = m.pct >= tsGoal();
+  const shown = (list) => txStore === "all" ? list : list.filter(t => t.store === txStore);
+  const notYet = shown(m.techs.filter(t => !t.met)).sort((a, b) => (b.hours || 0) - (a.hours || 0) || a.name.localeCompare(b.name));
+  const have = shown(m.techs.filter(t => t.met)).sort((a, b) => b.hours - a.hours || a.name.localeCompare(b.name));
+  const close = m.techs.filter(t => !t.met && t.hours !== null && t.required - t.hours <= 8).length;
+  const period = tsPeriod();
+  const credits = (tsSources && tsSources.credits && tsSources.credits.exported) || "";
+
+  // The Mock Schedule's year.
+  let mock = null;
+  try { if (!mockError) { const st = mockStats(); mock = { st, year: mockYear, courses: mockCourses().filter(mockInYear).length }; } } catch (e) { mock = null; }
+  // AGCO Development, by the level each technician has reached.
+  const tally = agcoError ? null : agcoTally(agcoPeople);
+  const stale = uploads.filter(u => u.stale);
+
+  box.innerHTML = `<div class="sx tx" style="${lit("teal")}">
+    <section class="sx-hero tx-hero">
+      <div class="sx-hero-text">
+        <span class="sx-kicker">AGCO dealer metric${period ? ` · ${esc(period)}` : ""}${credits ? ` · credits exported ${esc(credits)}` : ""}</span>
+        <h2>${tsPct(m.pct)} have ${need}+ hours</h2>
+        <p>${m.metCount} of ${m.techs.length} technicians. ${metGoal ? `<b class="ok">The ${goal}% goal is met.</b>`
+          : `<b>${m.neededForGoal} more</b> to reach ${goal}% (${m.goalCount} technicians).`}${close ? ` ${close} ${close === 1 ? "is" : "are"} within 8 hours.` : ""}</p>
+      </div>
+      <div class="tx-gauge${metGoal ? " ok" : ""}" style="--p:${Math.min(100, pctNow)}%;--g:${goal}" role="img"
+        aria-label="${tsPct(m.pct)} of technicians, goal ${goal}%">
+        <i class="tx-gauge-goal"></i>
+        <b>${Math.round(pctNow)}<small>%</small></b>
+        <span>Goal ${goal}%</span>
+      </div>
+    </section>
+
+    <div class="sx-tiles">
+      ${sxTile("Technicians", sxNum(m.techs.length), "on All Employees", { lit: "steel", go: "trainingstatus" })}
+      ${sxTile(`Have ${need}+ hours`, sxNum(m.metCount), `${tsPct(m.pct)} of technicians`, { lit: "green", good: metGoal })}
+      ${sxTile(`Still need hours`, sxNum(m.techs.length - m.metCount), close ? `${close} within 8 hours` : "Below the line", { lit: "amber" })}
+      ${sxTile(`More for ${goal}%`, metGoal ? "0" : sxNum(m.neededForGoal), metGoal ? "The goal is met" : `${m.goalCount} technicians is ${goal}%`, { lit: metGoal ? "green" : "red", hot: !metGoal })}
+      ${sxTile("With your plan", tsPct(plan.projected).replace("%", "<small>%</small>"), plan.planned ? `${plan.planned} planned · ${plan.stillNeeded ? `${plan.stillNeeded} more to go` : `reaches ${goal}%`}` : "Tick people below to plan", { lit: plan.projected >= tsGoal() ? "green" : "teal", good: plan.projected >= tsGoal() })}
+      ${sxTile("EPA 609", tsPct(m.techs.length ? m.epaCount / m.techs.length : 0).replace("%", "<small>%</small>"), `${m.techs.length - m.epaCount} still need one`, { lit: "violet" })}
+    </div>
+
+    <div class="sx-grid">
+      <section class="sx-panel sx-wide">
+        <header><h3>By location</h3><span>Share with ${need}+ hours · tap a shop to filter</span>
+          ${txStore !== "all" ? `<button type="button" class="sx-link" data-tx-store="all">All shops &rsaquo;</button>` : ""}</header>
+        ${txShopChart(m)}
+      </section>
+
+      <section class="sx-panel" style="${lit(stale.length ? "amber" : "green")}">
+        <header><h3>Uploads</h3><span>${stale.length ? `${stale.length} need${stale.length === 1 ? "s" : ""} a fresh one` : "All current"}</span></header>
+        <div class="tx-uploads">${uploads.map(u => `<button type="button" class="tx-upload${u.stale ? " stale" : ""}" data-tx-go="${u.tab}">
+          <span><b>${esc(u.label)}</b><small>${esc(u.text)}</small></span>
+          <em>${u.missing ? "Upload" : u.days === null ? "" : u.days === 0 ? "Today" : `${u.days}d`}</em></button>`).join("")}</div>
+      </section>
+
+      <section class="sx-panel sx-full">
+        <header><h3>Who has it, and who doesn't</h3><span>${txStore === "all" ? "Every shop" : esc(txStore)}</span>
+          <select id="txStore" class="tx-store">${["all", ...m.stores.filter(s => m.techs.some(t => t.store === s))].map(s =>
+            `<option value="${esc(s)}"${s === txStore ? " selected" : ""}>${s === "all" ? "Every shop" : esc(s)}</option>`).join("")}</select></header>
+        <div class="tx-who">
+          <div>
+            <h4>Not there yet · ${notYet.length}</h4>
+            <p class="sx-sub">Tick <b>Plan</b> for anyone you'll get to ${need} hours this year: <b>${tsPct(plan.projected)}</b> with the plan${
+              plan.stillNeeded ? `, <b>${plan.stillNeeded} more</b> to reach ${goal}%` : `, which reaches ${goal}%`}. The plan is saved to your account.</p>
+            <div class="tx-who-list">${notYet.map(t => txWhoRow(t, true)).join("") || `<p class="sx-empty sx-clear">${icon("checkCircle", 18)} Everyone here has ${need} hours.</p>`}</div>
+          </div>
+          <div>
+            <h4>Have ${need}+ hours · ${have.length}</h4>
+            <div class="tx-who-list">${have.map(t => txWhoRow(t, false)).join("") || `<p class="sx-empty">Nobody here yet.</p>`}</div>
+          </div>
+        </div>
+        ${m.missingCredits.length ? `<p class="sx-sub">Not on the credits report, so counted as not met: ${m.missingCredits.map(t => esc(t.name)).join(", ")}.</p>` : ""}
+      </section>
+
+      <section class="sx-panel" style="${lit("violet")}">
+        <header><h3>Mock Schedule</h3><span>${mock ? mock.year : ""}</span><button type="button" class="sx-link" data-tx-go="mock">Open &rsaquo;</button></header>
+        ${mock ? `<div class="tx-mock"><b class="${mock.st.pct >= mock.st.goal ? "ok" : ""}">${tsPct(mock.st.pct)}</b>
+            <span>${mock.st.met} of ${mock.st.total} reach ${mock.st.need} hours with the ${mock.courses} class${mock.courses === 1 ? "" : "es"} planned for ${mock.year}.</span></div>
+          <p class="sx-sub">${mock.st.short ? `${mock.st.short} more to reach ${Math.round(mock.st.goal * 100)}% in ${mock.year}.` : `That reaches ${Math.round(mock.st.goal * 100)}% in ${mock.year}.`}</p>`
+          : `<p class="sx-empty">The Mock Schedule isn't set up yet.</p>`}
+      </section>
+
+      <section class="sx-panel" style="${lit("deep")}">
+        <header><h3>AGCO Development</h3><button type="button" class="sx-link" data-tx-go="agco">Open &rsaquo;</button></header>
+        ${tally && agcoPeople.length ? sxRankHtml([6, 5, 4, 3, 2, 1, 0].map(n => [n ? `Level ${n}` : "Not started", tally[n]]), "")
+          + `<p class="sx-sub">The highest level each technician has completed in order.</p>`
+          : `<p class="sx-empty">No development maps yet. Upload the AGCO Catalog, then tick courses on AGCO Development.</p>`}
+      </section>
+
+      <section class="sx-panel" style="${lit("slate")}">
+        <header><h3>Skills</h3><button type="button" class="sx-link" data-tx-go="skillsadmin">Open &rsaquo;</button></header>
+        ${skillsError ? `<p class="sx-empty">${esc(skillsError)}</p>` : sxRankHtml(SKILL_LEVELS.map(n =>
+          [`Level ${n} · ${competencies.filter(c => c.is_active && c.level === n).length} skills`, levelsDone.filter(x => x.level === n).length]), "")}
+        <p class="sx-sub">Technicians who've finished each level. Sign-offs are in the Training Center; the list of skills is edited here.</p>
+      </section>
+    </div>
+  </div>`;
+}
+
+$("admin").addEventListener("click", (event) => {
+  const store = event.target.closest("[data-tx-store]");
+  if (store) { txStore = store.dataset.txStore === txStore ? "all" : store.dataset.txStore; return renderTrainingOverview(); }
+  const go = event.target.closest("[data-tx-go]");
+  if (go) document.querySelector(`#trainingNav [data-tab="${go.dataset.txGo}"]`).click();
+});
+$("admin").addEventListener("change", (event) => {
+  if (event.target.id === "txStore") { txStore = event.target.value; renderTrainingOverview(); }
+});
+
 // ---- the Safety dashboard's front page -------------------------------------------
 //
 // Everything safety on one screen, Safety Reports first: what's waiting for
@@ -11354,6 +11704,7 @@ function renderAppNav(active) {
         p.id === "news" ? newsUnseenCount() : 0, "data-view")).join("")
     + (isOwner() ? `<div class="nav-group">Manage</div>
         <button class="nav-item" data-open-admin>${icon("settings", 18)}<span>Admin</span></button>` : "")
+    + (isTrainingManager() ? `<button class="nav-item" data-open-training>${icon("training", 18)}<span>Training</span></button>` : "")
     + (isSafetyManager() ? `<button class="nav-item" data-open-safety>${icon("safety", 18)}<span>Safety</span>${
         (n => n ? `<span class="nav-count">${n}</span>` : "")(srReports.filter(srPending).length)}</button>` : "");
   document.querySelectorAll("#appNav [data-nav]").forEach(b =>
@@ -11361,17 +11712,20 @@ function renderAppNav(active) {
 }
 
 function setMode(mode, active) {
-  const admin = mode === "admin", safety = mode === "safety";
+  const admin = mode === "admin", safety = mode === "safety", training = mode === "training";
   document.body.classList.toggle("admin-mode", admin);
   document.body.classList.toggle("safety-mode", safety);
-  $("appNav").classList.toggle("hidden", admin || safety);
+  document.body.classList.toggle("training-mode", training);
+  $("appNav").classList.toggle("hidden", admin || safety || training);
   $("adminNav").classList.toggle("hidden", !admin);
   $("safetyNav").classList.toggle("hidden", !safety);
-  $("brandSub").textContent = admin ? "Admin" : safety ? "Safety" : "Team Portal";
-  $("adminEyebrow").textContent = safety ? "Safety" : "Admin";
+  $("trainingNav").classList.toggle("hidden", !training);
+  $("brandSub").textContent = admin ? "Admin" : safety ? "Safety" : training ? "Training" : "Team Portal";
+  $("adminEyebrow").textContent = safety ? "Safety" : training ? "Training" : "Admin";
   $("adminBtn").textContent = admin ? "Exit admin" : "Admin";
   $("safetyBtn").textContent = safety ? "Exit safety" : "Safety";
-  if (!admin && !safety) renderAppNav(active);
+  $("trainingBtn").textContent = training ? "Exit training" : "Training";
+  if (!admin && !safety && !training) renderAppNav(active);
   document.body.classList.remove("nav-open");
 }
 
@@ -11381,6 +11735,12 @@ $("scrim").onclick = () => document.body.classList.remove("nav-open");
 document.addEventListener("click", (event) => {
   if (event.target.closest("[data-open-admin]")) showAdmin();
   if (event.target.closest("[data-open-safety]")) showSafety();
+  if (event.target.closest("[data-open-training]")) showTraining();
+});
+
+// Icons in the Training dashboard's sidebar, the same way.
+document.querySelectorAll("#trainingNav i[data-icon]").forEach(el => {
+  el.outerHTML = icon(el.dataset.icon, 18);
 });
 
 // Icons in the Safety dashboard's sidebar, the same way.
@@ -15110,7 +15470,7 @@ function trainingStatusView() {
   if (!model.people.length) {
     const uploaded = tsSources && tsSources.employees && tsSources.employees.file;
     return intro + `<div class="card"><p class="note">${!uploaded ? "No reports yet. " + (isOwner()
-      ? "Upload them on the admin page's <b>Training Status</b> tab." : "The training department uploads them.")
+      ? "Upload them on the Training dashboard, under Uploads → <b>Training Status</b>." : "The training department uploads them.")
       : "Nobody at your location is on the latest reports."}</p></div>`;
   }
   const scope = isOwner() ? "All locations" : `Your location: ${esc(locations[profile.location_id] || "not set")}`;
@@ -15350,6 +15710,7 @@ document.addEventListener("change", (event) => {
     const key = box.dataset.tsPlan;
     if (box.checked) tsPlan.add(key); else tsPlan.delete(key);
     tsRedraw();
+    if (document.body.classList.contains("training-mode")) renderTrainingOverview();
     return tsSavePlan();
   }
   if (event.target.matches("[data-ts-everyone]")) { tsState.everyone = event.target.checked; return tsRedraw(); }
@@ -16570,7 +16931,7 @@ function agcoMapView() {
   }
   if (!agcoCatalog || !(agcoCatalog.levels || []).length) {
     return hero("AGCO Development Map", blurb) + `<p class="st-empty">Nothing has been published yet. The training department
-      uploads AGCO's catalog and ticks each technician's courses on the admin page.</p>`;
+      uploads AGCO's catalog and ticks each technician's courses on the Training dashboard.</p>`;
   }
   const chooser = isAdmin() && (agcoPeople.length > 1 || !agcoMine());
   const person = agcoPeople.find(p => p.person_key === agcoState.person) || (chooser ? null : agcoMine() || agcoPeople[0]);
@@ -16837,7 +17198,7 @@ function crPageInner() {
   const courses = crCourses(model);
   if (!courses.length) {
     return `<div class="card"><p class="note" style="margin:0">No classes on the uploaded reports yet.${
-      isOwner() ? " Upload them on the admin page's <b>Training Status</b> tab." : ""}</p></div>`;
+      isOwner() ? " Upload them on the Training dashboard, under Uploads → <b>Training Status</b>." : ""}</p></div>`;
   }
   // A class that went away with a new upload.
   if (crState.course && !courses.some(c => c.name === crState.course)) crState.course = null;
@@ -17516,10 +17877,12 @@ document.querySelectorAll(".tabs button[data-tab]").forEach(btn => {
     document.querySelectorAll(".tabs button[data-tab]").forEach(b =>
       b.classList.toggle("active", b === btn));
     ["certs", "plans", "people", "support", "payroll", "tools",
-      "directory", "logins", "reminders", "events", "org", "openseat", "inspections", "courses", "articles", "skillsadmin", "sds", "news", "trainingstatus", "handbook", "agco", "mock", "safetydesk", "safetyreportform", "safetyreports", "safetyoverview"].forEach(name =>
+      "directory", "logins", "reminders", "events", "org", "openseat", "inspections", "courses", "articles", "skillsadmin", "sds", "news", "trainingstatus", "handbook", "agco", "mock", "safetydesk", "safetyreportform", "safetyreports", "safetyoverview", "trainingoverview", "agcocatalog"].forEach(name =>
       $("tab-" + name).classList.toggle("hidden", name !== btn.dataset.tab));
     $("adminTitle").textContent = btn.dataset.title || btn.querySelector("span").textContent.trim();
-    if (btn.closest("#safetyNav")) safetyTab = btn.dataset.tab; else adminTab = btn.dataset.tab;
+    if (btn.closest("#safetyNav")) safetyTab = btn.dataset.tab;
+    else if (btn.closest("#trainingNav")) trainingTab = btn.dataset.tab;
+    else adminTab = btn.dataset.tab;
     document.body.classList.remove("nav-open");
     window.scrollTo(0, 0);
   };
