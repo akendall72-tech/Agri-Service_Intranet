@@ -986,13 +986,13 @@
   .sx-kicker { color: var(--lit-amber); font: 600 11.5px var(--font-mono); letter-spacing: .16em; text-transform: uppercase; }
   #admin .sx-hero h2 { margin: 6px 0 4px; color: #fff; font: 700 34px/1.05 var(--font-cab); letter-spacing: .03em; text-transform: uppercase; text-wrap: balance; }
   .sx-hero p { margin: 0; color: var(--cab-sub); font-size: 15px; max-width: 60ch; }
-  button.sx-injury { display: grid; justify-items: center; gap: 2px; min-width: 190px; margin: 0; padding: 12px 18px; height: auto;
-    border-radius: 14px; border: 1px solid color-mix(in srgb, var(--lit-green) 40%, transparent); box-shadow: none;
+  button.sx-count { display: grid; justify-items: center; gap: 2px; min-width: 190px; margin: 0; padding: 12px 18px; height: auto;
+    border-radius: 14px; border: 1px solid color-mix(in srgb, var(--lit-ember) 45%, transparent); box-shadow: none;
     background: rgba(0,0,0,.28); color: #fff; cursor: pointer; }
-  button.sx-injury:hover { background: rgba(0,0,0,.4); }
-  .sx-injury b { font: 700 56px/1 var(--font-cab); color: var(--lit-green); text-shadow: 0 0 18px color-mix(in srgb, var(--lit-green) 55%, transparent);
+  button.sx-count:hover { background: rgba(0,0,0,.4); }
+  .sx-count b { font: 700 56px/1 var(--font-cab); color: var(--lit-ember); text-shadow: 0 0 18px color-mix(in srgb, var(--lit-ember) 55%, transparent);
     font-variant-numeric: tabular-nums; }
-  .sx-injury span { color: var(--cab-sub); font: 600 11px/1.35 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; text-align: center;
+  .sx-count span { color: var(--cab-sub); font: 600 11px/1.35 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; text-align: center;
     max-width: 20ch; white-space: normal; }
 
   .sx-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
@@ -1042,6 +1042,9 @@
   .sx-stack i { display: block; background: var(--lit-ember); box-shadow: inset 0 1px 0 rgba(255,255,255,.25); }
   .sx-stack i.w { background: var(--lit-amber); }
   .sx-col small { color: var(--cab-detail); font: 500 10px var(--font-mono); letter-spacing: .04em; text-transform: uppercase; }
+  .sx-chart-wide { height: 150px; gap: 10px; }
+  .sx-chart-wide .sx-stack { width: min(70%, 56px); }
+  .sx-chart-wide .sx-col small { min-height: 2.6em; text-align: center; line-height: 1.3; letter-spacing: .02em; overflow-wrap: anywhere; }
   .sx-legend { display: flex; gap: 14px; margin-top: 8px; color: var(--cab-detail); font: 500 11px var(--font-mono); }
   .sx-legend span { display: inline-flex; align-items: center; gap: 6px; }
   .sx-legend i { width: 10px; height: 10px; border-radius: 2px; background: var(--lit-ember); }
@@ -1108,7 +1111,17 @@
   @media (max-width: 1180px) { .sx-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .sx-split.three { grid-template-columns: 1fr 1fr; }
     .sx-split.three > div:first-child { grid-column: 1 / -1; } }
   @media (max-width: 760px) { .sx-grid { grid-template-columns: 1fr; } .sx-wide { grid-column: auto; }
-    .sx-split, .sx-split.three { grid-template-columns: 1fr; } #admin .sx-hero h2 { font-size: 27px; } button.sx-injury { width: 100%; } }
+    .sx-split, .sx-split.three { grid-template-columns: 1fr; } #admin .sx-hero h2 { font-size: 27px; } button.sx-count { width: 100%; } }
+
+  /* Safety Desk: who hasn't passed, and the email to them. */
+  .sd-missing-sum { margin: 0 0 10px; font-size: 15px; }
+  .sd-missing-sum b { font-size: 20px; color: var(--red); }
+  .sd-mail-row { gap: 8px; }
+  a.sd-mail { display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: var(--radius-sm);
+    background: var(--red); color: #fff; font-weight: 600; font-size: 14px; text-decoration: none; }
+  a.sd-mail:hover { background: var(--red-dark); text-decoration: none; }
+  a.sd-mail:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+  table.sd-missing td, table.sd-missing th { font-size: 13.5px; }
 
   /* Admin: approving Safety Reports (the plain admin look). */
   .srr-tabs { margin: 10px 0 12px; }
@@ -3020,6 +3033,7 @@
 
     <!-- The Safety Desk's briefs: drawn by renderSafetyAdmin -->
     <section id="tab-safetydesk" class="hidden">
+      <div class="card" id="sdMissing"></div>
       <div class="card" id="sdAdminList"></div>
       <div class="card hidden" id="sdEditor"></div>
     </section>
@@ -7869,13 +7883,12 @@ $("admin").addEventListener("click", async (event) => {
 // ---- the Safety dashboard's front page -------------------------------------------
 //
 // Everything safety on one screen, Safety Reports first: what's waiting for
-// approval, the days since a work-related injury, the reports by month, type
-// and shop, then this month's Safety Brief, forklift cards running out and
+// approval, the reports sent this month, the reports by month, type and
+// location, then this month's Safety Brief, forklift cards running out and
 // lift plans waiting. Every number opens the tab behind it. In the Cab look.
 
 const SX_DAY = 86400000;
 const sxNum = (n) => Number(n || 0).toLocaleString();
-const sxIncident = (r) => { const d = (r.answers || {}).date; return d ? dateOnly(d) : new Date(r.created_at); };
 const sxKind = (r) => (r.answers || {}).kind || "";
 const sxEmoji = (kind) => { const first = kind.split(" ")[0]; return /[A-Za-z]/.test(first) ? "" : first; };
 
@@ -7894,22 +7907,44 @@ function sxMonths(reports) {
   return months;
 }
 
-function sxBarsHtml(months) {
-  const top = Math.max(1, ...months.map(m => m.approved + m.waiting));
-  return `<div class="sx-chart" role="img" aria-label="Reports sent each month for the last twelve months">
-    ${months.map(m => {
-      const total = m.approved + m.waiting;
-      return `<div class="sx-col" title="${esc(m.label)} ${m.year}: ${total} report${total === 1 ? "" : "s"}${m.waiting ? `, ${m.waiting} waiting` : ""}">
-        <span class="sx-val">${total || ""}</span>
+// Reports by where they happened, over the same twelve months: every shop,
+// even one with none, then "Not at a shop", then any name no longer a shop.
+function sxLocations(reports) {
+  const cols = allLocations.filter(l => l.is_active !== false)
+    .map(l => ({ key: l.name, label: l.name, tip: l.name, approved: 0, waiting: 0 }));
+  reports.forEach(r => {
+    const w = (r.answers || {}).where;
+    if (!w) return;
+    let c = cols.find(x => x.key === w);
+    if (!c) cols.push(c = { key: w, label: w === "N/A" ? "Not at a shop" : w, tip: w === "N/A" ? "Not at a shop" : w, approved: 0, waiting: 0 });
+    srPending(r) ? c.waiting++ : c.approved++;
+  });
+  const na = cols.findIndex(c => c.key === "N/A");
+  if (na >= 0) cols.push(...cols.splice(na, 1));
+  return cols;
+}
+
+// Columns of { label, tip, approved, waiting }, each bar split into the two.
+function sxBarsHtml(cols, aria, wide) {
+  const top = Math.max(1, ...cols.map(c => c.approved + c.waiting));
+  return `<div class="sx-chart${wide ? " sx-chart-wide" : ""}" role="img" aria-label="${esc(aria)}">
+    ${cols.map(c => {
+      const total = c.approved + c.waiting;
+      return `<div class="sx-col" title="${esc(c.tip)}: ${total} report${total === 1 ? "" : "s"}${c.waiting ? `, ${c.waiting} waiting` : ""}">
+        <span class="sx-val">${total || (wide ? "0" : "")}</span>
         <span class="sx-stack" style="height:${Math.round(total / top * 100)}%">
-          ${m.waiting ? `<i class="w" style="flex:${m.waiting}"></i>` : ""}${m.approved ? `<i style="flex:${m.approved}"></i>` : ""}
+          ${c.waiting ? `<i class="w" style="flex:${c.waiting}"></i>` : ""}${c.approved ? `<i style="flex:${c.approved}"></i>` : ""}
         </span>
-        <small>${esc(m.label.slice(0, 3))}</small>
+        <small>${esc(c.label)}</small>
       </div>`;
     }).join("")}
   </div>
   <div class="sx-legend"><span><i></i>Approved</span><span><i class="w"></i>Waiting</span></div>`;
 }
+
+const sxMonthBars = (reports) => sxBarsHtml(sxMonths(reports).map(m => ({ label: m.label.slice(0, 3), tip: `${m.label} ${m.year}`,
+  approved: m.approved, waiting: m.waiting })), "Reports sent each month for the last twelve months");
+const sxShopBars = (reports) => sxBarsHtml(sxLocations(reports), "Reports for each location in the last twelve months", true);
 
 // Horizontal bars: [label, count, emoji?].
 function sxRankHtml(rows, empty) {
@@ -7927,19 +7962,14 @@ function sxByType(reports) {
   return Object.values(tally).sort((a, b) => b[1] - a[1]);
 }
 
-function sxByShop(reports) {
-  const tally = {};
-  reports.forEach(r => { const w = (r.answers || {}).where; if (!w) return;
-    const label = w === "N/A" ? "Not at a shop" : w; (tally[label] = tally[label] || [label, 0])[1]++; });
-  return Object.values(tally).sort((a, b) => b[1] - a[1]);
-}
-
-// Days since the last work-related injury anyone reported, by its incident date.
-function sxInjuryFree(reports) {
-  const injuries = reports.filter(r => /work-related injury/i.test(sxKind(r))).map(sxIncident).sort((a, b) => b - a);
-  if (injuries.length) return { days: Math.max(0, Math.floor((Date.now() - injuries[0]) / SX_DAY)), since: injuries[0], any: true };
-  const first = reports.map(r => new Date(r.created_at)).sort((a, b) => a - b)[0];
-  return { days: first ? Math.floor((Date.now() - first) / SX_DAY) : 0, since: first || null, any: false };
+// Safety Reports sent this calendar month, and last month for comparison.
+function sxThisMonth(reports) {
+  const now = new Date();
+  const key = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}`;
+  const thisKey = key(now), lastKey = key(new Date(now.getFullYear(), now.getMonth() - 1, 1));
+  return { count: reports.filter(r => String(r.created_at).slice(0, 7) === thisKey).length,
+           last: reports.filter(r => String(r.created_at).slice(0, 7) === lastKey).length,
+           month: now.toLocaleDateString("en-US", { month: "long" }) };
 }
 
 function sxBrief() {
@@ -8009,7 +8039,7 @@ function renderSafetyOverview() {
   const year = reports.filter(r => inDays(r, 365, 0));
   const nearMisses = reports.filter(r => inDays(r, 90, 0) && /near miss/i.test(sxKind(r))).length;
   const follow = waiting.filter(r => (r.answers || {}).follow_up === true).length;
-  const injury = sxInjuryFree(reports);
+  const month = sxThisMonth(reports);
   const brief = sxBrief(), fork = sxForklift();
   const liftWaiting = plans.filter(p => p.status === "submitted");
   const delta = last30 - prior30;
@@ -8033,10 +8063,9 @@ function renderSafetyOverview() {
         <h2>${attention.length ? `${attention.length} thing${attention.length === 1 ? "" : "s"} need${attention.length === 1 ? "s" : ""} you` : "All clear"}</h2>
         <p>${attention.length ? esc(attention.slice(0, 2).map(a => a[0]).join(" · ")) : "Nothing waiting on the Safety Manager today."}</p>
       </div>
-      <button type="button" class="sx-injury${injury.any ? "" : " clean"}" data-sx-go="safetyreports"
-        title="${injury.any ? `Last work-related injury reported on ${injury.since.toLocaleDateString()}` : "No work-related injury has been reported"}">
-        <b>${sxNum(injury.days)}</b>
-        <span>${injury.any ? "days since a work-related injury" : "days with no work-related injury reported"}</span>
+      <button type="button" class="sx-count" data-sx-go="safetyreports" title="${sxNum(month.last)} last month">
+        <b>${sxNum(month.count)}</b>
+        <span>Safety Report${month.count === 1 ? "" : "s"} in ${esc(month.month)}</span>
       </button>
     </section>
 
@@ -8054,9 +8083,11 @@ function renderSafetyOverview() {
         <header><h3>Safety Reports</h3><span>Last 12 months · ${sxNum(year.length)} sent</span>
           <button type="button" class="sx-link" data-sx-go="safetyreports">Open &rsaquo;</button></header>
         <div class="sx-split">
-          <div>${sxBarsHtml(sxMonths(reports))}</div>
+          <div>${sxMonthBars(reports)}</div>
           <div><h4>By type</h4>${sxRankHtml(sxByType(year).slice(0, 6), "No reports in the last year.")}</div>
         </div>
+        <h4>By location · last 12 months</h4>
+        ${sxShopBars(year)}
         <h4>Waiting for approval</h4>
         ${sxQueueHtml(waiting, 4)}
       </section>
@@ -8066,8 +8097,6 @@ function renderSafetyOverview() {
         ${attention.length ? `<div class="sx-attn">${attention.map(([text, go, ic, tone]) => `<button type="button" class="sx-attn-row ${tone}" data-sx-go="${go}">
           ${icon(ic, 18)}<span>${esc(text)}</span><span class="sx-go">&rsaquo;</span></button>`).join("")}</div>`
           : `<p class="sx-empty sx-clear">${icon("checkCircle", 18)} All clear.</p>`}
-        <h4>Where reports come from</h4>
-        ${sxRankHtml(sxByShop(year).slice(0, 6), "No reports in the last year.")}
       </section>
 
       <section class="sx-panel" style="${lit(brief && briefPct >= 90 ? "green" : "ember")}">
@@ -8109,21 +8138,22 @@ function renderSafetyReportStats() {
   if (!isSafetyManager() || !srReports.length) { box.innerHTML = ""; return; }
   const reports = srReports, waiting = reports.filter(srPending);
   const year = reports.filter(r => Date.now() - new Date(r.created_at) < 365 * SX_DAY);
-  const injury = sxInjuryFree(reports);
+  const month = sxThisMonth(reports);
   box.innerHTML = `<div class="sx sx-reports">
     <div class="sx-tiles">
       ${sxTile("To approve", sxNum(waiting.length), "Waiting for a Safety Manager", { hot: waiting.length > 0, lit: "amber" })}
       ${sxTile("Approved", sxNum(reports.length - waiting.length), "In the Safety Center for everyone", { lit: "green" })}
       ${sxTile("Follow-ups asked", sxNum(year.filter(r => (r.answers || {}).follow_up === true).length), "In the last 12 months", {})}
-      ${sxTile("Injury-free", sxNum(injury.days), "days since a work-related injury", { lit: "green", good: true })}
+      ${sxTile(`${month.month}`, sxNum(month.count), `Safety Reports this month · ${sxNum(month.last)} last month`, {})}
     </div>
     <section class="sx-panel" style="${lit("ember")}">
       <header><h3>The last 12 months</h3><span>${sxNum(year.length)} reports</span></header>
-      <div class="sx-split three">
-        <div>${sxBarsHtml(sxMonths(reports))}</div>
+      <div class="sx-split">
+        <div>${sxMonthBars(reports)}</div>
         <div><h4>By type</h4>${sxRankHtml(sxByType(year), "No reports in the last year.")}</div>
-        <div><h4>By shop</h4>${sxRankHtml(sxByShop(year), "No reports in the last year.")}</div>
       </div>
+      <h4>By location</h4>
+      ${sxShopBars(year)}
     </section>
   </div>`;
 }
@@ -8456,9 +8486,81 @@ function sdBlankDraft() {
     questions: Array.from({ length: 5 }, () => ({ q: "", kind: "choice", choices: ["", "", "", ""] })), answers: [null, null, null, null, null] };
 }
 
+// Who hasn't passed a month's brief yet, by shop, with a button that opens an
+// email to all of them. Their addresses go in BCC so nobody sees the list;
+// the Safety Manager writes the rest. A long list is split into a few emails,
+// because mail apps refuse a link past about 2,000 characters.
+let sdMissingBrief = null;
+
+function renderSdMissing() {
+  const box = $("sdMissing");
+  if (!box) return;
+  const list = deskBriefs();
+  if (safetyError || !list.length) {
+    box.innerHTML = `<h2>Who hasn't passed</h2><p class="note">No Safety Briefs yet.</p>`;
+    return;
+  }
+  const b = list.find(x => x.id === sdMissingBrief) || list.find(x => x.month === briefThisMonth()) || list[0];
+  const end = new Date(dateOnly(b.month)); end.setMonth(end.getMonth() + 1);
+  const expected = people.filter(p => !p.deactivated_at && (!p.created_at || new Date(p.created_at) < end));
+  const shop = (p) => locations[p.location_id] || "No shop set";
+  const missing = expected.filter(p => !(briefResult(b, p.id) || {}).passed_at)
+    .sort((x, y) => shop(x).localeCompare(shop(y)) || (x.full_name || x.email || "").localeCompare(y.full_name || y.email || ""));
+  const emails = [...new Set(missing.map(p => (p.email || "").trim()).filter(e => /@/.test(e)))];
+  const noEmail = missing.filter(p => !/@/.test(p.email || "")).length;
+  const n = (b.questions || []).length;
+  const state = (r) => !r ? "Not started" : r.tries ? `${r.tries} ${r.tries === 1 ? "try" : "tries"}, last ${r.last_score} of ${n}` : "Started, not answered";
+
+  // As few emails as fit. The @ stays as it is: some mail apps don't decode it.
+  const mailto = (group) => "mailto:?bcc=" + group.map(e => encodeURIComponent(e).replace(/%40/g, "@")).join(",");
+  const batches = [];
+  emails.forEach(e => {
+    const last = batches[batches.length - 1];
+    const href = (list) => mailto(list);
+    if (last && href([...last, e]).length <= 1900) last.push(e); else batches.push([e]);
+  });
+
+  let from = 1;
+  const buttons = batches.map((group, i) => {
+    const label = batches.length === 1 ? `Email all ${group.length}` : `Email ${from}–${from + group.length - 1}`;
+    from += group.length;
+    return `<a class="sd-mail" href="${esc(mailto(group))}">${icon("mail", 16)}${label}</a>`;
+  }).join("");
+
+  box.innerHTML = `<h2>Who hasn't passed</h2>
+    <div class="row" style="margin-bottom:10px">
+      <select id="sdMissingMonth" style="max-width:360px;margin:0">${list.map(x => `<option value="${esc(x.id)}"${x.id === b.id ? " selected" : ""}>${
+        esc(briefMonthTitle(x))} · ${esc(x.title)}</option>`).join("")}</select>
+    </div>
+    <p class="sd-missing-sum"><b>${missing.length}</b> of ${expected.length} haven't passed ${esc(briefMonthTitle(b))}'s brief${
+      missing.length ? "" : ". Everyone has."}</p>
+    ${missing.length ? `<div class="row sd-mail-row">${buttons}
+        ${emails.length ? `<button type="button" class="ghost" data-sd-copy="${esc(emails.join("; "))}">Copy the addresses</button>` : ""}
+        <span class="msg"></span></div>
+      <p class="note" style="margin:6px 0 12px">Opens a new email in your mail app with everyone in <b>BCC</b>, so nobody sees the
+        others; write the subject and message yourself.${batches.length > 1 ? " The list is long, so it's split into a few emails." : ""}${
+        noEmail ? ` ${noEmail} ${noEmail === 1 ? "person has" : "people have"} no email on their account and ${noEmail === 1 ? "isn't" : "aren't"} included.` : ""}</p>
+      <div style="overflow-x:auto"><table class="sd-missing">
+        <thead><tr><th>Name</th><th>Shop</th><th>Email</th><th>Where they are</th></tr></thead>
+        <tbody>${missing.map(p => `<tr><td><b>${esc(p.full_name || "No name yet")}</b></td><td>${esc(shop(p))}</td>
+          <td>${esc(p.email || "—")}</td><td>${esc(state(briefResult(b, p.id)))}</td></tr>`).join("")}</tbody>
+      </table></div>` : ""}`;
+}
+
+$("admin").addEventListener("change", (event) => {
+  if (event.target.id === "sdMissingMonth") { sdMissingBrief = event.target.value; renderSdMissing(); }
+});
+$("admin").addEventListener("click", async (event) => {
+  const copy = event.target.closest("[data-sd-copy]");
+  if (!copy) return;
+  try { await navigator.clipboard.writeText(copy.dataset.sdCopy); speak(copy.closest(".row"), "Copied. Paste them into BCC.", false); }
+  catch (e) { speak(copy.closest(".row"), "Couldn't copy here. Select the emails in the list instead.", true); }
+});
+
 function renderSafetyAdmin() {
   const box = $("sdAdminList");
   if (!box) return;
+  renderSdMissing();
   if (safetyError) {
     box.innerHTML = `<h2>Safety Desk</h2><p class="error">Couldn't load the Safety Briefs (${esc(safetyError)}). If that says a
       table doesn't exist, run migration 0080_safety_desk.sql, then reload this page.</p>`;
