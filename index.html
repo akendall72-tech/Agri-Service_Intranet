@@ -2296,7 +2296,6 @@
       <div class="nav-group">App content</div>
       <button data-tab="news"><i data-icon="news"></i><span>News</span></button>
       <button data-tab="events"><i data-icon="events"></i><span>Events</span></button>
-      <button data-tab="courses"><i data-icon="training"></i><span>Course Catalog</span></button>
       <button data-tab="handbook"><i data-icon="briefcase"></i><span>Employee Handbook</span></button>
       <button data-tab="reminders"><i data-icon="reminders"></i><span>Reminders</span></button>
       <button data-tab="support"><i data-icon="support"></i><span>Support Center</span></button>
@@ -2327,6 +2326,7 @@
       <button data-tab="skillsadmin"><i data-icon="level"></i><span>Skills</span></button>
 
       <div class="nav-group">Content</div>
+      <button data-tab="courses"><i data-icon="training"></i><span>Course Catalog</span></button>
       <button data-tab="articles"><i data-icon="doc"></i><span>Training Articles</span></button>
 
       <div class="nav-group">Uploads</div>
@@ -3660,7 +3660,7 @@ const lit = (name) => `--accent:var(--lit-${name || "slate"})`;
 // `tint` and `icon` are the card's colour and glyph, the same colours as the
 // app's cards for these (TrainingHubModel.swift and the Centers' views).
 const TRAINING_LINKS = [
-  // Edited on the admin page's Course Catalog tab.
+  // Edited on the Training dashboard's Course Catalog tab.
   { title: "Course Catalog", sub: "Agri-Service courses", view: "catalog", tint: "ember", icon: "doc" },
   // Competencies and sign-offs; see skillsView.
   { title: "Skills", sub: "Competencies and sign-offs", view: "skills", tint: "amber", icon: "wrench" },
@@ -3855,7 +3855,7 @@ function showTraining(tab) {
   setMode("training");
   document.body.dataset.page = "training";
   evalAgreed = null; evalNotice = "";
-  renderMockSchedule(); renderSkillsAdmin(); renderArticlesAdmin(); renderTsImport(); renderTsLive(); renderOsrImport(); renderOsrLive();
+  renderMockSchedule(); renderSkillsAdmin(); renderCoursesAdmin(); renderArticlesAdmin(); renderTsImport(); renderTsLive(); renderOsrImport(); renderOsrLive();
   renderAgcoImport(); renderAgcoLive(); renderAgcoTechs(); renderAgcoRules(); renderAgcoAdded(); renderAgcoBales();
   renderTrainingOverview();
   document.querySelector(`#trainingNav [data-tab="${tab || trainingTab}"]`).click();
