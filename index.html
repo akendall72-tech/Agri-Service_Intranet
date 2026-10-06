@@ -1227,6 +1227,43 @@
   @media (max-width: 760px) { .tx-gauge { width: 140px; height: 140px; } .sx-full { grid-column: auto; }
     .tx-who-row:has(.tx-plan) { grid-template-columns: auto minmax(0, 1fr) 50px 64px; } .tx-who-row:has(.tx-plan) .tx-bar { display: none; } }
 
+  /* The monthly report's picker, in the Safety dashboard's top band. */
+  .sx-pdfbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; }
+  .sx-pdfbar label { margin: 0; color: var(--lit-amber); font: 600 11px var(--font-mono); letter-spacing: .12em; text-transform: uppercase; }
+  .sx-pdfbar select { width: auto; margin: 0; padding: 7px 10px; border-radius: 8px; font-size: 13.5px;
+    background: rgba(0,0,0,.3); color: #fff; border: 1px solid rgba(255,255,255,.22); }
+  .sx-pdfbar select option { color: var(--ink); background: #fff; }
+  .sx-pdfbar button { display: inline-flex; align-items: center; gap: 6px; margin: 0; padding: 7px 14px; height: auto; }
+  .sx-pdfbar .msg { color: var(--cab-sub); font-size: 13px; }
+
+  /* Who's sent a report, on the Safety dashboard's Reports tab. */
+  .sx-who-panel { margin-top: 14px; }
+  .sx-who-sum { display: flex; align-items: baseline; gap: 10px; }
+  .sx-who-sum b { font: 700 38px/1 var(--font-cab); color: var(--lit-teal); }
+  .sx-who-sum span { color: var(--cab-sub); font-size: 14px; }
+  .sx-who-meter { margin: 10px 0 14px; height: 8px; }
+  .sx-who-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+  .sx-who-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+  button.sx-who-pill { margin: 0; padding: 6px 12px; height: auto; border-radius: 999px; border: 1px solid rgba(255,255,255,.2);
+    background: rgba(255,255,255,.05); color: var(--cab-sub); box-shadow: none; cursor: pointer;
+    font: 600 13px var(--font-cab); letter-spacing: .05em; text-transform: uppercase; }
+  button.sx-who-pill span { margin-left: 6px; font: 500 11px var(--font-mono); opacity: .8; }
+  button.sx-who-pill.on { background: color-mix(in srgb, var(--lit-teal) 20%, transparent); border-color: var(--lit-teal); color: #fff; }
+  .sx-who-mail { gap: 8px; }
+  .sx-who-mail button.ghost { margin: 0; background: rgba(255,255,255,.06); color: #fff; border-color: rgba(255,255,255,.25); }
+  .sx-who-mail .msg { color: var(--cab-sub); }
+  .sx-who-shops { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px 22px; margin-top: 14px; }
+  .sx-who-shop h4 { display: flex; align-items: center; gap: 8px; margin: 0 0 6px !important; color: var(--lit-teal) !important; }
+  .sx-who-shop h4 span { color: var(--cab-detail); font-weight: 500; letter-spacing: 0; }
+  .sx-who-row { display: grid; grid-template-columns: 12px minmax(0, 1fr); column-gap: 10px; align-items: center; padding: 6px 0;
+    border-top: 1px solid rgba(255,255,255,.07); font-size: 14px; }
+  .sx-who-row:first-of-type { border-top: 0; }
+  .sx-who-row i { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--lit-amber); grid-row: span 2; }
+  .sx-who-row.did i { background: var(--lit-green); border-color: var(--lit-green); }
+  .sx-who-row span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff; }
+  .sx-who-row small { grid-column: 2; color: var(--cab-detail); font-size: 12px; }
+  .sx-who-row.did small { color: var(--lit-green); }
+
   /* Admin: approving Safety Reports (the plain admin look). */
   .srr-tabs { margin: 10px 0 12px; }
   .srr-list { display: grid; gap: 8px; }
@@ -8426,7 +8463,7 @@ function sxBarsHtml(cols, aria, wide) {
 
 const sxMonthBars = (reports) => sxBarsHtml(sxMonths(reports).map(m => ({ label: m.label.slice(0, 3), tip: `${m.label} ${m.year}`,
   approved: m.approved, waiting: m.waiting })), "Reports sent each month for the last twelve months");
-const sxShopBars = (reports) => sxBarsHtml(sxLocations(reports), "Reports for each location in the last twelve months", true);
+const sxShopBars = (reports) => sxBarsHtml(sxLocations(reports), "Reports for each location this month", true);
 
 // Horizontal bars: [label, count, emoji?].
 function sxRankHtml(rows, empty) {
@@ -8443,6 +8480,22 @@ function sxByType(reports) {
     const short = srShortKind(k) || k; (tally[short] = tally[short] || [short, 0, sxEmoji(k)])[1]++; });
   return Object.values(tally).sort((a, b) => b[1] - a[1]);
 }
+
+// Months as "2026-10", their names, and the last two years to pick from.
+const sxMonthKey = (d = new Date()) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}`;
+const sxMonthName = (key) => dateOnly(key + "-01").toLocaleDateString("en-US", { month: "long", year: "numeric" });
+const sxInMonth = (key) => (r) => String(r.created_at).slice(0, 7) === key;
+function sxMonthOptions(selected) {
+  const now = new Date();
+  return Array.from({ length: 24 }, (_, i) => sxMonthKey(new Date(now.getFullYear(), now.getMonth() - i, 1)))
+    .map(k => `<option value="${k}"${k === selected ? " selected" : ""}>${esc(sxMonthName(k))}</option>`).join("");
+}
+// Everyone expected to take part in a month: active, with an account by its end.
+function sxPeopleIn(key) {
+  const end = dateOnly(key + "-01"); end.setMonth(end.getMonth() + 1);
+  return people.filter(p => !p.deactivated_at && (!p.created_at || new Date(p.created_at) < end));
+}
+let sxWhoMonth = sxMonthKey(), sxWhoFilter = "not", sxPdfMonth = sxMonthKey();
 
 // Safety Reports sent this calendar month, and last month for comparison.
 function sxThisMonth(reports) {
@@ -8544,6 +8597,12 @@ function renderSafetyOverview() {
         <span class="sx-kicker">${esc(today)}</span>
         <h2>${attention.length ? `${attention.length} thing${attention.length === 1 ? "" : "s"} need${attention.length === 1 ? "s" : ""} you` : "All clear"}</h2>
         <p>${attention.length ? esc(attention.slice(0, 2).map(a => a[0]).join(" · ")) : "Nothing waiting on the Safety Manager today."}</p>
+        <div class="sx-pdfbar">
+          <label for="sxPdfMonth">Monthly report</label>
+          <select id="sxPdfMonth">${sxMonthOptions(sxPdfMonth)}</select>
+          <button type="button" data-sx-pdf>${icon("doc", 15)}Download PDF</button>
+          <span class="msg"></span>
+        </div>
       </div>
       <button type="button" class="sx-count" data-sx-go="safetyreports" title="${sxNum(month.last)} last month">
         <b>${sxNum(month.count)}</b>
@@ -8568,8 +8627,8 @@ function renderSafetyOverview() {
           <div>${sxMonthBars(reports)}</div>
           <div><h4>By type</h4>${sxRankHtml(sxByType(year).slice(0, 6), "No reports in the last year.")}</div>
         </div>
-        <h4>By location · last 12 months</h4>
-        ${sxShopBars(year)}
+        <h4>By location · ${esc(sxMonthName(sxMonthKey()))} · ${sxNum(reports.filter(sxInMonth(sxMonthKey())).length)} sent</h4>
+        ${sxShopBars(reports.filter(sxInMonth(sxMonthKey())))}
         <h4>Waiting for approval</h4>
         ${sxQueueHtml(waiting, 4)}
       </section>
@@ -8634,11 +8693,59 @@ function renderSafetyReportStats() {
         <div>${sxMonthBars(reports)}</div>
         <div><h4>By type</h4>${sxRankHtml(sxByType(year), "No reports in the last year.")}</div>
       </div>
-      <h4>By location</h4>
-      ${sxShopBars(year)}
+      <h4>By location · ${esc(sxMonthName(sxMonthKey()))} · ${sxNum(month.count)} sent</h4>
+      ${sxShopBars(reports.filter(sxInMonth(sxMonthKey())))}
     </section>
+    ${sxWhoHtml()}
   </div>`;
 }
+
+// Who has and hasn't sent a Safety Report in a month, by shop: everyone with an
+// account by its end, and the reports each sent. Those who haven't can be
+// emailed in BCC, as on the Safety Desk.
+function sxWhoHtml() {
+  const key = sxWhoMonth, everyone = sxPeopleIn(key);
+  const sent = new Map();
+  srReports.filter(sxInMonth(key)).forEach(r => { if (r.created_by) (sent.get(r.created_by) || sent.set(r.created_by, []).get(r.created_by)).push(r); });
+  const shop = (p) => locations[p.location_id] || "No shop set";
+  const did = everyone.filter(p => sent.has(p.id)), didnt = everyone.filter(p => !sent.has(p.id));
+  const shown = sxWhoFilter === "sent" ? did : sxWhoFilter === "not" ? didnt : everyone;
+  const shops = {};
+  shown.forEach(p => (shops[shop(p)] = shops[shop(p)] || []).push(p));
+  const pct = everyone.length ? Math.round(did.length / everyone.length * 100) : 0;
+  const day = (iso) => new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const emails = [...new Set(didnt.map(p => (p.email || "").trim()).filter(e => /@/.test(e)))];
+  const bcc = bccButtons(emails);
+  const pills = [["not", "Not yet", didnt.length], ["sent", "Sent one", did.length], ["all", "Everyone", everyone.length]];
+  return `<section class="sx-panel sx-who-panel" style="${lit("teal")}">
+    <header><h3>Who's sent a report</h3>
+      <select id="sxWhoMonth" class="tx-store" aria-label="Month">${sxMonthOptions(key)}</select></header>
+    <div class="sx-who-sum"><b>${did.length}</b><span>of ${everyone.length} people sent at least one in ${esc(sxMonthName(key))} · ${pct}%</span></div>
+    <div class="sx-meter sx-who-meter"><i style="width:${pct}%"></i></div>
+    <div class="sx-who-bar">
+      <div class="sx-who-pills">${pills.map(([id, label, n]) => `<button type="button" class="sx-who-pill${sxWhoFilter === id ? " on" : ""}" data-sx-who="${id}">${label}<span>${n}</span></button>`).join("")}</div>
+      ${didnt.length && sxWhoFilter !== "sent" ? `<div class="row sx-who-mail">${bcc.html}
+        ${emails.length ? `<button type="button" class="ghost" data-sd-copy="${esc(emails.join("; "))}">Copy the addresses</button>` : ""}<span class="msg"></span></div>` : ""}
+    </div>
+    ${didnt.length && sxWhoFilter !== "sent" ? `<p class="sx-sub">Email opens your mail app with everyone who hasn't sent one in <b>BCC</b>; write the rest yourself.${
+      bcc.split ? " The list is long, so it's split into a few emails." : ""}</p>` : ""}
+    <div class="sx-who-shops">${Object.keys(shops).sort().map(name => `<div class="sx-who-shop">
+      <h4>${esc(name)} <span>${shops[name].length}</span></h4>
+      ${shops[name].sort((a, b) => (a.full_name || a.email || "").localeCompare(b.full_name || b.email || "")).map(p => {
+        const mine = sent.get(p.id) || [];
+        return `<div class="sx-who-row${mine.length ? " did" : ""}"><i></i><span>${esc(p.full_name || p.email || "No name yet")}</span>
+          <small>${mine.length ? `${mine.length} report${mine.length === 1 ? "" : "s"} · ${mine.map(r => day(r.created_at)).join(", ")}` : "None yet"}</small></div>`;
+      }).join("")}</div>`).join("") || `<p class="sx-empty sx-clear">${icon("checkCircle", 18)} ${sxWhoFilter === "not" ? "Everyone has sent one." : "Nobody to show."}</p>`}</div>
+  </section>`;
+}
+
+$("admin").addEventListener("change", (event) => {
+  if (event.target.id === "sxWhoMonth") { sxWhoMonth = event.target.value; renderSafetyReportStats(); }
+});
+$("admin").addEventListener("click", (event) => {
+  const pill = event.target.closest("[data-sx-who]");
+  if (pill) { sxWhoFilter = pill.dataset.sxWho; renderSafetyReportStats(); }
+});
 
 $("admin").addEventListener("click", (event) => {
   const review = event.target.closest("[data-sx-review]");
@@ -8649,6 +8756,236 @@ $("admin").addEventListener("click", (event) => {
   }
   const go = event.target.closest("[data-sx-go]");
   if (go && go.dataset.sxGo) document.querySelector(`#safetyNav [data-tab="${go.dataset.sxGo}"]`).click();
+});
+
+// ---- the monthly safety report, as a PDF -----------------------------------------
+//
+// One month, for leadership: the headline numbers, the Safety Reports trend, the
+// month's Safety Brief by shop and who hasn't passed it, the month's reports by
+// type and location, every report in full, and who sent one and who didn't.
+// Confidential: it names who sent each report. jsPDF's fonts are Latin-1, so
+// emoji are dropped and dashes and quotes made plain.
+async function sxMonthlyPdf(key) {
+  const month = sxMonthName(key);
+  const latin = (t) => String(t ?? "").replace(/[–—]/g, "-").replace(/[‘’]/g, "'")
+    .replace(/[“”]/g, '"').replace(/…/g, "...").replace(/[^\x00-\xFF]/g, "").replace(/[ \t]+\n/g, "\n").trim();
+  const doc = new jspdf.jsPDF({ unit: "pt", format: "letter" });
+  const W = 612, H = 792, M = 44, CW = W - M * 2, BOTTOM = H - M - 20;
+  const red = [204, 0, 51], ink = [30, 30, 30], grey = [110, 110, 110], light = [246, 245, 243], rule = [226, 224, 222];
+  const green = [23, 112, 47], amber = [180, 110, 10];
+  const day = (iso) => new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const shopOf = (p) => locations[p.location_id] || "No shop set";
+  let y = 0;
+
+  const smallHead = () => {
+    doc.setFillColor(...red); doc.rect(0, 0, W, 6, "F");
+    doc.setFont("helvetica", "bold"); doc.setFontSize(8); doc.setTextColor(...grey);
+    doc.text(`AGRI-SERVICE  -  MONTHLY SAFETY REPORT  -  ${month.toUpperCase()}`, M, 24);
+    y = 42;
+  };
+  const ensure = (h, then) => { if (y + h > BOTTOM) { doc.addPage(); smallHead(); if (then) then(); } };
+  const section = (title, sub) => {
+    ensure(70); y += 14;
+    doc.setFont("helvetica", "bold"); doc.setFontSize(13); doc.setTextColor(...ink); doc.text(title.toUpperCase(), M, y);
+    doc.setFillColor(...red); doc.rect(M, y + 6, 40, 2.5, "F"); y += 20;
+    if (sub) { doc.setFont("helvetica", "normal"); doc.setFontSize(9.5); doc.setTextColor(...grey);
+      doc.splitTextToSize(latin(sub), CW).forEach(l => { doc.text(l, M, y); y += 12; }); y += 4; }
+  };
+  // A table: columns of [label, width, "r" for right-aligned]; rows of strings.
+  const table = (cols, rows, opts = {}) => {
+    const xs = []; cols.reduce((x, c) => (xs.push(x), x + c[1]), opts.x || M);
+    const width = cols.reduce((t, c) => t + c[1], 0);
+    const head = () => {
+      doc.setFillColor(238, 236, 233); doc.rect(opts.x || M, y, width, 17, "F");
+      doc.setFont("helvetica", "bold"); doc.setFontSize(7.5); doc.setTextColor(...grey);
+      cols.forEach(([label, w, a], i) => doc.text(label.toUpperCase(), a ? xs[i] + w - 5 : xs[i] + 5, y + 11.5, a ? { align: "right" } : {}));
+      y += 17;
+    };
+    ensure(40); head();
+    rows.forEach((row, n) => {
+      doc.setFontSize(8.8);
+      const cells = row.map((v, i) => doc.splitTextToSize(latin(v), cols[i][1] - 10));
+      const h = Math.max(...cells.map(c => c.length)) * 11 + 8;
+      ensure(h, head);
+      if (n % 2) { doc.setFillColor(...light); doc.rect(opts.x || M, y, width, h, "F"); }
+      cells.forEach((lines, i) => {
+        const bold = opts.bold === i, color = opts.color ? opts.color(row, i) : null;
+        doc.setFont("helvetica", bold ? "bold" : "normal"); doc.setTextColor(...(color || ink));
+        lines.forEach((l, j) => doc.text(l, cols[i][2] ? xs[i] + cols[i][1] - 5 : xs[i] + 5, y + 12 + j * 11, cols[i][2] ? { align: "right" } : {}));
+      });
+      doc.setDrawColor(...rule); doc.line(opts.x || M, y + h, (opts.x || M) + width, y + h);
+      y += h;
+    });
+    if (!rows.length) { doc.setFont("helvetica", "italic"); doc.setFontSize(9); doc.setTextColor(...grey); doc.text(opts.empty || "None.", (opts.x || M) + 5, y + 13); y += 20; }
+  };
+
+  // The month's figures.
+  const reports = srReports.filter(sxInMonth(key)).sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
+  const everyone = sxPeopleIn(key);
+  const waiting = reports.filter(srPending).length;
+  const kindIs = (re) => reports.filter(r => re.test(sxKind(r))).length;
+  const follow = reports.filter(r => (r.answers || {}).follow_up === true).length;
+  const senders = new Map();
+  reports.forEach(r => { if (r.created_by) senders.set(r.created_by, (senders.get(r.created_by) || 0) + 1); });
+  const brief = (safetyBriefs || []).find(b => b.is_published && b.month === `${key}-01`);
+  const briefPeople = brief ? everyone.map(p => ({ p, r: briefResult(brief, p.id) })) : [];
+  const passed = briefPeople.filter(x => x.r && x.r.passed_at);
+  const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
+
+  // The band.
+  doc.setFillColor(...red); doc.rect(0, 0, W, 84, "F");
+  doc.setTextColor(255); doc.setFont("helvetica", "bold"); doc.setFontSize(22); doc.text("AGRI-SERVICE", M, 38);
+  doc.setFontSize(10); doc.text("MONTHLY SAFETY REPORT", M, 56);
+  doc.setFontSize(20); doc.text(month, W - M, 40, { align: "right" });
+  doc.setFont("helvetica", "normal"); doc.setFontSize(9);
+  doc.text(latin(`Prepared ${new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}${profile && profile.full_name ? ` by ${profile.full_name}` : ""}`), W - M, 58, { align: "right" });
+  y = 108;
+  doc.setFont("helvetica", "normal"); doc.setFontSize(10); doc.setTextColor(...grey);
+  doc.text(latin(`Safety Reports and the Safety Brief for ${month}, across every location.`), M, y); y += 18;
+
+  // The headline numbers, two rows of three.
+  const boxes = [
+    ["SAFETY REPORTS", String(reports.length), `${reports.length - waiting} approved - ${waiting} waiting`, ink],
+    ["NEAR MISSES", String(kindIs(/near miss/i)), "Close calls reported", ink],
+    ["WORK-RELATED INJURIES", String(kindIs(/work-related injury/i)), "Reported this month", kindIs(/work-related injury/i) ? red : green],
+    ["SAFETY BRIEF", brief ? `${pct(passed.length, briefPeople.length)}%` : "-", brief ? `${passed.length} of ${briefPeople.length} passed` : "None published", brief && pct(passed.length, briefPeople.length) >= 90 ? green : brief ? amber : grey],
+    ["SENT A REPORT", `${senders.size}`, `of ${everyone.length} people - ${pct(senders.size, everyone.length)}%`, ink],
+    ["FOLLOW-UPS ASKED", String(follow), "People asking to be contacted", follow ? amber : ink]
+  ];
+  const bw = (CW - 20) / 3, bh = 62;
+  boxes.forEach(([label, value, sub, color], i) => {
+    const bx = M + (i % 3) * (bw + 10), by = y + Math.floor(i / 3) * (bh + 10);
+    doc.setFillColor(...light); doc.roundedRect(bx, by, bw, bh, 4, 4, "F");
+    doc.setFillColor(...red); doc.rect(bx, by, 3, bh, "F");
+    doc.setFont("helvetica", "bold"); doc.setFontSize(7.5); doc.setTextColor(...grey); doc.text(label, bx + 12, by + 15);
+    doc.setFontSize(22); doc.setTextColor(...color); doc.text(value, bx + 12, by + 40);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(...grey); doc.text(latin(sub), bx + 12, by + 53);
+  });
+  y += bh * 2 + 30;
+
+  // Twelve months of reports, ending this month.
+  doc.setFont("helvetica", "bold"); doc.setFontSize(8); doc.setTextColor(...grey); doc.text("SAFETY REPORTS, 12 MONTHS TO " + month.toUpperCase(), M, y); y += 10;
+  const end = dateOnly(key + "-01");
+  const months = Array.from({ length: 12 }, (_, i) => sxMonthKey(new Date(end.getFullYear(), end.getMonth() - 11 + i, 1)));
+  const counts = months.map(k => srReports.filter(sxInMonth(k)).length);
+  const top = Math.max(1, ...counts), ch = 70, cw = CW / 12;
+  counts.forEach((n, i) => {
+    const h = n / top * ch, x = M + i * cw;
+    doc.setFillColor(...(months[i] === key ? red : [205, 200, 196])); doc.rect(x + cw * 0.18, y + ch - h, cw * 0.64, Math.max(h, 1), "F");
+    doc.setFont("helvetica", "bold"); doc.setFontSize(7.5); doc.setTextColor(...ink); if (n) doc.text(String(n), x + cw / 2, y + ch - h - 3, { align: "center" });
+    doc.setFont("helvetica", "normal"); doc.setTextColor(...grey);
+    doc.text(dateOnly(months[i] + "-01").toLocaleDateString("en-US", { month: "short" }), x + cw / 2, y + ch + 11, { align: "center" });
+  });
+  y += ch + 22;
+
+  // The Safety Brief.
+  section("Safety Brief", brief ? `${latin(brief.title)}. Everyone with an account by the end of ${month} is expected to pass it.`
+    : `No Safety Brief was published for ${month}.`);
+  if (brief) {
+    const shops = {};
+    briefPeople.forEach(x => { const s = shopOf(x.p); const t = shops[s] = shops[s] || { e: 0, p: 0 }; t.e++; if (x.r && x.r.passed_at) t.p++; });
+    table([["Shop", 230], ["Expected", 80, "r"], ["Passed", 80, "r"], ["Not passed", 80, "r"], ["Passed %", CW - 470, "r"]],
+      Object.keys(shops).sort().map(s => [s, String(shops[s].e), String(shops[s].p), String(shops[s].e - shops[s].p), `${pct(shops[s].p, shops[s].e)}%`])
+        .concat([["All locations", String(briefPeople.length), String(passed.length), String(briefPeople.length - passed.length), `${pct(passed.length, briefPeople.length)}%`]]),
+      { bold: 0, color: (row, i) => i === 4 ? (parseInt(row[4]) >= 90 ? green : amber) : null });
+    const notPassed = briefPeople.filter(x => !(x.r && x.r.passed_at)).sort((a, b) => shopOf(a.p).localeCompare(shopOf(b.p)) || (a.p.full_name || "").localeCompare(b.p.full_name || ""));
+    if (notPassed.length) {
+      y += 22; ensure(40);
+      doc.setFont("helvetica", "bold"); doc.setFontSize(9); doc.setTextColor(...ink); doc.text(`Not passed (${notPassed.length})`, M, y); y += 8;
+      const n = (brief.questions || []).length;
+      table([["Name", 200], ["Shop", 150], ["Where they are", CW - 350]], notPassed.map(({ p, r }) => [p.full_name || p.email || "No name yet", shopOf(p),
+        !r ? "Not started" : r.tries ? `${r.tries} ${r.tries === 1 ? "try" : "tries"}, last ${r.last_score} of ${n}` : "Started, not answered"]));
+    }
+  }
+
+  // The reports.
+  section("Safety Reports", reports.length ? `${reports.length} sent in ${month}: ${reports.length - waiting} approved, ${waiting} waiting for approval.`
+    : `No Safety Reports were sent in ${month}.`);
+  if (reports.length) {
+    const tally = (fn) => { const t = {}; reports.forEach(r => { const k = fn(r); if (k) t[k] = (t[k] || 0) + 1; }); return Object.entries(t).sort((a, b) => b[1] - a[1]); };
+    const types = tally(r => srShortKind(sxKind(r)) || "No type");
+    const wheres = tally(r => { const w = (r.answers || {}).where; return w ? (w === "N/A" ? "Not at a shop" : w) : "Not given"; });
+    const startY = y, half = (CW - 16) / 2;
+    table([["By type", half - 60], ["Reports", 60, "r"]], types.map(([k, n]) => [k, String(n)]));
+    const leftEnd = y; y = startY;
+    table([["By location", half - 60], ["Reports", 60, "r"]], wheres.map(([k, n]) => [k, String(n)]), { x: M + half + 16 });
+    y = Math.max(y, leftEnd) + 14;
+    table([["Sent", 52], ["Title", 150], ["Type", 92], ["Where", 74], ["Reported by", 96], ["Status", CW - 464]],
+      reports.map(r => { const a = r.answers || {};
+        return [day(r.created_at), srTitle(r), srShortKind(sxKind(r)) || "-", a.where ? (a.where === "N/A" ? "Not at a shop" : a.where) : "-",
+          r.reporter_name || "-", (srPending(r) ? "Waiting" : "Approved") + (a.follow_up === true ? " - follow-up asked" : "")]; }),
+      { bold: 1, color: (row, i) => i === 5 ? (/Waiting/.test(row[5]) ? amber : green) : null });
+
+    // Every report in full.
+    section("Report details");
+    reports.forEach((r, n) => {
+      const a = r.answers || {};
+      ensure(70);
+      doc.setFillColor(...light); doc.rect(M, y, CW, 34, "F"); doc.setFillColor(...red); doc.rect(M, y, 3, 34, "F");
+      doc.setFont("helvetica", "bold"); doc.setFontSize(10.5); doc.setTextColor(...ink);
+      doc.text(doc.splitTextToSize(latin(`${n + 1}. ${srTitle(r)}`), CW - 20)[0], M + 12, y + 14);
+      doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(...grey);
+      doc.text(doc.splitTextToSize(latin([srShortKind(sxKind(r)), `sent ${day(r.created_at)}`, a.date ? `happened ${dateOnly(a.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : "",
+        a.where ? (a.where === "N/A" ? "not at a shop" : `at ${a.where}`) : "", r.reporter_name ? `by ${r.reporter_name}${r.reporter_location ? `, ${srShop(r.reporter_location)}` : ""}` : "",
+        srPending(r) ? "waiting for approval" : "approved"].filter(Boolean).join("  -  ")), CW - 20)[0], M + 12, y + 27);
+      y += 42;
+      const skip = new Set(["title", "kind", "date", "where"]);
+      (r.fields_snapshot || []).filter(f => !skip.has(f.id) && f.type !== "photos").forEach(f => {
+        const v = srDisplay(r, f);
+        if (!v) return;
+        ensure(28);
+        doc.setFont("helvetica", "bold"); doc.setFontSize(7.5); doc.setTextColor(...grey); doc.text(latin(f.label).toUpperCase(), M + 12, y); y += 11;
+        doc.setFont("helvetica", "normal"); doc.setFontSize(9.5); doc.setTextColor(...ink);
+        latin(v).split("\n").forEach(par => doc.splitTextToSize(par || " ", CW - 24).forEach(line => { ensure(13); doc.text(line, M + 12, y); y += 12; }));
+        y += 5;
+      });
+      const photos = srPhotoPaths(r).length;
+      if (photos) { doc.setFont("helvetica", "italic"); doc.setFontSize(8.5); doc.setTextColor(...grey); doc.text(`${photos} photo${photos === 1 ? "" : "s"} attached (see the report's own PDF).`, M + 12, y); y += 12; }
+      y += 10;
+    });
+  }
+
+  // Who sent one.
+  section("Participation", `${senders.size} of ${everyone.length} people sent at least one Safety Report in ${month}.`);
+  const sentRows = everyone.filter(p => senders.has(p.id)).sort((a, b) => shopOf(a).localeCompare(shopOf(b)) || (a.full_name || "").localeCompare(b.full_name || ""));
+  table([["Sent a report", 220], ["Shop", 170], ["Reports", CW - 390, "r"]], sentRows.map(p => [p.full_name || p.email || "No name yet", shopOf(p), String(senders.get(p.id))]),
+    { empty: "Nobody sent one this month." });
+  const none = everyone.filter(p => !senders.has(p.id));
+  if (none.length) {
+    y += 22; ensure(40);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(9); doc.setTextColor(...ink); doc.text(`No report this month (${none.length})`, M, y); y += 14;
+    const byShop = {};
+    none.forEach(p => (byShop[shopOf(p)] = byShop[shopOf(p)] || []).push(p.full_name || p.email || "No name yet"));
+    Object.keys(byShop).sort().forEach(s => {
+      ensure(26);
+      doc.setFont("helvetica", "bold"); doc.setFontSize(8.5); doc.setTextColor(...grey); doc.text(latin(`${s} (${byShop[s].length})`), M, y); y += 11;
+      doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(...ink);
+      doc.splitTextToSize(latin(byShop[s].sort().join(", ")), CW).forEach(l => { ensure(12); doc.text(l, M, y); y += 11.5; });
+      y += 6;
+    });
+  }
+
+  const pages = doc.getNumberOfPages();
+  for (let p = 1; p <= pages; p++) {
+    doc.setPage(p); doc.setDrawColor(220); doc.line(M, H - M + 2, M + CW, H - M + 2);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); doc.setTextColor(...grey);
+    doc.text(latin(`Agri-Service, LLC  -  Monthly Safety Report  -  ${month}  -  Confidential: for safety and leadership use`), M, H - M + 14);
+    doc.setFont("helvetica", "bold"); doc.text(`Page ${p} of ${pages}`, W - M, H - M + 14, { align: "right" });
+  }
+  doc.save(`Monthly Safety Report ${key}.pdf`);
+}
+
+$("admin").addEventListener("change", (event) => {
+  if (event.target.id === "sxPdfMonth") sxPdfMonth = event.target.value;
+});
+$("admin").addEventListener("click", async (event) => {
+  const btn = event.target.closest("[data-sx-pdf]");
+  if (!btn) return;
+  const row = btn.closest(".sx-pdfbar");
+  btn.disabled = true; speak(row, "Making the report…", false);
+  try { await sxMonthlyPdf(sxPdfMonth); speak(row, `Downloaded ${sxMonthName(sxPdfMonth)}.`, false); }
+  catch (e) { speak(row, `Couldn't make it: ${e.message}`, true); }
+  btn.disabled = false;
 });
 
 // ---- the Safety Desk (migration 0080) ---------------------------------------------
@@ -8968,6 +9305,25 @@ function sdBlankDraft() {
     questions: Array.from({ length: 5 }, () => ({ q: "", kind: "choice", choices: ["", "", "", ""] })), answers: [null, null, null, null, null] };
 }
 
+// Buttons that open an email to everyone in BCC, so nobody sees the list. Mail
+// apps refuse a link past about 2,000 characters, so a long list is split into
+// a few emails. The @ stays as it is: some mail apps don't decode it.
+function bccButtons(emails) {
+  const mailto = (group) => "mailto:?bcc=" + group.map(e => encodeURIComponent(e).replace(/%40/g, "@")).join(",");
+  const batches = [];
+  emails.forEach(e => {
+    const last = batches[batches.length - 1];
+    if (last && mailto([...last, e]).length <= 1900) last.push(e); else batches.push([e]);
+  });
+  let from = 1;
+  const html = batches.map(group => {
+    const label = batches.length === 1 ? `Email all ${group.length}` : `Email ${from}–${from + group.length - 1}`;
+    from += group.length;
+    return `<a class="sd-mail" href="${esc(mailto(group))}">${icon("mail", 16)}${label}</a>`;
+  }).join("");
+  return { html, split: batches.length > 1 };
+}
+
 // Who hasn't passed a month's brief yet, by shop, with a button that opens an
 // email to all of them. Their addresses go in BCC so nobody sees the list;
 // the Safety Manager writes the rest. A long list is split into a few emails,
@@ -8993,21 +9349,7 @@ function renderSdMissing() {
   const n = (b.questions || []).length;
   const state = (r) => !r ? "Not started" : r.tries ? `${r.tries} ${r.tries === 1 ? "try" : "tries"}, last ${r.last_score} of ${n}` : "Started, not answered";
 
-  // As few emails as fit. The @ stays as it is: some mail apps don't decode it.
-  const mailto = (group) => "mailto:?bcc=" + group.map(e => encodeURIComponent(e).replace(/%40/g, "@")).join(",");
-  const batches = [];
-  emails.forEach(e => {
-    const last = batches[batches.length - 1];
-    const href = (list) => mailto(list);
-    if (last && href([...last, e]).length <= 1900) last.push(e); else batches.push([e]);
-  });
-
-  let from = 1;
-  const buttons = batches.map((group, i) => {
-    const label = batches.length === 1 ? `Email all ${group.length}` : `Email ${from}–${from + group.length - 1}`;
-    from += group.length;
-    return `<a class="sd-mail" href="${esc(mailto(group))}">${icon("mail", 16)}${label}</a>`;
-  }).join("");
+  const { html: buttons, split } = bccButtons(emails);
 
   box.innerHTML = `<h2>Who hasn't passed</h2>
     <div class="row" style="margin-bottom:10px">
@@ -9020,7 +9362,7 @@ function renderSdMissing() {
         ${emails.length ? `<button type="button" class="ghost" data-sd-copy="${esc(emails.join("; "))}">Copy the addresses</button>` : ""}
         <span class="msg"></span></div>
       <p class="note" style="margin:6px 0 12px">Opens a new email in your mail app with everyone in <b>BCC</b>, so nobody sees the
-        others; write the subject and message yourself.${batches.length > 1 ? " The list is long, so it's split into a few emails." : ""}${
+        others; write the subject and message yourself.${split ? " The list is long, so it's split into a few emails." : ""}${
         noEmail ? ` ${noEmail} ${noEmail === 1 ? "person has" : "people have"} no email on their account and ${noEmail === 1 ? "isn't" : "aren't"} included.` : ""}</p>
       <div style="overflow-x:auto"><table class="sd-missing">
         <thead><tr><th>Name</th><th>Shop</th><th>Email</th><th>Where they are</th></tr></thead>
