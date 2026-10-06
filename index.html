@@ -7510,9 +7510,13 @@ function safetyReportListView() {
   if (!srReports.length) return head + `<div class="srl" style="${lit("ember")}"><p class="srf-note">${manager ? "No reports yet."
     : "No reports have been approved yet. They show here once the Safety Manager approves them."}</p></div>`;
   const qs = srQuestions();
-  const sortable = qs.filter(f => !["photos", "long_text", "people"].includes(f.type));
+  // Where it happened is left out of approved reports for everyone but the
+  // Safety Manager (0086), so it's no use to sort or filter by.
+  const sortable = qs.filter(f => !["photos", "long_text", "people"].includes(f.type)
+    && (manager || (f.type !== "location" && f.id !== "follow_up")));
   // Whether someone asked to be followed up is between them and the Safety Manager.
-  const filterable = qs.filter(f => ["choice", "location", "yes_no"].includes(f.type) && (manager || f.id !== "follow_up"));
+  const filterable = qs.filter(f => ["choice", "location", "yes_no"].includes(f.type)
+    && (manager || (f.id !== "follow_up" && f.type !== "location")));
   const words = srQuery.toLowerCase().split(/\s+/).filter(Boolean);
   const value = (r) => {
     if (srSort === "sent") return r.created_at;
@@ -7591,7 +7595,7 @@ function safetyReportOneView() {
     r.reporter_name ? ["Reported by", [r.reporter_name, manager ? r.reporter_email : ""].filter(Boolean).join(" · ")] : null,
     r.reporter_name ? ["Reporter's shop", shop || "—"] : null,
     ["Incident date", a.date ? dateOnly(a.date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "—"],
-    ["Where it happened", a.where ? (a.where === "N/A" ? "Not at a location" : a.where) : "—"],
+    manager || a.where ? ["Where it happened", a.where ? (a.where === "N/A" ? "Not at a location" : a.where) : "—"] : null,
     ["Type of report", a.kind || "—"],
     manager ? ["Follow-up requested", a.follow_up === true ? "Yes — please follow up" : a.follow_up === false ? "No" : "—"] : null,
     manager && !srPending(r) ? ["Approved", [day(r.approved_at), r.approved_by_name].filter(Boolean).join(" by ")] : null
