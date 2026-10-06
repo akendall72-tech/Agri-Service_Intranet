@@ -1120,6 +1120,8 @@
   /* Safety Desk: who hasn't passed, and the email to them. */
   .sd-missing-sum { margin: 0 0 10px; font-size: 15px; }
   .sd-missing-sum b { font-size: 20px; color: var(--red); }
+  .sd-missing-sum b.ok { color: #17702F; }
+  .sd-missing-toggle { margin: 0 0 10px; }
   .sd-mail-row { gap: 8px; }
   a.sd-mail { display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: var(--radius-sm);
     background: var(--red); color: #fff; font-weight: 600; font-size: 14px; text-decoration: none; }
@@ -9328,7 +9330,7 @@ function bccButtons(emails) {
 // email to all of them. Their addresses go in BCC so nobody sees the list;
 // the Safety Manager writes the rest. A long list is split into a few emails,
 // because mail apps refuse a link past about 2,000 characters.
-let sdMissingBrief = null;
+let sdMissingBrief = null, sdMissingView = "not";
 
 function renderSdMissing() {
   const box = $("sdMissing");
@@ -9342,8 +9344,10 @@ function renderSdMissing() {
   const end = new Date(dateOnly(b.month)); end.setMonth(end.getMonth() + 1);
   const expected = people.filter(p => !p.deactivated_at && (!p.created_at || new Date(p.created_at) < end));
   const shop = (p) => locations[p.location_id] || "No shop set";
-  const missing = expected.filter(p => !(briefResult(b, p.id) || {}).passed_at)
-    .sort((x, y) => shop(x).localeCompare(shop(y)) || (x.full_name || x.email || "").localeCompare(y.full_name || y.email || ""));
+  const byShop = (x, y) => shop(x).localeCompare(shop(y)) || (x.full_name || x.email || "").localeCompare(y.full_name || y.email || "");
+  const missing = expected.filter(p => !(briefResult(b, p.id) || {}).passed_at).sort(byShop);
+  const passed = expected.filter(p => (briefResult(b, p.id) || {}).passed_at).sort(byShop);
+  const when = (iso) => new Date(iso).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
   const emails = [...new Set(missing.map(p => (p.email || "").trim()).filter(e => /@/.test(e)))];
   const noEmail = missing.filter(p => !/@/.test(p.email || "")).length;
   const n = (b.questions || []).length;
@@ -9351,11 +9355,30 @@ function renderSdMissing() {
 
   const { html: buttons, split } = bccButtons(emails);
 
-  box.innerHTML = `<h2>Who hasn't passed</h2>
+  const toggle = `<div class="chips sd-missing-toggle">
+      <button type="button" class="chip${sdMissingView === "not" ? " on" : ""}" data-sd-view="not">Not passed · ${missing.length}</button>
+      <button type="button" class="chip${sdMissingView === "passed" ? " on" : ""}" data-sd-view="passed">Passed · ${passed.length}</button></div>`;
+  const head = `<h2>Who's taken it</h2>
     <div class="row" style="margin-bottom:10px">
       <select id="sdMissingMonth" style="max-width:360px;margin:0">${list.map(x => `<option value="${esc(x.id)}"${x.id === b.id ? " selected" : ""}>${
         esc(briefMonthTitle(x))} · ${esc(x.title)}</option>`).join("")}</select>
-    </div>
+    </div>${toggle}`;
+
+  // Who has passed, and when.
+  if (sdMissingView === "passed") {
+    box.innerHTML = `${head}
+      <p class="sd-missing-sum"><b class="ok">${passed.length}</b> of ${expected.length} have passed ${esc(briefMonthTitle(b))}'s brief${
+        passed.length ? "" : ". Nobody yet."}</p>
+      ${passed.length ? `<div style="overflow-x:auto"><table class="sd-missing">
+        <thead><tr><th>Name</th><th>Shop</th><th>Passed</th><th>Score</th><th>Tries</th></tr></thead>
+        <tbody>${passed.map(p => { const r = briefResult(b, p.id);
+          return `<tr><td><b>${esc(p.full_name || p.email || "No name yet")}</b></td><td>${esc(shop(p))}</td>
+            <td>${esc(when(r.passed_at))}</td><td>${r.score ?? "—"} of ${n}</td><td>${r.tries || 1}</td></tr>`; }).join("")}</tbody>
+      </table></div>` : ""}`;
+    return;
+  }
+
+  box.innerHTML = `${head}
     <p class="sd-missing-sum"><b>${missing.length}</b> of ${expected.length} haven't passed ${esc(briefMonthTitle(b))}'s brief${
       missing.length ? "" : ". Everyone has."}</p>
     ${missing.length ? `<div class="row sd-mail-row">${buttons}
@@ -9373,6 +9396,10 @@ function renderSdMissing() {
 
 $("admin").addEventListener("change", (event) => {
   if (event.target.id === "sdMissingMonth") { sdMissingBrief = event.target.value; renderSdMissing(); }
+});
+$("admin").addEventListener("click", (event) => {
+  const view = event.target.closest("[data-sd-view]");
+  if (view) { sdMissingView = view.dataset.sdView; renderSdMissing(); }
 });
 $("admin").addEventListener("click", async (event) => {
   const copy = event.target.closest("[data-sd-copy]");
