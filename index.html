@@ -3684,14 +3684,14 @@ const TRAINING_LINKS = [
 // The certification course is in UKG ProLearning, with the rest of people's assigned training.
 const FORKLIFT_LINKS = [
   { title: "Certification Report", sub: "Who is certified and when each card runs out.",
-    view: "certreport", tint: "green", icon: "people" },
+    view: "certreport", tint: "slate", icon: "people" },
   { title: "Forklift Driving Test", sub: "Evaluate someone on a truck and record the result.",
-    view: "evaltest", tint: "green", icon: "reminders" }
+    view: "evaltest", tint: "teal", icon: "reminders" }
 ];
 
 const SAFETY_LINKS = [
   { title: "Safety Desk", sub: "This month's Safety Brief: read it, then answer a few questions. Everyone, every month.",
-    tint: "ember", icon: "doc", view: "safetydesk" },
+    tint: "teal", icon: "doc", view: "safetydesk" },
   { title: "Submit a Safety Report", sub: "Report an incident, near miss, hazard or idea. It goes to the Safety Manager.",
     tint: "ember", icon: "megaphone", view: "safetyform" }
 ];
@@ -3936,9 +3936,9 @@ const VIEWS = {
     return hero("Safety Center", "Report what you see, keep your safety training current, and find the safety data sheet for any product.")
       + linkGrid(SAFETY_LINKS.map(linkCard).join("")
         + linkCard(isSafetyManager()
-          ? { title: "View a Safety Report", tint: "amber", icon: "reminders", view: "safetyreportlist",
+          ? { title: "View a Safety Report", tint: "slate", icon: "reminders", view: "safetyreportlist",
               sub: `Every report sent.${(n => n ? ` ${n} waiting for approval on the Safety dashboard.` : " Approve them on the Safety dashboard and everyone can read them.")(srReports.filter(srPending).length)}` }
-          : { title: "View a Safety Report", tint: "amber", icon: "reminders", view: "safetyreportlist",
+          : { title: "View a Safety Report", tint: "slate", icon: "reminders", view: "safetyreportlist",
               sub: "Reports from across the company, approved by the Safety Manager: what happened and what we learned." }))
       + sdsSectionHtml();
   },
@@ -3950,7 +3950,7 @@ const VIEWS = {
     + certificationCard()
     + linkGrid((isTrainingManager() ? linkCard({ title: `Driving Tests to Approve${pendingTests().length ? ` (${pendingTests().length})` : ""}`,
         sub: pendingTests().length ? "A test only counts once you approve it." : "Nothing waiting.", view: "approvals",
-        tint: "green", icon: "safety" }) : "")
+        tint: "amber", icon: "safety" }) : "")
       + FORKLIFT_LINKS.map(linkCard).join("")),
 
   approvals: () => approvalsView(),
