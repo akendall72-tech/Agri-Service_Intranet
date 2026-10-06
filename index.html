@@ -9513,6 +9513,7 @@ function renderMockHead() {
         <button type="button" class="ghost" data-ms-act="undo" ${mockUndo.length ? "" : "disabled"} title="Undo (Ctrl+Z)">&#8630; Undo</button>
         <button type="button" class="ghost" data-ms-act="redo" ${mockRedo.length ? "" : "disabled"} title="Redo (Ctrl+Shift+Z)">Redo &#8631;</button>
         <button type="button" class="ghost" data-ms-act="startover" ${mockCourses().length ? "" : "disabled"}>Start over</button>
+        <button type="button" class="ghost" data-ms-act="pdf" ${s.total ? "" : "disabled"} title="Every technician and class, as a PDF">${icon("doc", 15)}PDF</button>
       </span>
     </div>
     <p class="note">Only owners see this, and nothing here reaches the app, the Event Center or anyone's training
@@ -9820,6 +9821,173 @@ function renderMockTechRows(s = mockStats()) {
   }).join("") || `<tr><td colspan="6" class="note">Nobody matches.</td></tr>`;
 }
 
+// ---- the plan as a PDF ---------------------------------------------------------------
+//
+// What the Technicians list shows with All picked: every technician, their shop,
+// hours earned, planned and in all, and their classes in the level's colour. The
+// score and each shop's share go first, and the classes by date last. Landscape,
+// for the width. jsPDF's fonts are Latin-1, so dashes and quotes are swapped for
+// plain ones and anything else outside it is dropped.
+function mockPdf() {
+  const s = mockStats(), year = mockYear;
+  const latin = (t) => String(t ?? "").replace(/[\u2013\u2014]/g, "-").replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"').replace(/\u2026/g, "...").replace(/[^\x00-\xFF]/g, "").trim();
+  const rgb = (hex) => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16));
+  const doc = new jspdf.jsPDF({ unit: "pt", format: "letter", orientation: "landscape" });
+  const W = 792, H = 612, M = 36, CW = W - M * 2, BOTTOM = H - M - 18;
+  const red = [204, 0, 51], ink = [30, 30, 30], grey = [110, 110, 110], green = [23, 112, 47], short = [168, 0, 42];
+  const day = (d) => msFmt(d, { month: "short", day: "numeric" });
+  let y = 0;
+
+  const smallHead = () => {
+    doc.setFillColor(...red); doc.rect(0, 0, W, 6, "F");
+    doc.setFont("helvetica", "bold"); doc.setFontSize(8); doc.setTextColor(...grey);
+    doc.text(`AGRI-SERVICE  -  MOCK SCHEDULE ${year}`, M, 24);
+    y = 40;
+  };
+  const newPage = (then) => { doc.addPage(); smallHead(); if (then) then(); };
+
+  // The band and the score.
+  doc.setFillColor(...red); doc.rect(0, 0, W, 58, "F");
+  doc.setTextColor(255); doc.setFont("helvetica", "bold"); doc.setFontSize(18); doc.text("AGRI-SERVICE", M, 30);
+  doc.setFontSize(9); doc.text(`MOCK SCHEDULE ${year}`, M, 45);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(9);
+  doc.text(`Printed ${new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`, W - M, 28, { align: "right" });
+  doc.text("Planning only - not anyone's training record", W - M, 42, { align: "right" });
+  y = 84;
+  const met = s.pct >= s.goal;
+  doc.setFont("helvetica", "bold"); doc.setFontSize(34); doc.setTextColor(...(met ? green : short));
+  doc.text(`${Math.round(s.pct * 100)}%`, M, y + 10);
+  doc.setFontSize(12); doc.setTextColor(...ink);
+  doc.text(`${s.met} of ${s.total} technicians reach ${msNum(s.need)} hours in ${year} with this plan.`, M + 100, y - 4);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(10.5); doc.setTextColor(...(met ? green : short));
+  doc.text(s.short ? `${s.short} more needed for ${msNum(s.goal * 100)}% (${s.goalCount} technicians).`
+    : `That meets the ${msNum(s.goal * 100)}% goal.`, M + 100, y + 11);
+  // The meter, with the goal marked.
+  const mx = M + 100, mw = 300, my = y + 19;
+  doc.setFillColor(232, 230, 228); doc.roundedRect(mx, my, mw, 6, 3, 3, "F");
+  doc.setFillColor(...(met ? green : [217, 119, 6])); doc.roundedRect(mx, my, Math.max(6, mw * Math.min(1, s.pct)), 6, 3, 3, "F");
+  doc.setFillColor(...ink); doc.rect(mx + mw * Math.min(1, s.goal) - 1, my - 3, 2, 12, "F");
+  y += 44;
+  // Each shop.
+  const shops = [...new Set(s.people.map(x => x.p.store || "No store"))];
+  if (shops.length > 1) {
+    doc.setFontSize(9); let x = M;
+    shops.forEach(shop => {
+      const here = s.people.filter(p => (p.p.store || "No store") === shop), m = here.filter(p => p.met).length;
+      const label = latin(`${shop}  ${m}/${here.length} - ${Math.round(m / here.length * 100)}%`);
+      const w = doc.getTextWidth(label) + 16;
+      if (x + w > M + CW) { x = M; y += 20; }
+      const ok = m / here.length >= s.goal;
+      doc.setFillColor(...(ok ? [228, 243, 232] : [246, 244, 242])); doc.roundedRect(x, y - 11, w, 16, 8, 8, "F");
+      doc.setTextColor(...(ok ? green : ink)); doc.setFont("helvetica", "bold"); doc.text(label, x + 8, y);
+      x += w + 6;
+    });
+    y += 18;
+  }
+  doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(...grey);
+  doc.text(latin(`Earned is what Training Status has for ${year} so far; planned is the classes in this plan that finish in ${year}.`), M, y + 4);
+  y += 14;
+  // The level colours.
+  let lx = M;
+  [3, 4, 5, 6, 0].forEach(n => {
+    doc.setFillColor(...rgb(MOCK_COLOR[n])); doc.rect(lx, y - 6, 8, 8, "F");
+    doc.setTextColor(...grey); doc.text(mockLevelName(n), lx + 11, y + 1); lx += doc.getTextWidth(mockLevelName(n)) + 26;
+  });
+  y += 14;
+
+  // Every technician.
+  const all = mockCourses().slice().sort((a, b) => (a.start || "9999").localeCompare(b.start || "9999"));
+  const cols = [["Technician", 150], ["Shop", 92], ["Earned", 50, "r"], ["Planned", 52, "r"], ["Total", 76, "r"], ["Classes", CW - 150 - 92 - 50 - 52 - 76]];
+  const xs = []; cols.reduce((x, c) => (xs.push(x), x + c[1]), M);
+  const tableHead = () => {
+    doc.setFillColor(240, 238, 236); doc.rect(M, y, CW, 18, "F");
+    doc.setFont("helvetica", "bold"); doc.setFontSize(8); doc.setTextColor(...grey);
+    cols.forEach(([label, w, align], i) => doc.text(label.toUpperCase(), align ? xs[i] + w - 6 : xs[i] + 6, y + 12, align ? { align: "right" } : {}));
+    y += 18;
+  };
+  tableHead();
+  s.people.forEach((x, n) => {
+    const key = x.p.person_key;
+    const theirs = all.filter(c => (c.people || []).includes(key));
+    doc.setFontSize(9);
+    const lines = theirs.map(c => latin(`${c.start ? day(mockDays(c)[0]) + "  " : "Not placed  "}${c.title || "Untitled class"}  (${msNum(c.hours)}h)`));
+    const wrapped = lines.map(l => doc.splitTextToSize(l, cols[5][1] - 22));
+    // Room for the "8 short" line under a total that falls short.
+    const h = Math.max(x.met ? 1 : 2, wrapped.reduce((t, w) => t + w.length, 0)) * 11.5 + 9;
+    if (y + h > BOTTOM) newPage(tableHead);
+    if (n % 2) { doc.setFillColor(250, 249, 248); doc.rect(M, y, CW, h, "F"); }
+    doc.setDrawColor(230, 228, 226); doc.line(M, y + h, M + CW, y + h);
+    const top = y + 13;
+    doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); doc.setTextColor(...ink);
+    doc.text(doc.splitTextToSize(latin(mockName(x.p)), cols[0][1] - 10)[0], xs[0] + 6, top);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(...grey);
+    doc.text(doc.splitTextToSize(latin(x.p.store || ""), cols[1][1] - 10)[0] || "", xs[1] + 6, top);
+    doc.setTextColor(...ink);
+    doc.text(msNum(x.earned), xs[2] + cols[2][1] - 6, top, { align: "right" });
+    doc.text(msNum(x.plan), xs[3] + cols[3][1] - 6, top, { align: "right" });
+    doc.setFont("helvetica", "bold"); doc.setTextColor(...(x.met ? green : short));
+    doc.text(x.met ? `${msNum(x.total)}  OK` : msNum(x.total), xs[4] + cols[4][1] - 6, top, { align: "right" });
+    if (!x.met) { doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); doc.text(`${msNum(s.need - x.total)} short`, xs[4] + cols[4][1] - 6, top + 10, { align: "right" }); }
+    doc.setFont("helvetica", "normal"); doc.setFontSize(9);
+    let ly = top;
+    if (!theirs.length) { doc.setTextColor(...grey); doc.text("-", xs[5] + 6, ly); }
+    theirs.forEach((c, i) => {
+      doc.setFillColor(...rgb(mockColor(c))); doc.rect(xs[5] + 6, ly - 7, 7, 7, "F");
+      doc.setTextColor(...ink);
+      wrapped[i].forEach(line => { doc.text(line, xs[5] + 18, ly); ly += 11.5; });
+    });
+    y += h;
+  });
+
+  // The classes, by date.
+  if (all.length) {
+    if (y + 80 > BOTTOM) newPage(); else y += 22;
+    doc.setFont("helvetica", "bold"); doc.setFontSize(12); doc.setTextColor(...ink); doc.text("THE CLASSES", M, y);
+    doc.setFillColor(...red); doc.rect(M, y + 5, 36, 2, "F"); y += 16;
+    const ccols = [["When", 170], ["Class", CW - 170 - 70 - 50 - 80 - 120 - 60], ["Level", 70], ["Hours", 50, "r"], ["Technicians", 80, "r"], ["Where", 120], ["Seats", 60, "r"]];
+    const cxs = []; ccols.reduce((x, c) => (cxs.push(x), x + c[1]), M);
+    const classHead = () => {
+      doc.setFillColor(240, 238, 236); doc.rect(M, y, CW, 18, "F");
+      doc.setFont("helvetica", "bold"); doc.setFontSize(8); doc.setTextColor(...grey);
+      ccols.forEach(([label, w, align], i) => doc.text(label.toUpperCase(), align ? cxs[i] + w - 6 : cxs[i] + 6, y + 12, align ? { align: "right" } : {}));
+      y += 18;
+    };
+    classHead();
+    all.forEach((c, n) => {
+      doc.setFontSize(9);
+      const title = doc.splitTextToSize(latin(c.title || "Untitled class"), ccols[1][1] - 20);
+      const h = title.length * 11.5 + 9;
+      if (y + h > BOTTOM) newPage(classHead);
+      if (n % 2) { doc.setFillColor(250, 249, 248); doc.rect(M, y, CW, h, "F"); }
+      doc.setDrawColor(230, 228, 226); doc.line(M, y + h, M + CW, y + h);
+      const top = y + 13;
+      doc.setFont("helvetica", "normal"); doc.setTextColor(...(c.start ? ink : grey));
+      doc.text(latin(c.start ? mockWhen(c) : "Not on the calendar"), cxs[0] + 6, top);
+      doc.setFillColor(...rgb(mockColor(c))); doc.rect(cxs[1] + 6, top - 7, 7, 7, "F");
+      doc.setFont("helvetica", "bold"); doc.setTextColor(...ink);
+      title.forEach((line, i) => doc.text(line, cxs[1] + 18, top + i * 11.5));
+      doc.setFont("helvetica", "normal");
+      doc.text(mockLevelName(c.level), cxs[2] + 6, top);
+      doc.text(msNum(c.hours), cxs[3] + ccols[3][1] - 6, top, { align: "right" });
+      doc.text(String((c.people || []).length), cxs[4] + ccols[4][1] - 6, top, { align: "right" });
+      doc.setTextColor(...grey); doc.text(doc.splitTextToSize(latin(c.place || "-"), ccols[5][1] - 10)[0], cxs[5] + 6, top);
+      doc.text(c.seats ? String(c.seats) : "-", cxs[6] + ccols[6][1] - 6, top, { align: "right" });
+      y += h;
+    });
+  }
+
+  const pages = doc.getNumberOfPages();
+  for (let p = 1; p <= pages; p++) {
+    doc.setPage(p); doc.setDrawColor(220); doc.line(M, H - M + 2, M + CW, H - M + 2);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(...grey);
+    doc.text(`Agri-Service, LLC  -  Mock Schedule ${year}  -  planning only`, M, H - M + 14);
+    doc.setFont("helvetica", "bold"); doc.text(`Page ${p} of ${pages}`, W - M, H - M + 14, { align: "right" });
+  }
+  doc.save(`Mock Schedule ${year}.pdf`);
+  mockFlash("Downloaded the PDF.");
+}
+
 // ---- what people do -----------------------------------------------------------------
 
 function mockOpen(id, { jump = false } = {}) {
@@ -9932,6 +10100,7 @@ function mockSetField(c, field, value) {
         mockUndo = []; mockRedo = []; mockSavedVersion = mockVersion; mockConflict = false;
         if (mockOpenId && !mockCourse(mockOpenId)) mockOpenId = null;
         return renderMockSchedule();
+      case "pdf": return mockPdf();
       case "startover":
         if (!confirm(`Take every class off the ${mockYear} plan? Undo brings them back while this page is open.`)) return;
         mockOpenId = null;
