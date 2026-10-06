@@ -534,6 +534,10 @@
   .crane-table .cab-tag.ok { --accent: var(--lit-green); }
   .crane-table .cab-tag.off { color: #fff; background: #CC0033; border-color: #CC0033; box-shadow: 0 0 10px rgba(204,0,51,.5); }
   .crane-table .cab-tag.none { --accent: var(--cab-detail); }
+  .crane-table .cab-tag.exp { --accent: var(--lit-amber); }
+  .crane-expiry { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .crane-expiry label { display: block; margin-bottom: 6px; }
+  .crane-expiry .note { margin: 8px 0 0; }
   .crane-table button.quiet { padding: 6px 12px; border-radius: 9px; font: 600 12.5px var(--font-cab);
     letter-spacing: .05em; text-transform: uppercase; box-shadow: none; }
   .crane-table .where { display: none; }
@@ -2293,7 +2297,6 @@
       <button data-tab="news"><i data-icon="news"></i><span>News</span></button>
       <button data-tab="events"><i data-icon="events"></i><span>Events</span></button>
       <button data-tab="courses"><i data-icon="training"></i><span>Course Catalog</span></button>
-      <button data-tab="articles"><i data-icon="doc"></i><span>Training Articles</span></button>
       <button data-tab="handbook"><i data-icon="briefcase"></i><span>Employee Handbook</span></button>
       <button data-tab="reminders"><i data-icon="reminders"></i><span>Reminders</span></button>
       <button data-tab="support"><i data-icon="support"></i><span>Support Center</span></button>
@@ -2322,6 +2325,9 @@
       <div class="nav-group">Development</div>
       <button data-tab="agco" data-title="AGCO Development"><i data-icon="level"></i><span>AGCO Development</span></button>
       <button data-tab="skillsadmin"><i data-icon="level"></i><span>Skills</span></button>
+
+      <div class="nav-group">Content</div>
+      <button data-tab="articles"><i data-icon="doc"></i><span>Training Articles</span></button>
 
       <div class="nav-group">Uploads</div>
       <button data-tab="trainingstatus" data-title="Training Status uploads"><i data-icon="people"></i><span>Training Status</span><b class="nav-count tx-stale" data-tx-count="trainingstatus"></b></button>
@@ -3132,6 +3138,17 @@
           <button data-act="crane-course">Save</button>
           <span class="msg"></span>
         </div>
+        <div class="crane-expiry" id="craneExpiryRow">
+          <label for="craneMonthsInput"><b>Expires after</b></label>
+          <div class="row">
+            <input type="number" id="craneMonthsInput" min="1" max="240" step="1" placeholder="Never"
+                   style="width:110px;margin:0" aria-describedby="craneMonthsNote"> <span>months</span>
+            <button data-act="crane-months">Save</button>
+            <span class="msg"></span>
+          </div>
+          <p class="note" id="craneMonthsNote">How long a qualification lasts, counted from the day the course was completed.
+            Leave it empty for no expiration, as it is now. Taking the course again starts it over. For example, 24 is two years.</p>
+        </div>
       </div>
       <div class="card">
         <h2>Published now</h2>
@@ -3660,7 +3677,7 @@ const TRAINING_LINKS = [
   { title: "Training Status", sub: "AGCO hours, 609 and history", view: "trainingstatus", tint: "slate",
     icon: "training" },
   // The AGCO Development Map follows, as one wide button (agcoLinkCard), then
-  // the articles from the admin page's Training Articles tab.
+  // the articles from the Training dashboard's Training Articles tab.
 ];
 
 // The same three as the app's Forklift Center, with the card drawn above them.
@@ -3838,7 +3855,7 @@ function showTraining(tab) {
   setMode("training");
   document.body.dataset.page = "training";
   evalAgreed = null; evalNotice = "";
-  renderMockSchedule(); renderSkillsAdmin(); renderTsImport(); renderTsLive(); renderOsrImport(); renderOsrLive();
+  renderMockSchedule(); renderSkillsAdmin(); renderArticlesAdmin(); renderTsImport(); renderTsLive(); renderOsrImport(); renderOsrLive();
   renderAgcoImport(); renderAgcoLive(); renderAgcoTechs(); renderAgcoRules(); renderAgcoAdded(); renderAgcoBales();
   renderTrainingOverview();
   document.querySelector(`#trainingNav [data-tab="${tab || trainingTab}"]`).click();
@@ -5734,9 +5751,11 @@ $("view").addEventListener("click", async (event) => {
 //
 // Qualified means the qualifying course (a setting, see craneCourse below) is
 // on the person's training history
-// (the OLT and ILT report uploaded for Training Status). It doesn't expire. A
-// location admin or owner can remove it with a reason and restore it — only for
-// someone who has taken the course; the database enforces that.
+// (the OLT and ILT report uploaded for Training Status). It lasts as long as
+// the setting says, from the day the course was completed — or for good, while
+// the setting is empty, which is how it starts (migration 0087). A location
+// admin or owner can remove it with a reason and restore it — only for someone
+// who has taken the course; the database enforces that.
 
 // Which course qualifies someone is a SETTING (migration 0051), not a
 // constant: UKG renames courses, and a rename used to mean editing this file,
@@ -5774,12 +5793,30 @@ const craneCompletion = (row) => {
   return (row.classes || []).find(c => craneCourseKey(c.course) === wanted) || null;
 };
 
+// How many months a qualification lasts, or null for no expiration (0087).
+const craneValidMonths = () => {
+  const n = Number(tsSources && tsSources.crane_valid_months);
+  return n > 0 && n <= 240 ? n : null;
+};
+// The day it runs out: that many months after the course was completed.
+function craneExpiry(completion, months = craneValidMonths()) {
+  if (!months || !completion || !completion.completed) return null;
+  const d = dateOnly(completion.completed);
+  const day = d.getDate();
+  d.setDate(1); d.setMonth(d.getMonth() + months);
+  d.setDate(Math.min(day, new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()));
+  return d;
+}
+const craneDay = (d) => d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+
 function craneStatus(row) {
   const completion = craneCompletion(row);
   if (!completion) return { kind: "none" };
   const change = craneOverrides.get(row.person_key);
   if (change && change.revoked) return { kind: "removed", change, completion };
-  return { kind: "qualified", completion };
+  const expires = craneExpiry(completion);
+  if (expires && expires < new Date(new Date().toDateString())) return { kind: "expired", completion, expires };
+  return { kind: "qualified", completion, expires };
 }
 
 // The signed-in person's own training row: by work email, then by name.
@@ -5807,7 +5844,7 @@ function craneCard() {
           <div><dt>Course</dt><dd>${craneCourse()}</dd></div>
           <div><dt>Completed</dt><dd>${esc(newsDate(status.completion.completed))}</dd></div>
           <div><dt>Location</dt><dd>${esc(mine.store || "-")}</dd></div>
-          <div><dt>Expires</dt><dd>No expiration</dd></div>
+          <div><dt>Expires</dt><dd>${status.expires ? esc(craneDay(status.expires)) : "No expiration"}</dd></div>
         </dl>
         <p class="note" style="margin-top:16px">Issued by the Agri-Service Training Department</p>
       </div>
@@ -5819,6 +5856,13 @@ function craneCard() {
       <p>${esc(status.change.changed_by_name)} removed it on ${esc(new Date(status.change.changed_at).toLocaleDateString())}.
         Speak to your location admin.</p>
       ${status.change.reason ? `<q>${esc(status.change.reason)}</q>` : ""}</div></div>`;
+  }
+  if (status.kind === "expired") {
+    return `<div class="crane-alert removed">${warnIcon}<div>
+      <b>Qualification expired</b>
+      <p>Your Crane &amp; Rigging Qualification ran out on ${esc(craneDay(status.expires))}, ${craneValidMonths()} months after you
+        completed ${craneCourse()} on ${esc(newsDate(status.completion.completed))}. Take the course again to be qualified;
+        ask the training department when the next class is.</p></div></div>`;
   }
   return `<div class="crane-alert caution">${warnIcon}<div>
     <b>Not qualified yet</b>
@@ -5834,15 +5878,16 @@ function craneAdminSection() {
   const rows = tsPeople.map(r => ({ r, st: craneStatus(r) }))
     .filter(x => craneFilter === "all" || x.st.kind === craneFilter)
     .sort((a, b) => (a.r.store || "").localeCompare(b.r.store || "") || a.r.last_name.localeCompare(b.r.last_name));
-  const counts = { qualified: 0, removed: 0, none: 0 };
+  const counts = { qualified: 0, expired: 0, removed: 0, none: 0 };
   tsPeople.forEach(r => { counts[craneStatus(r).kind]++; });
   const filters = [["all", "All", tsPeople.length], ["qualified", "Qualified", counts.qualified],
+    ...(craneValidMonths() || counts.expired ? [["expired", "Expired", counts.expired]] : []),
     ["removed", "Removed", counts.removed], ["none", "Not taken", counts.none]];
   return `<section id="craneAdmin">
     <div class="group-title">Crane qualifications</div>
     <p class="osr-desc">${isOwner() ? "Everyone" : "Everyone at your location"}. Qualified means ${esc(craneCourse())} is on
-      their training history. You can remove a qualification, with a reason, and restore it — only for someone
-      who has taken the course, and never your own.</p>
+      their training history${craneValidMonths() ? `, completed in the last ${craneValidMonths()} months` : ""}. You can remove a
+      qualification, with a reason, and restore it — only for someone who has taken the course, and never your own.</p>
     <div class="cab-pills">${filters.map(([id, label, n]) =>
       `<button type="button" class="cab-pill${craneFilter === id ? " on" : ""}" data-crane-filter="${id}">${label}<span>${n}</span></button>`).join("")}</div>
     <div class="crane-scroll"><table class="crane-table">
@@ -5853,12 +5898,14 @@ function craneAdminSection() {
           ${isOwner() ? `<span class="why where">${esc(r.store || "-")}</span>` : ""}</td>
         ${isOwner() ? `<td class="loc">${esc(r.store || "-")}</td>` : ""}
         <td>${st.kind === "qualified" ? `<span class="cab-tag ok">Qualified</span>
-              <span class="why">${esc(newsDate(st.completion.completed))}</span>`
+              <span class="why">${esc(newsDate(st.completion.completed))}${st.expires ? ` · expires ${esc(craneDay(st.expires))}` : ""}</span>`
+          : st.kind === "expired" ? `<span class="cab-tag exp">Expired</span>
+              <span class="why">${esc(craneDay(st.expires))} · completed ${esc(newsDate(st.completion.completed))}</span>`
           : st.kind === "removed" ? `<span class="cab-tag off">Removed</span>
               <span class="why">by ${esc(st.change.changed_by_name)}, ${esc(new Date(st.change.changed_at).toLocaleDateString())}:
               ${esc(st.change.reason)}</span>`
           : `<span class="cab-tag none">Not taken</span>`}</td>
-        <td style="white-space:nowrap;text-align:right">${r.person_key === myKey || st.kind === "none" ? ""
+        <td style="white-space:nowrap;text-align:right">${r.person_key === myKey || st.kind === "none" || st.kind === "expired" ? ""
           : st.kind === "qualified" ? `<button type="button" class="quiet" data-crane="remove" data-key="${esc(r.person_key)}">Remove</button>`
           : `<button type="button" class="quiet" data-crane="restore" data-key="${esc(r.person_key)}">Restore</button>`}</td>
       </tr>`).join("") || `<tr><td colspan="4">Nobody here.</td></tr>`}</tbody>
@@ -16048,6 +16095,8 @@ function renderTsLive() {
   if (hoursInput && document.activeElement !== hoursInput) hoursInput.value = tsRequiredHours();
   const courseInput = $("craneCourseInput");
   if (courseInput && document.activeElement !== courseInput) courseInput.value = craneCourse();
+  const monthsInput = $("craneMonthsInput");
+  if (monthsInput && document.activeElement !== monthsInput) monthsInput.value = craneValidMonths() || "";
   if (!tsSources || !(tsSources.employees && tsSources.employees.file)) {
     box.innerHTML = `<p class="note">Nothing published yet.</p>`;
     return;
@@ -16102,6 +16151,38 @@ $("admin").addEventListener("click", async (event) => {
   await loadTrainingStatus();
   renderTsLive();
   speak(card, `Saved. ${tsGoalPercent()}% of technicians with ${tsRequiredHours()}+ hours.`, false);
+});
+
+$("admin").addEventListener("click", async (event) => {
+  const button = event.target.closest('button[data-act="crane-months"]');
+  if (!button) return;
+  const card = $("craneExpiryRow");
+  const raw = $("craneMonthsInput").value.trim();
+  const months = raw === "" ? null : Number(raw);
+  if (months !== null && !(Number.isInteger(months) && months >= 1 && months <= 240)) {
+    return speak(card, "Enter whole months from 1 to 240, or leave it empty for no expiration.", true);
+  }
+  if (months === craneValidMonths()) return speak(card, "That's already the setting.", false);
+  // Say how many people it would take off the qualified list before saving.
+  if (months) {
+    const today = new Date(new Date().toDateString());
+    const lapsed = tsPeople.filter(r => { const c = craneCompletion(r); return c && craneExpiry(c, months) < today; }).length;
+    if (!confirm(`Make the Crane & Rigging Qualification last ${months} months from the day the course was completed?\n\n`
+        + (lapsed ? `${lapsed} ${lapsed === 1 ? "person's qualification" : "people's qualifications"} would show as expired straight away, `
+          + `in the app and on this page, until they take the course again.`
+          : "Nobody's qualification would expire straight away."))) return;
+  }
+  button.disabled = true;
+  const { data, error } = await db.from("training_status")
+    .upsert({ id: "current", crane_valid_months: months }, { onConflict: "id" }).select("crane_valid_months");
+  button.disabled = false;
+  if (error) return speak(card, /crane_valid_months/.test(error.message)
+    ? "Run migration 0087_crane_expiry_setting.sql in the SQL editor first." : error.message, true);
+  if (!data || !data.length) return speak(card, "Not saved — only an owner can change this.", true);
+  await loadTrainingStatus();
+  renderTsLive();
+  redrawCrane();
+  speak(card, months ? `Saved. A qualification now lasts ${months} months.` : "Saved. The qualification doesn't expire.", false);
 });
 
 $("admin").addEventListener("click", async (event) => {
