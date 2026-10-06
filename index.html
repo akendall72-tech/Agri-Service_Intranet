@@ -1226,6 +1226,28 @@
   /* Admin: approving Safety Reports (the plain admin look). */
   .srr-tabs { margin: 10px 0 12px; }
   .srr-list { display: grid; gap: 8px; }
+  .srr-table-wrap { max-height: 72vh; overflow: auto; border: 1px solid var(--line); border-radius: var(--radius-sm); }
+  table.srr-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  table.srr-table th { position: sticky; top: 0; z-index: 1; padding: 0; background: var(--paper); box-shadow: inset 0 -1px 0 var(--line-strong);
+    text-align: left; white-space: nowrap; }
+  button.srr-sort { display: flex; align-items: center; gap: 6px; width: 100%; margin: 0; padding: 9px 12px; height: auto; border: 0;
+    border-radius: 0; background: none; box-shadow: none; color: var(--muted); font: 600 11.5px var(--font); letter-spacing: .05em;
+    text-transform: uppercase; cursor: pointer; }
+  button.srr-sort:hover { background: var(--canvas); color: var(--ink); }
+  button.srr-sort.on { color: var(--ink); }
+  button.srr-sort i { font-style: normal; font-size: 10px; opacity: .45; }
+  button.srr-sort.on i { opacity: 1; color: var(--red); }
+  table.srr-table td { padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; white-space: nowrap; }
+  table.srr-table td.wide { white-space: normal; min-width: 220px; max-width: 340px; }
+  table.srr-table tbody tr { cursor: pointer; }
+  table.srr-table tbody tr:hover, table.srr-table tbody tr:focus-visible { background: var(--red-soft); outline: none; }
+  table.srr-table tbody tr:last-child td { border-bottom: 0; }
+  table.srr-table td.srr-acts { position: sticky; left: 0; background: var(--card); box-shadow: inset -1px 0 0 var(--line); }
+  table.srr-table td.srr-acts > span { display: flex; align-items: center; gap: 6px; }
+  table.srr-table tbody tr:hover td.srr-acts { background: var(--red-soft); }
+  table.srr-table th:first-child { left: 0; z-index: 2; }
+  table.srr-table td.srr-acts button { margin: 0; }
+  table.srr-table td.srr-acts .msg { font-size: 12px; }
   .srr-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 12px 14px; margin: 0; }
   .srr-row .note { margin: 3px 0 0; }
   .srr-photos { display: flex; flex-wrap: wrap; gap: 10px; }
@@ -7601,9 +7623,8 @@ function safetyReportOneView() {
 
 // The report as a PDF, laid out like the app's. jsPDF's fonts are Latin-1, so
 // emoji are left out of the text.
-async function srDownloadPdf(r) {
+async function srDownloadPdf(r, box = document.querySelector(".srd-acts")) {
   if (!r) return;
-  const box = document.querySelector(".srd-acts");
   speak(box, "Making the PDF…", false);
   const latin = (s) => String(s ?? "").replace(/[^\x00-\xFF]/g, "").replace(/\s+\n/g, "\n").trim();
   const a = r.answers || {}, shop = srShop(r.reporter_location);
@@ -7820,6 +7841,36 @@ $("admin").addEventListener("click", async (event) => {
 // Approved, it joins the Safety Reports everyone reads, without who sent it.
 
 let srrOpenId = null, srrShowing = "waiting";
+// The list's sort: a column's key, and which way.
+let srrSort = { key: "sent", asc: false };
+
+// The list's columns: when it was sent, the form's questions with short
+// answers (the long ones and photos don't fit a column), who sent it and from
+// where, and when it was approved. Each knows what it shows and what it sorts by.
+function srrColumns(approvedList) {
+  const day = (iso) => iso ? new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "";
+  const label = { title: "Title", kind: "Type", where: "Where", date: "Incident date", involved: "Employees involved",
+    witness: "Witness", follow_up: "Follow-up" };
+  const first = ["title", "kind", "where", "date"];
+  const qs = srQuestions().filter(f => !["long_text", "photos"].includes(f.type))
+    .sort((a, b) => ((first.indexOf(a.id) + 1) || 99) - ((first.indexOf(b.id) + 1) || 99));
+  const question = (f) => ({
+    key: "q:" + f.id, label: label[f.id] || f.label.replace(/[?:]+$/, ""), wide: f.id === "title",
+    show: (r) => f.id === "kind" ? srShortKind((r.answers || {}).kind || "") : srDisplay(r, f),
+    // The type sorts by its words, not the emoji in front of them.
+    sort: (r) => f.type === "date" ? String((r.answers || {})[f.id] || "")
+      : f.id === "kind" ? srShortKind((r.answers || {}).kind || "").toLowerCase() : srDisplay(r, f).toLowerCase()
+  });
+  const at = qs.findIndex(f => !first.includes(f.id));
+  const cols = [{ key: "sent", label: "Sent", show: (r) => day(r.created_at), sort: (r) => r.created_at || "" }];
+  qs.slice(0, at < 0 ? qs.length : at).forEach(f => cols.push(question(f)));
+  cols.push({ key: "reporter", label: "Reported by", show: (r) => r.reporter_name || "", sort: (r) => (r.reporter_name || "").toLowerCase() },
+            { key: "shop", label: "Their shop", show: (r) => srShop(r.reporter_location), sort: (r) => srShop(r.reporter_location).toLowerCase() });
+  if (at >= 0) qs.slice(at).forEach(f => cols.push(question(f)));
+  if (approvedList) cols.push({ key: "approved", label: "Approved",
+    show: (r) => [day(r.approved_at), r.approved_by_name].filter(Boolean).join(" · "), sort: (r) => r.approved_at || "" });
+  return cols;
+}
 
 const SRR_BUCKET = "safety-report-photos";
 const srrShared = (r, path) => `approved/${r.id}/${path.split("/").pop()}`;
@@ -7858,16 +7909,31 @@ function renderSafetyReportsAdmin() {
       <button class="${srrShowing === "approved" ? "" : "ghost"}" data-srr-show="approved">Approved (${approved.length})</button>
       <span class="msg"></span>
     </div>
-    <div class="srr-list">${list.map(x => {
-      const a = x.answers || {};
-      return `<div class="role srr-row"><div>
-          <b>${esc(srTitle(x))}</b>${a.kind ? ` <span class="badge b-none">${esc(srShortKind(a.kind))}</span>` : ""}${
-            a.follow_up === true ? ` <span class="badge b-expiring">Follow up</span>` : ""}
-          <div class="note">${esc(x.reporter_name || "—")}${x.reporter_location ? ` · ${esc(srShop(x.reporter_location))}` : ""} · sent ${esc(day(x.created_at))}${
-            srPending(x) ? "" : ` · approved ${esc(day(x.approved_at))}${x.approved_by_name ? ` by ${esc(x.approved_by_name)}` : ""}`}${
-            x.edited_at ? " · edited" : ""}</div></div>
-        <button class="pdf" data-srr-open="${esc(x.id)}">Review</button></div>`;
-    }).join("") || `<p class="note">${srrShowing === "approved" ? "Nothing approved yet." : "Nothing waiting. Every report has been approved."}</p>`}</div>
+    ${list.length ? (() => {
+      const cols = srrColumns(srrShowing === "approved");
+      const col = cols.find(c => c.key === srrSort.key) || cols[0];
+      // Empty answers go last, whichever way it's sorted; a tie falls back to newest first.
+      const rows = list.slice().sort((a, b) => {
+        const x = col.sort(a), y = col.sort(b);
+        if (x === y) return String(b.created_at).localeCompare(String(a.created_at));
+        if (!x) return 1; if (!y) return -1;
+        return (srrSort.asc ? 1 : -1) * (x < y ? -1 : 1);
+      });
+      return `<p class="note" style="margin:0 0 8px">Click a heading to sort by it; click it again to reverse. Click a report to review it.</p>
+      <div class="srr-table-wrap"><table class="srr-table">
+        <thead><tr><th></th>${cols.map(c => {
+          const on = c.key === col.key;
+          return `<th aria-sort="${on ? (srrSort.asc ? "ascending" : "descending") : "none"}"><button type="button" class="srr-sort${on ? " on" : ""}"
+            data-srr-sort="${esc(c.key)}">${esc(c.label)}<i aria-hidden="true">${on ? (srrSort.asc ? "▲" : "▼") : "↕"}</i></button></th>`;
+        }).join("")}</tr></thead>
+        <tbody>${rows.map(x => `<tr data-srr-open="${esc(x.id)}" tabindex="0"><td class="srr-acts"><span><button class="pdf" data-srr-open="${esc(x.id)}">Review</button><button
+          class="ghost pdf" data-srr-pdf="${esc(x.id)}" title="Download this report as a PDF">PDF</button><span class="msg"></span></span></td>${cols.map(c => {
+          const v = c.show(x);
+          return `<td class="${c.wide ? "wide" : ""}">${c.key === "q:title" ? `<b>${esc(v || srTitle(x))}</b>${x.edited_at ? ` <span class="badge b-none">Edited</span>` : ""}`
+            : c.key === "q:follow_up" && v === "Yes" ? `<span class="badge b-expiring">Yes</span>` : esc(v || "—")}</td>`;
+        }).join("")}</tr>`).join("")}</tbody>
+      </table></div>`;
+    })() : `<p class="note">${srrShowing === "approved" ? "Nothing approved yet." : "Nothing waiting. Every report has been approved."}</p>`}
   </div>`;
 }
 
@@ -7992,9 +8058,24 @@ async function srrSave(button, approve) {
   else speak($("srrAdmin").querySelector("[data-srr-report] .row:last-child"), "Saved.", false);
 }
 
+$("admin").addEventListener("click", (event) => {
+  const sort = event.target.closest("[data-srr-sort]");
+  if (!sort) return;
+  const key = sort.dataset.srrSort;
+  // Dates start newest first; words start A to Z.
+  srrSort = srrSort.key === key ? { key, asc: !srrSort.asc } : { key, asc: !["sent", "approved", "q:date"].includes(key) };
+  renderSafetyReportsAdmin();
+});
+$("admin").addEventListener("keydown", (event) => {
+  if (event.key !== "Enter" || !event.target.matches("tr[data-srr-open]")) return;
+  srrOpenId = event.target.dataset.srrOpen; renderSafetyReportsAdmin(); window.scrollTo(0, 0);
+});
+
 $("admin").addEventListener("click", async (event) => {
   const show = event.target.closest("[data-srr-show]");
   if (show) { srrShowing = show.dataset.srrShow; return renderSafetyReportsAdmin(); }
+  const pdf = event.target.closest("[data-srr-pdf]");
+  if (pdf) return srDownloadPdf(srReports.find(x => x.id === pdf.dataset.srrPdf), pdf.closest("td"));
   const open = event.target.closest("[data-srr-open]");
   if (open) { srrOpenId = open.dataset.srrOpen; renderSafetyReportsAdmin(); return window.scrollTo(0, 0); }
   const button = event.target.closest("[data-srr-act]");
