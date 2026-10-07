@@ -2138,6 +2138,82 @@
   .cm-count { padding: 2px 9px; border-radius: 99px; background: var(--lit-red); color: #fff; font: 700 12.5px system-ui, sans-serif;
     letter-spacing: 0; text-transform: none; box-shadow: 0 0 10px rgba(255,26,83,.45); }
   @media (prefers-reduced-motion: reduce) { .cm button.cm-react.pop, .cm-card.cm-arrive { animation: none; } }
+
+  /* ---- The Fitness Challenge (0089): its leaderboard on Social, in the Cab
+     look, and the admin page's rule picker. ---- */
+  .fx .cm-card { --accent: var(--lit-slate); }
+  .fx .fx-hero, .fx .fx-join { --accent: var(--lit-green); }
+  .fx .cm-eyebrow { color: var(--lit-green); }
+  .fx h2.fx-title { margin: 0 0 6px; color: #fff; font: 700 26px/1.1 var(--font-cab); letter-spacing: .02em;
+    text-transform: uppercase; text-wrap: balance; }
+  #view .fx h2.fx-title { margin: 0 0 6px; }
+  .fx-prize { display: flex; align-items: flex-start; gap: 8px; margin: 0 0 12px; color: var(--lit-amber);
+    font-weight: 600; font-size: 14.5px; }
+  .fx-prize svg { flex: none; margin-top: 1px; }
+  .fx-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  @media (max-width: 760px) { .fx-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } .fx-month { grid-column: 1 / -1; } }
+  .cm-stats > div.fx-month { flex-direction: column; align-items: stretch; justify-content: center; gap: 4px; }
+  .fx-month label { color: var(--cab-detail); font: 600 10.5px var(--font-mono); letter-spacing: .12em; text-transform: uppercase; }
+  .cm .fx-month select { margin: 0; padding: 6px 8px; background: rgba(0,0,0,.25); color: #fff;
+    border-color: rgba(255,255,255,.18); font-size: 14px; }
+  .fx-join b { font: 600 17px var(--font-cab); letter-spacing: .04em; text-transform: uppercase; }
+  .fx-join p { margin: 4px 0 0; color: var(--cab-sub); font-size: 14px; max-width: 68ch; }
+  .fx-tabs { align-self: flex-start; margin: 4px 0 0; --accent: var(--lit-green);
+    background: linear-gradient(var(--cab-top), var(--cab-bottom)); border: 1px solid var(--cab-edge); }
+  .fx-board { padding: 6px 12px 6px 22px; }
+  .fx-row + .fx-row { border-top: 1px solid rgba(255,255,255,.08); }
+  .fx-row.mine { background: color-mix(in srgb, var(--lit-green) 9%, transparent); border-radius: 8px; }
+  .cm button.fx-person, .fx-person { display: flex; align-items: center; justify-content: flex-start; gap: 10px; width: 100%;
+    margin: 0; padding: 9px 6px; background: none; border: 0; box-shadow: none; color: #fff; text-align: left;
+    font-weight: 400; white-space: normal; border-radius: 8px; }
+  .cm button.fx-person:hover { background: rgba(255,255,255,.05); }
+  .cm button.fx-person:focus-visible { outline: 2px solid var(--lit-green); outline-offset: 1px; }
+  .fx-place { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px;
+    border-radius: 50%; background: rgba(255,255,255,.06); color: var(--cab-sub); font: 700 13.5px ui-rounded, system-ui, sans-serif; }
+  .fx-place.p1 { background: #F5C542; color: rgba(0,0,0,.75); }
+  .fx-place.p2 { background: #C9D1D9; color: rgba(0,0,0,.75); }
+  .fx-place.p3 { background: #D08A4E; color: rgba(0,0,0,.75); }
+  .fx-who { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .fx-who b { font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fx-who small { color: var(--cab-detail); font-size: 12.5px; }
+  .fx-pts { display: flex; flex-direction: column; align-items: flex-end; }
+  .fx-pts b { font: 700 20px/1.1 var(--font-cab); font-variant-numeric: tabular-nums; }
+  .fx-pts small { color: var(--cab-detail); font-size: 11px; }
+  .fx-bar { display: block; height: 5px; margin-top: 6px; border-radius: 99px; background: rgba(255,255,255,.07); }
+  .fx-bar i { display: block; height: 100%; border-radius: 99px; background: var(--lit-green); }
+  .fx-lines { margin: 0 6px 10px 44px; padding: 8px 12px; border-radius: 10px; background: rgba(0,0,0,.22); }
+  .fx-lines > div { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; }
+  .fx-lines > div + div { border-top: 1px solid rgba(255,255,255,.07); }
+  .fx-lines span { display: flex; flex-direction: column; font-size: 14px; font-weight: 600; }
+  .fx-lines small { color: var(--cab-detail); font-size: 12px; font-weight: 400; }
+  .fx-lines em, .fx-rule-line em { flex: none; font-style: normal; color: var(--lit-green); font: 700 14.5px var(--font-cab);
+    letter-spacing: .03em; }
+  .fx-lines p { margin: 6px 0 0; color: var(--cab-sub); font-size: 12.5px; }
+  .fx-rules { padding-block: 8px; }
+  .fx-rule-line { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; padding: 9px 0; }
+  .fx-rule-line + .fx-rule-line { border-top: 1px solid rgba(255,255,255,.08); }
+  .fx-rule-line span { display: flex; flex-direction: column; gap: 2px; font-size: 14.5px; }
+  .fx-rule-line b { font-weight: 600; }
+  .fx-rule-line small { color: var(--cab-detail); font-size: 12.5px; }
+  .fx-foot { margin: 6px 0 0; color: var(--cab-sub); font-size: 12.5px; }
+
+  .fx-admin h2 .fx-count { margin-left: 8px; color: var(--muted); font: 500 13px var(--font-body, inherit); text-transform: none; letter-spacing: 0; }
+  .fx-state { margin: 6px 0 0; padding: 8px 12px; border-radius: var(--radius-sm); background: var(--paper); font-size: 14px; }
+  h3.fx-group { margin: 18px 0 6px; color: var(--muted); font: 600 12px var(--font-mono); letter-spacing: .14em; text-transform: uppercase; }
+  .fx-pick { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px 12px; align-items: start;
+    padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); margin-bottom: 6px; background: #fff; }
+  .fx-pick.on { border-color: #9BC9A5; background: #F3FAF4; }
+  .fx-pick > input[type=checkbox] { width: 18px; height: 18px; margin: 3px 0 0; accent-color: #137026; }
+  .fx-pick-label { display: flex; flex-wrap: wrap; align-items: center; gap: 0 6px; font-weight: 600; font-size: 14.5px; }
+  .fx-pick-label label { cursor: pointer; }
+  .fx-pick-main small { display: block; margin-top: 2px; color: var(--muted); font-size: 12.5px; }
+  input.fx-val { width: 96px; margin: 0; padding: 4px 8px; text-align: right; font-weight: 600; }
+  .fx-pick-pts { display: flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 13px; color: var(--ink-2); }
+  .fx-pick-pts input { width: 72px; margin: 0; padding: 5px 8px; text-align: right; }
+  .fx-pick-pts span { min-width: 76px; }
+  .fx-watch { display: inline-block; margin-top: 4px; padding: 1px 7px; border-radius: 99px; border: 1px solid var(--line-strong);
+    color: var(--ink-2); font: 600 10.5px var(--font-mono); letter-spacing: .06em; text-transform: uppercase; }
+  @media (max-width: 640px) { .fx-pick { grid-template-columns: auto minmax(0, 1fr); } .fx-pick-pts { grid-column: 2; } }
   .ev-add { margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.09); }
   .ev-add label { display: block; margin-bottom: 6px; color: var(--cab-sub); font: 600 10.5px var(--font-mono);
     letter-spacing: .12em; text-transform: uppercase; }
@@ -2520,6 +2596,7 @@
       <div class="nav-group">App content</div>
       <button data-tab="news"><i data-icon="news"></i><span>News</span></button>
       <button data-tab="events"><i data-icon="events"></i><span>Events</span></button>
+      <button data-tab="fitness" data-title="Fitness Challenge"><i data-icon="fitness"></i><span>Fitness Challenge</span></button>
       <button data-tab="handbook"><i data-icon="briefcase"></i><span>Employee Handbook</span></button>
       <button data-tab="reminders"><i data-icon="reminders"></i><span>Reminders</span></button>
       <button data-tab="support"><i data-icon="support"></i><span>Support Center</span></button>
@@ -3442,6 +3519,9 @@
     </section>
 
     <!-- Events -->
+    <!-- Each month's Fitness Challenge rules: renderFitnessAdmin(). -->
+    <section id="tab-fitness" class="hidden"><div id="fitnessAdmin"></div></section>
+
     <section id="tab-events" class="hidden">
       <div class="card" id="eventEditor">
         <h2 id="eventEditorTitle">Add an event</h2>
@@ -3788,7 +3868,7 @@ async function loadAll() {
   trainingReportsError = trr.error ? trr.error.message : null;
   await Promise.all([loadEvents(), loadInspections(), loadCourses(), loadSds(),
     loadArticles(), loadSkills(), loadNews(), loadTrainingStatus(), loadCrane(), loadCompanyDocs(), loadTools(),
-    loadAgco(), loadMockSchedules(), loadSafetyDesk(), loadSafetyReportData(), loadCommunity()]);
+    loadAgco(), loadMockSchedules(), loadSafetyDesk(), loadSafetyReportData(), loadCommunity(), loadFitness()]);
 
   // Only your own profile comes back for most people — that policy is the
   // point — so the page reads it out of the list rather than asking twice.
@@ -3822,6 +3902,8 @@ const ICONS = {
   social: '<circle cx="12" cy="7.5" r="3"/><circle cx="5" cy="9" r="2.2"/><circle cx="19" cy="9" r="2.2"/><path d="M7 19.5c.6-3.3 2.6-5.3 5-5.3s4.4 2 5 5.3"/><path d="M2 18c.3-2.3 1.4-3.8 3-4.2M22 18c-.3-2.3-1.4-3.8-3-4.2"/>',
   people: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5c2 .6 3.2 2.5 3.5 5.5"/>',
   megaphone: '<path d="M3 10v4h4l7 5V5L7 10H3Z"/><path d="M18 8a5 5 0 0 1 0 8"/>',
+  fitness: '<path d="M3 12h4l2.5-6 4 12 2.5-6H21"/>',
+  trophy: '<path d="M8 4h8v5a4 4 0 0 1-8 0Z"/><path d="M16 5.5h3a3 3 0 0 1-3.4 3.4M8 5.5H5a3 3 0 0 0 3.4 3.4"/><path d="M12 13v4M8.5 20h7M10 17h4"/>',
   news: '<path d="M4 5h12v14a2 2 0 0 0 2 2H6a2 2 0 0 1-2-2Z"/><path d="M16 9h4v10a2 2 0 0 1-2 2"/><path d="M7.5 9h5M7.5 13h5M7.5 17h3"/>',
   pin: '<path d="M9 3.5h6l-1 6.5 3.5 3.5h-11L10 10 9 3.5Z"/><path d="M12 13.5V21"/>',
   pinFilled: '<path d="M9 3.5h6l-1 6.5 3.5 3.5h-11L10 10 9 3.5Z" fill="currentColor"/><path d="M12 13.5V21"/>',
@@ -4011,7 +4093,7 @@ function tileCount(id) {
 // The Support Center's own pages, under it in the crumbs and the sidebar.
 const SUPPORT_PAGES = ["requests", "request", "newrequest", "tools", "tool", "toolform"];
 // Social's: Events and the Company community.
-const SOCIAL_PAGES = ["events", "event", "community", "communitypost"];
+const SOCIAL_PAGES = ["events", "event", "community", "communitypost", "fitness"];
 
 function showView(name) {
   $("home").classList.add("hidden");
@@ -4065,7 +4147,7 @@ function showAdmin() {
   renderCoursesAdmin(); renderSdsAdmin(); renderSdsPending(); renderArticlesAdmin(); renderSkillsAdmin();
   renderNewsAdmin(); renderTsImport(); renderTsLive(); renderHandbook(); renderAgcoImport(); renderAgcoLive();
   renderAgcoTechs(); renderAgcoRules(); renderAgcoAdded(); renderAgcoBales(); renderMockSchedule(); renderSafetyAdmin();
-  renderSafetyReportAdmin(); renderSafetyReportsAdmin();
+  renderSafetyReportAdmin(); renderSafetyReportsAdmin(); renderFitnessAdmin();
   document.querySelector(`#adminNav [data-tab="${adminTab}"]`).click();
   window.scrollTo(0, 0);
 }
@@ -4201,6 +4283,7 @@ const VIEWS = {
   social: () => socialView(),
   community: () => communityView(),
   communitypost: () => communityPostView(),
+  fitness: () => fitnessView(),
   events: () => eventsView(),
   event: () => eventView(),
   safetydesk: () => safetyDeskView(),
@@ -7387,6 +7470,12 @@ const cmPostTitle = (p) => p.shoutout && (p.mentions || []).length
 
 function socialView() {
   setTimeout(cmRefresh);
+  // This month's leader, or your place, on the Fitness Challenge's door.
+  setTimeout(async () => {
+    await loadFitness(fxThisMonth());
+    const root = $("view").querySelector('[data-cm-page="social"]');
+    if (root && !$("view").classList.contains("hidden")) root.outerHTML = cmSocialHtml();
+  });
   return hero("Social", "Share wins, give shout-outs, and see what's coming up across Agri-Service.") + cmSocialHtml();
 }
 
@@ -7415,6 +7504,7 @@ function cmSocialHtml() {
         <span class="cm-go">Open events &rarr;</span>
       </span>
     </button>
+    ${fxDoorHtml()}
   </div>`;
 }
 
@@ -7923,6 +8013,413 @@ $("view").addEventListener("change", async (event) => {
   } finally {
     d.shrinking = false;
   }
+});
+
+// ---- the Fitness Challenge (0089) -----------------------------------------------
+//
+// A competition every month, scored from Apple Health, with a fresh leaderboard
+// on the 1st. Joining is in the app, on an iPhone, where Health is; this page
+// shows the leaderboard on Social, and owners pick each month's rules and their
+// points on the admin page's Fitness Challenge tab. A month nobody set up
+// carries on with the last one's rules. The database does the scoring
+// (fitness_points), so the app and this page can't disagree on a score.
+
+let fxKinds = [], fxChallenges = [], fxBoard = [], fxEffective = null;
+let fxError = null, fxNotSetUp = false;
+let fxMonth = null;              // the month Social shows, "2026-10-01"
+let fxBoardMonth = null;         // the month fxBoard is for
+let fxTab = "people", fxOpen = null;
+let fxAdminMonth = null, fxDraft = null;
+// The first month there was a challenge: the month lists stop here.
+const FX_FIRST = "2026-10-01";
+// What a month runs before any month has been set up: the database's default too.
+const FX_DEFAULT = [{ id: "move_ring", points: 10 }, { id: "exercise_ring", points: 10 }, { id: "stand_ring", points: 10 },
+  { id: "all_rings", points: 10 }, { id: "steps_goal", points: 10, value: 10000 }, { id: "streak_rings", points: 25, value: 7 }];
+
+const fxMonthKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
+const fxThisMonth = () => fxMonthKey(new Date());
+const fxMonthName = (key) => dateOnly(key).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+const fxAddMonths = (key, n) => { const d = dateOnly(key); return fxMonthKey(new Date(d.getFullYear(), d.getMonth() + n, 1)); };
+
+async function loadFitness(month = fxMonth || fxThisMonth()) {
+  const [kinds, all, eff, board] = await Promise.all([
+    fxKinds.length ? Promise.resolve({ data: fxKinds }) : db.from("fitness_rule_kinds").select("*").order("sort_order"),
+    db.from("fitness_challenges").select("*").order("month"),
+    db.rpc("fitness_challenge_for", { for_month: month }),
+    db.rpc("fitness_leaderboard", { for_month: month })
+  ]);
+  const err = kinds.error || all.error || eff.error || board.error;
+  if (err) {
+    fxError = err.message || "unknown";
+    fxNotSetUp = /does not exist|schema cache|Could not find/i.test(fxError);
+    return;
+  }
+  fxError = null; fxNotSetUp = false;
+  fxKinds = kinds.data || [];
+  fxChallenges = all.data || [];
+  fxEffective = (eff.data || [])[0] || null;
+  fxBoard = board.data || [];
+  fxMonth = fxBoardMonth = month;
+}
+
+// ---- wording, the same as the app's ----------------------------------------------
+
+const fxKind = (id) => fxKinds.find(k => k.id === id);
+const fxNum = (n) => Number(n).toLocaleString("en-US", { maximumFractionDigits: 1 });
+
+// "Walk 10,000 steps in a day".
+function fxLabel(rule) {
+  const k = fxKind(rule.id);
+  if (!k) return rule.id;
+  const v = rule.value ?? k.default_value;
+  return k.label.replace("{value}", v == null ? "" : fxNum(v));
+}
+
+const FX_PER = { day: "a day", unit: "each", run: "each time", week: "a week", weekend: "a weekend", month: "once" };
+
+// "10 pts a day".
+function fxWorth(rule) {
+  const k = fxKind(rule.id) || {};
+  const pts = `${fxNum(rule.points)} ${Number(rule.points) === 1 ? "pt" : "pts"}`;
+  return k.per && k.per !== "month" ? `${pts} ${FX_PER[k.per]}` : pts;
+}
+
+// "12 days" — how often a rule scored for someone.
+function fxTimes(line) {
+  const k = fxKind(line.id) || {}, n = Math.round(Number(line.count));
+  const s = (word) => `${n} ${word}${n === 1 ? "" : "s"}`;
+  return ({ day: s("day"), run: s("time"), week: s("week"), weekend: s("weekend"), month: "Done" })[k.per] || n.toLocaleString("en-US");
+}
+
+const fxRules = () => ((fxEffective && fxEffective.rules) || []).filter(r => Number(r.points) > 0)
+  .sort((a, b) => ((fxKind(a.id) || {}).sort_order || 999) - ((fxKind(b.id) || {}).sort_order || 999));
+const fxPlace = (s) => fxBoard.findIndex(x => x.points === s.points) + 1;
+const fxTitle = () => (fxEffective && fxEffective.title) || `${dateOnly(fxMonth || fxThisMonth()).toLocaleDateString("en-US", { month: "long" })} Fitness Challenge`;
+
+function fxDaysLeft() {
+  const start = dateOnly(fxMonth), next = new Date(start.getFullYear(), start.getMonth() + 1, 1);
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  return Math.max(0, Math.round((next - today) / 86400000));
+}
+
+// Each shop's average per person who joined, so a small shop can beat a big one.
+function fxShops() {
+  const by = {};
+  fxBoard.forEach(s => { const k = s.location || "No shop"; (by[k] = by[k] || []).push(s); });
+  return Object.entries(by).map(([name, people]) => ({ name, members: people.length,
+    avg: people.reduce((t, s) => t + s.points, 0) / people.length }))
+    .sort((a, b) => b.avg - a.avg || a.name.localeCompare(b.name));
+}
+
+function fxMonths() {
+  const out = [];
+  for (let m = fxThisMonth(); m >= FX_FIRST && out.length < 36; m = fxAddMonths(m, -1)) out.push(m);
+  return out.length ? out : [fxThisMonth()];
+}
+
+// ---- on Social --------------------------------------------------------------------
+
+// The door on the Social page.
+function fxDoorHtml() {
+  const current = fxBoardMonth === fxThisMonth(), leader = current && fxBoard[0];
+  const mine = current && fxBoard.find(s => s.user_id === me.id);
+  return `<h2 class="group-title">Fitness</h2>
+    <button type="button" class="cab-card cm-door" data-view="fitness" style="${lit("green")}">
+      <span class="cm-door-glyph">${icon("fitness", 24)}</span>
+      <span class="cm-door-main">
+        <b>Fitness Challenge</b>
+        <span>Steps, rings and workouts from Apple Health. A new competition and a fresh leaderboard every month.</span>
+        ${mine ? `<span class="cm-latest">You're #${fxPlace(mine)} of ${fxBoard.length} · ${fxNum(mine.points)} pts</span>`
+          : leader ? `<span class="cm-latest">${esc(leader.full_name || "Someone")} leads with ${fxNum(leader.points)} pts · ${fxDaysLeft()} days left</span>` : ""}
+        <span class="cm-go">See the leaderboard &rarr;</span>
+      </span>
+    </button>`;
+}
+
+function fitnessView() {
+  setTimeout(() => fxRefresh(fxMonth || fxThisMonth()));
+  const head = hero("Fitness Challenge", "Steps, rings and workouts from Apple Health. A fresh leaderboard every month.");
+  if (fxNotSetUp || fxError) {
+    return head + `<div class="cm"><div class="cm-card cm-empty">
+      <b>${fxNotSetUp ? "The Fitness Challenge isn't switched on yet" : "The leaderboard couldn't be loaded"}</b>
+      <p>${fxNotSetUp ? "It opens once the database is ready for it." : "Try again in a minute."}</p></div></div>`;
+  }
+  return head + `<div class="cm fx" id="fxPage">${fxPageHtml()}</div>`;
+}
+
+async function fxRefresh(month) {
+  await loadFitness(month);
+  const page = $("fxPage");
+  if (page && !$("view").classList.contains("hidden")) page.innerHTML = fxPageHtml();
+}
+
+function fxPageHtml() {
+  const current = fxMonth === fxThisMonth(), mine = fxBoard.find(s => s.user_id === me.id);
+  const prize = fxEffective && fxEffective.prize;
+  const stat = (value, label) => `<div><span class="cm-stat"><b>${value}</b><small>${esc(label)}</small></span></div>`;
+  const rules = fxRules();
+  const cap = fxEffective && fxEffective.daily_cap;
+  return `<div class="cm-card fx-hero">
+      <p class="cm-eyebrow">${icon("fitness", 15)}Fitness Challenge · ${esc(fxMonthName(fxMonth))}</p>
+      <h2 class="fx-title">${esc(fxTitle())}</h2>
+      ${prize ? `<p class="fx-prize">${icon("trophy", 16)}${esc(prize)}</p>` : ""}
+      <div class="cm-stats fx-stats">
+        ${mine ? stat(`#${fxPlace(mine)}`, `of ${fxBoard.length} · ${fxNum(mine.points)} pts`) : stat(fxBoard.length, fxBoard.length === 1 ? "person in" : "people in")}
+        ${current ? stat(fxDaysLeft(), fxDaysLeft() === 1 ? "day left" : "days left") : stat("Final", "standings")}
+        <div class="fx-month"><label for="fxMonth">Month</label>
+          <select id="fxMonth">${fxMonths().map(m => `<option value="${m}"${m === fxMonth ? " selected" : ""}>${esc(fxMonthName(m))}</option>`).join("")}</select></div>
+      </div>
+    </div>
+    ${current && !mine ? `<div class="cm-card fx-join">
+      <b>Join from the app on your iPhone</b>
+      <p>Social, then Fitness Challenge. It reads your daily totals from Apple Health, so joining can't be done from
+        here. Coworkers see your name, shop, points and how you earned them, never your daily numbers.</p></div>` : ""}
+    <div class="cm-kind fx-tabs" role="group" aria-label="Leaderboard">
+      <button type="button" class="${fxTab === "people" ? "on" : ""}" data-fx-tab="people" aria-pressed="${fxTab === "people"}">${icon("person", 15)}People</button>
+      <button type="button" class="${fxTab === "shops" ? "on" : ""}" data-fx-tab="shops" aria-pressed="${fxTab === "shops"}">${icon("building", 15)}Shops</button>
+    </div>
+    ${!fxBoard.length ? `<p class="cm-none">${current ? "Nobody's joined yet this month." : "Nobody took part that month."}</p>`
+      : fxTab === "people" ? `<div class="cm-card fx-board">${fxBoard.map(fxPersonHtml).join("")}</div>`
+      : `<div class="cm-card fx-board">${fxShopsHtml()}</div>
+         <p class="cm-none">Each shop's average points per person who joined, so a small shop can beat a big one.</p>`}
+    <h2 class="group-title">How to score</h2>
+    <div class="cm-card fx-rules">
+      ${rules.map(r => { const k = fxKind(r.id) || {};
+        return `<div class="fx-rule-line"><span><b>${esc(fxLabel(r))}</b>${k.detail ? `<small>${esc(k.detail)}</small>` : ""}</span>
+          <em>${esc(fxWorth(r))}</em></div>`; }).join("")}
+      ${cap ? `<p class="fx-foot">At most ${fxNum(cap)} points a day from the daily rules; streaks, weeks and the month's total come on top.</p>` : ""}
+      ${rules.some(r => (fxKind(r.id) || {}).needs_watch) ? `<p class="fx-foot">Exercise and stand come from an Apple Watch.</p>` : ""}
+      <p class="fx-foot">Anything typed into the Health app by hand doesn't count.</p>
+    </div>`;
+}
+
+function fxBadge(place) {
+  return `<span class="fx-place${place <= 3 ? ` p${place}` : ""}">${place}</span>`;
+}
+
+function fxPersonHtml(s) {
+  const open = fxOpen === s.user_id, mine = s.user_id === me.id;
+  const lines = s.breakdown || [];
+  const total = lines.reduce((t, l) => t + Number(l.points), 0);
+  const cap = fxEffective && fxEffective.daily_cap;
+  return `<div class="fx-row${mine ? " mine" : ""}${open ? " open" : ""}">
+    <button type="button" class="fx-person" data-fx-person="${esc(s.user_id)}" aria-expanded="${open}">
+      ${fxBadge(fxPlace(s))}${cmAvatar(s.full_name, 34)}
+      <span class="fx-who"><b>${esc(s.full_name || "Someone")}${mine ? " (you)" : ""}</b><small>${esc(s.location || "")}</small></span>
+      <span class="fx-pts"><b>${fxNum(s.points)}</b><small>pts</small></span>
+    </button>
+    ${open ? `<div class="fx-lines">
+      ${lines.length ? lines.map(l => `<div><span>${esc(fxLabel((fxRules().find(r => r.id === l.id)) || { id: l.id }))}
+          <small>${esc(fxTimes(l))}</small></span><em>${fxNum(l.points)} pts</em></div>`).join("")
+        : `<p>No points yet this month.</p>`}
+      ${cap && total > s.points ? `<p>The ${fxNum(cap)}-a-day cap trims these to ${fxNum(s.points)}.</p>` : ""}
+      ${s.last_synced ? `<p>Updated ${esc(cmWhen(s.last_synced))} · ${s.days_synced} ${s.days_synced === 1 ? "day" : "days"} this month. Daily numbers stay private.</p>` : ""}
+    </div>` : ""}
+  </div>`;
+}
+
+function fxShopsHtml() {
+  const shops = fxShops(), top = Math.max(1, shops.length ? shops[0].avg : 1);
+  return shops.map((s, i) => `<div class="fx-row"><div class="fx-person fx-shop">
+      ${fxBadge(i + 1)}
+      <span class="fx-who"><b>${esc(s.name)}</b><small>${s.members} ${s.members === 1 ? "person" : "people"} in</small>
+        <i class="fx-bar"><i style="width:${Math.round(s.avg / top * 100)}%"></i></i></span>
+      <span class="fx-pts"><b>${fxNum(Math.round(s.avg * 10) / 10)}</b><small>avg pts</small></span>
+    </div></div>`).join("");
+}
+
+$("view").addEventListener("click", (event) => {
+  const tab = event.target.closest("[data-fx-tab]");
+  if (tab) { fxTab = tab.dataset.fxTab; fxOpen = null; $("fxPage").innerHTML = fxPageHtml(); return; }
+  const person = event.target.closest("[data-fx-person]");
+  if (person) {
+    fxOpen = fxOpen === person.dataset.fxPerson ? null : person.dataset.fxPerson;
+    $("fxPage").innerHTML = fxPageHtml();
+    const again = document.querySelector(`[data-fx-person="${CSS.escape(person.dataset.fxPerson)}"]`);
+    if (again) again.focus();
+  }
+});
+
+$("view").addEventListener("change", (event) => {
+  if (event.target.id !== "fxMonth") return;
+  fxOpen = null;
+  fxRefresh(event.target.value);
+});
+
+// ---- on the admin page: each month's rules -------------------------------------------
+
+// What the editor starts from: the month's own setup, or the one it carries
+// over, or the standard set. Title and prize belong to their own month.
+function fxDraftFor(month) {
+  const own = fxChallenges.find(c => c.month === month);
+  const before = fxChallenges.filter(c => c.month < month).sort((a, b) => b.month.localeCompare(a.month))[0];
+  const from = own || before;
+  return { month, title: own ? own.title : "", prize: own ? own.prize : "",
+    daily_cap: from && from.daily_cap ? String(from.daily_cap) : "",
+    rules: new Map(((from && from.rules) || FX_DEFAULT).map(r => [r.id, { points: String(r.points), value: r.value == null ? "" : String(r.value) }])),
+    own: !!own, carriedFrom: own ? null : before ? before.month : null };
+}
+
+function renderFitnessAdmin() {
+  const host = $("fitnessAdmin");
+  if (!host) return;
+  if (fxNotSetUp || fxError) {
+    host.innerHTML = `<div class="card"><p class="error">${fxNotSetUp
+      ? "Run migration 0089_fitness.sql in the SQL editor, then reload this page." : esc(fxError || "")}</p></div>`;
+    return;
+  }
+  if (!fxAdminMonth) fxAdminMonth = fxThisMonth();
+  if (!fxDraft || fxDraft.month !== fxAdminMonth) fxDraft = fxDraftFor(fxAdminMonth);
+  const d = fxDraft, now = fxThisMonth();
+  const months = [fxAddMonths(now, 3), fxAddMonths(now, 2), fxAddMonths(now, 1), ...fxMonths()];
+  const state = d.own ? `Set up for ${fxMonthName(d.month)}${(fxChallenges.find(c => c.month === d.month) || {}).updated_by_name
+      ? ` by ${(fxChallenges.find(c => c.month === d.month)).updated_by_name}` : ""}.`
+    : d.carriedFrom ? `Not set up: ${fxMonthName(d.month)} carries on with ${fxMonthName(d.carriedFrom)}'s rules. Save to give it its own.`
+    : `Not set up yet: ${fxMonthName(d.month)} uses the standard rules (rings, 10,000 steps and a week's streak). Save to change them.`;
+  const groups = [...new Set(fxKinds.map(k => k.category))];
+  host.innerHTML = `<div class="card fx-admin">
+      <h2>The month</h2>
+      <p class="note">A competition every month, scored from Apple Health, with a fresh leaderboard on the 1st. People
+        join in the app on their iPhone. Pick the month's rules and what each is worth; a month you don't set up carries
+        on with the last one's. Changing a month's rules rescores everyone in it straight away.</p>
+      <div class="fields">
+        <div><label for="fxAdminMonth">Month</label>
+          <select id="fxAdminMonth">${months.map(m => `<option value="${m}"${m === d.month ? " selected" : ""}>${esc(fxMonthName(m))}${
+            m === now ? " (this month)" : m > now ? " (coming up)" : ""}${fxChallenges.some(c => c.month === m) ? "" : " · not set up"}</option>`).join("")}</select></div>
+        <div><label for="fxAdminCap">Most points a day (optional)</label>
+          <input id="fxAdminCap" type="number" min="1" max="100000" step="1" data-fx-field="daily_cap" value="${esc(d.daily_cap)}"
+            placeholder="No limit"></div>
+        <div class="wide"><label for="fxAdminTitle">Title (optional)</label>
+          <input id="fxAdminTitle" type="text" maxlength="80" data-fx-field="title" value="${esc(d.title)}"
+            placeholder="${esc(dateOnly(d.month).toLocaleDateString("en-US", { month: "long" }))} Fitness Challenge"></div>
+        <div class="wide"><label for="fxAdminPrize">Prize (optional)</label>
+          <input id="fxAdminPrize" type="text" maxlength="500" data-fx-field="prize" value="${esc(d.prize)}"
+            placeholder="A Fendt jacket for the winner, and lunch for the top shop"></div>
+      </div>
+      <p class="fx-state">${esc(state)}</p>
+    </div>
+    <div class="card fx-admin">
+      <h2>Rules <span class="fx-count">${d.rules.size} picked</span></h2>
+      <p class="note">Tick the rules for ${esc(fxMonthName(d.month))} and set their points. The cap above limits what the
+        daily and "each" rules add up to on any one day; streaks, weeks and month totals come on top.
+        Rules marked <span class="fx-watch">Apple Watch</span> score nothing for someone with only a phone.</p>
+      ${groups.map(g => `<h3 class="fx-group">${esc(g)}</h3>
+        ${fxKinds.filter(k => k.category === g).map(fxAdminRuleHtml).join("")}`).join("")}
+      <div class="row" style="margin-top:14px">
+        <button type="button" data-fx-act="save">Save ${esc(fxMonthName(d.month))}</button>
+        ${d.own ? `<button type="button" class="ghost" data-fx-act="unset" title="Delete this month's own setup">Carry over the month before instead</button>` : ""}
+        <button type="button" class="ghost" data-fx-act="standard">Start from the standard rules</button>
+      </div>
+      <p class="msg" style="margin:8px 0 0"></p>
+    </div>`;
+}
+
+function fxAdminRuleHtml(k) {
+  const r = fxDraft.rules.get(k.id), on = !!r, id = esc(k.id);
+  const pts = on ? r.points : String(k.default_points);
+  const val = on && r.value !== "" ? r.value : (k.default_value == null ? "" : String(k.default_value));
+  const [before, after] = k.label.split("{value}");
+  // The rule's number sits in its sentence: "Walk [10000] steps in a day".
+  const text = k.value_unit
+    ? `<label for="fx-on-${id}">${esc(before)}</label><input type="number" class="fx-val" data-fx-val="${id}" min="0.1" step="any"
+         value="${esc(val)}" aria-label="${esc(k.value_unit)}"><label for="fx-on-${id}">${esc(after || "")}</label>`
+    : `<label for="fx-on-${id}">${esc(k.label)}</label>`;
+  return `<div class="fx-pick${on ? " on" : ""}">
+    <input type="checkbox" id="fx-on-${id}" data-fx-on="${id}"${on ? " checked" : ""}>
+    <div class="fx-pick-main"><div class="fx-pick-label">${text}</div>
+      ${k.detail ? `<small>${esc(k.detail)}</small>` : ""}${k.needs_watch ? `<span class="fx-watch">Apple Watch</span>` : ""}</div>
+    <div class="fx-pick-pts"><input type="number" min="0" max="1000" step="1" data-fx-pts="${id}" value="${esc(pts)}"
+        aria-label="Points for ${esc(k.label.replace("{value}", val))}"><span>${esc(k.per === "month" ? "pts once" : `pts ${FX_PER[k.per]}`)}</span></div>
+  </div>`;
+}
+
+$("admin").addEventListener("input", (event) => {
+  const t = event.target, d = fxDraft;
+  if (!d || !t.closest || !t.closest("#fitnessAdmin")) return;
+  if (t.dataset.fxField) { d[t.dataset.fxField] = t.value; return; }
+  const id = t.dataset.fxPts || t.dataset.fxVal;
+  if (!id) return;
+  // Changing a rule's points or number picks it.
+  const k = fxKind(id);
+  const row = d.rules.get(id) || { points: String(k.default_points), value: k.default_value == null ? "" : String(k.default_value) };
+  if (t.dataset.fxPts) row.points = t.value; else row.value = t.value;
+  if (!d.rules.has(id)) {
+    d.rules.set(id, row);
+    const box = $(`fx-on-${id}`);
+    if (box) { box.checked = true; box.closest(".fx-pick").classList.add("on"); }
+    fxCountPicked();
+  }
+});
+
+function fxCountPicked() {
+  const n = document.querySelector("#fitnessAdmin .fx-count");
+  if (n) n.textContent = `${fxDraft.rules.size} picked`;
+}
+
+$("admin").addEventListener("change", (event) => {
+  const t = event.target;
+  if (!t.closest || !t.closest("#fitnessAdmin")) return;
+  if (t.id === "fxAdminMonth") { fxAdminMonth = t.value; fxDraft = null; return renderFitnessAdmin(); }
+  const id = t.dataset.fxOn;
+  if (!id) return;
+  if (t.checked) {
+    const pick = t.closest(".fx-pick");
+    fxDraft.rules.set(id, { points: pick.querySelector("[data-fx-pts]").value,
+      value: (pick.querySelector("[data-fx-val]") || {}).value || "" });
+  } else {
+    fxDraft.rules.delete(id);
+  }
+  t.closest(".fx-pick").classList.toggle("on", t.checked);
+  fxCountPicked();
+});
+
+$("admin").addEventListener("click", async (event) => {
+  const b = event.target.closest("[data-fx-act]");
+  if (!b) return;
+  const card = b.closest(".card"), d = fxDraft;
+  if (b.dataset.fxAct === "standard") {
+    d.rules = new Map(FX_DEFAULT.map(r => [r.id, { points: String(r.points), value: r.value == null ? "" : String(r.value) }]));
+    return renderFitnessAdmin();
+  }
+  if (b.dataset.fxAct === "unset") {
+    if (!confirm(`Delete ${fxMonthName(d.month)}'s own rules, title and prize? It carries on with the month before's rules instead.`)) return;
+    const { error } = await db.from("fitness_challenges").delete().eq("month", d.month);
+    if (error) return speak(card, error.message, true);
+    await loadFitness(fxMonth || fxThisMonth());
+    fxDraft = null;
+    renderFitnessAdmin();
+    return;
+  }
+  // Save: every picked rule, in the catalog's order, with its points and number.
+  const rules = [];
+  for (const k of fxKinds) {
+    const r = d.rules.get(k.id);
+    if (!r) continue;
+    const points = Number(r.points);
+    if (r.points === "" || !Number.isFinite(points) || points < 0 || points > 1000) {
+      return speak(card, `Give "${k.label.replace("{value}", "…")}" points from 0 to 1,000.`, true);
+    }
+    const rule = { id: k.id, points };
+    if (k.value_unit) {
+      const value = Number(r.value === "" ? k.default_value : r.value);
+      if (!Number.isFinite(value) || value <= 0) return speak(card, `"${k.label.replace("{value}", "…")}" needs a number more than 0.`, true);
+      rule.value = value;
+    }
+    rules.push(rule);
+  }
+  if (!rules.length) return speak(card, "Pick at least one rule.", true);
+  const cap = d.daily_cap === "" ? null : Math.round(Number(d.daily_cap));
+  if (cap !== null && !(cap >= 1 && cap <= 100000)) return speak(card, "The most points a day must be a whole number from 1, or left empty.", true);
+  b.disabled = true;
+  const { error } = await db.from("fitness_challenges")
+    .upsert({ month: d.month, title: d.title.trim(), prize: d.prize.trim(), daily_cap: cap, rules }, { onConflict: "month" });
+  b.disabled = false;
+  if (error) return speak(card, error.message, true);
+  await loadFitness(fxMonth || fxThisMonth());
+  fxDraft = null;
+  renderFitnessAdmin();
+  const again = document.querySelector("#fitnessAdmin [data-fx-act='save']");
+  if (again) speak(again.closest(".card"), `Saved. ${fxMonthName(d.month)} scores with these rules now.`, false);
 });
 
 // ---- the Event Center, for everyone ----------------------------------------
@@ -13316,7 +13813,7 @@ const pageTitle = (id) => (FEATURES.find(f => f.id === id) || COMPANY_PAGES.find
        approvals: { title: "Driving Tests to Approve" },
        requests: { title: "Support Requests" },
        event: { title: (companyEvents.find(e => e.id === openEventId) || {}).title || "Event" },
-       events: { title: "Event Center" }, community: { title: "Company" },
+       events: { title: "Event Center" }, community: { title: "Company" }, fitness: { title: "Fitness Challenge" },
        communitypost: { title: (cmPosts.find(p => p.id === openCommunityPostId) || {}).shoutout ? "Shout-out" : "Post" },
        safetydesk: { title: "Safety Desk" }, safetyreport: { title: "Safety Brief Report" },
        safetyform: { title: "Safety Report" }, safetyreportlist: { title: "Safety Reports" },
@@ -19554,7 +20051,7 @@ document.querySelectorAll(".tabs button[data-tab]").forEach(btn => {
     document.querySelectorAll(".tabs button[data-tab]").forEach(b =>
       b.classList.toggle("active", b === btn));
     ["certs", "plans", "people", "support", "payroll", "tools",
-      "directory", "logins", "reminders", "events", "org", "openseat", "inspections", "courses", "articles", "skillsadmin", "sds", "news", "trainingstatus", "handbook", "agco", "mock", "safetydesk", "safetyreportform", "safetyreports", "safetyoverview", "trainingoverview", "agcocatalog"].forEach(name =>
+      "directory", "logins", "reminders", "events", "fitness", "org", "openseat", "inspections", "courses", "articles", "skillsadmin", "sds", "news", "trainingstatus", "handbook", "agco", "mock", "safetydesk", "safetyreportform", "safetyreports", "safetyoverview", "trainingoverview", "agcocatalog"].forEach(name =>
       $("tab-" + name).classList.toggle("hidden", name !== btn.dataset.tab));
     $("adminTitle").textContent = btn.dataset.title || btn.querySelector("span").textContent.trim();
     if (btn.closest("#safetyNav")) safetyTab = btn.dataset.tab;
