@@ -9713,6 +9713,8 @@ async function sxMonthlyPdf(key) {
       const cells = row.map((v, i) => doc.splitTextToSize(latin(v), cols[i][1] - 10));
       const h = Math.max(...cells.map(c => c.length)) * 11 + 8;
       ensure(h, head);
+      // A page break redraws the header in its own smaller type.
+      doc.setFontSize(8.8);
       if (n % 2) { doc.setFillColor(...light); doc.rect(opts.x || M, y, width, h, "F"); }
       cells.forEach((lines, i) => {
         const bold = opts.bold === i, color = opts.color ? opts.color(row, i) : null;
@@ -9767,22 +9769,33 @@ async function sxMonthlyPdf(key) {
     doc.setFontSize(22); doc.setTextColor(...color); doc.text(value, bx + 12, by + 40);
     doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(...grey); doc.text(latin(sub), bx + 12, by + 53);
   });
-  y += bh * 2 + 30;
+  y += bh * 2 + 28;
 
-  // Twelve months of reports, ending this month.
-  doc.setFont("helvetica", "bold"); doc.setFontSize(8); doc.setTextColor(...grey); doc.text("SAFETY REPORTS, 12 MONTHS TO " + month.toUpperCase(), M, y); y += 10;
+  // Reports by month, up to twelve, ending this month. Only from the first
+  // month anyone sent one: before that it's a row of empty bars. With a single
+  // month there's nothing to compare, and the box above already has it.
   const end = dateOnly(key + "-01");
-  const months = Array.from({ length: 12 }, (_, i) => sxMonthKey(new Date(end.getFullYear(), end.getMonth() - 11 + i, 1)));
-  const counts = months.map(k => srReports.filter(sxInMonth(k)).length);
-  const top = Math.max(1, ...counts), ch = 70, cw = CW / 12;
-  counts.forEach((n, i) => {
-    const h = n / top * ch, x = M + i * cw;
-    doc.setFillColor(...(months[i] === key ? red : [205, 200, 196])); doc.rect(x + cw * 0.18, y + ch - h, cw * 0.64, Math.max(h, 1), "F");
-    doc.setFont("helvetica", "bold"); doc.setFontSize(7.5); doc.setTextColor(...ink); if (n) doc.text(String(n), x + cw / 2, y + ch - h - 3, { align: "center" });
-    doc.setFont("helvetica", "normal"); doc.setTextColor(...grey);
-    doc.text(dateOnly(months[i] + "-01").toLocaleDateString("en-US", { month: "short" }), x + cw / 2, y + ch + 11, { align: "center" });
-  });
-  y += ch + 22;
+  const first = srReports.map(r => sxMonthKey(new Date(r.created_at))).sort()[0] || key;
+  const [fy, fm] = first.split("-").map(Number);
+  const span = Math.max(1, Math.min(12, (end.getFullYear() - fy) * 12 + end.getMonth() + 1 - fm + 1));
+  if (span >= 2) {
+    const months = Array.from({ length: span }, (_, i) => sxMonthKey(new Date(end.getFullYear(), end.getMonth() - span + 1 + i, 1)));
+    doc.setFont("helvetica", "bold"); doc.setFontSize(8); doc.setTextColor(...grey);
+    doc.text(span === 12 ? "SAFETY REPORTS, 12 MONTHS TO " + month.toUpperCase()
+      : "SAFETY REPORTS BY MONTH, SINCE " + sxMonthName(months[0]).toUpperCase(), M, y);
+    // Room for the count over the tallest bar.
+    y += 16;
+    const counts = months.map(k => srReports.filter(sxInMonth(k)).length);
+    const top = Math.max(1, ...counts), ch = 50, cw = CW / 12;
+    counts.forEach((n, i) => {
+      const h = n / top * ch, x = M + i * cw;
+      doc.setFillColor(...(months[i] === key ? red : [205, 200, 196])); doc.rect(x + cw * 0.18, y + ch - h, cw * 0.64, Math.max(h, 1), "F");
+      doc.setFont("helvetica", "bold"); doc.setFontSize(7.5); doc.setTextColor(...ink); if (n) doc.text(String(n), x + cw / 2, y + ch - h - 3, { align: "center" });
+      doc.setFont("helvetica", "normal"); doc.setTextColor(...grey);
+      doc.text(dateOnly(months[i] + "-01").toLocaleDateString("en-US", { month: "short" }), x + cw / 2, y + ch + 11, { align: "center" });
+    });
+    y += ch + 16;
+  }
 
   // The Safety Brief.
   section("Safety Brief", brief ? `${latin(brief.title)}. Everyone with an account by the end of ${month} is expected to pass it.`
@@ -9811,7 +9824,11 @@ async function sxMonthlyPdf(key) {
     const tally = (fn) => { const t = {}; reports.forEach(r => { const k = fn(r); if (k) t[k] = (t[k] || 0) + 1; }); return Object.entries(t).sort((a, b) => b[1] - a[1]); };
     const types = tally(r => srShortKind(sxKind(r)) || "No type");
     const wheres = tally(r => { const w = (r.answers || {}).where; return w ? (w === "N/A" ? "Not at a shop" : w) : "Not given"; });
-    const startY = y, half = (CW - 16) / 2;
+    const half = (CW - 16) / 2;
+    // Side by side on one page, so the second doesn't start where the first
+    // left off on the page before.
+    ensure(17 + 19 * Math.max(types.length, wheres.length) + 4);
+    const startY = y;
     table([["By type", half - 60], ["Reports", 60, "r"]], types.map(([k, n]) => [k, String(n)]));
     const leftEnd = y; y = startY;
     table([["By location", half - 60], ["Reports", 60, "r"]], wheres.map(([k, n]) => [k, String(n)]), { x: M + half + 16 });
@@ -9821,8 +9838,30 @@ async function sxMonthlyPdf(key) {
         return [day(r.created_at), srTitle(r), srShortKind(sxKind(r)) || "-", a.where ? (a.where === "N/A" ? "Not at a shop" : a.where) : "-",
           r.reporter_name || "-", (srPending(r) ? "Waiting" : "Approved") + (a.follow_up === true ? " - follow-up asked" : "")]; }),
       { bold: 1, color: (row, i) => i === 5 ? (/Waiting/.test(row[5]) ? amber : green) : null });
+  }
 
-    // Every report in full.
+  // Who sent one.
+  section("Participation", `${senders.size} of ${everyone.length} people sent at least one Safety Report in ${month}.`);
+  const sentRows = everyone.filter(p => senders.has(p.id)).sort((a, b) => shopOf(a).localeCompare(shopOf(b)) || (a.full_name || "").localeCompare(b.full_name || ""));
+  table([["Sent a report", 220], ["Shop", 170], ["Reports", CW - 390, "r"]], sentRows.map(p => [p.full_name || p.email || "No name yet", shopOf(p), String(senders.get(p.id))]),
+    { empty: "Nobody sent one this month." });
+  const none = everyone.filter(p => !senders.has(p.id));
+  if (none.length) {
+    y += 22; ensure(40);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(9); doc.setTextColor(...ink); doc.text(`No report this month (${none.length})`, M, y); y += 14;
+    const byShop = {};
+    none.forEach(p => (byShop[shopOf(p)] = byShop[shopOf(p)] || []).push(p.full_name || p.email || "No name yet"));
+    Object.keys(byShop).sort().forEach(s => {
+      ensure(26);
+      doc.setFont("helvetica", "bold"); doc.setFontSize(8.5); doc.setTextColor(...grey); doc.text(latin(`${s} (${byShop[s].length})`), M, y); y += 11;
+      doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(...ink);
+      doc.splitTextToSize(latin(byShop[s].sort().join(", ")), CW).forEach(l => { ensure(12); doc.text(l, M, y); y += 11.5; });
+      y += 6;
+    });
+  }
+
+  // Every report in full, last.
+  if (reports.length) {
     section("Report details");
     reports.forEach((r, n) => {
       const a = r.answers || {};
@@ -9848,26 +9887,6 @@ async function sxMonthlyPdf(key) {
       const photos = srPhotoPaths(r).length;
       if (photos) { doc.setFont("helvetica", "italic"); doc.setFontSize(8.5); doc.setTextColor(...grey); doc.text(`${photos} photo${photos === 1 ? "" : "s"} attached (see the report's own PDF).`, M + 12, y); y += 12; }
       y += 10;
-    });
-  }
-
-  // Who sent one.
-  section("Participation", `${senders.size} of ${everyone.length} people sent at least one Safety Report in ${month}.`);
-  const sentRows = everyone.filter(p => senders.has(p.id)).sort((a, b) => shopOf(a).localeCompare(shopOf(b)) || (a.full_name || "").localeCompare(b.full_name || ""));
-  table([["Sent a report", 220], ["Shop", 170], ["Reports", CW - 390, "r"]], sentRows.map(p => [p.full_name || p.email || "No name yet", shopOf(p), String(senders.get(p.id))]),
-    { empty: "Nobody sent one this month." });
-  const none = everyone.filter(p => !senders.has(p.id));
-  if (none.length) {
-    y += 22; ensure(40);
-    doc.setFont("helvetica", "bold"); doc.setFontSize(9); doc.setTextColor(...ink); doc.text(`No report this month (${none.length})`, M, y); y += 14;
-    const byShop = {};
-    none.forEach(p => (byShop[shopOf(p)] = byShop[shopOf(p)] || []).push(p.full_name || p.email || "No name yet"));
-    Object.keys(byShop).sort().forEach(s => {
-      ensure(26);
-      doc.setFont("helvetica", "bold"); doc.setFontSize(8.5); doc.setTextColor(...grey); doc.text(latin(`${s} (${byShop[s].length})`), M, y); y += 11;
-      doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(...ink);
-      doc.splitTextToSize(latin(byShop[s].sort().join(", ")), CW).forEach(l => { ensure(12); doc.text(l, M, y); y += 11.5; });
-      y += 6;
     });
   }
 
