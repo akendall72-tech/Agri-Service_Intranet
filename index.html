@@ -1339,7 +1339,7 @@
   .ms-tools { margin-left: auto; display: flex; flex-wrap: wrap; gap: 6px; }
   .ms-tools button { padding: 6px 12px; font-size: 13px; }
   .ms-head > .note { margin: 10px 0 14px; max-width: 90ch; }
-  .ms-score { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px 20px; align-items: center;
+  .ms-score { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; gap: 8px 20px; align-items: center;
     padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); }
   .ms-pct { font: 700 46px/1 var(--font-cab, inherit); font-variant-numeric: tabular-nums; }
   .ms-pct.ok, .ms-score .ok { color: #137026; }
@@ -1353,12 +1353,20 @@
   .ms-goal { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 14px; color: var(--ink-2); }
   .ms-goal label { font-weight: 600; color: var(--ink); }
   .ms-goal input { width: 68px; margin: 0; padding: 6px 8px; text-align: right; }
-  @container (max-width: 860px) { .ms-score { grid-template-columns: auto minmax(0, 1fr); } .ms-goal { grid-column: 1 / -1; } }
+  .ms-avg { display: grid; gap: 1px; padding-left: 20px; border-left: 1px solid var(--line); }
+  .ms-avg b { font: 700 30px/1 var(--font-cab, inherit); font-variant-numeric: tabular-nums; color: var(--ink); }
+  .ms-avg b small { margin-left: 3px; font-size: 15px; font-weight: 600; color: var(--ink-2); }
+  .ms-avg span { font-size: 13px; font-weight: 600; color: var(--ink); }
+  .ms-avg em { font-style: normal; font-size: 12.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  @container (max-width: 860px) { .ms-score { grid-template-columns: auto minmax(0, 1fr); }
+    .ms-avg { grid-column: 1 / -1; padding: 10px 0 0; border-left: 0; border-top: 1px solid var(--line); }
+    .ms-goal { grid-column: 1 / -1; } }
   .ms-shops { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
   .ms-shop { padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); background: #fff; font-size: 13px;
     color: var(--red-dark, #B4041E); font-variant-numeric: tabular-nums; }
   .ms-shop.ok { color: #137026; }
   .ms-shop b { color: var(--ink); font-weight: 600; margin-right: 4px; }
+  .ms-shop-avg { color: var(--ink-2); }
   .ms-focusing { margin: 10px 0 0; padding: 8px 12px; border-radius: var(--radius-sm); background: #EEF4F8; font-size: 14px; }
   .ms-flash { margin: 10px 0 0; padding: 8px 12px; border-radius: var(--radius-sm); background: var(--caution-soft, #FDF3E1);
     font-size: 14px; }
@@ -1480,6 +1488,7 @@
   .ms-table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .ms-table td.ok { color: #137026; font-weight: 600; }
   .ms-table td.short { color: var(--red-dark, #B4041E); font-weight: 600; }
+  .ms-table tr.ms-avg-row td { border-top: 2px solid var(--line-strong); border-bottom: 0; background: var(--paper); font-weight: 700; }
   .ms-table td small { font-weight: 500; }
   .ms-table tr.focus td { background: #EEF4F8; }
   .ms-tclasses { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
@@ -10700,7 +10709,13 @@ function mockStats(upTo) {
   const met = people.filter(x => x.met).length;
   const goalCount = Math.ceil(techs.length * goal - 1e-9);
   return { people, met, total: techs.length, pct: techs.length ? met / techs.length : 0, goal, goalCount,
-    short: Math.max(0, goalCount - met), need, earned: people.reduce((t, x) => t + x.earned, 0) };
+    short: Math.max(0, goalCount - met), need, earned: people.reduce((t, x) => t + x.earned, 0), ...mockAverage(people) };
+}
+
+// Hours per technician, on average: earned, planned and the two together.
+function mockAverage(people) {
+  const n = people.length || 1, sum = (f) => people.reduce((t, x) => t + x[f], 0) / n;
+  return { avg: sum("total"), avgEarned: sum("earned"), avgPlan: sum("plan") };
 }
 
 // What's worth knowing about one person in one class.
@@ -10870,6 +10885,11 @@ function renderMockHead() {
           <i class="${s.pct >= s.goal ? "ok" : ""}" style="width:${Math.min(100, s.pct * 100)}%"></i>
           <b style="left:${Math.min(100, s.goal * 100)}%"></b></div>
       </div>
+      <div class="ms-avg" title="Every technician's earned and planned hours for ${mockYear}, added up and divided by ${s.total}">
+        <b>${msNum(s.avg)}<small>hrs</small></b>
+        <span>average per technician</span>
+        <em>${msNum(s.avgEarned)} earned + ${msNum(s.avgPlan)} planned</em>
+      </div>
       <div class="ms-goal">
         <label for="msGoal">Goal</label>
         <input id="msGoal" type="number" min="1" max="100" step="1" value="${msNum(row.goal_percent)}"> % of technicians with
@@ -10880,7 +10900,7 @@ function renderMockHead() {
       const here = s.people.filter(x => (x.p.store || "No store") === shop);
       const met = here.filter(x => x.met).length;
       return `<span class="ms-shop${met / here.length >= s.goal ? " ok" : ""}"><b>${esc(shop)}</b>
-        ${met}/${here.length} · ${Math.round(met / here.length * 100)}%</span>`;
+        ${met}/${here.length} · ${Math.round(met / here.length * 100)}% · <span class="ms-shop-avg">${msNum(mockAverage(here).avg)} hrs avg</span></span>`;
     }).join("")}</div>` : ""}
     ${focus ? `<p class="ms-focusing">Showing ${esc(mockName(focus))}'s classes on the calendar.
       <button type="button" class="linkish" data-ms-act="clear-focus">Show everyone's</button></p>` : ""}
@@ -11121,7 +11141,7 @@ function renderMockTechs() {
         ${mockYear}. Click a name to see their classes on the calendar, or add them to one from their row.</p>
       <div class="ms-table-wrap"><table class="ms-table"><thead><tr><th>Technician</th><th>Shop</th>
         <th class="num">Earned</th><th class="num">Planned</th><th class="num">Total</th><th>Classes</th></tr></thead>
-        <tbody id="msTechRows"></tbody></table></div>`;
+        <tbody id="msTechRows"></tbody><tfoot id="msTechAvg"></tfoot></table></div>`;
   }
   const short = s.people.filter(x => !x.met).length;
   $("msTechPills").innerHTML = [["all", "All", s.total], ["short", `Short of ${msNum(s.need)}`, short], ["met", `Reach ${msNum(s.need)}`, s.total - short]]
@@ -11158,6 +11178,12 @@ function renderMockTechRows(s = mockStats()) {
         </select>` : ""}</div></td>
     </tr>`;
   }).join("") || `<tr><td colspan="6" class="note">Nobody matches.</td></tr>`;
+  const foot = $("msTechAvg");
+  if (foot) {
+    const a = mockAverage(rows);
+    foot.innerHTML = rows.length ? `<tr class="ms-avg-row"><td colspan="2">Average of ${rows.length === s.total ? "all" : "these"} ${rows.length}</td>
+      <td class="num">${msNum(a.avgEarned)}</td><td class="num">${msNum(a.avgPlan)}</td><td class="num">${msNum(a.avg)}</td><td></td></tr>` : "";
+  }
 }
 
 // ---- the plan as a PDF ---------------------------------------------------------------
@@ -11207,6 +11233,18 @@ function mockPdf() {
   doc.setFillColor(232, 230, 228); doc.roundedRect(mx, my, mw, 6, 3, 3, "F");
   doc.setFillColor(...(met ? green : [217, 119, 6])); doc.roundedRect(mx, my, Math.max(6, mw * Math.min(1, s.pct)), 6, 3, 3, "F");
   doc.setFillColor(...ink); doc.rect(mx + mw * Math.min(1, s.goal) - 1, my - 3, 2, 12, "F");
+  // Hours per technician, on average, beside the score and clear of its words.
+  doc.setFont("helvetica", "bold"); doc.setFontSize(12);
+  const said = doc.getTextWidth(`${s.met} of ${s.total} technicians reach ${msNum(s.need)} hours in ${year} with this plan.`);
+  const ax = Math.max(mx + mw, M + 100 + said) + 36;
+  doc.setDrawColor(226, 224, 222); doc.line(ax - 20, y - 16, ax - 20, y + 26);
+  doc.setFont("helvetica", "bold"); doc.setFontSize(24); doc.setTextColor(...ink);
+  const avgText = `${msNum(s.avg)} hrs`;
+  doc.text(avgText, ax, y + 8);
+  const lx2 = ax + doc.getTextWidth(avgText) + 10;
+  doc.setFontSize(10.5); doc.text("average per technician", lx2, y - 2);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(9.5); doc.setTextColor(...grey);
+  doc.text(`${msNum(s.avgEarned)} earned + ${msNum(s.avgPlan)} planned`, lx2, y + 11);
   y += 44;
   // Each shop.
   const shops = [...new Set(s.people.map(x => x.p.store || "No store"))];
@@ -11214,7 +11252,7 @@ function mockPdf() {
     doc.setFontSize(9); let x = M;
     shops.forEach(shop => {
       const here = s.people.filter(p => (p.p.store || "No store") === shop), m = here.filter(p => p.met).length;
-      const label = latin(`${shop}  ${m}/${here.length} - ${Math.round(m / here.length * 100)}%`);
+      const label = latin(`${shop}  ${m}/${here.length} - ${Math.round(m / here.length * 100)}% - ${msNum(mockAverage(here).avg)} hrs avg`);
       const w = doc.getTextWidth(label) + 16;
       if (x + w > M + CW) { x = M; y += 20; }
       const ok = m / here.length >= s.goal;
@@ -11278,6 +11316,16 @@ function mockPdf() {
     });
     y += h;
   });
+  // The average, under the list.
+  if (y + 22 > BOTTOM) newPage(tableHead);
+  doc.setDrawColor(...grey); doc.line(M, y, M + CW, y);
+  doc.setFillColor(246, 244, 242); doc.rect(M, y + 0.5, CW, 20, "F");
+  doc.setFont("helvetica", "bold"); doc.setFontSize(9.5); doc.setTextColor(...ink);
+  doc.text(`Average of all ${s.total}`, xs[0] + 6, y + 14);
+  doc.text(msNum(s.avgEarned), xs[2] + cols[2][1] - 6, y + 14, { align: "right" });
+  doc.text(msNum(s.avgPlan), xs[3] + cols[3][1] - 6, y + 14, { align: "right" });
+  doc.text(msNum(s.avg), xs[4] + cols[4][1] - 6, y + 14, { align: "right" });
+  y += 21;
 
   // The classes, by date.
   if (all.length) {
