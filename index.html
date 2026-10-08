@@ -2608,7 +2608,7 @@
       <button data-tab="tools"><i data-icon="wrench"></i><span>Special Tools</span></button>
 
       <div class="nav-group">Setup</div>
-      <button data-tab="org"><i data-icon="building"></i><span>Groups &amp; Shops</span></button>
+      <button data-tab="org"><i data-icon="building"></i><span>Groups &amp; Locations</span></button>
     </nav>
 
     <!-- The Training dashboard: Training Managers only. Like Safety, its tabs
@@ -2781,7 +2781,7 @@
               <th data-sort="created_by_name">By</th>
               <th data-sort="job_description">Job</th>
               <th data-sort="location">Site</th>
-              <th data-sort="location_id">Shop</th>
+              <th data-sort="location_id">Location</th>
               <th data-sort="total_weight">Total lbs</th>
               <th data-sort="percent_capacity">% cap</th>
               <th data-sort="status">Status</th>
@@ -2803,15 +2803,15 @@
                  style="margin-left:auto">
           <span class="msg"></span>
         </div>
-        <p class="note">As an admin you see your own shop's people; as an owner,
+        <p class="note">As an admin you see your own location's people; as an owner,
           everyone. <b>Owners change roles here.</b> An employee sees their own records;
-          a location admin sees everyone at their shop; an owner sees everyone and can
+          a location admin sees everyone at their location; an owner sees everyone and can
           reach this page. You can't change your own role, and the last owner can't be
           demoted — otherwise one wrong tap leaves nobody able to undo it.</p>
-        <p class="note"><b>Owners also set a name and a shop here.</b> Both are normally
+        <p class="note"><b>Owners also set a name and a location here.</b> Both are normally
           chosen by the person on first sign-in in the app, and after that both are locked:
           only an owner changes them, here. Anyone who only ever uses this page arrives with
-          neither. Type over the name; pick a shop from the list. The lock matters for names
+          neither. Type over the name; pick a location from the list. The lock matters for names
           too: Training Status finds people without a work email by name, so a name people
           could change themselves was a way into a colleague's record. These go through the
           same owner-only function deactivation does.</p>
@@ -3017,7 +3017,7 @@
 
       <div class="card">
         <h2>Fields on the tool form</h2>
-        <p class="note">Anything beyond the name, part number, description, home shop and
+        <p class="note">Anything beyond the name, part number, description, home location and
           quantity. A field added here is on the app's form, and on every tool, straight away
           — no app update. Answers are kept by field rather than by name, so renaming a field
           keeps them. Set <b>Showing</b> to No to stop asking without losing what's recorded.</p>
@@ -3076,7 +3076,7 @@
       <div class="card" id="techAdd">
         <h2>Skills competencies</h2>
         <p class="note">The list technicians are signed off against, level by level. Sign-offs happen in the
-          Training Center — admins for their own shop, owners for anyone. Retire a competency rather than
+          Training Center — admins for their own location, owners for anyone. Retire a competency rather than
           removing it: it comes off everyone's list and past sign-offs are kept. Adding one to a level never
           moves a tech who already finished that level back down.</p>
         <div id="skillsAdminStats" style="margin:10px 0 14px"></div>
@@ -3457,7 +3457,7 @@
       </div>
     </section>
 
-    <!-- Groups & shops -->
+    <!-- Groups & locations -->
     <section id="tab-org" class="hidden">
       <div class="card">
         <h2>Groups</h2>
@@ -3476,20 +3476,20 @@
       </div>
 
       <div class="card">
-        <h2>Shops</h2>
-        <p class="note">The locations people choose when they first sign in. A shop
+        <h2>Locations</h2>
+        <p class="note">The locations people choose when they first sign in. A location
           decides which admin reviews someone's lift plans, and its time zone is
           what the Events tab uses when it hosts something.</p>
-        <p class="note">A new shop shows up for people signing in for the first
-          time. Moving someone who already has a shop is still done in Supabase,
-          because the app locks it. A shop with people, lift plans or events
+        <p class="note">A new location shows up for people signing in for the first
+          time. Moving someone who already has a location is still done in Supabase,
+          because the app locks it. A location with people, lift plans or events
           can't be deleted — set <b>Showing: No</b> if it closes.</p>
         <div id="shopList"></div>
         <div class="row" style="margin-top:10px">
-          <input type="text" id="newShopName" placeholder="New shop name"
+          <input type="text" id="newShopName" placeholder="New location name"
                  style="max-width:220px;margin-bottom:0">
           <select id="newShopZone" style="max-width:240px;margin-bottom:0"></select>
-          <button data-act="add-shop">Add shop</button>
+          <button data-act="add-shop">Add location</button>
           <span class="msg"></span>
         </div>
       </div>
@@ -3536,7 +3536,7 @@
             <input type="text" data-e="title" maxlength="120"
                    placeholder="Fendt 1000 Vario service school"></div>
           <div><label>Kind</label><select data-e="category"></select></div>
-          <div><label>Hosting shop (optional)</label>
+          <div><label>Hosting location (optional)</label>
             <select data-e="location_id"></select></div>
           <div><label>Venue's time zone</label><select data-e="timezone"></select></div>
           <div><label>Showing in the app</label>
@@ -3560,7 +3560,7 @@
           <div><label>Ends</label><input type="datetime-local" data-e="end"></div>
           <div><label>Place</label>
             <input type="text" data-e="location_name"
-                   placeholder="Twin Falls shop, training room"></div>
+                   placeholder="Twin Falls, training room"></div>
           <div><label>Address (for directions)</label>
             <input type="text" data-e="address"
                    placeholder="Street, city, state"></div>
@@ -3580,7 +3580,7 @@
             <p class="note" style="margin:4px 0 0">Paste the Teams link. The app shows a
               <b>Join the meeting</b> button and puts the link in the calendar entry, so it is
               tappable at two minutes to the hour. Leave it empty if the link isn't made yet —
-              the event still says it's online, which is what stops somebody driving to a shop.</p></div>
+              the event still says it's online, which is what stops somebody driving to a location.</p></div>
         </div>
         <div class="row">
           <button data-act="save-event">Add event</button>
@@ -3645,7 +3645,7 @@
 //   THE FEATURES, in the order they appear in the script
 //     shared reminders      the weekly and daily checklists
 //     events                the Event Center, and admin for it
-//     groups & shops        locations and the groups people belong to
+//     groups & locations        locations and the groups people belong to
 //     open seat report      classes with seats left
 //     inspections           forms, the fields on them, and the records
 //     shell                 home dashboard, HR, the inspection PDF
@@ -3709,17 +3709,17 @@ let companyEvents = [], eventsError = null;
 // Who's going (0077): every list this person can see, and the event open in
 // the Event Center.
 let eventAttendees = [], openEventId = null;
-// Every shop with all its columns, switched-off ones included. `locations`
+// Every location with all its columns, switched-off ones included. `locations`
 // above stays a plain id -> name lookup for showing names.
 let allLocations = [];
 
-// Admins approve lift plans for their own shop, so plenty of the page keys off
+// Admins approve lift plans for their own location, so plenty of the page keys off
 // this. The Admin button does not — see isOwner.
 const isAdmin = () => profile && (profile.role === "admin" || profile.role === "owner");
 
 // The admin tables are the whole company's records: every certification, every
-// shop's plans, the support roles everyone sees. That's an owner's view, not a
-// shop admin's, so the button is theirs alone.
+// location's plans, the support roles everyone sees. That's an owner's view, not a
+// location admin's, so the button is theirs alone.
 //
 // This hides a door rather than locking one. What anybody can actually read or
 // change is decided by the database policies, which don't consult this.
@@ -5027,7 +5027,7 @@ $("view").addEventListener("click", async (event) => {
     if (!picked.length) return say("Pick at least one group.", true);
 
     say("Sending…", false);
-    // created_by, the name and the shop are all filled in by the database.
+    // created_by, the name and the location are all filled in by the database.
     const { data, error } = await db.from("support_tickets").insert({
       machine_type: get("machine_type"), brand: get("brand"), model: get("model"),
       error_codes: get("error_codes"), description: get("description"),
@@ -5087,7 +5087,7 @@ $("view").addEventListener("click", (event) => {
 //
 // Where every special tool lives, and where it is right now (migration 0061),
 // as in the app: a list to search and filter, and a page per tool with where
-// it is, where it's been, and — for the admin of its home shop, or an owner —
+// it is, where it's been, and — for the admin of its home location, or an owner —
 // Check out, Check in, Edit and Delete (migration 0062). The database decides
 // who can do each; the buttons only show for the people it will accept.
 //
@@ -5131,7 +5131,7 @@ const toolHistory = (t) => (t.special_tool_checkouts || []).filter(c => c.return
 const toolOutCount = (t) => toolOpen(t).reduce((n, c) => n + (c.quantity || 0), 0);
 const activeToolFields = () => toolFields.filter(f => f.is_active)
   .sort((a, b) => (a.sort_order - b.sort_order) || a.label.localeCompare(b.label));
-const shopName = (id) => locations[id] || id || "another shop";
+const shopName = (id) => locations[id] || id || "another location";
 // A timestamp as the day it was here, not the day it was in UTC.
 const localDay = (ts) => ts ? new Date(ts).toLocaleDateString("en-US") : "";
 const toolDay = (ts) => ts ? new Date(ts).toLocaleDateString("en-US",
@@ -5141,7 +5141,7 @@ const toolFieldText = (field, value) =>
 // Part numbers compare the way the database does: trimmed, single spaces, any case.
 const partKey = (p) => String(p || "").trim().replace(/\s+/g, " ").toUpperCase();
 
-// Owners anywhere; a location admin at their own shop. The same rules as
+// Owners anywhere; a location admin at their own location. The same rules as
 // manages_special_tool() in migration 0062, which has the final word.
 const canAddTools = () => isOwner() || (isAdmin() && !!(profile && profile.location_id));
 const canManageTool = (t) => isOwner()
@@ -5167,8 +5167,8 @@ function toolMatches(t, q) {
     .join(" ").toLowerCase().includes(q.toLowerCase());
 }
 
-const NOT_YOURS = "That's not yours to change. A location admin can only change tools at their own shop.";
-const NOT_HOME_SHOP = "Only the admin at the tool's home shop, or an owner, can check it out or back in.";
+const NOT_YOURS = "That's not yours to change. A location admin can only change tools at their own location.";
+const NOT_HOME_SHOP = "Only the admin at the tool's home location, or an owner, can check it out or back in.";
 
 // The database's own sentence when it's one of ours, and plain words for the
 // codes it uses when it isn't.
@@ -5201,7 +5201,7 @@ function toolsView() {
           data-tool-filter="${id}">${esc(label)}<span>${n}</span></button>`).join("")}</div>
       <div class="st-list" id="toolList">${toolRowsHtml()}</div>
       <p class="st-how">${icon("info", 16)}<span>Need one? Your location admin asks the admin at the
-        tool's home shop, who checks it out to you, and back in when it's returned.</span></p>
+        tool's home location, who checks it out to you, and back in when it's returned.</span></p>
     </div>`;
 }
 
@@ -5258,7 +5258,7 @@ function toolView() {
   // Where it is now, and the one thing to do about it.
   let action;
   if (!manage) {
-    // The way to get one: through your own admin, to the shop that owns it.
+    // The way to get one: through your own admin, to the location that owns it.
     action = `<p class="st-hint">${icon("info", 16)}<span>${profile && t.location_id === profile.location_id
       ? "Need it? Ask your location admin. They check it out to you, and back in when it's returned."
       : `Need it? Your location admin asks the ${esc(home)} admin, who checks it out to you and back in when it's returned.`}</span></p>`;
@@ -5317,14 +5317,14 @@ function toolView() {
 }
 
 // Where it's going, how many, and a note for who has it. The destination is a
-// shop; the note carries anything finer than that.
+// location; the note carries anything finer than that.
 function checkoutFormHtml(t, atHome) {
-  // Anywhere but home: checking a tool out to its own shop isn't "out".
+  // Anywhere but home: checking a tool out to its own location isn't "out".
   const places = allLocations.filter(l => l.is_active !== false && l.id !== t.location_id);
   return `<div class="st-checkout">
     <div class="fields">
       <div><label for="coTo">Going to</label>
-        <select id="coTo"><option value="">Choose a shop</option>${places.map(l =>
+        <select id="coTo"><option value="">Choose a location</option>${places.map(l =>
           `<option value="${esc(l.id)}">${esc(l.name)}</option>`).join("")}</select></div>
       ${atHome > 1 ? `<div><label for="coQty">How many</label>
         <input id="coQty" type="number" min="1" max="${atHome}" value="1"></div>` : ""}
@@ -5355,7 +5355,7 @@ document.addEventListener("click", async (event) => {
   }
 
   if (b.hasAttribute("data-tool-add")) {
-    // A new tool starts at your own shop. An owner can change that; a
+    // A new tool starts at your own location. An owner can change that; a
     // location admin can't.
     toolDraft = { mode: "add", name: "", part_number: "", description: "",
       location_id: (profile && profile.location_id) || "", quantity: 1, extra: {} };
@@ -5423,7 +5423,7 @@ document.addEventListener("click", async (event) => {
   }
 
   if (b.hasAttribute("data-tool-delete")) {
-    if (!confirm(`Delete ${t.name}?\n\nIt comes off the list for every shop, with its checkout history.`)) return;
+    if (!confirm(`Delete ${t.name}?\n\nIt comes off the list for every location, with its checkout history.`)) return;
     say("Deleting…", false);
     const { data, error } = await db.from("special_tools").delete().eq("id", t.id).select("id");
     if (error) return say(toolSentence(error), true);
@@ -5440,13 +5440,13 @@ function toolFormView() {
   if (!d) return hero("Special Tool") + `<div class="sr-empty">
     <p><button type="button" class="ghost" data-view="tools">Back to the list</button></p></div>`;
   const owner = isOwner();
-  // Active shops, plus the tool's own if it has since been switched off, so
+  // Active locations, plus the tool's own if it has since been switched off, so
   // an old tool's home still shows.
   const shops = allLocations.filter(l => l.is_active !== false || l.id === d.location_id);
   const fields = activeToolFields();
 
   return hero(d.mode === "add" ? "Add a Tool" : "Edit Tool",
-      d.mode === "add" ? "It's in every shop's list as soon as it's saved." : `${d.name} · ${d.part_number}`)
+      d.mode === "add" ? "It's in every location's list as soon as it's saved." : `${d.name} · ${d.part_number}`)
     + `<div class="st-form" data-tool-form>
       <div class="card">
         <div class="fields">
@@ -5460,15 +5460,15 @@ function toolFormView() {
           <div class="wide"><label for="tfDesc">Description</label>
             <textarea id="tfDesc" rows="3" maxlength="1000"
               placeholder="Optional: what it's for, what it fits">${esc(d.description)}</textarea></div>
-          <div class="wide"><label for="tfHome">Home shop</label>
-            ${owner ? `<select id="tfHome"><option value="">Choose a shop</option>${shops.map(l =>
+          <div class="wide"><label for="tfHome">Home location</label>
+            ${owner ? `<select id="tfHome"><option value="">Choose a location</option>${shops.map(l =>
               `<option value="${esc(l.id)}"${l.id === d.location_id ? " selected" : ""}>${esc(l.name)}</option>`).join("")}</select>`
             : `<input id="tfHome" type="text" value="${esc(shopName(d.location_id))}" disabled>`}</div>
         </div>
         <p class="note">The part number is what makes a tool unique. No two tools share one, so a
           second of the same tool is its quantity going up. ${owner
-          ? "The home shop is where it lives when it isn't checked out."
-          : "Tools you add live at your own shop. An owner can move one to another shop."}</p>
+          ? "The home location is where it lives when it isn't checked out."
+          : "Tools you add live at your own location. An owner can move one to another location."}</p>
       </div>
       ${fields.length ? `<div class="card">
         <h2>Details</h2>
@@ -5542,7 +5542,7 @@ document.addEventListener("click", async (event) => {
   // What's still missing, in the order someone would fix it.
   const problem = !row.name ? "What's the tool called?"
     : !row.part_number ? "Every tool needs its part number."
-    : !row.location_id ? "Which shop is its home?"
+    : !row.location_id ? "Which location is its home?"
     : !(Number.isInteger(row.quantity) && row.quantity >= 1 && row.quantity <= 999)
       ? "The quantity has to be between 1 and 999."
     : row.description.length > 1000 ? "The description is too long. Keep it under 1,000 characters."
@@ -5840,7 +5840,7 @@ async function importTools(file) {
     // one upload per mistake.
     const before = problems.length;
     const home = shopIds.get(cell(r, at.home).toLowerCase());
-    if (!home) problems.push(`Row ${line}: "${esc(cell(r, at.home))}" isn't one of the shops.`);
+    if (!home) problems.push(`Row ${line}: "${esc(cell(r, at.home))}" isn't one of the locations.`);
     const qtyText = cell(r, at.qty), qty = Number(qtyText);
     if (!Number.isInteger(qty) || qty < 1 || qty > 999) {
       problems.push(`Row ${line}: ${esc(part)} needs a whole-number quantity from 1 to 999`
@@ -6284,7 +6284,7 @@ function riggingView() {
     + (isAdmin() ? group("Waiting on you", others.filter(p => p.status === "submitted"),
         "Nothing to approve right now.") : "")
     + group("Your plans", mine, "You haven't submitted a lift plan yet. Plans are written in the app.")
-    + (isAdmin() ? group("Everything else at your shop", others.filter(p => p.status !== "submitted"),
+    + (isAdmin() ? group("Everything else at your location", others.filter(p => p.status !== "submitted"),
         "Nothing else here.") : "")
     + craneAdminSection()
     + `</div>`;
@@ -6516,7 +6516,7 @@ function renderPeople() {
       `<span class="stat"><b>${active.length}</b>accounts</span>` +
       `<span class="stat"><b>${byRole.admin + byRole.owner}</b>admins</span>` +
       (withoutLocation
-        ? `<span class="stat"><b style="color:var(--red)">${withoutLocation}</b>no shop set</span>`
+        ? `<span class="stat"><b style="color:var(--red)">${withoutLocation}</b>no location set</span>`
         : "") +
       (deactivated ? `<span class="stat"><b>${deactivated}</b>deactivated</span>` : "");
   }
@@ -6626,7 +6626,7 @@ document.addEventListener("change", async (event) => {
   const name = person.full_name || "this account";
 
   const what = { employee: "an employee — their own records only",
-                 admin: "a location admin — everyone at their shop",
+                 admin: "a location admin — everyone at their location",
                  owner: "an owner — everyone, everywhere, including this page" };
   if (!confirm(`Make ${name} ${what[role]}?`)) {
     picker.value = was;
@@ -6651,7 +6651,7 @@ document.addEventListener("change", async (event) => {
   speak(card, `${name} is now an ${role}.`, false);
 });
 
-// A name and a shop, for somebody who never gets the screen that asks for
+// A name and a location, for somebody who never gets the screen that asks for
 // them. Both are chosen once, by the person, on first sign-in in the app —
 // so anyone who only ever opens this page has neither, and the guard in
 // migration 0007 refuses a second location from anyone signed in. The account
@@ -6690,13 +6690,13 @@ document.addEventListener("change", async (event) => {
     return speak(card, `Saved — this account is ${person.full_name}.`, false);
   }
 
-  // A shop decides which admin reviews that person's lift plans and
+  // A location decides which admin reviews that person's lift plans and
   // inspections, so it asks first, the same way a role does.
   const was = person.location_id || "";
   const picked = field.value;
   if (picked === was) return;
-  const to = picked ? (locations[picked] || picked) : "no shop";
-  if (!confirm(`Move ${who} to ${to}?\n\nA shop decides which admin sees their lift plans and inspections.`)) {
+  const to = picked ? (locations[picked] || picked) : "no location";
+  if (!confirm(`Move ${who} to ${to}?\n\nA location decides which admin sees their lift plans and inspections.`)) {
     field.value = was;
     return;
   }
@@ -6710,8 +6710,8 @@ document.addEventListener("change", async (event) => {
     return speak(card, problem, true);
   }
   person.location_id = picked || null;
-  renderPeople();          // the "no shop set" count at the top changes
-  speak(card, picked ? `${who} is at ${to}.` : `${who} has no shop set.`, false);
+  renderPeople();          // the "no location set" count at the top changes
+  speak(card, picked ? `${who} is at ${to}.` : `${who} has no location set.`, false);
 });
 
 // Designations: straight to the table, since the rules are in the database —
@@ -6910,8 +6910,8 @@ const EVENT_ZONES = [
   ["America/New_York", "Eastern"]
 ];
 
-// Which clock each shop keeps, so picking the hosting shop sets the zone.
-// Ontario is in Oregon but runs on Mountain time. Shops now carry their own
+// Which clock each location keeps, so picking the hosting location sets the zone.
+// Ontario is in Oregon but runs on Mountain time. Locations now carry their own
 // time zone (migration 0029); this is the fallback until that's been run.
 const SHOP_ZONES = {
   "moses-lake": "America/Los_Angeles", "pasco": "America/Los_Angeles",
@@ -7006,11 +7006,11 @@ function renderEvents() {
       `<option value="${v}">${l}</option>`).join("");
   }
 
-  // Refilled every time, so a shop added on the Groups & Shops tab is here
-  // without a reload. Switched-off shops are left out unless already chosen.
+  // Refilled every time, so a location added on the Groups & Locations tab is here
+  // without a reload. Switched-off locations are left out unless already chosen.
   const shopSelect = editor.querySelector('[data-e="location_id"]');
   const chosenShop = shopSelect.value;
-  shopSelect.innerHTML = `<option value="">Not at a shop</option>` +
+  shopSelect.innerHTML = `<option value="">Not at a location</option>` +
     allLocations.filter(l => l.is_active !== false || l.id === chosenShop)
       .map(l => `<option value="${esc(l.id)}">${esc(l.name)}</option>`).join("");
   shopSelect.value = chosenShop;
@@ -7137,13 +7137,13 @@ $("admin").addEventListener("change", (event) => {
   if (field === "all_day") return setAllDay(event.target.checked);
   if (field === "is_online") return setOnline(event.target.checked);
 
-  // Picking the shop sets its clock; it can still be changed afterwards.
+  // Picking the location sets its clock; it can still be changed afterwards.
   const shop = allLocations.find(l => l.id === event.target.value);
   const shopZone = shop && (shop.timezone || SHOP_ZONES[shop.id]);
   if (field === "location_id" && shopZone) {
     get("timezone").value = shopZone;
     if (!get("location_name").value.trim()) {
-      get("location_name").value = `${locations[event.target.value]} shop`;
+      get("location_name").value = `${locations[event.target.value]}`;
     }
   }
 
@@ -7298,10 +7298,10 @@ async function loadAttendees() {
 //
 // The app's Social tab: Events, and the Company community, everyone at every
 // location. People post, give shout-outs, @mention each other, react and
-// comment. Who wrote a post, their shop, and the names of anyone @mentioned are
+// comment. Who wrote a post, their location, and the names of anyone @mentioned are
 // stamped by the database from their profiles, not taken from here. Authors
 // edit and delete their own posts; owners anyone's (and, once there are
-// location communities, that shop's admins theirs: the database already says
+// location communities, that location's admins theirs: the database already says
 // so). Being @mentioned is a push to the app, sent by the notify function. A
 // new post is only a count, kept in the same place as the app's, so reading the
 // feed here clears it on the phone too.
@@ -8104,10 +8104,10 @@ function fxDaysLeft() {
   return Math.max(0, Math.round((next - today) / 86400000));
 }
 
-// Each shop's average per person who joined, so a small shop can beat a big one.
+// Each location's average per person who joined, so a small location can beat a big one.
 function fxShops() {
   const by = {};
-  fxBoard.forEach(s => { const k = s.location || "No shop"; (by[k] = by[k] || []).push(s); });
+  fxBoard.forEach(s => { const k = s.location || "No location"; (by[k] = by[k] || []).push(s); });
   return Object.entries(by).map(([name, people]) => ({ name, members: people.length,
     avg: people.reduce((t, s) => t + s.points, 0) / people.length }))
     .sort((a, b) => b.avg - a.avg || a.name.localeCompare(b.name));
@@ -8175,15 +8175,15 @@ function fxPageHtml() {
     ${current && !mine ? `<div class="cm-card fx-join">
       <b>Join from the app on your iPhone</b>
       <p>Social, then Fitness Challenge. It reads your daily totals from Apple Health, so joining can't be done from
-        here. Coworkers see your name, shop, points and how you earned them, never your daily numbers.</p></div>` : ""}
+        here. Coworkers see your name, location, points and how you earned them, never your daily numbers.</p></div>` : ""}
     <div class="cm-kind fx-tabs" role="group" aria-label="Leaderboard">
       <button type="button" class="${fxTab === "people" ? "on" : ""}" data-fx-tab="people" aria-pressed="${fxTab === "people"}">${icon("person", 15)}People</button>
-      <button type="button" class="${fxTab === "shops" ? "on" : ""}" data-fx-tab="shops" aria-pressed="${fxTab === "shops"}">${icon("building", 15)}Shops</button>
+      <button type="button" class="${fxTab === "shops" ? "on" : ""}" data-fx-tab="shops" aria-pressed="${fxTab === "shops"}">${icon("building", 15)}Locations</button>
     </div>
     ${!fxBoard.length ? `<p class="cm-none">${current ? "Nobody's joined yet this month." : "Nobody took part that month."}</p>`
       : fxTab === "people" ? `<div class="cm-card fx-board">${fxBoard.map(fxPersonHtml).join("")}</div>`
       : `<div class="cm-card fx-board">${fxShopsHtml()}</div>
-         <p class="cm-none">Each shop's average points per person who joined, so a small shop can beat a big one.</p>`}
+         <p class="cm-none">Each location's average points per person who joined, so a small location can beat a big one.</p>`}
     <h2 class="group-title">How to score</h2>
     <div class="cm-card fx-rules">
       ${rules.map(r => { const k = fxKind(r.id) || {};
@@ -8296,7 +8296,7 @@ function renderFitnessAdmin() {
             placeholder="${esc(dateOnly(d.month).toLocaleDateString("en-US", { month: "long" }))} Fitness Challenge"></div>
         <div class="wide"><label for="fxAdminPrize">Prize (optional)</label>
           <input id="fxAdminPrize" type="text" maxlength="500" data-fx-field="prize" value="${esc(d.prize)}"
-            placeholder="A Fendt jacket for the winner, and lunch for the top shop"></div>
+            placeholder="A Fendt jacket for the winner, and lunch for the top location"></div>
       </div>
       <p class="fx-state">${esc(state)}</p>
     </div>
@@ -8582,7 +8582,7 @@ function eventGoingHtml(e) {
             : open ? "Nobody yet. Be the first." : "Nobody yet."}</p>`}
       ${isOwner() ? `<div class="ev-add">
           <label for="evAddSearch">Add people</label>
-          <input id="evAddSearch" type="search" class="search" data-ev-search placeholder="Search by name or shop" autocomplete="off">
+          <input id="evAddSearch" type="search" class="search" data-ev-search placeholder="Search by name or location" autocomplete="off">
           <div class="ev-results" id="evAddResults">${eventCandidatesHtml(e, "")}</div>
         </div>` : ""}
     </div>
@@ -8604,7 +8604,7 @@ function eventCandidatesHtml(e, query) {
       return words.every(w => hay.includes(w));
     })
     .sort((a, b) => (a.full_name || a.email || "").localeCompare(b.full_name || b.email || ""));
-  if (!words.length) return `<p class="ev-hint">Type a name or a shop to find people.</p>`;
+  if (!words.length) return `<p class="ev-hint">Type a name or a location to find people.</p>`;
   if (!matches.length) return `<p class="ev-hint">Nobody matches${on.size ? " who isn't already on the list" : ""}.</p>`;
   return matches.slice(0, 8).map(p => `<div class="ev-result">
       <span><b>${esc(p.full_name || p.email)}</b><small>${esc(locations[p.location_id] || "")}</small></span>
@@ -8761,8 +8761,8 @@ $("view").addEventListener("click", (event) => {
 //
 // The company's own form, which used to be a Microsoft Form. The questions come
 // from the database and only the Safety Manager changes them, on the admin page,
-// the way the inspection forms are edited. Where it happened starts at the shop
-// of whoever's filling it in; their name, email and shop are added by the
+// the way the inspection forms are edited. Where it happened starts at the location
+// of whoever's filling it in; their name, email and location are added by the
 // database. People pickers list everyone on the All Employees upload. A report
 // goes to the Safety Manager by push notification; they get the list, sorted
 // and filtered by any question, and each report as a PDF.
@@ -8772,7 +8772,7 @@ let srPicked = {}, srPhotos = {}, srSent = false, srNotice = "";
 let srSort = "sent", srAscending = false, srFilters = {}, srQuery = "", srStatus = null, openSafetyReportId = null;
 
 const SR_TYPES = [["text", "Short answer"], ["long_text", "Long answer"], ["date", "Date"], ["choice", "Pick one"],
-  ["yes_no", "Yes or no"], ["people", "People (from All Employees)"], ["location", "Shop (starts at theirs)"], ["photos", "Photos"]];
+  ["yes_no", "Yes or no"], ["people", "People (from All Employees)"], ["location", "Location (starts at theirs)"], ["photos", "Photos"]];
 
 const isSafetyManager = () => isOwner() && personDesignations.some(pd =>
   pd.person_id === me.id && pd.designation_id === "safety_manager");
@@ -9091,7 +9091,7 @@ function safetyReportOneView() {
   // follow-up is for the Safety Manager.
   const facts = [
     r.reporter_name ? ["Reported by", [r.reporter_name, manager ? r.reporter_email : ""].filter(Boolean).join(" · ")] : null,
-    r.reporter_name ? ["Reporter's shop", shop || "—"] : null,
+    r.reporter_name ? ["Reporter's location", shop || "—"] : null,
     ["Incident date", a.date ? dateOnly(a.date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "—"],
     manager || a.where ? ["Where it happened", a.where ? (a.where === "N/A" ? "Not at a location" : a.where) : "—"] : null,
     ["Type of report", a.kind || "—"],
@@ -9155,7 +9155,7 @@ async function srDownloadPdf(r, box = document.querySelector(".srd-acts")) {
   const titleLines = doc.splitTextToSize(latin(srTitle(r)), CW);
   doc.text(titleLines, M, y); y += titleLines.length * 24 + 4;
 
-  const facts = [["REPORTED BY", [r.reporter_name, r.reporter_email].filter(Boolean).join("\n")], ["REPORTER'S SHOP", shop || "-"],
+  const facts = [["REPORTED BY", [r.reporter_name, r.reporter_email].filter(Boolean).join("\n")], ["REPORTER'S LOCATION", shop || "-"],
     ["SENT", sent], ["INCIDENT DATE", a.date ? dateOnly(a.date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "-"],
     ["WHERE IT HAPPENED", a.where ? (a.where === "N/A" ? "Not at a location" : a.where) : "-"],
     ["FOLLOW-UP REQUESTED", a.follow_up === true ? "Yes - please follow up" : a.follow_up === false ? "No" : "-"]];
@@ -9240,7 +9240,7 @@ function renderSafetyReportAdmin() {
       <p class="note">${can ? "" : "<b>Only the Safety Manager can change this form.</b> "}What everyone fills in from the Safety Center, in the
         app and on the web page. Changes are live as soon as they're saved. Past reports keep the questions they were answered with,
         so renaming, changing or deleting a question never alters an old report. <b>Showing: No</b> stops asking it and can be undone.
-        Their name, email and shop are added for them; a <b>Shop</b> question starts at their own shop, and a <b>People</b> question
+        Their name, email and location are added for them; a <b>Location</b> question starts at their own location, and a <b>People</b> question
         picks from the All Employees upload.${srForm && srForm.updated_by_name ? ` Last saved by ${esc(srForm.updated_by_name)},
         ${esc(new Date(srForm.updated_at).toLocaleDateString())}.` : ""}</p>
       ${fields.map((q, i) => `<div class="role" style="padding:14px 16px${q.active === false ? ";opacity:.6" : ""}" data-srquestion="${i}">
@@ -9322,7 +9322,7 @@ $("admin").addEventListener("click", async (event) => {
     const options = uniqueText(get("options").split("\n").map(o => o.trim()).filter(Boolean));
     if (get("type") === "choice" && options.length < 2) return speak(card, "A pick-one question needs at least two choices, one per line.", true);
     if (get("type") === "location" && fields.some((f, i) => i !== index && f.type === "location" && f.active !== false) && get("active") === "yes") {
-      return speak(card, "There's already a Shop question showing.", true);
+      return speak(card, "There's already a Location question showing.", true);
     }
     fields[index] = { ...fields[index], label: get("label"), type: get("type"), options: get("type") === "choice" ? options : [],
       help: get("help"), required: get("required") === "yes", active: get("active") === "yes" };
@@ -9367,7 +9367,7 @@ function srrColumns(approvedList) {
   const cols = [{ key: "sent", label: "Sent", show: (r) => day(r.created_at), sort: (r) => r.created_at || "" }];
   qs.slice(0, at < 0 ? qs.length : at).forEach(f => cols.push(question(f)));
   cols.push({ key: "reporter", label: "Reported by", show: (r) => r.reporter_name || "", sort: (r) => (r.reporter_name || "").toLowerCase() },
-            { key: "shop", label: "Their shop", show: (r) => srShop(r.reporter_location), sort: (r) => srShop(r.reporter_location).toLowerCase() });
+            { key: "shop", label: "Their location", show: (r) => srShop(r.reporter_location), sort: (r) => srShop(r.reporter_location).toLowerCase() });
   if (at >= 0) qs.slice(at).forEach(f => cols.push(question(f)));
   if (approvedList) cols.push({ key: "approved", label: "Approved",
     show: (r) => [day(r.approved_at), r.approved_by_name].filter(Boolean).join(" · "), sort: (r) => r.approved_at || "" });
@@ -9405,7 +9405,7 @@ function renderSafetyReportsAdmin() {
     <h2>Safety Reports</h2>
     <p class="note">Every report waits here for a Safety Manager. <b>Review</b> one to read it, tidy the wording if it needs it, choose
       which photos to share, and <b>Approve</b>. Approved reports are in the Safety Center for everyone to read, without the
-      sender's name, email or shop. Their own words are always kept.</p>
+      sender's name, email or location. Their own words are always kept.</p>
     <div class="row srr-tabs">
       <button class="${srrShowing === "waiting" ? "" : "ghost"}" data-srr-show="waiting">Waiting for approval (${waiting.length})</button>
       <button class="${srrShowing === "approved" ? "" : "ghost"}" data-srr-show="approved">Approved (${approved.length})</button>
@@ -9611,7 +9611,7 @@ $("admin").addEventListener("click", async (event) => {
 // ---- the Training dashboard's front page -----------------------------------------
 //
 // The dealer metric first: the share of technicians with 24+ AGCO hours
-// against AGCO's 65%, how many more it takes, and each shop's share. Then who
+// against AGCO's 65%, how many more it takes, and each location's share. Then who
 // has it and who doesn't, where ticking someone plans them to get there (the
 // same plan as Training Status's Planning tab, saved to this account). Then
 // the Mock Schedule's year, AGCO Development by level, and how fresh each
@@ -9655,7 +9655,7 @@ function renderTrainingNavCounts(uploads) {
   });
 }
 
-// Each shop's share against the goal: columns, with the goal drawn across.
+// Each location's share against the goal: columns, with the goal drawn across.
 function txShopChart(m) {
   const goal = tsGoalPercent();
   const shops = m.stores.map(store => {
@@ -9747,8 +9747,8 @@ function renderTrainingOverview() {
 
     <div class="sx-grid">
       <section class="sx-panel sx-wide">
-        <header><h3>By location</h3><span>Share with ${need}+ hours · tap a shop to filter</span>
-          ${txStore !== "all" ? `<button type="button" class="sx-link" data-tx-store="all">All shops &rsaquo;</button>` : ""}</header>
+        <header><h3>By location</h3><span>Share with ${need}+ hours · tap a location to filter</span>
+          ${txStore !== "all" ? `<button type="button" class="sx-link" data-tx-store="all">All locations &rsaquo;</button>` : ""}</header>
         ${txShopChart(m)}
       </section>
 
@@ -9760,9 +9760,9 @@ function renderTrainingOverview() {
       </section>
 
       <section class="sx-panel sx-full">
-        <header><h3>Who has it, and who doesn't</h3><span>${txStore === "all" ? "Every shop" : esc(txStore)}</span>
+        <header><h3>Who has it, and who doesn't</h3><span>${txStore === "all" ? "Every location" : esc(txStore)}</span>
           <select id="txStore" class="tx-store">${["all", ...m.stores.filter(s => m.techs.some(t => t.store === s))].map(s =>
-            `<option value="${esc(s)}"${s === txStore ? " selected" : ""}>${s === "all" ? "Every shop" : esc(s)}</option>`).join("")}</select></header>
+            `<option value="${esc(s)}"${s === txStore ? " selected" : ""}>${s === "all" ? "Every location" : esc(s)}</option>`).join("")}</select></header>
         <div class="tx-who">
           <div>
             <h4>Not there yet · ${notYet.length}</h4>
@@ -9840,8 +9840,8 @@ function sxMonths(reports) {
   return months;
 }
 
-// Reports by where they happened, over the same twelve months: every shop,
-// even one with none, then "Not at a shop", then any name no longer a shop.
+// Reports by where they happened, over the same twelve months: every location,
+// even one with none, then "Not at a location", then any name no longer a location.
 function sxLocations(reports) {
   const cols = allLocations.filter(l => l.is_active !== false)
     .map(l => ({ key: l.name, label: l.name, tip: l.name, approved: 0, waiting: 0 }));
@@ -9849,7 +9849,7 @@ function sxLocations(reports) {
     const w = (r.answers || {}).where;
     if (!w) return;
     let c = cols.find(x => x.key === w);
-    if (!c) cols.push(c = { key: w, label: w === "N/A" ? "Not at a shop" : w, tip: w === "N/A" ? "Not at a shop" : w, approved: 0, waiting: 0 });
+    if (!c) cols.push(c = { key: w, label: w === "N/A" ? "Not at a location" : w, tip: w === "N/A" ? "Not at a location" : w, approved: 0, waiting: 0 });
     srPending(r) ? c.waiting++ : c.approved++;
   });
   const na = cols.findIndex(c => c.key === "N/A");
@@ -9928,7 +9928,7 @@ function sxBrief() {
   const expected = people.filter(p => !p.deactivated_at && (!p.created_at || new Date(p.created_at) < end));
   const passed = expected.filter(p => (briefResult(b, p.id) || {}).passed_at);
   const shops = {};
-  expected.forEach(p => { const s = locations[p.location_id] || "No shop set";
+  expected.forEach(p => { const s = locations[p.location_id] || "No location set";
     const t = shops[s] = shops[s] || { shop: s, expected: 0, passed: 0 }; t.expected++;
     if ((briefResult(b, p.id) || {}).passed_at) t.passed++; });
   return { brief: b, expected: expected.length, passed: passed.length, shops: Object.values(shops).sort((x, y) => x.shop.localeCompare(y.shop)) };
@@ -9970,7 +9970,7 @@ function sxQueueHtml(waiting, limit) {
     return `<button type="button" class="sx-queue-row" data-sx-review="${esc(r.id)}">
       <span class="sx-queue-emoji">${sxEmoji(k) || "•"}</span>
       <span class="sx-queue-main"><b>${esc(srTitle(r))}</b>
-        <small>${esc([srShortKind(k), a.where === "N/A" ? "Not at a shop" : a.where, r.reporter_name, day(r.created_at)].filter(Boolean).join(" · "))}</small></span>
+        <small>${esc([srShortKind(k), a.where === "N/A" ? "Not at a location" : a.where, r.reporter_name, day(r.created_at)].filter(Boolean).join(" · "))}</small></span>
       ${a.follow_up === true ? `<span class="sx-flag">Follow up</span>` : ""}
       <span class="sx-go">Review &rsaquo;</span>
     </button>`;
@@ -10114,14 +10114,14 @@ function renderSafetyReportStats() {
   </div>`;
 }
 
-// Who has and hasn't sent a Safety Report in a month, by shop: everyone with an
+// Who has and hasn't sent a Safety Report in a month, by location: everyone with an
 // account by its end, and the reports each sent. Those who haven't can be
 // emailed in BCC, as on the Safety Desk.
 function sxWhoHtml() {
   const key = sxWhoMonth, everyone = sxPeopleIn(key);
   const sent = new Map();
   srReports.filter(sxInMonth(key)).forEach(r => { if (r.created_by) (sent.get(r.created_by) || sent.set(r.created_by, []).get(r.created_by)).push(r); });
-  const shop = (p) => locations[p.location_id] || "No shop set";
+  const shop = (p) => locations[p.location_id] || "No location set";
   const did = everyone.filter(p => sent.has(p.id)), didnt = everyone.filter(p => !sent.has(p.id));
   const shown = sxWhoFilter === "sent" ? did : sxWhoFilter === "not" ? didnt : everyone;
   const shops = {};
@@ -10175,7 +10175,7 @@ $("admin").addEventListener("click", (event) => {
 // ---- the monthly safety report, as a PDF -----------------------------------------
 //
 // One month, for leadership: the headline numbers, the Safety Reports trend, the
-// month's Safety Brief by shop and who hasn't passed it, the month's reports by
+// month's Safety Brief by location and who hasn't passed it, the month's reports by
 // type and location, every report in full, and who sent one and who didn't.
 // Confidential: it names who sent each report. jsPDF's fonts are Latin-1, so
 // emoji are dropped and dashes and quotes made plain.
@@ -10188,7 +10188,7 @@ async function sxMonthlyPdf(key) {
   const red = [204, 0, 51], ink = [30, 30, 30], grey = [110, 110, 110], light = [246, 245, 243], rule = [226, 224, 222];
   const green = [23, 112, 47], amber = [180, 110, 10];
   const day = (iso) => new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  const shopOf = (p) => locations[p.location_id] || "No shop set";
+  const shopOf = (p) => locations[p.location_id] || "No location set";
   let y = 0;
 
   const smallHead = () => {
@@ -10311,7 +10311,7 @@ async function sxMonthlyPdf(key) {
   if (brief) {
     const shops = {};
     briefPeople.forEach(x => { const s = shopOf(x.p); const t = shops[s] = shops[s] || { e: 0, p: 0 }; t.e++; if (x.r && x.r.passed_at) t.p++; });
-    table([["Shop", 230], ["Expected", 80, "r"], ["Passed", 80, "r"], ["Not passed", 80, "r"], ["Passed %", CW - 470, "r"]],
+    table([["Location", 230], ["Expected", 80, "r"], ["Passed", 80, "r"], ["Not passed", 80, "r"], ["Passed %", CW - 470, "r"]],
       Object.keys(shops).sort().map(s => [s, String(shops[s].e), String(shops[s].p), String(shops[s].e - shops[s].p), `${pct(shops[s].p, shops[s].e)}%`])
         .concat([["All locations", String(briefPeople.length), String(passed.length), String(briefPeople.length - passed.length), `${pct(passed.length, briefPeople.length)}%`]]),
       { bold: 0, color: (row, i) => i === 4 ? (parseInt(row[4]) >= 90 ? green : amber) : null });
@@ -10320,7 +10320,7 @@ async function sxMonthlyPdf(key) {
       y += 22; ensure(40);
       doc.setFont("helvetica", "bold"); doc.setFontSize(9); doc.setTextColor(...ink); doc.text(`Not passed (${notPassed.length})`, M, y); y += 8;
       const n = (brief.questions || []).length;
-      table([["Name", 200], ["Shop", 150], ["Where they are", CW - 350]], notPassed.map(({ p, r }) => [p.full_name || p.email || "No name yet", shopOf(p),
+      table([["Name", 200], ["Location", 150], ["Where they are", CW - 350]], notPassed.map(({ p, r }) => [p.full_name || p.email || "No name yet", shopOf(p),
         !r ? "Not started" : r.tries ? `${r.tries} ${r.tries === 1 ? "try" : "tries"}, last ${r.last_score} of ${n}` : "Started, not answered"]));
     }
   }
@@ -10331,7 +10331,7 @@ async function sxMonthlyPdf(key) {
   if (reports.length) {
     const tally = (fn) => { const t = {}; reports.forEach(r => { const k = fn(r); if (k) t[k] = (t[k] || 0) + 1; }); return Object.entries(t).sort((a, b) => b[1] - a[1]); };
     const types = tally(r => srShortKind(sxKind(r)) || "No type");
-    const wheres = tally(r => { const w = (r.answers || {}).where; return w ? (w === "N/A" ? "Not at a shop" : w) : "Not given"; });
+    const wheres = tally(r => { const w = (r.answers || {}).where; return w ? (w === "N/A" ? "Not at a location" : w) : "Not given"; });
     const half = (CW - 16) / 2;
     // Side by side on one page, so the second doesn't start where the first
     // left off on the page before.
@@ -10343,7 +10343,7 @@ async function sxMonthlyPdf(key) {
     y = Math.max(y, leftEnd) + 14;
     table([["Sent", 52], ["Title", 150], ["Type", 92], ["Where", 74], ["Reported by", 96], ["Status", CW - 464]],
       reports.map(r => { const a = r.answers || {};
-        return [day(r.created_at), srTitle(r), srShortKind(sxKind(r)) || "-", a.where ? (a.where === "N/A" ? "Not at a shop" : a.where) : "-",
+        return [day(r.created_at), srTitle(r), srShortKind(sxKind(r)) || "-", a.where ? (a.where === "N/A" ? "Not at a location" : a.where) : "-",
           r.reporter_name || "-", (srPending(r) ? "Waiting" : "Approved") + (a.follow_up === true ? " - follow-up asked" : "")]; }),
       { bold: 1, color: (row, i) => i === 5 ? (/Waiting/.test(row[5]) ? amber : green) : null });
   }
@@ -10351,7 +10351,7 @@ async function sxMonthlyPdf(key) {
   // Who sent one.
   section("Participation", `${senders.size} of ${everyone.length} people sent at least one Safety Report in ${month}.`);
   const sentRows = everyone.filter(p => senders.has(p.id)).sort((a, b) => shopOf(a).localeCompare(shopOf(b)) || (a.full_name || "").localeCompare(b.full_name || ""));
-  table([["Sent a report", 220], ["Shop", 170], ["Reports", CW - 390, "r"]], sentRows.map(p => [p.full_name || p.email || "No name yet", shopOf(p), String(senders.get(p.id))]),
+  table([["Sent a report", 220], ["Location", 170], ["Reports", CW - 390, "r"]], sentRows.map(p => [p.full_name || p.email || "No name yet", shopOf(p), String(senders.get(p.id))]),
     { empty: "Nobody sent one this month." });
   const none = everyone.filter(p => !senders.has(p.id));
   if (none.length) {
@@ -10379,7 +10379,7 @@ async function sxMonthlyPdf(key) {
       doc.text(doc.splitTextToSize(latin(`${n + 1}. ${srTitle(r)}`), CW - 20)[0], M + 12, y + 14);
       doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(...grey);
       doc.text(doc.splitTextToSize(latin([srShortKind(sxKind(r)), `sent ${day(r.created_at)}`, a.date ? `happened ${dateOnly(a.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : "",
-        a.where ? (a.where === "N/A" ? "not at a shop" : `at ${a.where}`) : "", r.reporter_name ? `by ${r.reporter_name}${r.reporter_location ? `, ${srShop(r.reporter_location)}` : ""}` : "",
+        a.where ? (a.where === "N/A" ? "not at a location" : `at ${a.where}`) : "", r.reporter_name ? `by ${r.reporter_name}${r.reporter_location ? `, ${srShop(r.reporter_location)}` : ""}` : "",
         srPending(r) ? "waiting for approval" : "approved"].filter(Boolean).join("  -  ")), CW - 20)[0], M + 12, y + 27);
       y += 42;
       const skip = new Set(["title", "kind", "date", "where"]);
@@ -10696,7 +10696,7 @@ function safetyReportView() {
   const shown = expected.filter(p => safetyReportFilter === "everyone"
     || (safetyReportFilter === "passed") === !!(res(p) || {}).passed_at);
   const shops = {};
-  shown.forEach(p => { const s = locations[p.location_id] || "No shop set"; (shops[s] = shops[s] || []).push(p); });
+  shown.forEach(p => { const s = locations[p.location_id] || "No location set"; (shops[s] = shops[s] || []).push(p); });
   const share = expected.length ? passed.length / expected.length : 0;
   const line = (r) => !r ? "Not started"
     : r.passed_at ? `Passed ${briefDay(r.passed_at)} · ${r.score} of ${n}`
@@ -10757,7 +10757,7 @@ function bccButtons(emails) {
   return { html, split: batches.length > 1 };
 }
 
-// Who hasn't passed a month's brief yet, by shop, with a button that opens an
+// Who hasn't passed a month's brief yet, by location, with a button that opens an
 // email to all of them. Their addresses go in BCC so nobody sees the list;
 // the Safety Manager writes the rest. A long list is split into a few emails,
 // because mail apps refuse a link past about 2,000 characters.
@@ -10774,7 +10774,7 @@ function renderSdMissing() {
   const b = list.find(x => x.id === sdMissingBrief) || list.find(x => x.month === briefThisMonth()) || list[0];
   const end = new Date(dateOnly(b.month)); end.setMonth(end.getMonth() + 1);
   const expected = people.filter(p => !p.deactivated_at && (!p.created_at || new Date(p.created_at) < end));
-  const shop = (p) => locations[p.location_id] || "No shop set";
+  const shop = (p) => locations[p.location_id] || "No location set";
   const byShop = (x, y) => shop(x).localeCompare(shop(y)) || (x.full_name || x.email || "").localeCompare(y.full_name || y.email || "");
   const missing = expected.filter(p => !(briefResult(b, p.id) || {}).passed_at).sort(byShop);
   const passed = expected.filter(p => (briefResult(b, p.id) || {}).passed_at).sort(byShop);
@@ -10801,7 +10801,7 @@ function renderSdMissing() {
       <p class="sd-missing-sum"><b class="ok">${passed.length}</b> of ${expected.length} have passed ${esc(briefMonthTitle(b))}'s brief${
         passed.length ? "" : ". Nobody yet."}</p>
       ${passed.length ? `<div style="overflow-x:auto"><table class="sd-missing">
-        <thead><tr><th>Name</th><th>Shop</th><th>Passed</th><th>Score</th><th>Tries</th></tr></thead>
+        <thead><tr><th>Name</th><th>Location</th><th>Passed</th><th>Score</th><th>Tries</th></tr></thead>
         <tbody>${passed.map(p => { const r = briefResult(b, p.id);
           return `<tr><td><b>${esc(p.full_name || p.email || "No name yet")}</b></td><td>${esc(shop(p))}</td>
             <td>${esc(when(r.passed_at))}</td><td>${r.score ?? "—"} of ${n}</td><td>${r.tries || 1}</td></tr>`; }).join("")}</tbody>
@@ -10819,7 +10819,7 @@ function renderSdMissing() {
         others; write the subject and message yourself.${split ? " The list is long, so it's split into a few emails." : ""}${
         noEmail ? ` ${noEmail} ${noEmail === 1 ? "person has" : "people have"} no email on their account and ${noEmail === 1 ? "isn't" : "aren't"} included.` : ""}</p>
       <div style="overflow-x:auto"><table class="sd-missing">
-        <thead><tr><th>Name</th><th>Shop</th><th>Email</th><th>Where they are</th></tr></thead>
+        <thead><tr><th>Name</th><th>Location</th><th>Email</th><th>Where they are</th></tr></thead>
         <tbody>${missing.map(p => `<tr><td><b>${esc(p.full_name || "No name yet")}</b></td><td>${esc(shop(p))}</td>
           <td>${esc(p.email || "—")}</td><td>${esc(state(briefResult(b, p.id)))}</td></tr>`).join("")}</tbody>
       </table></div>` : ""}`;
@@ -11557,7 +11557,7 @@ function renderMockEditor() {
           <label for="msAddSearch">Add technicians</label>
           <div class="ms-add-bar">
             <input id="msAddSearch" type="search" class="search" placeholder="Search by name" autocomplete="off" value="${esc(mockAddView.search)}">
-            <select id="msAddShop" aria-label="Shop"><option value="">Every shop</option>${shops.map(s =>
+            <select id="msAddShop" aria-label="Location"><option value="">Every location</option>${shops.map(s =>
               `<option${s === mockAddView.shop ? " selected" : ""}>${esc(s)}</option>`).join("")}</select>
             <label class="check"><input type="checkbox" id="msAddShort"${mockAddView.shortOnly ? " checked" : ""}>
               Only those short of the hours</label>
@@ -11632,13 +11632,13 @@ function renderMockTechs() {
     box.innerHTML = `<h2>Technicians</h2>
       <div class="ms-tech-bar">
         <div class="chips" id="msTechPills"></div>
-        <select id="msTechShop" aria-label="Shop"><option value="">Every shop</option>${shops.map(x =>
+        <select id="msTechShop" aria-label="Location"><option value="">Every location</option>${shops.map(x =>
           `<option${x === mockTechView.shop ? " selected" : ""}>${esc(x)}</option>`).join("")}</select>
         <input id="msTechSearch" type="search" class="search" placeholder="Search by name" autocomplete="off" value="${esc(mockTechView.search)}">
       </div>
       <p class="note">Earned is what Training Status has for ${mockYear} so far; planned is the classes here that finish in
         ${mockYear}. Click a name to see their classes on the calendar, or add them to one from their row.</p>
-      <div class="ms-table-wrap"><table class="ms-table"><thead><tr><th>Technician</th><th>Shop</th>
+      <div class="ms-table-wrap"><table class="ms-table"><thead><tr><th>Technician</th><th>Location</th>
         <th class="num">Earned</th><th class="num">Planned</th><th class="num">Total</th><th>Classes</th></tr></thead>
         <tbody id="msTechRows"></tbody><tfoot id="msTechAvg"></tfoot></table></div>`;
   }
@@ -11687,9 +11687,9 @@ function renderMockTechRows(s = mockStats()) {
 
 // ---- the plan as a PDF ---------------------------------------------------------------
 //
-// What the Technicians list shows with All picked: every technician, their shop,
+// What the Technicians list shows with All picked: every technician, their location,
 // hours earned, planned and in all, and their classes in the level's colour. The
-// score and each shop's share go first, and the classes by date last. Landscape,
+// score and each location's share go first, and the classes by date last. Landscape,
 // for the width. jsPDF's fonts are Latin-1, so dashes and quotes are swapped for
 // plain ones and anything else outside it is dropped.
 function mockPdf() {
@@ -11745,7 +11745,7 @@ function mockPdf() {
   doc.setFont("helvetica", "normal"); doc.setFontSize(9.5); doc.setTextColor(...grey);
   doc.text(`${msNum(s.avgEarned)} earned + ${msNum(s.avgPlan)} planned`, lx2, y + 11);
   y += 44;
-  // Each shop.
+  // Each location.
   const shops = [...new Set(s.people.map(x => x.p.store || "No store"))];
   if (shops.length > 1) {
     doc.setFontSize(9); let x = M;
@@ -11774,7 +11774,7 @@ function mockPdf() {
 
   // Every technician.
   const all = mockCourses().slice().sort((a, b) => (a.start || "9999").localeCompare(b.start || "9999"));
-  const cols = [["Technician", 150], ["Shop", 92], ["Earned", 50, "r"], ["Planned", 52, "r"], ["Total", 76, "r"], ["Classes", CW - 150 - 92 - 50 - 52 - 76]];
+  const cols = [["Technician", 150], ["Location", 92], ["Earned", 50, "r"], ["Planned", 52, "r"], ["Total", 76, "r"], ["Classes", CW - 150 - 92 - 50 - 52 - 76]];
   const xs = []; cols.reduce((x, c) => (xs.push(x), x + c[1]), M);
   const tableHead = () => {
     doc.setFillColor(240, 238, 236); doc.rect(M, y, CW, 18, "F");
@@ -12119,15 +12119,15 @@ function mockSetField(c, field, value) {
   });
 })();
 
-// ---------------------------------------------------------------- groups & shops
+// ---------------------------------------------------------------- groups & locations
 //
 // Both lists are company-wide, so only an owner can change them (migration
-// 0029). A group or shop can be switched off, which takes it out of the lists
+// 0029). A group or location can be switched off, which takes it out of the lists
 // people pick from without touching anything already recorded against it, or
 // deleted, which is for mistakes and things that are truly gone.
 
 // "Service Writers" -> "service_writers" for a group, "Walla Walla" ->
-// "walla-walla" for a shop, matching the ids already in use. The id never
+// "walla-walla" for a location, matching the ids already in use. The id never
 // changes after it's made, so renaming later is safe.
 function slugify(text, separator) {
   return text.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
@@ -12199,7 +12199,7 @@ function renderOrg() {
           <span class="msg"></span>
         </div>
       </div>`;
-  }).join("") || `<p class="note">No shops yet.</p>`;
+  }).join("") || `<p class="note">No locations yet.</p>`;
 
   const newZone = $("newShopZone");
   if (!newZone.options.length) {
@@ -12221,7 +12221,7 @@ $("admin").addEventListener("click", async (event) => {
     const box = button.closest(".row");
     const nameInput = $(isGroup ? "newGroupName" : "newShopName");
     const name = nameInput.value.trim();
-    if (!name) return speak(box, `Type the ${isGroup ? "group" : "shop"}'s name first.`, true);
+    if (!name) return speak(box, `Type the ${isGroup ? "group" : "location"}'s name first.`, true);
 
     const id = slugify(name, isGroup ? "_" : "-");
     const existing = isGroup ? workGroups : allLocations;
@@ -12271,17 +12271,17 @@ $("admin").addEventListener("click", async (event) => {
   }
 
   if (act === "delete-shop") {
-    if (!confirm(`Delete ${record.name}?\n\nThis only works for a shop nothing ` +
-        `belongs to yet — one added by mistake. For a shop that's closed, set ` +
+    if (!confirm(`Delete ${record.name}?\n\nThis only works for a location nothing ` +
+        `belongs to yet — one added by mistake. For a location that's closed, set ` +
         `Showing to No instead.`)) return;
     speak(box, "Deleting…", false);
     const { data, error } = await db.from("locations").delete().eq("id", id).select();
     if (error) {
       return speak(box, error.code === "23503"
-        ? "People, lift plans or events belong to this shop, so it can't be deleted. Set Showing to No instead."
+        ? "People, lift plans or events belong to this location, so it can't be deleted. Set Showing to No instead."
         : needsMigration(error), true);
     }
-    if (!data || !data.length) return speak(box, "Nothing deleted — only an owner can remove shops.", true);
+    if (!data || !data.length) return speak(box, "Nothing deleted — only an owner can remove locations.", true);
     await loadAll();
     return renderOrg();
   }
@@ -15991,7 +15991,7 @@ $("osrDrop").addEventListener("drop", (e) => {
 // ---------------------------------------------------------------- skills
 //
 // The Skills program (migration 0040, renamed from Tech Levels in 0064). A technician sees their own
-// progress; an admin sees the technicians at their shop and signs them off; an
+// progress; an admin sees the technicians at their location and signs them off; an
 // owner sees everyone and keeps the competency list in the admin area.
 //
 // The database decides who may see and sign off whom — these screens only
@@ -16039,7 +16039,7 @@ function techSummary(pr) {
     : `Level ${pr.current} · ${pr.count(pr.current)} of ${pr.at(pr.current).length} signed off`;
 }
 
-// An owner looks after everyone; an admin, the people at their own shop.
+// An owner looks after everyone; an admin, the people at their own location.
 const techManages = (person) => isOwner()
   || (isAdmin() && profile && profile.location_id && person.location_id === profile.location_id);
 
@@ -16060,7 +16060,7 @@ function techPersonCard(person, label) {
     <span class="skill-ring" style="--p:${pct}"><span>${pr.finished ? "✓" : pr.current}</span></span>
     <span style="flex:1;min-width:0"><b>${esc(label || techName(person))}</b>
       <span class="note" style="display:block">${esc(techSummary(pr))}${
-        isOwner() && !label ? " · " + esc(locations[person.location_id] || "No shop") : ""}</span></span>
+        isOwner() && !label ? " · " + esc(locations[person.location_id] || "No location") : ""}</span></span>
     <span class="note">&rsaquo;</span>
   </button>`;
 }
@@ -16092,9 +16092,9 @@ function skillsView() {
     const candidates = techPeople.filter(p => !p.is_technician && p.location_id && p.id !== me.id && techManages(p))
       .sort((a, b) => techName(a).localeCompare(techName(b)));
 
-    html += `<div class="section-title">${isOwner() ? "Technicians" : "Technicians at your shop"}</div>
+    html += `<div class="section-title">${isOwner() ? "Technicians" : "Technicians at your location"}</div>
       ${techs.length ? `<div class="skill-people">${techs.map(t => techPersonCard(t)).join("")}</div>`
-        : `<p class="note">Nobody's enrolled yet. Add the technicians at your shop below.</p>`}
+        : `<p class="note">Nobody's enrolled yet. Add the technicians at your location below.</p>`}
       ${candidates.length ? `<div class="card" id="techEnroll" style="margin-top:18px">
         <h2>Add a technician</h2>
         <div class="row" style="align-items:flex-end">
@@ -17299,7 +17299,7 @@ $("admin").addEventListener("click", async (event) => {
 let tsPeople = [], tsSources = null, tsRaw = null, trainingStatusError = null;
 // Who a driving test can be about: everyone on All Employees, from
 // forklift_eligible_people() (migration 0059). The same list the app uses.
-// Reading tsPeople instead would show an admin only their own shop.
+// Reading tsPeople instead would show an admin only their own location.
 let evalPeople = [];
 let tsPlan = new Set();            // person keys ticked as planned to reach 24
 let tsState = { tab: "summary", filter: "all", store: null, everyone: false, year: null };
@@ -17916,7 +17916,7 @@ function renderTsImport(problems = []) {
         in All employees, so left out: ${unmatched.map(c => esc(c.first + " " + c.last)).join(", ")}.</p>` : ""}
       ${strayStores.length ? `<p class="note" style="margin:0 0 6px">Stores with no location of the same name in the app,
         so no location admin sees them (owners still do): ${strayStores.map(esc).join(", ")}. Rename the location under
-        Groups &amp; Shops to match.</p>` : ""}
+        Groups &amp; Locations to match.</p>` : ""}
       <div class="row"><button data-act="ts-publish" ${has("employees") ? "" : "disabled"}>Publish</button>
         <button class="ghost" data-act="ts-discard">Discard</button><span class="msg"></span></div>
     </div>` : ""}`;
@@ -18112,7 +18112,7 @@ let agcoPeople = [], agcoCatalog = null, agcoMarks = [], agcoError = null;
 // A catalog read on the admin page and not yet published.
 let agcoPending = null;
 // Which technician is open, which level's sign was clicked, and the picker's
-// search and shop.
+// search and location.
 const agcoState = { person: null, level: null, query: "", store: "all" };
 // The same, for the technician being ticked on the admin page.
 // By technician or by course, and within each what's open, searched and sorted.
@@ -18495,9 +18495,9 @@ function agcoEditorHtml(tech, levels) {
 
 // By course: every course with how many have it ticked, then one course with
 // who has it and who doesn't — ticked from there, for everyone at a class.
-const agcoShopSelect = (stores) => `<select id="agcoEditStore" style="width:auto;margin:0" aria-label="Shop">${
+const agcoShopSelect = (stores) => `<select id="agcoEditStore" style="width:auto;margin:0" aria-label="Location">${
   ["all", ...stores].map(s => `<option value="${esc(s)}"${agcoEdit.store === s ? " selected" : ""}>${
-    s === "all" ? "All shops" : esc(s)}</option>`).join("")}</select>`;
+    s === "all" ? "All locations" : esc(s)}</option>`).join("")}</select>`;
 
 function agcoCourseViewHtml(levels, techs, stores) {
   const onRoster = new Set(techs.map(t => t.person_key));
@@ -19081,7 +19081,7 @@ function agcoChooserHtml() {
       ${mine ? `<button type="button" class="ghost" data-agco-person="${esc(mine.person_key)}">My map</button>` : ""}
     </div>
     ${stores.length > 1 ? `<div class="cab-pills">${["all", ...stores].map(s => `<button type="button"
-      class="cab-pill${agcoState.store === s ? " on" : ""}" data-agco-store="${esc(s)}">${s === "all" ? "All shops" : esc(s)}<span>${
+      class="cab-pill${agcoState.store === s ? " on" : ""}" data-agco-store="${esc(s)}">${s === "all" ? "All locations" : esc(s)}<span>${
       s === "all" ? agcoPeople.length : agcoPeople.filter(p => (p.store || "No store") === s).length}</span></button>`).join("")}</div>` : ""}
     <div class="agco-people" id="agcoPeople">${agcoPeopleRows(shown)}</div>
   </div>`;
@@ -19315,7 +19315,7 @@ document.addEventListener("click", (event) => {
 // One class, and who has and hasn't taken it: the app's Course Report
 // (CourseReportView.swift), for location admins and owners. It reads the same
 // uploads as Training Status, so it needs no data of its own and has the same
-// reach: an admin sees their own shop, an owner everyone. That's the
+// reach: an admin sees their own location, an owner everyone. That's the
 // database's answer, not this page's, which is why the report says whose list
 // it is.
 //
@@ -19345,7 +19345,7 @@ function crCourses(model) {
     .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" }));
 }
 
-// Who's on the list, by shop then surname, and how many have taken it.
+// Who's on the list, by location then surname, and how many have taken it.
 function crList(model) {
   const pool = crState.techs ? model.techs : model.people;
   const course = crState.course;
@@ -19422,7 +19422,7 @@ function crReport(model) {
     </div>
     <p class="section-title" style="margin:16px 2px 8px">${shown.length} ${shown.length === 1 ? "person" : "people"} · ${filterLabel.toLowerCase()}</p>
     ${shown.length ? `<div style="overflow-x:auto"><table class="cr-table">
-      <thead><tr><th>Name</th><th>Shop · job</th><th>Completed</th></tr></thead>
+      <thead><tr><th>Name</th><th>Location · job</th><th>Completed</th></tr></thead>
       <tbody>${shown.map(p => {
         const done = crCompletion(p, crState.course);
         return `<tr><td><b>${esc(p.name)}</b></td><td class="note">${esc(crShopJob(p))}</td>
@@ -19508,7 +19508,7 @@ function downloadCourseReportPDF() {
   };
   const columnHeader = () => {
     write("NAME", MARGIN, y, { size: 8, style: "bold", color: [130, 130, 130] });
-    write("SHOP · JOB", shopCol, y, { size: 8, style: "bold", color: [130, 130, 130] });
+    write("LOCATION · JOB", shopCol, y, { size: 8, style: "bold", color: [130, 130, 130] });
     write("COMPLETED", dateCol, y, { size: 8, style: "bold", color: [130, 130, 130] });
     y += 12;
     doc.setDrawColor(190, 190, 190); doc.setLineWidth(0.5); doc.line(MARGIN, y, MARGIN + WIDTH, y);
