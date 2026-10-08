@@ -4081,6 +4081,8 @@ function tileCount(id) {
   if (id === "reminders") return visibleTasks().filter(t => !t.done).length;
   // Posts since the feed was last read, here or on the phone.
   if (id === "social") return cmUnseenCount();
+  // For a Safety Manager, the reports waiting for their approval.
+  if (id === "safety") return isSafetyManager() ? srReports.filter(srPending).length : 0;
   if (id === "forklift") return isTrainingManager() ? pendingTests().length : 0;
   if (id === "rigging") {
     return isAdmin()
