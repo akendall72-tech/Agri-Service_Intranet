@@ -2467,6 +2467,7 @@
   .rp-table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .rp-table td.ok { color: #137026; font-weight: 600; }
   .rp-table td.short { color: var(--red-dark, #B4041E); font-weight: 600; }
+  .rp-table td.rp-outside { color: var(--muted); font-size: 12.5px; white-space: nowrap; }
   .rp-table tfoot td { font-weight: 700; border-top: 2px solid var(--line-strong); border-bottom: 0; background: var(--paper); }
   .rp-credits span { display: block; font-size: 12.5px; color: var(--ink-2); white-space: nowrap; }
   .rp-bar { display: block; height: 8px; margin-top: 5px; border-radius: 99px; background: var(--line); overflow: hidden; }
@@ -19615,6 +19616,15 @@ function rpDone(p, course, per) {
     .reduce((best, c) => !best || c.completed > best.completed ? c : best, null);
 }
 
+// Their latest completion outside the period, for someone who didn't take it
+// inside: shown, so a blank isn't mistaken for "never", but not counted.
+function rpOutside(p, course, per) {
+  const c = p.classes.filter(x => x.course === course && (x.completed < per.start || x.completed >= per.end))
+    .reduce((best, x) => !best || x.completed > best.completed ? x : best, null);
+  return c ? { completed: c.completed, when: c.completed < per.start ? "Earlier" : "Later" } : null;
+}
+const rpOutsideText = (o) => `${o.when} · ${newsDate(o.completed)}`;
+
 function rpClassModel() {
   const m = tsModel(), per = rpPeriod(), picked = rpClass.picked;
   const stores = [...new Set((rpClass.techs ? m.techs : m.people).map(p => p.store))].sort(rpStoreOrder);
@@ -19622,11 +19632,12 @@ function rpClassModel() {
   const pool = (rpClass.techs ? m.techs : m.people).filter(p => rpClass.store === "all" || p.store === rpClass.store);
   const rows = pool.map(p => {
     const done = picked.map(c => rpDone(p, c, per));
-    return { p, done, n: done.filter(Boolean).length };
+    const outside = picked.map((c, i) => done[i] ? null : rpOutside(p, c, per));
+    return { p, done, outside, n: done.filter(Boolean).length };
   }).sort((x, y) => rpByPlace(x.p, y.p));
   const perClass = picked.map((name, i) => {
     const n = rows.filter(r => r.done[i]).length;
-    return { name, n, pct: rpPct(n, pool.length) };
+    return { name, n, pct: rpPct(n, pool.length), outside: rows.filter(r => r.outside[i]).length };
   });
   const allN = rows.filter(r => picked.length && r.n === picked.length).length;
   const anyN = rows.filter(r => r.n > 0).length;
@@ -19635,13 +19646,15 @@ function rpClassModel() {
     return { store, people: here.length, all: here.filter(r => picked.length && r.n === picked.length).length,
       any: here.filter(r => r.n > 0).length, perClass: picked.map((_, i) => here.filter(r => r.done[i]).length) };
   });
-  const shown = rows.filter(r => rpClass.show === "all" || (rpClass.show === "done") === (r.n === picked.length));
-  return { m, per, picked, pool, rows, perClass, allN, anyN, byStore, shown, stores, noun: rpClass.techs ? "technicians" : "people" };
+  // Only the people who completed one or more of the classes in the period.
+  const completers = rows.filter(r => r.n > 0);
+  const shown = completers.filter(r => rpClass.show === "all" || (rpClass.show === "done") === (r.n === picked.length));
+  return { m, per, picked, pool, rows, completers, perClass, allN, anyN, byStore, shown, stores,
+    noun: rpClass.techs ? "technicians" : "people" };
 }
 
-const rpShowLabels = (k) => k > 1
-  ? [["all", "Everyone"], ["done", "Took all"], ["missing", "Missing some"]]
-  : [["all", "Everyone"], ["done", "Took it"], ["missing", "Didn't"]];
+// With more than one class, which completers to show.
+const rpShowLabels = () => [["all", "Any of them"], ["done", "All of them"], ["missing", "Some of them"]];
 
 function renderRpClass() {
   const host = $("rpClass");
@@ -19704,7 +19717,9 @@ function rpDrawClassReport() {
     return;
   }
   const box = (label, value, sub) => `<div class="rp-box"><span>${esc(label)}</span><b>${value}</b><small>${esc(sub)}</small></div>`;
-  const dateCell = (d) => d ? `<td class="ok">${esc(newsDate(d.completed))}</td>` : `<td class="note">—</td>`;
+  const dateCell = (d, o) => d ? `<td class="ok">${esc(newsDate(d.completed))}</td>`
+    : o ? `<td class="rp-outside" title="Outside ${esc(r.per.range)}, so it isn't counted">${esc(rpOutsideText(o))}</td>`
+    : `<td class="note">—</td>`;
   host.innerHTML = `<div class="card rp">
     <div class="rp-head">
       <div><h2>Class Report · ${esc(r.per.label)}</h2>
@@ -19726,9 +19741,11 @@ function rpDrawClassReport() {
     </div>
     <h3 class="rp-sub">By class</h3>
     <div class="rp-scroll"><table class="rp-table">
-      <thead><tr><th>Class</th><th class="num">Completed</th><th class="num">Percent</th><th style="width:40%"></th></tr></thead>
+      <thead><tr><th>Class</th><th class="num">Completed</th><th class="num">Percent</th><th style="width:34%"></th>
+        <th class="num" title="Completed it, but not between ${esc(r.per.range)}">Outside the year</th></tr></thead>
       <tbody>${r.perClass.map(c => `<tr><td><b>${esc(c.name)}</b></td><td class="num">${c.n} of ${r.pool.length}</td>
-        <td class="num">${c.pct}%</td><td><span class="rp-bar"><i style="width:${Math.min(100, c.pct)}%"></i></span></td></tr>`).join("")}</tbody>
+        <td class="num">${c.pct}%</td><td><span class="rp-bar"><i style="width:${Math.min(100, c.pct)}%"></i></span></td>
+        <td class="num note">${c.outside || "—"}</td></tr>`).join("")}</tbody>
     </table></div>
     <h3 class="rp-sub">By location</h3>
     <div class="rp-scroll"><table class="rp-table">
@@ -19740,17 +19757,20 @@ function rpDrawClassReport() {
       <tfoot><tr><td>${rpClass.store === "all" ? "Whole company" : esc(rpClass.store)}</td><td class="num">${r.pool.length}</td>
         <td class="num">${r.allN}</td><td class="num">${rpPctText(r.allN, r.pool.length)}</td>${k > 1 ? `<td class="num">${r.anyN}</td>` : ""}</tr></tfoot>
     </table></div>
-    <h3 class="rp-sub">People <span>${r.shown.length}</span></h3>
-    <div class="chips">${rpShowLabels(k).map(([id, label]) =>
-      `<button type="button" class="chip${rpClass.show === id ? " on" : ""}" data-rp-show="${id}">${label}</button>`).join("")}</div>
+    <h3 class="rp-sub">Completed <span>${r.shown.length}</span></h3>
+    ${k > 1 ? `<div class="chips">${rpShowLabels().map(([id, label]) =>
+      `<button type="button" class="chip${rpClass.show === id ? " on" : ""}" data-rp-show="${id}">${label}</button>`).join("")}</div>` : ""}
     ${r.shown.length ? `<div class="rp-scroll"><table class="rp-table">
       <thead><tr><th>Name</th><th>Location</th><th>Job</th>${r.picked.map(c => `<th class="rp-classcol">${esc(c)}</th>`).join("")}${
         k > 1 ? `<th class="num">Done</th>` : ""}</tr></thead>
       <tbody>${r.shown.map(row => `<tr><td><b>${esc(row.p.name)}</b></td><td>${esc(row.p.store)}</td><td class="note">${esc(rpJob(row.p))}</td>
-        ${row.done.map(dateCell).join("")}${k > 1 ? `<td class="num ${row.n === k ? "ok" : ""}">${row.n} of ${k}</td>` : ""}</tr>`).join("")}</tbody>
-    </table></div>` : `<p class="note">Nobody here.</p>`}
-    <p class="note" style="margin:14px 0 0">A class counts when it was completed between ${esc(r.per.range)}. The PDF and the
-      Excel file have everyone in the report, whichever of Everyone, ${esc(rpShowLabels(k)[1][1])} or ${esc(rpShowLabels(k)[2][1])} is showing.</p>
+        ${row.done.map((d, i) => dateCell(d, row.outside[i])).join("")}${k > 1 ? `<td class="num ${row.n === k ? "ok" : ""}">${row.n} of ${k}</td>` : ""}</tr>`).join("")}</tbody>
+    </table></div>` : `<p class="note">${r.completers.length ? "Nobody matches." : `Nobody completed ${k === 1 ? "this class" : "these classes"}
+      in ${esc(r.per.label.toLowerCase())} (${esc(r.per.range)}).${(n => n ? ` ${n} ${n === 1 ? "person" : "people"} took ${k === 1 ? "it" : "them"}
+      outside those dates; the By class table counts them. Try another year.` : "")(r.rows.filter(x => x.outside.some(Boolean)).length)}`}</p>`}
+    <p class="note" style="margin:14px 0 0">Only the people who completed ${k === 1 ? "the class" : "one or more of the classes"} in
+      ${esc(r.per.label.toLowerCase())} (${esc(r.per.range)}) are listed; the percentages count all ${r.pool.length} ${r.noun}. A class taken outside those dates shows in
+      grey, marked Earlier or Later, and isn't counted.${k > 1 ? " The PDF and the Excel file list every completer, whichever of Any, All or Some is showing." : ""}</p>
   </div>`;
 }
 
@@ -19769,8 +19789,8 @@ function rpClassPdf() {
     ["CLASSES", String(k), k === 1 ? "picked" : "picked together"]
   ]);
   pdf.section("By class");
-  pdf.table([["Class", pdf.width - 170], ["Completed", 90, "r"], ["Percent", 80, "r"]],
-    r.perClass.map(c => [c.name, `${c.n} of ${r.pool.length}`, `${c.pct}%`]), { bold: 0 });
+  pdf.table([["Class", pdf.width - 270], ["Completed", 90, "r"], ["Percent", 80, "r"], ["Outside the year", 100, "r"]],
+    r.perClass.map(c => [c.name, `${c.n} of ${r.pool.length}`, `${c.pct}%`, c.outside ? String(c.outside) : "-"]), { bold: 0 });
   pdf.section("By location");
   pdf.table(k > 1
       ? [["Location", pdf.width - 320], [Noun, 80, "r"], ["Took all", 80, "r"], ["Percent", 80, "r"], ["At least one", 80, "r"]]
@@ -19779,28 +19799,34 @@ function rpClassPdf() {
       .concat([[rpClass.store === "all" ? "Whole company" : rpClass.store, String(r.pool.length), String(r.allN),
         rpPctText(r.allN, r.pool.length), ...(k > 1 ? [String(r.anyN)] : [])]]),
     { bold: 0, total: true });
-  pdf.section("People", `Everyone in the report, by location. A date is when they completed the class in ${r.per.label.toLowerCase()}.`);
+  pdf.section("Completed", `${r.completers.length} ${r.completers.length === 1 ? "person" : "people"} who completed ` +
+    `${k === 1 ? "the class" : "one or more of the classes"} in ${r.per.label.toLowerCase()}, by location. ` +
+    `"Earlier" or "Later" is a class they took outside the year, which isn't counted.`);
   // A column a class while they fit; past that, one column listing them.
   const fixed = [["Name", 120], ["Location", 80], ["Job", wide ? 110 : 90]];
   const left = pdf.width - fixed.reduce((t, c) => t + c[1], 0) - (k > 1 ? 44 : 0);
   const perCol = left / k;
-  const rowsOut = r.rows.map(row => [row.p.name, row.p.store, rpJob(row.p)]);
+  const listed = r.completers;
+  const rowsOut = listed.map(row => [row.p.name, row.p.store, rpJob(row.p)]);
   let cols;
   if (perCol >= 74) {
     cols = fixed.concat(r.picked.map(c => [c, perCol])).concat(k > 1 ? [["Done", 44, "r"]] : []);
-    r.rows.forEach((row, i) => rowsOut[i].push(...row.done.map(d => d ? newsDate(d.completed) : "-"), ...(k > 1 ? [`${row.n}/${k}`] : [])));
+    listed.forEach((row, i) => rowsOut[i].push(...row.done.map((d, j) => d ? newsDate(d.completed)
+      : row.outside[j] ? rpOutsideText(row.outside[j]) : "-"), ...(k > 1 ? [`${row.n}/${k}`] : [])));
   } else {
     cols = fixed.concat([["Classes", left], ["Done", 44, "r"]]);
     // What they took, with the dates, then one line of what they didn't.
-    r.rows.forEach((row, i) => {
+    listed.forEach((row, i) => {
       const took = r.picked.map((c, j) => row.done[j] ? `${c} (${newsDate(row.done[j].completed)})` : null).filter(Boolean);
-      const not = r.picked.filter((c, j) => !row.done[j]);
+      const not = r.picked.map((c, j) => row.done[j] ? null
+        : row.outside[j] ? `${c} (${row.outside[j].when.toLowerCase()}, ${newsDate(row.outside[j].completed)})` : c).filter(Boolean);
       rowsOut[i].push([...took, ...(not.length ? [`Not taken: ${not.join(", ")}`] : [])].join("\n"), `${row.n}/${k}`);
     });
   }
   // A date is green; "Done" only when every class is.
   pdf.table(cols, rowsOut, { bold: 0, headSize: 7, color: (row, i) => i < 3 ? null
     : i === cols.length - 1 && k > 1 ? (row[i] === `${k}/${k}` ? "ok" : null)
+    : /^(Earlier|Later) /.test(row[i]) ? "muted"
     : row[i] !== "-" && !/Not taken/.test(row[i]) ? "ok" : null });
   pdf.save(`Class Report ${r.per.label}${rpClass.store === "all" ? "" : ` ${rpClass.store}`}.pdf`);
 }
@@ -19812,8 +19838,8 @@ function rpClassXlsx() {
   const head = [[`Class Report · ${r.per.label}`], [`Agri-Service, LLC · ${r.per.range} · ${rpClass.store === "all" ? "Whole company" : rpClass.store} · ${rpStamp()}`],
     [`${r.pool.length} ${r.noun}. A class counts when it was completed inside these dates.`], []];
   rpXlsx(`Class Report ${r.per.label}${rpClass.store === "all" ? "" : ` ${rpClass.store}`}.xlsx`, [
-    { name: "By class", widths: [44, 12, 10, 10], rows: head.concat([["Class", "Completed", Noun, "Percent"],
-      ...r.perClass.map(c => [c.name, c.n, r.pool.length, c.pct]),
+    { name: "By class", widths: [44, 12, 10, 10, 16], rows: head.concat([["Class", "Completed", Noun, "Percent", "Outside the year"],
+      ...r.perClass.map(c => [c.name, c.n, r.pool.length, c.pct, c.outside]),
       ...(k > 1 ? [[], ["Took all", r.allN, r.pool.length, rpPct(r.allN, r.pool.length)],
         ["Took at least one", r.anyN, r.pool.length, rpPct(r.anyN, r.pool.length)]] : [])]) },
     { name: "By location", widths: [22, 12, 10, 10, ...(k > 1 ? [13] : []), ...r.picked.map(() => 14)],
@@ -19821,9 +19847,10 @@ function rpClassXlsx() {
         ...r.byStore.map(s => [s.store, s.people, s.all, rpPct(s.all, s.people), ...(k > 1 ? [s.any] : []), ...s.perClass]),
         [rpClass.store === "all" ? "Whole company" : rpClass.store, r.pool.length, r.allN, rpPct(r.allN, r.pool.length),
           ...(k > 1 ? [r.anyN] : []), ...r.perClass.map(c => c.n)]]) },
-    { name: "People", widths: [24, 16, 28, ...r.picked.map(() => 16), ...(k > 1 ? [8] : [])],
+    { name: "Completed", widths: [24, 16, 28, ...r.picked.map(() => 16), ...(k > 1 ? [8] : [])],
       rows: head.concat([["Name", "Location", "Job", ...r.picked, ...(k > 1 ? ["Done"] : [])],
-        ...r.rows.map(row => [row.p.name, row.p.store, rpJob(row.p), ...row.done.map(d => d ? dateOnly(d.completed) : ""),
+        ...r.completers.map(row => [row.p.name, row.p.store, rpJob(row.p), ...row.done.map((d, j) => d ? dateOnly(d.completed)
+          : row.outside[j] ? rpOutsideText(row.outside[j]) : ""),
           ...(k > 1 ? [row.n] : [])])]) }
   ]);
 }
@@ -19840,7 +19867,7 @@ function rpPdf({ title, period, orientation = "portrait" }) {
   const W = orientation === "landscape" ? 792 : 612, H = orientation === "landscape" ? 612 : 792;
   const M = 40, CW = W - M * 2, BOTTOM = H - M - 20;
   const red = [204, 0, 51], ink = [30, 30, 30], grey = [110, 110, 110], light = [246, 245, 243], rule = [226, 224, 222];
-  const tones = { ok: [23, 112, 47], short: [168, 0, 42] };
+  const tones = { ok: [23, 112, 47], short: [168, 0, 42], muted: [125, 125, 125] };
   let y = 0;
   const smallHead = () => {
     doc.setFillColor(...red); doc.rect(0, 0, W, 6, "F");
