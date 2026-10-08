@@ -2436,6 +2436,64 @@
   .cr-table td:last-child, .cr-table th:last-child { text-align: right; white-space: nowrap; }
   .cr-table td.note { font-size: 13px; }
   .cr-done { color: #217030; font-variant-numeric: tabular-nums; }
+
+  /* ---- Reports, on the Training dashboard: AGCO Training Hours and the
+     Class Report, each with a PDF and an Excel file. ---- */
+  .rp h2 { margin: 0 0 4px; font: 700 21px/1.2 var(--font-cab); text-transform: uppercase; letter-spacing: .02em; text-wrap: balance; }
+  .rp-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 12px 20px; }
+  .rp-head > div:first-child { flex: 1; min-width: 260px; }
+  .rp-head .note { margin: 0; max-width: 75ch; }
+  .rp-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .rp-tools select { width: auto; margin: 0; }
+  .rp-tools button.pdf { gap: 6px; }
+  .rp-boxes { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 16px 0 6px; }
+  .rp-box { display: flex; flex-direction: column; gap: 2px; padding: 11px 14px 12px; border-radius: var(--radius-sm);
+    background: var(--paper); border-left: 3px solid var(--red); }
+  .rp-box span { color: var(--muted); font: 600 11px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
+  .rp-box b { font: 700 26px/1.1 var(--font-cab); font-variant-numeric: tabular-nums; color: var(--ink); }
+  .rp-box small { color: var(--muted); font-size: 12.5px; }
+  .rp-box.ok b { color: #137026; }
+  .rp-box.short b { color: var(--red-dark, #B4041E); }
+  h3.rp-sub { display: flex; align-items: center; gap: 8px; margin: 22px 0 8px; color: var(--muted);
+    font: 600 12px var(--font-mono); letter-spacing: .14em; text-transform: uppercase; }
+  h3.rp-sub span { color: var(--ink); letter-spacing: 0; }
+  .rp-scroll { overflow-x: auto; }
+  table.rp-table { font-size: 13.5px; }
+  .rp-table th { padding: 8px 10px; color: var(--muted); font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase;
+    background: var(--paper); white-space: nowrap; }
+  .rp-table th.rp-classcol { white-space: normal; min-width: 110px; max-width: 180px; text-transform: none; letter-spacing: 0; font-size: 12px; }
+  .rp-table td { padding: 8px 10px; }
+  .rp-table td:first-child { white-space: nowrap; }
+  .rp-table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .rp-table td.ok { color: #137026; font-weight: 600; }
+  .rp-table td.short { color: var(--red-dark, #B4041E); font-weight: 600; }
+  .rp-table tfoot td { font-weight: 700; border-top: 2px solid var(--line-strong); border-bottom: 0; background: var(--paper); }
+  .rp-credits span { display: block; font-size: 12.5px; color: var(--ink-2); white-space: nowrap; }
+  .rp-bar { display: block; height: 8px; margin-top: 5px; border-radius: 99px; background: var(--line); overflow: hidden; }
+  .rp-bar i { display: block; height: 100%; border-radius: 99px; background: #217030; }
+  .rp-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 14px 0 0; }
+  .rp-controls select { width: auto; margin: 0; }
+  .rp-picked { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 0; }
+  .rp-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 4px 3px 11px; border-radius: 999px;
+    background: var(--ink); color: #fff; font-size: 13px; font-weight: 500; }
+  .rp-chip button { width: 22px; height: 22px; padding: 0; border: 0; border-radius: 50%; background: rgba(255,255,255,.18);
+    box-shadow: none; color: #fff; font-size: 15px; line-height: 1; }
+  .rp-chip button:hover { background: rgba(255,255,255,.32); }
+  .rp-class-layout { display: grid; gap: 16px; grid-template-columns: minmax(250px, 320px) minmax(0, 1fr); align-items: start; }
+  .rp-class-layout > .card, #rpClassReport > .card { margin: 0; }
+  @media (max-width: 900px) { .rp-class-layout { grid-template-columns: minmax(0, 1fr); } }
+  .rp-picker { position: sticky; top: 76px; display: flex; flex-direction: column; max-height: calc(100vh - 96px); padding: 14px 12px; }
+  .rp-picker h2 { margin: 0 4px 10px; font: 700 17px var(--font-cab); text-transform: uppercase; letter-spacing: .03em; }
+  .rp-picker input.search { max-width: none; }
+  .rp-picker-count { margin: 8px 4px 6px; font-size: 12.5px; }
+  .rp-class-list { overflow-y: auto; margin: 0 -4px; }
+  label.rp-class { display: flex; align-items: flex-start; gap: 8px; margin: 0; padding: 7px 10px; border-radius: var(--radius-sm);
+    font-size: 14px; font-weight: 400; color: var(--ink); cursor: pointer; }
+  label.rp-class:hover { background: var(--paper); }
+  label.rp-class.on { background: var(--red-soft); color: var(--red-dark); font-weight: 600; }
+  label.rp-class input { flex: none; width: 16px; height: 16px; margin: 2px 0 0; accent-color: var(--red); }
+  label.rp-class span { flex: 1; }
+  label.rp-class small { color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
   /* Filling in an inspection: one white card per question on the rise page. */
   .insp-start { margin: 0 2px 12px; }
   p.insp-sub { font: 600 11.5px var(--font-mono); letter-spacing: .12em; text-transform: uppercase;
@@ -2630,6 +2688,10 @@
       <button data-tab="courses"><i data-icon="training"></i><span>Course Catalog</span></button>
       <button data-tab="articles"><i data-icon="doc"></i><span>Training Articles</span></button>
 
+      <div class="nav-group">Reports</div>
+      <button data-tab="rpagco" data-title="AGCO Training Hours"><i data-icon="level"></i><span>AGCO Training Hours</span></button>
+      <button data-tab="rpclass" data-title="Class Report"><i data-icon="doc"></i><span>Class Report</span></button>
+
       <div class="nav-group">Uploads</div>
       <button data-tab="trainingstatus" data-title="Training Status uploads"><i data-icon="people"></i><span>Training Status</span><b class="nav-count tx-stale" data-tx-count="trainingstatus"></b></button>
       <button data-tab="openseat" data-title="Open Seat Report uploads"><i data-icon="calendar"></i><span>Open Seat Report</span><b class="nav-count tx-stale" data-tx-count="openseat"></b></button>
@@ -2697,6 +2759,10 @@
     <section id="tab-trainingoverview" class="hidden">
       <div id="txOverview"></div>
     </section>
+
+    <!-- The Training dashboard's reports: renderReports() -->
+    <section id="tab-rpagco" class="hidden"><div id="rpAgco"></div></section>
+    <section id="tab-rpclass" class="hidden"><div id="rpClass"></div></section>
 
     <!-- The Safety dashboard's front page: drawn by renderSafetyOverview -->
     <section id="tab-safetyoverview" class="hidden">
@@ -4173,7 +4239,7 @@ function showTraining(tab) {
   evalAgreed = null; evalNotice = "";
   renderMockSchedule(); renderSkillsAdmin(); renderCoursesAdmin(); renderArticlesAdmin(); renderTsImport(); renderTsLive(); renderOsrImport(); renderOsrLive();
   renderAgcoImport(); renderAgcoLive(); renderAgcoTechs(); renderAgcoRules(); renderAgcoAdded(); renderAgcoBales();
-  renderTrainingOverview();
+  renderTrainingOverview(); renderReports();
   document.querySelector(`#trainingNav [data-tab="${tab || trainingTab}"]`).click();
   window.scrollTo(0, 0);
 }
@@ -17923,6 +17989,8 @@ function renderTsImport(problems = []) {
 }
 
 function renderTsLive() {
+  // The reports read the same uploads.
+  renderReports();
   const box = $("tsLive");
   if (!box) return;
   if (trainingStatusError) {
@@ -19357,6 +19425,571 @@ function crList(model) {
   return { pool, taken: taken.length, shown: [...shown].sort(byShop) };
 }
 
+// ---- Reports, on the Training dashboard --------------------------------------------------
+//
+// Two reports for Training Managers, on screen and as a PDF or an Excel
+// workbook, from the same Training Status uploads as the rest of the page:
+//
+//   AGCO Training Hours  the dealer metric for the credits report's calendar
+//                        year: each technician's AGCO hours against what's
+//                        needed, for the whole company and each location.
+//   Class Report         the classes picked, in a calendar year or a fiscal
+//                        year (April 1 to March 31): who took them, and what
+//                        share of the people did, class by class and location
+//                        by location.
+//
+// A class counts when it was completed inside the year picked. The AGCO hours
+// are the credits report's own year: that report only carries the current one.
+
+let rpAgcoStore = "all";
+let rpClass = { picked: [], search: "", kind: "calendar", year: null, techs: true, store: "all", show: "all" };
+
+const rpJob = (p) => (p.job || "").replace(/^\d+\s*-\s*/, "");
+const rpPct = (n, d) => d ? Math.round(n / d * 1000) / 10 : 0;
+const rpPctText = (n, d) => `${rpPct(n, d)}%`;
+const rpByPlace = (a, b) => a.store.localeCompare(b.store) || a.last.localeCompare(b.last) || a.first.localeCompare(b.first);
+// "Field Support" last, as the rest of the page orders locations.
+const rpStoreOrder = (a, b) => (a === "Field Support") - (b === "Field Support") || a.localeCompare(b);
+const rpStamp = () => `Prepared ${new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}${
+  profile && profile.full_name ? ` by ${profile.full_name}` : ""}`;
+
+function renderReports() {
+  renderRpAgco();
+  renderRpClass();
+}
+
+// ---- AGCO Training Hours -----------------------------------------------------------------
+
+function rpAgcoModel() {
+  const m = tsModel(), need = tsRequiredHours(), goal = tsGoal();
+  const stores = [...new Set(m.techs.map(t => t.store))].sort(rpStoreOrder);
+  if (rpAgcoStore !== "all" && !stores.includes(rpAgcoStore)) rpAgcoStore = "all";
+  const techs = m.techs.filter(t => rpAgcoStore === "all" || t.store === rpAgcoStore).sort(rpByPlace);
+  const sum = (list) => list.reduce((a, t) => a + (t.hours || 0), 0);
+  const line = (store, list) => {
+    const met = list.filter(t => t.met).length, hours = sum(list);
+    return { store, techs: list.length, met, pct: rpPct(met, list.length), hours, avg: list.length ? hours / list.length : 0,
+      goalCount: Math.ceil(list.length * goal - 1e-9) };
+  };
+  const byStore = stores.filter(s => rpAgcoStore === "all" || s === rpAgcoStore).map(s => line(s, m.techs.filter(t => t.store === s)));
+  const all = line(rpAgcoStore === "all" ? "Whole company" : rpAgcoStore, techs);
+  return { m, need, goal, goalPct: tsGoalPercent(), stores, techs, byStore, all,
+    short: Math.max(0, all.goalCount - all.met), period: tsPeriod() || String(new Date().getFullYear()) };
+}
+
+const rpStatus = (t, need) => t.hours === null ? "Not on the credits report"
+  : t.met ? "Met" : `${fmtHours(need - t.hours)} short`;
+function fmtHours(n) { return String(Math.round((Number(n) || 0) * 10) / 10); }
+const rpCredits = (t) => (t.entries || []).map(e => `${fmtHours(e.hours)} hrs${e.title ? ` ${e.title}` : ""}${
+  e.earned ? ` (${newsDate(e.earned).replace(/, \d{4}$/, "")})` : ""}`);
+
+function renderRpAgco() {
+  const host = $("rpAgco");
+  if (!host) return;
+  if (trainingStatusError) { host.innerHTML = `<div class="card"><p class="error">${esc(trainingStatusError)}</p></div>`; return; }
+  const r = rpAgcoModel();
+  if (!r.m.techs.length) {
+    host.innerHTML = `<div class="card"><p class="note" style="margin:0">No technicians yet. Upload the UKG reports under
+      Uploads → Training Status and this fills in.</p></div>`;
+    return;
+  }
+  const a = r.all, metGoal = a.pct >= r.goalPct;
+  const box = (label, value, sub, tone) => `<div class="rp-box${tone ? ` ${tone}` : ""}"><span>${esc(label)}</span><b>${value}</b><small>${esc(sub)}</small></div>`;
+  host.innerHTML = `<div class="card rp">
+    <div class="rp-head">
+      <div><h2>AGCO Training Hours · ${esc(r.period)}</h2>
+        <p class="note">The dealer metric: technicians with ${fmtHours(r.need)}+ AGCO hours in ${esc(r.period)}, against a goal of
+          ${r.goalPct}%. From the credits report${tsSources && tsSources.credits && tsSources.credits.exported
+            ? ` exported ${esc(String(tsSources.credits.exported).replace(" MDT", ""))}` : ""}.</p></div>
+      <div class="rp-tools">
+        <select id="rpAgcoStore" aria-label="Location"><option value="all">Whole company</option>${r.stores.map(s =>
+          `<option${s === rpAgcoStore ? " selected" : ""}>${esc(s)}</option>`).join("")}</select>
+        <button type="button" class="pdf" data-rp="agco-pdf">${icon("doc", 15)}PDF</button>
+        <button type="button" class="pdf" data-rp="agco-xlsx">${icon("doc", 15)}Excel</button>
+      </div>
+    </div>
+    <div class="rp-boxes">
+      ${box("Technicians", a.techs, rpAgcoStore === "all" ? "across the company" : `at ${rpAgcoStore}`)}
+      ${box(`${fmtHours(r.need)}+ hours`, `${a.pct}%`, `${a.met} of ${a.techs}`, metGoal ? "ok" : "short")}
+      ${box("Goal", `${r.goalPct}%`, metGoal ? "Met" : `${r.short} more ${r.short === 1 ? "technician" : "technicians"} needed`, metGoal ? "ok" : "")}
+      ${box("Average", `${fmtHours(a.avg)} hrs`, `${fmtHours(a.hours)} hours in all`)}
+    </div>
+    ${rpAgcoStore === "all" ? `<h3 class="rp-sub">By location</h3>
+    <div class="rp-scroll"><table class="rp-table">
+      <thead><tr><th>Location</th><th class="num">Technicians</th><th class="num">${fmtHours(r.need)}+ hours</th><th class="num">Percent</th>
+        <th class="num">Still needed</th><th class="num">Average hrs</th><th class="num">Total hrs</th></tr></thead>
+      <tbody>${r.byStore.map(s => `<tr><td><b>${esc(s.store)}</b></td><td class="num">${s.techs}</td><td class="num">${s.met}</td>
+        <td class="num ${s.pct >= r.goalPct ? "ok" : "short"}">${s.pct}%</td><td class="num">${Math.max(0, s.goalCount - s.met)}</td>
+        <td class="num">${fmtHours(s.avg)}</td><td class="num">${fmtHours(s.hours)}</td></tr>`).join("")}</tbody>
+      <tfoot><tr><td>Whole company</td><td class="num">${a.techs}</td><td class="num">${a.met}</td>
+        <td class="num ${metGoal ? "ok" : "short"}">${a.pct}%</td><td class="num">${r.short}</td><td class="num">${fmtHours(a.avg)}</td>
+        <td class="num">${fmtHours(a.hours)}</td></tr></tfoot>
+    </table></div>` : ""}
+    <h3 class="rp-sub">Technicians <span>${a.techs}</span></h3>
+    <div class="rp-scroll"><table class="rp-table">
+      <thead><tr><th>Name</th><th>Location</th><th>Job</th><th class="num">AGCO hrs</th><th>Status</th><th>Credits</th></tr></thead>
+      <tbody>${r.techs.map(t => `<tr><td><b>${esc(t.name)}</b></td><td>${esc(t.store)}</td><td class="note">${esc(rpJob(t))}</td>
+        <td class="num">${t.hours === null ? "—" : fmtHours(t.hours)}</td>
+        <td class="${t.met ? "ok" : "short"}">${esc(rpStatus(t, r.need))}</td>
+        <td class="rp-credits">${rpCredits(t).map(c => `<span>${esc(c)}</span>`).join("") || `<span class="note">—</span>`}</td></tr>`).join("")}</tbody>
+    </table></div>
+  </div>`;
+}
+
+function rpAgcoPdf() {
+  const r = rpAgcoModel(), a = r.all, where = rpAgcoStore === "all" ? "Whole company" : rpAgcoStore;
+  const pdf = rpPdf({ title: "AGCO Training Hours", period: r.period });
+  pdf.note(`${where}. The dealer metric: technicians with ${fmtHours(r.need)}+ AGCO hours in ${r.period}, against a goal of ${r.goalPct}%.`);
+  pdf.boxes([
+    ["TECHNICIANS", String(a.techs), where],
+    [`${fmtHours(r.need)}+ HOURS`, `${a.pct}%`, `${a.met} of ${a.techs}`, a.pct >= r.goalPct ? "ok" : "short"],
+    ["GOAL", `${r.goalPct}%`, a.pct >= r.goalPct ? "Met" : `${r.short} more needed`],
+    ["AVERAGE", `${fmtHours(a.avg)} hrs`, `${fmtHours(a.hours)} hours in all`]
+  ]);
+  if (rpAgcoStore === "all") {
+    pdf.section("By location");
+    pdf.table([["Location", 150], ["Techs", 55, "r"], [`${fmtHours(r.need)}+ hrs`, 60, "r"], ["Percent", 60, "r"],
+      ["Still needed", 70, "r"], ["Avg hrs", 60, "r"], ["Total hrs", pdf.width - 455, "r"]],
+      r.byStore.map(s => [s.store, String(s.techs), String(s.met), `${s.pct}%`, String(Math.max(0, s.goalCount - s.met)),
+        fmtHours(s.avg), fmtHours(s.hours)])
+        .concat([["Whole company", String(a.techs), String(a.met), `${a.pct}%`, String(r.short), fmtHours(a.avg), fmtHours(a.hours)]]),
+      { bold: 0, total: true, color: (row, i) => i === 3 ? (parseFloat(row[3]) >= r.goalPct ? "ok" : "short") : null });
+  }
+  pdf.section("Technicians", `${a.techs} technicians, by location. Credits are the AGCO hours on the credits report, with the day each was earned.`);
+  pdf.table([["Name", 118], ["Location", 78], ["Job", 100], ["Hours", 42, "r"], ["Status", 72], ["Credits", pdf.width - 410]],
+    r.techs.map(t => [t.name, t.store, rpJob(t), t.hours === null ? "-" : fmtHours(t.hours), rpStatus(t, r.need), rpCredits(t).join("\n") || "-"]),
+    { bold: 0, color: (row, i) => i === 4 ? (row[4] === "Met" ? "ok" : "short") : null });
+  pdf.save(`AGCO Training Hours ${r.period}${rpAgcoStore === "all" ? "" : ` ${rpAgcoStore}`}.pdf`);
+}
+
+function rpAgcoXlsx() {
+  const r = rpAgcoModel(), a = r.all, where = rpAgcoStore === "all" ? "Whole company" : rpAgcoStore;
+  const head = [[`AGCO Training Hours ${r.period}`], [`Agri-Service, LLC · ${where} · ${rpStamp()}`],
+    [`Technicians with ${fmtHours(r.need)}+ AGCO hours in ${r.period}; goal ${r.goalPct}%.`], []];
+  const sheets = [];
+  if (rpAgcoStore === "all") {
+    sheets.push({ name: "By location", widths: [22, 12, 12, 10, 13, 12, 11], rows: head.concat([
+      ["Location", "Technicians", `${fmtHours(r.need)}+ hours`, "Percent", "Still needed", "Average hrs", "Total hrs"],
+      ...r.byStore.map(s => [s.store, s.techs, s.met, s.pct, Math.max(0, s.goalCount - s.met), Number(fmtHours(s.avg)), Number(fmtHours(s.hours))]),
+      ["Whole company", a.techs, a.met, a.pct, r.short, Number(fmtHours(a.avg)), Number(fmtHours(a.hours))]]) });
+  }
+  sheets.push({ name: "Technicians", widths: [24, 16, 28, 10, 24, 60], rows: head.concat([
+    ["Name", "Location", "Job", "AGCO hours", "Status", "Credits"],
+    ...r.techs.map(t => [t.name, t.store, rpJob(t), t.hours === null ? "" : Number(fmtHours(t.hours)), rpStatus(t, r.need), rpCredits(t).join("; ")])]) });
+  sheets.push({ name: "Credits", widths: [24, 16, 10, 12, 50], rows: head.concat([
+    ["Name", "Location", "Hours", "Earned", "Credit"],
+    ...r.techs.flatMap(t => (t.entries || []).map(e => [t.name, t.store, Number(e.hours) || 0, e.earned ? dateOnly(e.earned) : "", e.title || ""]))]) });
+  rpXlsx(`AGCO Training Hours ${r.period}${rpAgcoStore === "all" ? "" : ` ${rpAgcoStore}`}.xlsx`, sheets);
+}
+
+// ---- Class Report ------------------------------------------------------------------------
+
+// The calendar year, or the fiscal year starting April 1 of `year`.
+function rpPeriod() {
+  const now = new Date();
+  const thisFy = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
+  const y = Number(rpClass.year) || (rpClass.kind === "fiscal" ? thisFy : now.getFullYear());
+  return rpClass.kind === "fiscal"
+    ? { year: y, start: `${y}-04-01`, end: `${y + 1}-04-01`, label: `Fiscal year ${y}–${String(y + 1).slice(2)}`,
+        range: `Apr 1, ${y} – Mar 31, ${y + 1}` }
+    : { year: y, start: `${y}-01-01`, end: `${y + 1}-01-01`, label: `Calendar year ${y}`, range: `Jan 1 – Dec 31, ${y}` };
+}
+
+function rpYears(m) {
+  const now = new Date(), years = new Set(m.years.map(Number).filter(Boolean));
+  years.add(now.getFullYear());
+  if (rpClass.kind === "fiscal") {
+    years.add(now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1);
+    // A fiscal year starting the year before the earliest class still holds its spring.
+    if (years.size) years.add(Math.min(...years) - 1);
+  }
+  // Every year from the earliest to now, none skipped.
+  const out = [];
+  for (let y = Math.max(...years); y >= Math.min(...years); y--) out.push(y);
+  return out;
+}
+
+// The latest completion of a class inside the period.
+function rpDone(p, course, per) {
+  return p.classes.filter(c => c.course === course && c.completed >= per.start && c.completed < per.end)
+    .reduce((best, c) => !best || c.completed > best.completed ? c : best, null);
+}
+
+function rpClassModel() {
+  const m = tsModel(), per = rpPeriod(), picked = rpClass.picked;
+  const stores = [...new Set((rpClass.techs ? m.techs : m.people).map(p => p.store))].sort(rpStoreOrder);
+  if (rpClass.store !== "all" && !stores.includes(rpClass.store)) rpClass.store = "all";
+  const pool = (rpClass.techs ? m.techs : m.people).filter(p => rpClass.store === "all" || p.store === rpClass.store);
+  const rows = pool.map(p => {
+    const done = picked.map(c => rpDone(p, c, per));
+    return { p, done, n: done.filter(Boolean).length };
+  }).sort((x, y) => rpByPlace(x.p, y.p));
+  const perClass = picked.map((name, i) => {
+    const n = rows.filter(r => r.done[i]).length;
+    return { name, n, pct: rpPct(n, pool.length) };
+  });
+  const allN = rows.filter(r => picked.length && r.n === picked.length).length;
+  const anyN = rows.filter(r => r.n > 0).length;
+  const byStore = [...new Set(rows.map(r => r.p.store))].sort(rpStoreOrder).map(store => {
+    const here = rows.filter(r => r.p.store === store);
+    return { store, people: here.length, all: here.filter(r => picked.length && r.n === picked.length).length,
+      any: here.filter(r => r.n > 0).length, perClass: picked.map((_, i) => here.filter(r => r.done[i]).length) };
+  });
+  const shown = rows.filter(r => rpClass.show === "all" || (rpClass.show === "done") === (r.n === picked.length));
+  return { m, per, picked, pool, rows, perClass, allN, anyN, byStore, shown, stores, noun: rpClass.techs ? "technicians" : "people" };
+}
+
+const rpShowLabels = (k) => k > 1
+  ? [["all", "Everyone"], ["done", "Took all"], ["missing", "Missing some"]]
+  : [["all", "Everyone"], ["done", "Took it"], ["missing", "Didn't"]];
+
+function renderRpClass() {
+  const host = $("rpClass");
+  if (!host) return;
+  if (trainingStatusError) { host.innerHTML = `<div class="card"><p class="error">${esc(trainingStatusError)}</p></div>`; return; }
+  const m = tsModel(), courses = crCourses(m);
+  if (!courses.length) {
+    host.innerHTML = `<div class="card"><p class="note" style="margin:0">No classes on the uploaded reports yet. Upload them
+      under Uploads → Training Status.</p></div>`;
+    return;
+  }
+  rpClass.picked = rpClass.picked.filter(c => courses.some(x => x.name === c));
+  if (!host.querySelector(".rp-class-layout")) {
+    host.innerHTML = `<div class="rp-class-layout">
+      <div class="card rp-picker">
+        <h2>Classes</h2>
+        <input type="text" class="search" id="rpClassSearch" placeholder="Search classes…" aria-label="Search classes" autocomplete="off">
+        <p class="note rp-picker-count" id="rpClassCount"></p>
+        <div id="rpClassList" class="rp-class-list"></div>
+      </div>
+      <div id="rpClassReport"></div>
+    </div>`;
+  }
+  $("rpClassSearch").value = rpClass.search;
+  rpDrawClassList(courses);
+  rpDrawClassReport();
+}
+
+function rpDrawClassList(courses = crCourses(tsModel())) {
+  const list = $("rpClassList");
+  if (!list) return;
+  const text = rpClass.search.trim().toLowerCase();
+  const found = courses.filter(c => !text || c.name.toLowerCase().includes(text));
+  $("rpClassCount").textContent = `${rpClass.picked.length} picked · ${courses.length} classes · the number is how many have ever taken it`;
+  list.innerHTML = found.map(c => `<label class="rp-class${rpClass.picked.includes(c.name) ? " on" : ""}">
+      <input type="checkbox" data-rp-class="${esc(c.name)}"${rpClass.picked.includes(c.name) ? " checked" : ""}>
+      <span>${esc(c.name)}</span><small>${c.count}</small></label>`).join("")
+    || `<p class="note" style="margin:8px 4px">No class matches that.</p>`;
+}
+
+function rpDrawClassReport() {
+  const host = $("rpClassReport");
+  if (!host) return;
+  const r = rpClassModel(), k = r.picked.length;
+  const years = rpYears(r.m);
+  if (!years.includes(r.per.year)) years.unshift(r.per.year);
+  const controls = `<div class="rp-controls">
+      <div class="chips" style="margin:0">${[["calendar", "Calendar year"], ["fiscal", "Fiscal year"]].map(([id, label]) =>
+        `<button type="button" class="chip${rpClass.kind === id ? " on" : ""}" data-rp-kind="${id}">${label}</button>`).join("")}</div>
+      <select id="rpClassYear" aria-label="Year">${years.map(y => `<option value="${y}"${y === r.per.year ? " selected" : ""}>${
+        rpClass.kind === "fiscal" ? `Apr ${y} – Mar ${y + 1}` : y}</option>`).join("")}</select>
+      <select id="rpClassStore" aria-label="Location"><option value="all">Every location</option>${r.stores.map(s =>
+        `<option${s === rpClass.store ? " selected" : ""}>${esc(s)}</option>`).join("")}</select>
+      <label class="check" style="margin:0"><input type="checkbox" id="rpClassTechs"${rpClass.techs ? " checked" : ""}> Technicians only</label>
+    </div>`;
+  if (!k) {
+    host.innerHTML = `<div class="card rp"><h2>Class Report</h2>${controls}
+      <p class="note" style="margin:14px 0 0">Tick one or more classes on the left. The report shows who took them in
+        ${esc(r.per.label.toLowerCase())} (${esc(r.per.range)}), and the share of ${r.noun} who did.</p></div>`;
+    return;
+  }
+  const box = (label, value, sub) => `<div class="rp-box"><span>${esc(label)}</span><b>${value}</b><small>${esc(sub)}</small></div>`;
+  const dateCell = (d) => d ? `<td class="ok">${esc(newsDate(d.completed))}</td>` : `<td class="note">—</td>`;
+  host.innerHTML = `<div class="card rp">
+    <div class="rp-head">
+      <div><h2>Class Report · ${esc(r.per.label)}</h2>
+        <p class="note">${esc(r.per.range)} · ${r.pool.length} ${r.noun}${rpClass.store === "all" ? " across the company" : ` at ${esc(rpClass.store)}`}.</p></div>
+      <div class="rp-tools">
+        <button type="button" class="pdf" data-rp="class-pdf">${icon("doc", 15)}PDF</button>
+        <button type="button" class="pdf" data-rp="class-xlsx">${icon("doc", 15)}Excel</button>
+      </div>
+    </div>
+    ${controls}
+    <div class="rp-picked">${r.picked.map(c => `<span class="rp-chip">${esc(c)}<button type="button" data-rp-unpick="${esc(c)}"
+      aria-label="Take ${esc(c)} off the report">&times;</button></span>`).join("")}</div>
+    <div class="rp-boxes">
+      ${box(r.noun[0].toUpperCase() + r.noun.slice(1), r.pool.length, rpClass.store === "all" ? "across the company" : `at ${rpClass.store}`)}
+      ${k > 1 ? box("Took all", rpPctText(r.allN, r.pool.length), `${r.allN} of ${r.pool.length}`)
+        : box("Took it", rpPctText(r.allN, r.pool.length), `${r.allN} of ${r.pool.length}`)}
+      ${k > 1 ? box("Took at least one", rpPctText(r.anyN, r.pool.length), `${r.anyN} of ${r.pool.length}`) : ""}
+      ${box("Classes", k, k === 1 ? "picked" : "picked together")}
+    </div>
+    <h3 class="rp-sub">By class</h3>
+    <div class="rp-scroll"><table class="rp-table">
+      <thead><tr><th>Class</th><th class="num">Completed</th><th class="num">Percent</th><th style="width:40%"></th></tr></thead>
+      <tbody>${r.perClass.map(c => `<tr><td><b>${esc(c.name)}</b></td><td class="num">${c.n} of ${r.pool.length}</td>
+        <td class="num">${c.pct}%</td><td><span class="rp-bar"><i style="width:${Math.min(100, c.pct)}%"></i></span></td></tr>`).join("")}</tbody>
+    </table></div>
+    <h3 class="rp-sub">By location</h3>
+    <div class="rp-scroll"><table class="rp-table">
+      <thead><tr><th>Location</th><th class="num">${esc(r.noun[0].toUpperCase() + r.noun.slice(1))}</th>${k > 1
+        ? `<th class="num">Took all</th><th class="num">Percent</th><th class="num">At least one</th>`
+        : `<th class="num">Took it</th><th class="num">Percent</th>`}</tr></thead>
+      <tbody>${r.byStore.map(s => `<tr><td><b>${esc(s.store)}</b></td><td class="num">${s.people}</td><td class="num">${s.all}</td>
+        <td class="num">${rpPctText(s.all, s.people)}</td>${k > 1 ? `<td class="num">${s.any}</td>` : ""}</tr>`).join("")}</tbody>
+      <tfoot><tr><td>${rpClass.store === "all" ? "Whole company" : esc(rpClass.store)}</td><td class="num">${r.pool.length}</td>
+        <td class="num">${r.allN}</td><td class="num">${rpPctText(r.allN, r.pool.length)}</td>${k > 1 ? `<td class="num">${r.anyN}</td>` : ""}</tr></tfoot>
+    </table></div>
+    <h3 class="rp-sub">People <span>${r.shown.length}</span></h3>
+    <div class="chips">${rpShowLabels(k).map(([id, label]) =>
+      `<button type="button" class="chip${rpClass.show === id ? " on" : ""}" data-rp-show="${id}">${label}</button>`).join("")}</div>
+    ${r.shown.length ? `<div class="rp-scroll"><table class="rp-table">
+      <thead><tr><th>Name</th><th>Location</th><th>Job</th>${r.picked.map(c => `<th class="rp-classcol">${esc(c)}</th>`).join("")}${
+        k > 1 ? `<th class="num">Done</th>` : ""}</tr></thead>
+      <tbody>${r.shown.map(row => `<tr><td><b>${esc(row.p.name)}</b></td><td>${esc(row.p.store)}</td><td class="note">${esc(rpJob(row.p))}</td>
+        ${row.done.map(dateCell).join("")}${k > 1 ? `<td class="num ${row.n === k ? "ok" : ""}">${row.n} of ${k}</td>` : ""}</tr>`).join("")}</tbody>
+    </table></div>` : `<p class="note">Nobody here.</p>`}
+    <p class="note" style="margin:14px 0 0">A class counts when it was completed between ${esc(r.per.range)}. The PDF and the
+      Excel file have everyone in the report, whichever of Everyone, ${esc(rpShowLabels(k)[1][1])} or ${esc(rpShowLabels(k)[2][1])} is showing.</p>
+  </div>`;
+}
+
+function rpClassPdf() {
+  const r = rpClassModel(), k = r.picked.length;
+  if (!k) return;
+  const wide = k > 2;
+  const pdf = rpPdf({ title: "Class Report", period: r.per.label, orientation: wide ? "landscape" : "portrait" });
+  const Noun = r.noun[0].toUpperCase() + r.noun.slice(1);
+  pdf.note(`${r.per.range}. ${r.pool.length} ${r.noun}${rpClass.store === "all" ? " across the company" : ` at ${rpClass.store}`}. ` +
+    `A class counts when it was completed inside these dates.`);
+  pdf.boxes([
+    [Noun.toUpperCase(), String(r.pool.length), rpClass.store === "all" ? "Whole company" : rpClass.store],
+    [k > 1 ? "TOOK ALL" : "TOOK IT", rpPctText(r.allN, r.pool.length), `${r.allN} of ${r.pool.length}`],
+    ...(k > 1 ? [["AT LEAST ONE", rpPctText(r.anyN, r.pool.length), `${r.anyN} of ${r.pool.length}`]] : []),
+    ["CLASSES", String(k), k === 1 ? "picked" : "picked together"]
+  ]);
+  pdf.section("By class");
+  pdf.table([["Class", pdf.width - 170], ["Completed", 90, "r"], ["Percent", 80, "r"]],
+    r.perClass.map(c => [c.name, `${c.n} of ${r.pool.length}`, `${c.pct}%`]), { bold: 0 });
+  pdf.section("By location");
+  pdf.table(k > 1
+      ? [["Location", pdf.width - 320], [Noun, 80, "r"], ["Took all", 80, "r"], ["Percent", 80, "r"], ["At least one", 80, "r"]]
+      : [["Location", pdf.width - 240], [Noun, 80, "r"], ["Took it", 80, "r"], ["Percent", 80, "r"]],
+    r.byStore.map(s => [s.store, String(s.people), String(s.all), rpPctText(s.all, s.people), ...(k > 1 ? [String(s.any)] : [])])
+      .concat([[rpClass.store === "all" ? "Whole company" : rpClass.store, String(r.pool.length), String(r.allN),
+        rpPctText(r.allN, r.pool.length), ...(k > 1 ? [String(r.anyN)] : [])]]),
+    { bold: 0, total: true });
+  pdf.section("People", `Everyone in the report, by location. A date is when they completed the class in ${r.per.label.toLowerCase()}.`);
+  // A column a class while they fit; past that, one column listing them.
+  const fixed = [["Name", 120], ["Location", 80], ["Job", wide ? 110 : 90]];
+  const left = pdf.width - fixed.reduce((t, c) => t + c[1], 0) - (k > 1 ? 44 : 0);
+  const perCol = left / k;
+  const rowsOut = r.rows.map(row => [row.p.name, row.p.store, rpJob(row.p)]);
+  let cols;
+  if (perCol >= 74) {
+    cols = fixed.concat(r.picked.map(c => [c, perCol])).concat(k > 1 ? [["Done", 44, "r"]] : []);
+    r.rows.forEach((row, i) => rowsOut[i].push(...row.done.map(d => d ? newsDate(d.completed) : "-"), ...(k > 1 ? [`${row.n}/${k}`] : [])));
+  } else {
+    cols = fixed.concat([["Classes", left], ["Done", 44, "r"]]);
+    // What they took, with the dates, then one line of what they didn't.
+    r.rows.forEach((row, i) => {
+      const took = r.picked.map((c, j) => row.done[j] ? `${c} (${newsDate(row.done[j].completed)})` : null).filter(Boolean);
+      const not = r.picked.filter((c, j) => !row.done[j]);
+      rowsOut[i].push([...took, ...(not.length ? [`Not taken: ${not.join(", ")}`] : [])].join("\n"), `${row.n}/${k}`);
+    });
+  }
+  // A date is green; "Done" only when every class is.
+  pdf.table(cols, rowsOut, { bold: 0, headSize: 7, color: (row, i) => i < 3 ? null
+    : i === cols.length - 1 && k > 1 ? (row[i] === `${k}/${k}` ? "ok" : null)
+    : row[i] !== "-" && !/Not taken/.test(row[i]) ? "ok" : null });
+  pdf.save(`Class Report ${r.per.label}${rpClass.store === "all" ? "" : ` ${rpClass.store}`}.pdf`);
+}
+
+function rpClassXlsx() {
+  const r = rpClassModel(), k = r.picked.length;
+  if (!k) return;
+  const Noun = r.noun[0].toUpperCase() + r.noun.slice(1);
+  const head = [[`Class Report · ${r.per.label}`], [`Agri-Service, LLC · ${r.per.range} · ${rpClass.store === "all" ? "Whole company" : rpClass.store} · ${rpStamp()}`],
+    [`${r.pool.length} ${r.noun}. A class counts when it was completed inside these dates.`], []];
+  rpXlsx(`Class Report ${r.per.label}${rpClass.store === "all" ? "" : ` ${rpClass.store}`}.xlsx`, [
+    { name: "By class", widths: [44, 12, 10, 10], rows: head.concat([["Class", "Completed", Noun, "Percent"],
+      ...r.perClass.map(c => [c.name, c.n, r.pool.length, c.pct]),
+      ...(k > 1 ? [[], ["Took all", r.allN, r.pool.length, rpPct(r.allN, r.pool.length)],
+        ["Took at least one", r.anyN, r.pool.length, rpPct(r.anyN, r.pool.length)]] : [])]) },
+    { name: "By location", widths: [22, 12, 10, 10, ...(k > 1 ? [13] : []), ...r.picked.map(() => 14)],
+      rows: head.concat([["Location", Noun, k > 1 ? "Took all" : "Took it", "Percent", ...(k > 1 ? ["At least one"] : []), ...r.picked],
+        ...r.byStore.map(s => [s.store, s.people, s.all, rpPct(s.all, s.people), ...(k > 1 ? [s.any] : []), ...s.perClass]),
+        [rpClass.store === "all" ? "Whole company" : rpClass.store, r.pool.length, r.allN, rpPct(r.allN, r.pool.length),
+          ...(k > 1 ? [r.anyN] : []), ...r.perClass.map(c => c.n)]]) },
+    { name: "People", widths: [24, 16, 28, ...r.picked.map(() => 16), ...(k > 1 ? [8] : [])],
+      rows: head.concat([["Name", "Location", "Job", ...r.picked, ...(k > 1 ? ["Done"] : [])],
+        ...r.rows.map(row => [row.p.name, row.p.store, rpJob(row.p), ...row.done.map(d => d ? dateOnly(d.completed) : ""),
+          ...(k > 1 ? [row.n] : [])])]) }
+  ]);
+}
+
+// ---- the PDF and the workbook --------------------------------------------------------------
+
+// The look of the Monthly Safety Report: the red band, boxes for the headline
+// numbers, and tables that carry their header onto every page they run onto.
+// jsPDF's fonts are Latin-1, so dashes and quotes become plain ones.
+function rpPdf({ title, period, orientation = "portrait" }) {
+  const latin = (t) => String(t ?? "").replace(/[–—]/g, "-").replace(/[‘’]/g, "'").replace(/[“”]/g, '"')
+    .replace(/…/g, "...").replace(/·/g, "-").replace(/[^\x00-\xFF]/g, "").trim();
+  const doc = new jspdf.jsPDF({ unit: "pt", format: "letter", orientation });
+  const W = orientation === "landscape" ? 792 : 612, H = orientation === "landscape" ? 612 : 792;
+  const M = 40, CW = W - M * 2, BOTTOM = H - M - 20;
+  const red = [204, 0, 51], ink = [30, 30, 30], grey = [110, 110, 110], light = [246, 245, 243], rule = [226, 224, 222];
+  const tones = { ok: [23, 112, 47], short: [168, 0, 42] };
+  let y = 0;
+  const smallHead = () => {
+    doc.setFillColor(...red); doc.rect(0, 0, W, 6, "F");
+    doc.setFont("helvetica", "bold"); doc.setFontSize(8); doc.setTextColor(...grey);
+    doc.text(latin(`AGRI-SERVICE  -  ${title.toUpperCase()}  -  ${period.toUpperCase()}`), M, 24);
+    y = 42;
+  };
+  const ensure = (h, then) => { if (y + h > BOTTOM) { doc.addPage(); smallHead(); if (then) then(); } };
+
+  doc.setFillColor(...red); doc.rect(0, 0, W, 78, "F");
+  doc.setTextColor(255); doc.setFont("helvetica", "bold"); doc.setFontSize(21); doc.text("AGRI-SERVICE", M, 36);
+  doc.setFontSize(10); doc.text(latin(title.toUpperCase()), M, 54);
+  doc.setFontSize(17); doc.text(latin(period), W - M, 38, { align: "right" });
+  doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.text(latin(rpStamp()), W - M, 55, { align: "right" });
+  y = 100;
+
+  return {
+    width: CW,
+    note(text) {
+      doc.setFont("helvetica", "normal"); doc.setFontSize(10); doc.setTextColor(...grey);
+      doc.splitTextToSize(latin(text), CW).forEach(l => { ensure(14); doc.text(l, M, y); y += 13; });
+      y += 8;
+    },
+    boxes(list) {
+      const n = list.length, gap = 10, bw = (CW - gap * (n - 1)) / n, bh = 58;
+      ensure(bh + 10);
+      list.forEach(([label, value, sub, tone], i) => {
+        const bx = M + i * (bw + gap);
+        doc.setFillColor(...light); doc.roundedRect(bx, y, bw, bh, 4, 4, "F");
+        doc.setFillColor(...red); doc.rect(bx, y, 3, bh, "F");
+        doc.setFont("helvetica", "bold"); doc.setFontSize(7.5); doc.setTextColor(...grey); doc.text(latin(label), bx + 11, y + 14);
+        doc.setFontSize(19); doc.setTextColor(...(tones[tone] || ink)); doc.text(latin(value), bx + 11, y + 37);
+        doc.setFont("helvetica", "normal"); doc.setFontSize(8.3); doc.setTextColor(...grey);
+        doc.text(doc.splitTextToSize(latin(sub || ""), bw - 18)[0] || "", bx + 11, y + 50);
+      });
+      y += bh + 14;
+    },
+    section(name, sub) {
+      ensure(70); y += 22;
+      doc.setFont("helvetica", "bold"); doc.setFontSize(12.5); doc.setTextColor(...ink); doc.text(latin(name.toUpperCase()), M, y);
+      doc.setFillColor(...red); doc.rect(M, y + 6, 36, 2.5, "F"); y += 20;
+      if (sub) {
+        doc.setFont("helvetica", "normal"); doc.setFontSize(9.3); doc.setTextColor(...grey);
+        doc.splitTextToSize(latin(sub), CW).forEach(l => { doc.text(l, M, y); y += 12; }); y += 4;
+      }
+    },
+    // cols: [label, width, "r" to right-align]; rows of strings. opts.total
+    // makes the last row bold and shaded; opts.color(row, i) gives "ok" or "short".
+    table(cols, rows, opts = {}) {
+      const xs = []; cols.reduce((x, c) => (xs.push(x), x + c[1]), M);
+      const head = () => {
+        doc.setFont("helvetica", "bold"); doc.setFontSize(opts.headSize || 7.5);
+        const labels = cols.map(([label, w]) => doc.splitTextToSize(latin(label.toUpperCase()), w - 10));
+        const hh = Math.max(...labels.map(l => l.length)) * 9 + 8;
+        doc.setFillColor(238, 236, 233); doc.rect(M, y, CW, hh, "F");
+        doc.setTextColor(...grey);
+        labels.forEach((lines, i) => lines.forEach((l, j) => doc.text(l, cols[i][2] ? xs[i] + cols[i][1] - 5 : xs[i] + 5,
+          y + 11 + j * 9, cols[i][2] ? { align: "right" } : {})));
+        y += hh;
+      };
+      ensure(40); head();
+      rows.forEach((row, n) => {
+        doc.setFontSize(8.8);
+        const cells = row.map((v, i) => latin(v).split("\n").flatMap(part => doc.splitTextToSize(part || " ", cols[i][1] - 10)));
+        const h = Math.max(...cells.map(c => c.length)) * 11 + 8;
+        ensure(h, head);
+        doc.setFontSize(8.8);
+        const total = opts.total && n === rows.length - 1;
+        if (total) { doc.setFillColor(232, 230, 227); doc.rect(M, y, CW, h, "F"); }
+        else if (n % 2) { doc.setFillColor(...light); doc.rect(M, y, CW, h, "F"); }
+        cells.forEach((lines, i) => {
+          const tone = opts.color ? opts.color(row, i) : null;
+          doc.setFont("helvetica", total || opts.bold === i ? "bold" : "normal");
+          doc.setTextColor(...(tones[tone] || ink));
+          lines.forEach((l, j) => doc.text(l, cols[i][2] ? xs[i] + cols[i][1] - 5 : xs[i] + 5, y + 12 + j * 11,
+            cols[i][2] ? { align: "right" } : {}));
+        });
+        doc.setDrawColor(...rule); doc.line(M, y + h, M + CW, y + h);
+        y += h;
+      });
+      if (!rows.length) { doc.setFont("helvetica", "italic"); doc.setFontSize(9); doc.setTextColor(...grey); doc.text("Nobody.", M + 5, y + 13); y += 20; }
+    },
+    save(name) {
+      const pages = doc.getNumberOfPages();
+      for (let p = 1; p <= pages; p++) {
+        doc.setPage(p); doc.setDrawColor(220); doc.line(M, H - M + 2, M + CW, H - M + 2);
+        doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); doc.setTextColor(...grey);
+        doc.text(latin(`Agri-Service, LLC  -  ${title}  -  ${period}  -  From the UKG Training Status uploads`), M, H - M + 14);
+        doc.setFont("helvetica", "bold"); doc.text(`Page ${p} of ${pages}`, W - M, H - M + 14, { align: "right" });
+      }
+      doc.save(name);
+    }
+  };
+}
+
+// An Excel workbook, one sheet per table. Dates go in as real dates.
+function rpXlsx(name, sheets) {
+  const book = XLSX.utils.book_new();
+  sheets.forEach(s => {
+    const sheet = XLSX.utils.aoa_to_sheet(s.rows, { cellDates: true, dateNF: "mmm d, yyyy" });
+    if (s.widths) sheet["!cols"] = s.widths.map(w => ({ wch: w }));
+    XLSX.utils.book_append_sheet(book, sheet, s.name.slice(0, 31));
+  });
+  XLSX.writeFile(book, name);
+}
+
+// ---- what the controls do ------------------------------------------------------------------
+
+$("admin").addEventListener("change", (event) => {
+  const t = event.target;
+  if (t.id === "rpAgcoStore") { rpAgcoStore = t.value; return renderRpAgco(); }
+  if (t.id === "rpClassYear") { rpClass.year = Number(t.value); return rpDrawClassReport(); }
+  if (t.id === "rpClassStore") { rpClass.store = t.value; return rpDrawClassReport(); }
+  if (t.id === "rpClassTechs") { rpClass.techs = t.checked; return rpDrawClassReport(); }
+  if (t.dataset && t.dataset.rpClass !== undefined) {
+    const name = t.dataset.rpClass;
+    rpClass.picked = t.checked ? rpClass.picked.concat(rpClass.picked.includes(name) ? [] : [name]) : rpClass.picked.filter(c => c !== name);
+    t.closest(".rp-class").classList.toggle("on", t.checked);
+    $("rpClassCount").textContent = $("rpClassCount").textContent.replace(/^\d+ picked/, `${rpClass.picked.length} picked`);
+    rpDrawClassReport();
+  }
+});
+
+$("admin").addEventListener("input", (event) => {
+  if (event.target.id !== "rpClassSearch") return;
+  rpClass.search = event.target.value;
+  rpDrawClassList();
+});
+
+$("admin").addEventListener("click", (event) => {
+  const kind = event.target.closest("[data-rp-kind]");
+  if (kind) { rpClass.kind = kind.dataset.rpKind; rpClass.year = null; return rpDrawClassReport(); }
+  const show = event.target.closest("[data-rp-show]");
+  if (show) { rpClass.show = show.dataset.rpShow; return rpDrawClassReport(); }
+  const unpick = event.target.closest("[data-rp-unpick]");
+  if (unpick) {
+    rpClass.picked = rpClass.picked.filter(c => c !== unpick.dataset.rpUnpick);
+    rpDrawClassList();
+    return rpDrawClassReport();
+  }
+  const b = event.target.closest("[data-rp]");
+  if (!b) return;
+  try {
+    ({ "agco-pdf": rpAgcoPdf, "agco-xlsx": rpAgcoXlsx, "class-pdf": rpClassPdf, "class-xlsx": rpClassXlsx })[b.dataset.rp]();
+  } catch (e) {
+    alert(`That report couldn't be made: ${e.message}`);
+  }
+});
+
 function courseReportView() {
   const intro = hero("Course Report", "Pick a class to see who has taken it and who hasn't, from the latest UKG exports.");
   if (!isAdmin()) {
@@ -20053,7 +20686,7 @@ document.querySelectorAll(".tabs button[data-tab]").forEach(btn => {
     document.querySelectorAll(".tabs button[data-tab]").forEach(b =>
       b.classList.toggle("active", b === btn));
     ["certs", "plans", "people", "support", "payroll", "tools",
-      "directory", "logins", "reminders", "events", "fitness", "org", "openseat", "inspections", "courses", "articles", "skillsadmin", "sds", "news", "trainingstatus", "handbook", "agco", "mock", "safetydesk", "safetyreportform", "safetyreports", "safetyoverview", "trainingoverview", "agcocatalog"].forEach(name =>
+      "directory", "logins", "reminders", "events", "fitness", "org", "openseat", "inspections", "courses", "articles", "skillsadmin", "sds", "news", "trainingstatus", "handbook", "agco", "mock", "safetydesk", "safetyreportform", "safetyreports", "safetyoverview", "trainingoverview", "agcocatalog", "rpagco", "rpclass"].forEach(name =>
       $("tab-" + name).classList.toggle("hidden", name !== btn.dataset.tab));
     $("adminTitle").textContent = btn.dataset.title || btn.querySelector("span").textContent.trim();
     if (btn.closest("#safetyNav")) safetyTab = btn.dataset.tab;
