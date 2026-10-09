@@ -2459,6 +2459,24 @@
   a.oc-go:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
   .oc-card.done a.oc-go { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.25); }
   @media (max-width: 600px) { .oc-card { flex-direction: column; align-items: stretch; } a.oc-go { text-align: center; } }
+  /* The Forklift Center's spot for the card, before there's a card (0092). */
+  .fk-card { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; max-width: 560px;
+    margin-bottom: 20px; padding: 16px 18px 16px 27px; color: #fff; border: 1px solid var(--cab-edge); border-radius: 14px;
+    background: linear-gradient(var(--cab-top), var(--cab-bottom)); box-shadow: 0 4px 14px rgba(20,28,34,.2); }
+  .fk-card::before { content: ""; position: absolute; left: 10px; top: 12px; bottom: 12px; width: 3px; border-radius: 3px;
+    background: var(--accent); box-shadow: 0 0 7px color-mix(in srgb, var(--accent) 65%, transparent); }
+  .fk-card > b { font: 600 18px/1.2 var(--font-cab); letter-spacing: .04em; text-transform: uppercase; }
+  .fk-card p { margin: 0; color: var(--cab-sub); font-size: 14px; max-width: 60ch; }
+  .fk-card p.fk-small { color: var(--cab-detail); font-size: 13px; }
+  .fk-eyebrow { font: 600 12px var(--font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+  .fk-count { font: 600 34px/1.1 var(--font-cab); letter-spacing: .03em; text-transform: uppercase; font-variant-numeric: tabular-nums; }
+  .fk-steps { margin: 4px 0 6px; padding: 0; list-style: none; counter-reset: fk; display: grid; gap: 10px; }
+  .fk-steps li { counter-increment: fk; position: relative; padding-left: 32px; display: grid; gap: 2px; }
+  .fk-steps li::before { content: counter(fk); position: absolute; left: 0; top: 1px; width: 21px; height: 21px; border-radius: 50%;
+    display: grid; place-items: center; background: var(--accent); color: var(--cab-bottom); font: 700 12px var(--font-cab); }
+  .fk-steps b { font-size: 15px; }
+  .fk-steps span { color: var(--cab-sub); font-size: 13.5px; }
+  .fk-card a.oc-go { margin-top: 6px; }
   .oc-admin-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 16px; }
   .oc-admin-tags { display: flex; gap: 6px; margin-bottom: 14px; }
   .oc-version { margin: 4px 0 12px; }
@@ -3971,7 +3989,7 @@ async function loadAll() {
   trainingReportsError = trr.error ? trr.error.message : null;
   await Promise.all([loadEvents(), loadInspections(), loadCourses(), loadSds(),
     loadArticles(), loadSkills(), loadNews(), loadTrainingStatus(), loadCrane(), loadCompanyDocs(), loadTools(),
-    loadAgco(), loadMockSchedules(), loadSafetyDesk(), loadSafetyReportData(), loadCommunity(), loadFitness(), loadOnlineCourses()]);
+    loadAgco(), loadMockSchedules(), loadSafetyDesk(), loadSafetyReportData(), loadCommunity(), loadFitness(), loadOnlineCourses(), loadForkliftCourse()]);
 
   // Only your own profile comes back for most people — that policy is the
   // point — so the page reads it out of the list rather than asking twice.
@@ -4094,7 +4112,8 @@ const TRAINING_LINKS = [
 ];
 
 // The same three as the app's Forklift Center, with the card drawn above them.
-// The certification course is in UKG ProLearning, with the rest of people's assigned training.
+// Until there's a card, its spot shows the online course and the driving test
+// countdown (forkliftCourseCard, migration 0092).
 const FORKLIFT_LINKS = [
   { title: "Certification Report", sub: "Who is certified and when each card runs out.",
     view: "certreport", tint: "slate", icon: "people" },
@@ -4367,8 +4386,9 @@ const VIEWS = {
 
   forklift: () =>
     hero("Forklift Center",
-         "Your driving evaluation and your operator card. The certification course itself is in UKG ProLearning, with the rest of your assigned training.",
+         "Your operator card, the online course that starts it, and the driving test.",
          true)
+    + forkliftCourseCard()
     + certificationCard()
     + linkGrid((isTrainingManager() ? linkCard({ title: `Driving Tests to Approve${pendingTests().length ? ` (${pendingTests().length})` : ""}`,
         sub: pendingTests().length ? "A test only counts once you approve it." : "Nothing waiting.", view: "approvals",
@@ -4495,8 +4515,8 @@ function evalTestView() {
         <p class="note">Pick the operator, the truck classes they were tested on, and the four
           parts of the test. All four have to be met for a card; anything less is recorded as not
           passed. The card lasts three years, and counts once the Training Manager approves the test;
-          they're told it's waiting. An import won't remove it. Anyone on the All Employees report can be evaluated,
-          except yourself. The database checks that, not just this page.</p>
+          they're told it's waiting. An import won't remove it. Anyone who passed the online forklift course in
+          the last 30 days can be evaluated, except yourself. The database checks that, not just this page.</p>
         <div class="fields">
           <div><label for="evalName">Operator</label>
             <select id="evalName"></select></div>
@@ -4694,6 +4714,83 @@ function myCertification(list = approvedCerts()) {
 const tokens = (name) =>
   new Set(name.toLowerCase().split(/[^a-z]+/).filter(w => w.length > 1));
 
+// ---- the online course and the 30 days after it (migration 0092) ----------------
+//
+// Nobody can be given a driving test until they've passed the online forklift
+// course, and then they have 30 days, to the end of the 30th day. Past that,
+// the course again. my_forklift_course() is the database's own answer, the
+// same one the app shows and the insert policy applies.
+
+let fkCourse = null;
+
+async function loadForkliftCourse() {
+  const { data, error } = await db.rpc("my_forklift_course");
+  fkCourse = error ? null : (data || [])[0] || null;
+}
+
+// "2026-11-08" as a day on this computer's calendar.
+const fkDay = (text) => { const [y, m, d] = String(text).split("-").map(Number); return new Date(y, m - 1, d); };
+
+function fkStage(status) {
+  if (!status || !status.passed_at || !status.last_day) return { kind: "notPassed" };
+  if (status.tested) return { kind: "tested" };
+  const last = fkDay(status.last_day);
+  if (new Date(status.deadline) > new Date()) {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    return { kind: "due", last, daysLeft: Math.max(0, Math.round((last - today) / 86400000)) };
+  }
+  return { kind: "expired", last };
+}
+
+const fkCourseLink = () => fkCourse && fkCourse.course_ready && fkCourse.course_id
+  ? `course.html?c=${encodeURIComponent(fkCourse.course_id)}` : null;
+
+// The spot for the card while there's no valid one: how to get certified, the
+// days left for the driving test, or the course again. A test that's due shows
+// even beside a valid card, for someone renewing.
+function forkliftCourseCard() {
+  if (!fkCourse) return "";
+  const stage = fkStage(fkCourse);
+  const cert = myCertification();
+  const valid = cert && ["b-current", "b-expiring"].includes(certStatusNow(cert)[1]);
+  const waiting = myCertification(pendingTests());
+  const link = fkCourseLink();
+  const longDay = (d) => d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+
+  if (stage.kind === "due") {
+    const accent = stage.daysLeft <= 3 ? "red" : "amber";
+    const count = stage.daysLeft === 0 ? "Last day" : stage.daysLeft === 1 ? "1 day left" : `${stage.daysLeft} days left`;
+    const passed = new Date(fkCourse.passed_at).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    return `<div class="cab-card fk-card" style="${lit(accent)}">
+      <span class="fk-eyebrow">Driving test due</span>
+      <b class="fk-count">${count}</b>
+      <p>Get it done by ${longDay(stage.last)}. Ask your location admin to give it.</p>
+      <p class="fk-small">You passed the online course on ${passed}. If the test isn't done by then, you'll take the course again.</p>
+    </div>`;
+  }
+  if (valid || waiting) return "";
+  if (stage.kind === "expired") {
+    return `<div class="cab-card fk-card" style="${lit("amber")}">
+      <b>Take the course again</b>
+      <p>Your 30 days for the driving test ran out on ${stage.last.toLocaleDateString(undefined, { month: "long", day: "numeric" })}.
+        Pass the online course again and you'll have another 30 days.</p>
+      ${link ? `<a class="oc-go" href="${link}">Take the online course &rarr;</a>` : ""}
+    </div>`;
+  }
+  return `<div class="cab-card fk-card" style="${lit("green")}">
+    <b>Get certified</b>
+    <p>You need a forklift card to drive one. Two steps:</p>
+    <ol class="fk-steps">
+      <li><b>Take the online course</b><span>${link
+        ? "Here or in the app. Your place is saved, so you can stop and come back to it."
+        : "It isn't up yet. It'll be in Online Courses, in the Training Center, once the training department adds it."}</span></li>
+      <li><b>Get your driving test within 30 days</b><span>Once you pass, your location admin can give you the driving test.
+        You have 30 days to get it done.</span></li>
+    </ol>
+    ${link ? `<a class="oc-go" href="${link}">Take the online course &rarr;</a>` : ""}
+  </div>`;
+}
+
 function certificationCard() {
   const cert = myCertification();
   // A test of theirs waiting for the Training Manager, newer than the card.
@@ -4705,6 +4802,7 @@ function certificationCard() {
         Manager. ${cert ? "The card below stands until it's approved." : "Your card appears here once it's approved."}</p></div>`
     : "";
   if (!cert && waitingNote) return waitingNote;
+  if (!cert && fkCourse) return "";
   if (!cert) {
     return `<div class="card"><b>Not on the certification list</b>
       <p class="note">You're matched on your work email first, then your name.
@@ -15422,6 +15520,13 @@ function evalExpiry(on) {
   return d.toISOString().slice(0, 10);
 }
 
+// "12 days left", for the picker.
+function fkLeft(lastDay) {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const days = Math.round((fkDay(lastDay) - today) / 86400000);
+  return days <= 0 ? "last day" : days === 1 ? "1 day left" : `${days} days left`;
+}
+
 function renderEvalForm() {
   const classes = $("evalClasses");
   if (!classes) return;
@@ -15429,17 +15534,17 @@ function renderEvalForm() {
   const picker = $("evalName");
   const keep = picker.value;
   picker.innerHTML = `<option value="">Choose someone</option>` + evalPeople
-    .map(r => `<option value="${esc(r.person_key)}">${esc(r.name)}</option>`)
+    .map(r => `<option value="${esc(r.person_key)}">${esc(r.name)}${r.last_day ? ` · ${esc(fkLeft(r.last_day))}` : ""}</option>`)
     .join("");
   if (keep && evalPeople.some(r => r.person_key === keep)) picker.value = keep;
   const chosen = evalPeople.find(r => r.person_key === picker.value);
   $("evalEmail").value = chosen ? (chosen.email || "") : "";
-  // Not required any more, but still worth the evaluator knowing.
   $("evalCoursePassed").value = !chosen ? ""
-    : chosen.course_completed ? usDate(chosen.course_completed) : "Not on file yet";
+    : (chosen.course_completed ? usDate(chosen.course_completed) : "Not on file yet")
+      + (chosen.last_day ? ` · test due by ${fkDay(chosen.last_day).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}` : "");
   $("evalEligibleNote").textContent = evalPeople.length
-    ? `Everyone on the All Employees report can be evaluated: ${evalPeople.length} people.`
-    : `Nobody is on the All Employees report yet. Upload it on the Training Status tab.`;
+    ? `People who passed the online course in the last 30 days and haven't had their test, soonest deadline first: ${evalPeople.length}.`
+    : `Nobody can be given a driving test right now. People are listed here once they pass the online forklift course, for 30 days.`;
   classes.innerHTML = EVAL_CLASSES.map(c =>
     `<button class="pdf${evalState.classes.has(c) ? " on" : ""}" data-eval-class="${esc(c)}"
       aria-pressed="${evalState.classes.has(c)}">${esc(c)}</button>`).join(" ");
@@ -17403,9 +17508,9 @@ $("admin").addEventListener("click", async (event) => {
 // whatever came back.
 
 let tsPeople = [], tsSources = null, tsRaw = null, trainingStatusError = null;
-// Who a driving test can be about: everyone on All Employees, from
-// forklift_eligible_people() (migration 0059). The same list the app uses.
-// Reading tsPeople instead would show an admin only their own location.
+// Who a driving test can be about: since 0092, people who passed the online
+// course in the last 30 days and haven't been tested, from
+// forklift_eligible_people(). The same list the app uses.
 let evalPeople = [];
 let tsPlan = new Set();            // person keys ticked as planned to reach 24
 let tsState = { tab: "summary", filter: "all", store: null, everyone: false, year: null };
@@ -17439,8 +17544,8 @@ async function loadTrainingStatus() {
   ]);
   trainingStatusError = people.error ? people.error.message : null;
   tsPeople = people.data || [];
-  // Loaded here so a fresh All Employees upload refreshes the driving test
-  // picker along with everything else. Not yourself: the database refuses it.
+  // The driving test picker, loaded with everything else. Not yourself: the
+  // database refuses it.
   const mine = ((me && me.email) || "").toLowerCase();
   evalPeople = (evaluable.data || [])
     .filter(r => (r.email || "").toLowerCase() !== mine);
