@@ -19674,6 +19674,11 @@ function renderOltAdmin() {
       <div class="oc-progress" id="ocProgress-new"${ocBusy && ocBusy.courseId === "new" ? "" : " hidden"}>${ocBusy && ocBusy.courseId === "new" ? esc(ocBusy.text) : ""}</div>
       <p class="msg" style="margin:8px 0 0"></p>
     </div>
+    ${ocCourses.length && !ocCourses.some(c => c.purpose === "forklift" && c.is_published)
+      ? `<div class="card" style="background:#FFF7E6"><b>No course is ticked as the forklift certification course</b>
+          <p class="note" style="margin:6px 0 0">Until one is, published, nobody can be given a forklift driving test: passing that
+          course is what puts someone on the list (migration 0092). Tick <b>The forklift certification course</b> on it below,
+          then Save.</p></div>` : ""}
     ${ocCourses.length ? ocCourses.map(ocAdminCard).join("") : `<div class="card"><p class="note" style="margin:0">No courses yet.</p></div>`}`;
 }
 
