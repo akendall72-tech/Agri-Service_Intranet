@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Online Course · Agri-Service</title>
+<link rel="icon" href="images/barn.svg" type="image/svg+xml">
+<!--
+  The course player: one online course (SCORM 1.2), full screen, with a thin
+  bar above it. Opened from Online Courses on the web page, and inside the app.
+
+  course.html?c=<course id>
+
+  It finds or starts this person's attempt, gives the course the SCORM "API"
+  it looks for in the page around it, and saves what the course reports —
+  where they are, its saved state, the score and the status — to
+  online_course_attempts, so they can stop and pick up again anywhere. The course
+  files come through course-sw.js, which makes them part of this website.
+
+  In the app, the app serves this page and the course files itself, at
+  agricourse://course/ (CourseFiles.swift), so there's no worker. It hands
+  over a sign-in token (window.__agriAppToken) and owns refreshing it; the
+  page never refreshes the app's session itself.
+-->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"
+        integrity="sha384-0w2KAL2YHP6wKOkUDzkCDGgVvfmHnj02DHeQ6XcHOgTfFsGyonKOpShMH1x6nk9o"
+        crossorigin="anonymous"></script>
+<style>
+  :root { --red: #CC0033; --ink: #1E1E1E; --bar: #23292E; --bar-2: #2B343A; --sub: #A3AEB5; --ok: #45FF62; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; background: #111417; color: #fff;
+    font: 15px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  body { display: flex; flex-direction: column; }
+  header { flex: none; display: flex; align-items: center; gap: 12px; padding: 8px 14px;
+    padding-top: calc(8px + env(safe-area-inset-top, 0px)); background: linear-gradient(var(--bar-2), var(--bar));
+    border-bottom: 2px solid var(--red); }
+  header .mark { width: 26px; height: 26px; border-radius: 6px; background: var(--red); display: grid; place-items: center;
+    font-weight: 800; font-size: 13px; letter-spacing: -.02em; }
+  header .title { flex: 1; min-width: 0; }
+  header .title b { display: block; font: 700 15px/1.2 "Roboto Condensed", "Arial Narrow", sans-serif; letter-spacing: .03em;
+    text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  header .title small { display: block; color: var(--sub); font-size: 12px; }
+  header .title small.ok { color: var(--ok); font-weight: 600; }
+  header button { flex: none; padding: 7px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,.25);
+    background: rgba(255,255,255,.08); color: #fff; font: 600 14px inherit; cursor: pointer; }
+  header button:hover { background: rgba(255,255,255,.16); }
+  header button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  main { flex: 1; min-height: 0; position: relative; }
+  iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #fff; }
+  .note { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; }
+  .note div { max-width: 460px; }
+  .note b { display: block; font-size: 19px; margin-bottom: 8px; }
+  .note p { margin: 0 0 14px; color: var(--sub); }
+  .note a { color: #fff; }
+  .spinner { width: 34px; height: 34px; margin: 0 auto 14px; border-radius: 50%; border: 3px solid rgba(255,255,255,.2);
+    border-top-color: #fff; animation: spin 0.9s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+</style>
+</head>
+<body>
+<header>
+  <span class="mark" aria-hidden="true">A</span>
+  <span class="title"><b id="title">Online course</b><small id="state">Opening…</small></span>
+  <button type="button" id="close">Close</button>
+</header>
+<main id="main">
+  <div class="note" id="note"><div><div class="spinner"></div><b>Opening the course…</b></div></div>
+</main>
+<script>
+const SUPABASE_URL = "https://gzmtxsgaulzkghaqyibt.supabase.co";
+const SUPABASE_KEY = "sb_publishable_Yvapp2YhfG8tTRKw4ihCCg_OjmKkvNQ";
+const courseId = new URLSearchParams(location.search).get("c");
+const native = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.agri;
+// Served by the app, which serves the course files too.
+const inApp = location.protocol === "agricourse:";
+const $ = (id) => document.getElementById(id);
+
+// ---- signing in --------------------------------------------------------------------
+//
+// On the web page, the same session as the rest of the site. In the app, the
+// app's token, which it refreshes by calling agriSetToken().
+let appToken = window.__agriAppToken || null;
+let db = makeClient();
+function makeClient() {
+  return appToken
+    ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+        auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+        global: { headers: { Authorization: `Bearer ${appToken}` } } })
+    : supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+}
+window.agriSetToken = (token) => {
+  appToken = token;
+  db = makeClient();
+  tellWorker();
+};
+async function currentToken() {
+  if (appToken) return appToken;
+  const { data } = await db.auth.getSession();
+  return data.session ? data.session.access_token : null;
+}
+
+// ---- the worker that serves the course files -----------------------------------------
+let worker = null;
+async function tellWorker() {
+  const token = await currentToken();
+  if (!worker || !token) return;
+  await talk({ type: "auth", token, url: SUPABASE_URL, key: SUPABASE_KEY });
+}
+function talk(message) {
+  return new Promise((resolve) => {
+    const channel = new MessageChannel();
+    const timer = setTimeout(resolve, 3000);
+    channel.port1.onmessage = () => { clearTimeout(timer); resolve(); };
+    worker.postMessage(message, [channel.port2]);
+  });
+}
+// The worker asks for a token when the one it has runs out.
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.addEventListener("message", async (event) => {
+    if (event.data && event.data.type === "need-auth" && event.ports[0]) {
+      if (!appToken) await db.auth.refreshSession().catch(() => {});
+      event.ports[0].postMessage({ token: await currentToken(), url: SUPABASE_URL, key: SUPABASE_KEY });
+    }
+  });
+}
+
+// ---- the attempt -----------------------------------------------------------------------
+let me = null, course = null, version = null, attempt = null;
+
+function show(title, text, link) {
+  $("note").hidden = false;
+  $("note").innerHTML = `<div><b>${esc(title)}</b><p>${esc(text)}</p>${link && !inApp ? `<a href="${link.href}">${esc(link.label)}</a>` : ""}</div>`;
+}
+function esc(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]); }
+
+async function start() {
+  if (!courseId) return show("No course picked", "Open a course from Online Courses.", { href: "index.html", label: "Go to the web page" });
+  if (!inApp && !("serviceWorker" in navigator)) return show("This browser can't play courses", "Use a current Safari, Chrome or Edge.");
+
+  const token = await currentToken();
+  if (!token) return show("Sign in first", "Sign in on the web page, then open the course again.", { href: "index.html", label: "Sign in" });
+  const { data: userData, error: userError } = await db.auth.getUser(token);
+  if (userError || !userData.user) return show("Sign in again", "Your sign-in has run out.", { href: "index.html", label: "Sign in" });
+  const { data: profile } = await db.from("profiles").select("id, full_name, email").eq("id", userData.user.id).maybeSingle();
+  me = { id: userData.user.id, name: (profile && profile.full_name) || userData.user.email || "", email: userData.user.email || "" };
+
+  const { data: found, error } = await db.from("online_courses").select("*").eq("id", courseId).maybeSingle();
+  if (error) return show("The course couldn't be opened", /does not exist|schema cache/i.test(error.message)
+    ? "Online courses aren't switched on yet." : error.message);
+  if (!found || !found.current_version) return show("This course isn't available", "It may have been taken down. Check Online Courses.");
+  course = found;
+  $("title").textContent = course.title;
+  document.title = `${course.title} · Agri-Service`;
+
+  // Their latest attempt: carried on if it isn't finished, otherwise a new one
+  // on the current version.
+  const { data: attempts } = await db.from("online_course_attempts").select("*")
+    .eq("course_id", courseId).eq("user_id", me.id).order("started_at", { ascending: false }).limit(1);
+  const last = (attempts || [])[0];
+  if (last && !["passed", "completed", "failed"].includes(last.status)) {
+    attempt = last;
+  } else {
+    const { data: made, error: startError } = await db.from("online_course_attempts")
+      .insert({ course_id: courseId, version: course.current_version }).select().single();
+    if (startError) return show("The course couldn't be started", startError.message);
+    attempt = made;
+  }
+  const { data: v } = await db.from("online_course_versions").select("*").eq("course_id", courseId).eq("version", attempt.version).maybeSingle();
+  if (!v) return show("This version of the course is gone", "Ask the training department to reset your attempt.");
+  version = v;
+  scorm.load(attempt);
+  stateLine();
+
+  // The worker, then the course. (In the app, the app is the worker.)
+  if (!inApp) {
+    const reg = await navigator.serviceWorker.register("course-sw.js", { scope: "./course-files/" });
+    await waitActive(reg);
+    worker = reg.active;
+    await tellWorker();
+    await talk({ type: "sizes", key: `${courseId}/${attempt.version}`, files: version.files || {} });
+  }
+  const frame = document.createElement("iframe");
+  frame.title = course.title;
+  frame.allow = "autoplay; fullscreen";
+  frame.src = `course-files/${courseId}/${attempt.version}/${version.launch_path.split("/").map(encodeURIComponent).join("/")}`;
+  $("note").hidden = true;
+  $("main").appendChild(frame);
+}
+
+function waitActive(reg) {
+  if (reg.active) return Promise.resolve();
+  return new Promise((resolve) => {
+    const sw = reg.installing || reg.waiting;
+    sw.addEventListener("statechange", () => { if (sw.state === "activated") resolve(); });
+  });
+}
+
+// ---- SCORM 1.2 -------------------------------------------------------------------------
+//
+// What a SCORM 1.2 course expects to find as window.API. Values live in
+// `data`; the ones the database keeps in their own columns are read from and
+// written back to the attempt, and everything else (interactions, objectives,
+// comments) goes in its `cmi` column.
+const scorm = (() => {
+  let data = {}, started = false, finished = false, error = "0", dirty = false, sessionStart = Date.now(), baseSeconds = 0;
+  const RO = new Set(["cmi.core._children", "cmi.core.student_id", "cmi.core.student_name", "cmi.core.credit", "cmi.core.entry",
+    "cmi.core.score._children", "cmi.core.total_time", "cmi.core.lesson_mode", "cmi.launch_data", "cmi.comments_from_lms",
+    "cmi.student_data._children", "cmi.student_data.mastery_score", "cmi.student_data.max_time_allowed",
+    "cmi.student_data.time_limit_action", "cmi.objectives._children", "cmi.objectives._count", "cmi.interactions._children",
+    "cmi.interactions._count", "cmi.student_preference._children"]);
+  const WO = new Set(["cmi.core.exit", "cmi.core.session_time"]);
+  const STATUSES = ["passed", "completed", "failed", "incomplete", "browsed", "not attempted"];
+  const ERRORS = { "0": "No error", "101": "General exception", "201": "Invalid argument error", "202": "Element cannot have children",
+    "203": "Element not an array - cannot have count", "301": "Not initialized", "401": "Not implemented error",
+    "402": "Invalid set value, element is a keyword", "403": "Element is read only", "404": "Element is write only",
+    "405": "Incorrect data type" };
+
+  function load(a) {
+    baseSeconds = a.total_seconds || 0;
+    const name = me.name.trim().split(/\s+/);
+    data = Object.assign({}, a.cmi || {}, {
+      "cmi.core._children": "student_id,student_name,lesson_location,credit,lesson_status,entry,score,total_time,lesson_mode,exit,session_time",
+      "cmi.core.student_id": me.email || me.id,
+      "cmi.core.student_name": name.length > 1 ? `${name.slice(-1)[0]}, ${name.slice(0, -1).join(" ")}` : me.name,
+      "cmi.core.lesson_location": a.lesson_location || "",
+      "cmi.core.credit": "credit",
+      "cmi.core.lesson_status": a.status || "not attempted",
+      "cmi.core.entry": a.suspend_data || a.lesson_location ? "resume" : "ab-initio",
+      "cmi.core.score._children": "raw,min,max",
+      "cmi.core.score.raw": a.score_raw == null ? "" : String(a.score_raw),
+      "cmi.core.score.min": a.score_min == null ? "" : String(a.score_min),
+      "cmi.core.score.max": a.score_max == null ? "" : String(a.score_max),
+      "cmi.core.total_time": clock(baseSeconds),
+      "cmi.core.lesson_mode": "normal",
+      "cmi.suspend_data": a.suspend_data || "",
+      "cmi.launch_data": "",
+      "cmi.comments_from_lms": "",
+      "cmi.student_data._children": "mastery_score,max_time_allowed,time_limit_action",
+      "cmi.student_data.mastery_score": version && version.mastery_score != null ? String(version.mastery_score) : "",
+      "cmi.student_data.max_time_allowed": "",
+      "cmi.student_data.time_limit_action": "continue,no message",
+      "cmi.objectives._children": "id,score,status",
+      "cmi.interactions._children": "id,objectives,time,type,correct_responses,weighting,student_response,result,latency",
+      "cmi.student_preference._children": "audio,language,speed,text"
+    });
+  }
+
+  function count(prefix) {
+    let n = 0;
+    while (Object.keys(data).some(k => k.startsWith(`${prefix}.${n}.`))) n++;
+    return String(n);
+  }
+
+  const api = {
+    LMSInitialize(arg) {
+      if (arg !== "" && arg !== undefined) { error = "201"; return "false"; }
+      started = true; finished = false; error = "0"; sessionStart = Date.now();
+      return "true";
+    },
+    LMSFinish(arg) {
+      if (!started) { error = "301"; return "false"; }
+      // Saved before it's marked finished, so this session's time is counted.
+      save(true);
+      finished = true; started = false; error = "0";
+      return "true";
+    },
+    LMSGetValue(name) {
+      if (!started) { error = "301"; return ""; }
+      if (WO.has(name)) { error = "404"; return ""; }
+      error = "0";
+      if (name === "cmi.objectives._count") return count("cmi.objectives");
+      if (name === "cmi.interactions._count") return count("cmi.interactions");
+      if (/^cmi\.interactions\.\d+\.(id|objectives|time|type|correct_responses|weighting|student_response|result|latency)/.test(name)
+          && !/_count$/.test(name)) { error = "404"; return ""; }
+      if (name in data) return data[name];
+      if (/^cmi\.(core|suspend_data|launch_data|comments|objectives|student_data|student_preference|interactions)/.test(name)) return "";
+      error = "401"; return "";
+    },
+    LMSSetValue(name, value) {
+      if (!started) { error = "301"; return "false"; }
+      if (/\._(children|count)$/.test(name)) { error = "402"; return "false"; }
+      if (RO.has(name)) { error = "403"; return "false"; }
+      value = String(value ?? "");
+      if (name === "cmi.core.lesson_status" && !STATUSES.includes(value)) { error = "405"; return "false"; }
+      if (/^cmi\.core\.score\.(raw|min|max)$/.test(name) && value !== "" && isNaN(Number(value))) { error = "405"; return "false"; }
+      data[name] = value;
+      error = "0"; dirty = true;
+      if (name === "cmi.core.lesson_status") stateLine();
+      return "true";
+    },
+    LMSCommit(arg) {
+      if (!started) { error = "301"; return "false"; }
+      error = "0";
+      save(false);
+      return "true";
+    },
+    LMSGetLastError() { return error; },
+    LMSGetErrorString(code) { return ERRORS[String(code)] || ""; },
+    LMSGetDiagnostic(code) { return ERRORS[String(code || error)] || ""; }
+  };
+
+  // This session's time, from what the course reports, or from the clock.
+  function sessionSeconds() {
+    if (finished && !started) return 0;
+    const told = seconds(data["cmi.core.session_time"]);
+    return told != null ? told : Math.round((Date.now() - sessionStart) / 1000);
+  }
+
+  function row() {
+    const num = (k) => data[k] === "" || data[k] == null || isNaN(Number(data[k])) ? null : Number(data[k]);
+    const rest = {};
+    for (const [k, v] of Object.entries(data)) {
+      if (/^cmi\.(interactions|objectives|comments|student_preference)\./.test(k) && !/_(children|count)$/.test(k)) rest[k] = v;
+    }
+    return {
+      status: STATUSES.includes(data["cmi.core.lesson_status"]) ? data["cmi.core.lesson_status"] : "incomplete",
+      score_raw: num("cmi.core.score.raw"), score_min: num("cmi.core.score.min"), score_max: num("cmi.core.score.max"),
+      lesson_location: (data["cmi.core.lesson_location"] || "").slice(0, 1000),
+      suspend_data: data["cmi.suspend_data"] || "",
+      cmi: rest,
+      total_seconds: baseSeconds + sessionSeconds()
+    };
+  }
+
+  let saving = Promise.resolve();
+  function save(final) {
+    if (!attempt) return saving;
+    dirty = false;
+    const body = row();
+    // A finished session's time is counted once: the next starts from here.
+    if (final) {
+      baseSeconds = body.total_seconds; data["cmi.core.total_time"] = clock(baseSeconds);
+      delete data["cmi.core.session_time"]; sessionStart = Date.now();
+    }
+    saving = saving.then(async () => {
+      const { data: saved, error: e } = await db.from("online_course_attempts").update(body).eq("id", attempt.id).select().maybeSingle();
+      if (e) { dirty = true; $("state").textContent = "Not saved — check your signal. It tries again."; $("state").className = ""; return; }
+      if (saved) attempt = saved;
+      stateLine(true);
+      if (native) native.postMessage({ type: "saved", status: attempt.status, completed: !!attempt.completed_at });
+    });
+    return saving;
+  }
+
+  // Saved every half minute while there's something new, and on the way out.
+  setInterval(() => { if (dirty && started) save(false); }, 30000);
+
+  // Leaving the page: the last progress, sent so it still goes if the page closes.
+  async function saveOnExit() {
+    if (!attempt) return;
+    const token = await currentToken();
+    const body = JSON.stringify(row());
+    try {
+      fetch(`${SUPABASE_URL}/rest/v1/online_course_attempts?id=eq.${attempt.id}`, { method: "PATCH", keepalive: true, body,
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}`, "Content-Type": "application/json", Prefer: "return=minimal" } });
+    } catch (e) {}
+  }
+
+  return { api, load, save, saveOnExit, isDirty: () => dirty, status: () => data["cmi.core.lesson_status"] };
+})();
+
+window.API = scorm.api;
+
+function stateLine(saved) {
+  const s = scorm.status();
+  const passed = attempt && attempt.completed_at;
+  $("state").className = passed ? "ok" : "";
+  $("state").textContent = passed
+    ? `${s === "completed" ? "Completed" : "Passed"} ${new Date(attempt.completed_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })} — it's on your record`
+    : s === "failed" ? "Not passed this time. Close and open it again to retake it."
+    : saved ? `Saved ${new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}` : "Your place is saved as you go";
+}
+
+// ---- time in SCORM's formats -------------------------------------------------------------
+function clock(total) {
+  const h = Math.floor(total / 3600), m = Math.floor(total % 3600 / 60), s = total % 60;
+  return `${String(h).padStart(4, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+function seconds(text) {
+  const m = /^(\d+):(\d{2}):(\d{2})(\.\d+)?$/.exec(text || "");
+  return m ? Number(m[1]) * 3600 + Number(m[2]) * 60 + Number(m[3]) : null;
+}
+
+// ---- leaving -------------------------------------------------------------------------------
+$("close").addEventListener("click", async () => {
+  await scorm.save(true);
+  if (native) return native.postMessage({ type: "close" });
+  if (history.length > 1 && document.referrer.startsWith(location.origin)) history.back();
+  else location.href = "index.html";
+});
+addEventListener("pagehide", () => scorm.saveOnExit());
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") scorm.saveOnExit(); });
+
+start().catch((e) => show("The course couldn't be opened", e.message || String(e)));
+</script>
+</body>
+</html>
