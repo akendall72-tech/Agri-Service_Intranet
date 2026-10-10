@@ -2767,6 +2767,7 @@
 
       <div class="nav-group">Equipment</div>
       <button data-tab="certs"><i data-icon="forklift"></i><span>Forklift Certifications</span><b class="nav-count" data-sx-count="certs"></b></button>
+      <button data-tab="fkwaiting" data-title="Driving Tests Due"><i data-icon="clock"></i><span>Driving Tests Due</span><b class="nav-count" data-sx-count="fkwaiting"></b></button>
       <button data-tab="plans"><i data-icon="rigging"></i><span>Lift Plans</span><b class="nav-count" data-sx-count="plans"></b></button>
 
       <div class="nav-group">Reference</div>
@@ -2885,6 +2886,7 @@
         </div>
       </div>
     </section>
+    <section id="tab-fkwaiting" class="hidden"><div class="card" id="fkWaiting"></div></section>
 
     <!-- Lift plans -->
     <section id="tab-plans" class="hidden">
@@ -3989,7 +3991,7 @@ async function loadAll() {
   trainingReportsError = trr.error ? trr.error.message : null;
   await Promise.all([loadEvents(), loadInspections(), loadCourses(), loadSds(),
     loadArticles(), loadSkills(), loadNews(), loadTrainingStatus(), loadCrane(), loadCompanyDocs(), loadTools(),
-    loadAgco(), loadMockSchedules(), loadSafetyDesk(), loadSafetyReportData(), loadCommunity(), loadFitness(), loadOnlineCourses(), loadForkliftCourse()]);
+    loadAgco(), loadMockSchedules(), loadSafetyDesk(), loadSafetyReportData(), loadCommunity(), loadFitness(), loadOnlineCourses(), loadForkliftCourse(), loadFkWaiting()]);
 
   // Only your own profile comes back for most people — that policy is the
   // point — so the page reads it out of the list rather than asking twice.
@@ -4311,7 +4313,7 @@ function showSafety(tab) {
   document.body.dataset.page = "safety";
   evalAgreed = null; evalNotice = "";
   renderCerts(); renderEvalForm(); renderPlans(); renderSafetyAdmin(); renderSdsAdmin(); renderSdsPending();
-  renderSafetyReportAdmin(); renderSafetyReportsAdmin(); renderSafetyOverview();
+  renderSafetyReportAdmin(); renderSafetyReportsAdmin(); renderSafetyOverview(); renderFkWaiting();
   document.querySelector(`#safetyNav [data-tab="${tab || safetyTab}"]`).click();
   window.scrollTo(0, 0);
 }
@@ -10158,6 +10160,7 @@ function renderSafetyNavCounts() {
   set("reports", srReports.filter(srPending).length);
   set("certs", f.expiring.length + f.expired);
   set("plans", plans.filter(p => p.status === "submitted").length);
+  set("fkwaiting", fkWaiting.filter(r => !r.ran_out).length);
 }
 
 function sxTile(label, value, sub, opts = {}) {
@@ -10962,6 +10965,84 @@ function bccButtons(emails) {
   }).join("");
   return { html, split: batches.length > 1 };
 }
+
+// ---- Driving Tests Due (migration 0093) --------------------------------------------
+//
+// People who passed the online forklift course and haven't had their driving
+// test: still inside their 30 days, or ran out and due to take the course
+// again. Like Who's taken it on the Safety Desk: pick a group (and a
+// location), and one click opens an email to all of them in BCC.
+let fkWaiting = [], fkWaitingError = null, fkWaitingView = "waiting", fkWaitingStore = "all";
+
+async function loadFkWaiting() {
+  const { data, error } = await db.rpc("forklift_waiting_report");
+  fkWaitingError = error ? error.message : null;
+  fkWaiting = data || [];
+}
+
+function renderFkWaiting() {
+  const box = $("fkWaiting");
+  if (!box) return;
+  if (fkWaitingError) {
+    box.innerHTML = `<h2>Driving tests due</h2><p class="error">${/Could not find|does not exist|schema cache/i.test(fkWaitingError)
+      ? "Run migration 0093_forklift_waiting_report.sql in the SQL editor, then reload this page." : esc(fkWaitingError)}</p>`;
+    return;
+  }
+  const where = (r) => r.location || "No location set";
+  const stores = [...new Set(fkWaiting.map(where))].sort();
+  if (fkWaitingStore !== "all" && !stores.includes(fkWaitingStore)) fkWaitingStore = "all";
+  const here = fkWaiting.filter(r => fkWaitingStore === "all" || where(r) === fkWaitingStore);
+  const waiting = here.filter(r => !r.ran_out);
+  const ranOut = here.filter(r => r.ran_out).reverse();   // most recent first
+  const shown = fkWaitingView === "ranout" ? ranOut : waiting;
+  const emails = [...new Set(shown.map(r => (r.email || "").trim()).filter(e => /@/.test(e)))];
+  const noEmail = shown.filter(r => !/@/.test(r.email || "")).length;
+  const { html: buttons, split } = bccButtons(emails);
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const daysLeft = (r) => Math.round((fkDay(r.last_day) - today) / 86400000);
+  const day = (text) => fkDay(text).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  const passed = (iso) => new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  const left = (r) => { const d = daysLeft(r); return d <= 0 ? "Last day" : d === 1 ? "1 day" : `${d} days`; };
+  const ran = fkWaitingView === "ranout";
+
+  box.innerHTML = `<h2>Driving tests due</h2>
+    <p class="note" style="margin:0 0 12px">People who passed the online forklift course and haven't had their driving test.
+      They have 30 days from passing; after that they take the course again.</p>
+    <div class="row" style="margin-bottom:10px">
+      <select id="fkWaitingStore" style="max-width:260px;margin:0" aria-label="Location">
+        <option value="all">All locations</option>${stores.map(x => `<option${x === fkWaitingStore ? " selected" : ""}>${esc(x)}</option>`).join("")}
+      </select>
+    </div>
+    <div class="chips sd-missing-toggle">
+      <button type="button" class="chip${ran ? "" : " on"}" data-fk-view="waiting">Waiting for a test · ${waiting.length}</button>
+      <button type="button" class="chip${ran ? " on" : ""}" data-fk-view="ranout">30 days ran out · ${ranOut.length}</button></div>
+    <p class="sd-missing-sum">${ran
+      ? (ranOut.length ? `<b>${ranOut.length}</b> ${ranOut.length === 1 ? "person's" : "people's"} 30 days ran out without a driving test. They need to take the online course again.`
+                       : "Nobody's 30 days have run out.")
+      : (waiting.length ? `<b>${waiting.length}</b> ${waiting.length === 1 ? "person is" : "people are"} waiting for a driving test, soonest deadline first.`
+                        : "Nobody is waiting for a driving test right now.")}</p>
+    ${shown.length ? `<div class="row sd-mail-row">${buttons}
+        ${emails.length ? `<button type="button" class="ghost" data-sd-copy="${esc(emails.join("; "))}">Copy the addresses</button>` : ""}
+        <span class="msg"></span></div>
+      <p class="note" style="margin:6px 0 12px">Opens a new email in your mail app with everyone in <b>BCC</b>, so nobody sees the
+        others; write the subject and message yourself.${split ? " The list is long, so it's split into a few emails." : ""}${
+        noEmail ? ` ${noEmail} ${noEmail === 1 ? "person has" : "people have"} no email on their account and ${noEmail === 1 ? "isn't" : "aren't"} included.` : ""}</p>
+      <div style="overflow-x:auto"><table class="sd-missing">
+        <thead><tr><th>Name</th><th>Location</th><th>Email</th><th>Passed the course</th>${ran
+          ? "<th>Ran out after</th>" : "<th>Last day for the test</th><th>Left</th>"}</tr></thead>
+        <tbody>${shown.map(r => `<tr><td><b>${esc(r.name || "No name yet")}</b></td><td>${esc(where(r))}</td>
+          <td>${esc(r.email || "—")}</td><td>${esc(passed(r.passed_at))}</td><td>${esc(day(r.last_day))}</td>${ran ? ""
+            : `<td${daysLeft(r) <= 3 ? ' style="color:var(--red);font-weight:600"' : ""}>${esc(left(r))}</td>`}</tr>`).join("")}</tbody>
+      </table></div>` : ""}`;
+}
+
+$("admin").addEventListener("click", (event) => {
+  const view = event.target.closest("[data-fk-view]");
+  if (view) { fkWaitingView = view.dataset.fkView; renderFkWaiting(); }
+});
+$("admin").addEventListener("change", (event) => {
+  if (event.target.id === "fkWaitingStore") { fkWaitingStore = event.target.value; renderFkWaiting(); }
+});
 
 // Who hasn't passed a month's brief yet, by location, with a button that opens an
 // email to all of them. Their addresses go in BCC so nobody sees the list;
@@ -21177,7 +21258,7 @@ document.querySelectorAll(".tabs button[data-tab]").forEach(btn => {
     document.querySelectorAll(".tabs button[data-tab]").forEach(b =>
       b.classList.toggle("active", b === btn));
     ["certs", "plans", "people", "support", "payroll", "tools",
-      "directory", "logins", "reminders", "events", "fitness", "org", "openseat", "inspections", "courses", "articles", "skillsadmin", "sds", "news", "trainingstatus", "handbook", "agco", "mock", "safetydesk", "safetyreportform", "safetyreports", "safetyoverview", "trainingoverview", "agcocatalog", "rpagco", "rpclass", "oltadmin"].forEach(name =>
+      "directory", "logins", "reminders", "events", "fitness", "org", "openseat", "inspections", "courses", "articles", "skillsadmin", "sds", "news", "trainingstatus", "handbook", "agco", "mock", "safetydesk", "safetyreportform", "safetyreports", "safetyoverview", "fkwaiting", "trainingoverview", "agcocatalog", "rpagco", "rpclass", "oltadmin"].forEach(name =>
       $("tab-" + name).classList.toggle("hidden", name !== btn.dataset.tab));
     $("adminTitle").textContent = btn.dataset.title || btn.querySelector("span").textContent.trim();
     if (btn.closest("#safetyNav")) safetyTab = btn.dataset.tab;
