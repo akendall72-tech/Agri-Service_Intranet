@@ -3,6 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- As index.html: scripts only from here and the CDN, and the page talks
+     only to this site and Supabase. The course inside the frame is its own
+     page and isn't bound by this. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' blob:; connect-src 'self' https://gzmtxsgaulzkghaqyibt.supabase.co; frame-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<style id="topOnly">html { display: none !important; }</style>
+<script>
+  // Never inside another site's frame (clickjacking).
+  if (window.top === window.self) document.getElementById("topOnly").remove();
+  else window.top.location = window.self.location.href;
+</script>
 <title>Online Course · Agri-Service</title>
 <link rel="icon" href="images/barn.svg" type="image/svg+xml">
 <!--
@@ -390,6 +400,12 @@ $("close").addEventListener("click", async () => {
   else location.href = "index.html";
 });
 addEventListener("pagehide", () => scorm.saveOnExit());
+
+// Watching a course is using the site: the web page signs an idle owner or
+// admin out after 30 minutes (index.html), and a long video shouldn't do it.
+setInterval(() => {
+  if (document.visibilityState === "visible") { try { localStorage.setItem("agri.lastActive", String(Date.now())); } catch (e) {} }
+}, 60000);
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") scorm.saveOnExit(); });
 
 start().catch((e) => show("The course couldn't be opened", e.message || String(e)));

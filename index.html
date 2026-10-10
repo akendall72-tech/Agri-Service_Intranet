@@ -3,6 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Where this page may load things from and send things to. GitHub Pages
+     can't send security headers, so it's here. Scripts come only from this
+     site and the two script CDNs (each pinned with an integrity hash), and
+     the page talks only to this site and Supabase, so a script that got in
+     some other way couldn't send someone's sign-in anywhere else. Pictures
+     stay open to any https site: a news story's picture is the article's own. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' blob: https://gzmtxsgaulzkghaqyibt.supabase.co; connect-src 'self' https://gzmtxsgaulzkghaqyibt.supabase.co wss://gzmtxsgaulzkghaqyibt.supabase.co; frame-src 'self' blob: https://gzmtxsgaulzkghaqyibt.supabase.co; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<!-- Shown only as the top page. Another site could otherwise load this one in
+     an invisible frame and trick someone into clicking its buttons
+     (clickjacking); the header that would forbid that can't be sent from
+     GitHub Pages, or set in a meta tag. -->
+<style id="topOnly">html { display: none !important; }</style>
+<script>
+  if (window.top === window.self) document.getElementById("topOnly").remove();
+  else window.top.location = window.self.location.href;
+</script>
 <title>Agri-Service</title>
 <!-- The tab icon: a little red barn. SVG where the browser takes it, a PNG for
      Safari, and a larger one for a phone's home screen. -->
@@ -2477,6 +2493,9 @@
   .fk-steps b { font-size: 15px; }
   .fk-steps span { color: var(--cab-sub); font-size: 13.5px; }
   .fk-card a.oc-go { margin-top: 6px; }
+  .oc-old { margin: 0 0 12px; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--paper); font-size: 13.5px; display: grid; gap: 6px; }
+  .oc-old-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; }
+  .oc-old-row button { margin: 0; padding: 4px 10px; font-size: 13px; }
   .oc-admin-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 16px; }
   .oc-admin-tags { display: flex; gap: 6px; margin-bottom: 14px; }
   .oc-version { margin: 4px 0 12px; }
@@ -3880,6 +3899,45 @@ $("signIn").onclick = async () => {
 let signingOut = false;
 $("signOut").onclick = async () => { signingOut = true; await db.auth.signOut(); location.reload(); };
 
+// ---- signing out a computer left alone ----
+//
+// On a shared computer, a location's front desk or the parts counter, a page
+// left signed in is the next person's way into an owner's or an admin's
+// access. So an owner or admin who hasn't touched the page for 30 minutes, in
+// any tab of it (a course playing counts, see course.html), is signed out,
+// and the page starts again clean, with nothing of theirs left on it. Not
+// while a course is uploading. Everyone else stays signed in: theirs only
+// reaches their own records.
+const IDLE_LIMIT = 30 * 60 * 1000;
+const IDLE_KEY = "agri.lastActive";
+let lastActive = Date.now();
+function noteActive() {
+  const now = Date.now();
+  if (now - lastActive < 15000) return;   // written every 15 seconds at most
+  lastActive = now;
+  try { localStorage.setItem(IDLE_KEY, String(now)); } catch (e) {}
+}
+["pointerdown", "pointermove", "keydown", "wheel", "touchstart", "scroll"].forEach(type =>
+  addEventListener(type, noteActive, { passive: true, capture: true }));
+function idleFor() {
+  let shared = 0;
+  try { shared = Number(localStorage.getItem(IDLE_KEY)) || 0; } catch (e) {}
+  return Date.now() - Math.max(lastActive, shared);
+}
+async function signOutIfIdle() {
+  if (!me || !isAdmin() || signingOut || ocBusy || idleFor() < IDLE_LIMIT) return;
+  signingOut = true;
+  await db.auth.signOut().catch(() => {});
+  location.replace(location.pathname + "?signedout=idle");
+}
+setInterval(signOutIfIdle, 60000);
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") signOutIfIdle(); });
+if (new URLSearchParams(location.search).get("signedout") === "idle") {
+  $("authError").textContent = "You were signed out after 30 minutes without use, so nobody else at this computer "
+    + "can use your account. Sign in again to carry on.";
+  history.replaceState(null, "", location.pathname);
+}
+
 // A sign-in can end without Sign out being pressed here: a renewal refused
 // after the computer slept, or Sign out in another tab. The page used to carry
 // on regardless, sending everything as nobody, so the database refused each
@@ -3914,11 +3972,13 @@ async function start() {
   const { data: { user } } = await db.auth.getUser();
   if (!user) return;
   me = user;
+  lastActive = Date.now();
+  try { localStorage.setItem(IDLE_KEY, String(lastActive)); } catch (e) {}
 
   document.body.classList.add("signed-in");
   $("signOut").classList.remove("hidden");
 
-  await loadAll();
+  const { rest } = await loadAll({ restInBackground: true });
 
   // Deactivated since they last signed in: out, and told why.
   if (profile && profile.deactivated_at) {
@@ -3939,11 +3999,36 @@ async function start() {
   $("trainingBtn").classList.toggle("hidden", !isTrainingManager());
 
   showHome();
+  // The rest, once it's in: the screen showing is drawn again with it, unless
+  // something on it has been typed into or picked since it opened.
+  rest.then(refreshShown, (error) => console.error("loading the rest of the page", error));
+}
+
+let viewShown = null, screenTouched = false;
+["input", "change"].forEach(type => document.addEventListener(type, (event) => {
+  if (event.target.closest && event.target.closest("#view, #admin")) screenTouched = true;
+}, true));
+function refreshShown() {
+  if (!me || screenTouched) return;
+  const y = window.scrollY;
+  const page = document.body.dataset.page;
+  if (page === "home") showHome();
+  else if (page === "view" && viewShown) showView(viewShown);
+  else if (page === "training") showTraining(trainingTab);
+  else if (page === "safety") showSafety(safetyTab);
+  else if (page === "admin") showAdmin();
+  window.scrollTo(0, y);
 }
 
 // ---------------------------------------------------------------- loading
 
-async function loadAll() {
+// Everything the page shows, in two batches. The first is what the home page
+// and the sign-in checks need: your profile, the locations, the counts. The
+// rest (Training Status, AGCO, the Safety Desk, news, events and so on) is
+// the bulk of it. Signing in waits only for the first, shows the home page,
+// and lets the rest come in behind it (start); every other caller, after a
+// change on an admin page, waits for both as it always did.
+async function loadAll({ restInBackground = false } = {}) {
   const [locs, c, p, pe, sr, wt, pt, ht, tc, tk, gr, pr, ph, dir, sl, allWt, trr, ds, pds, frm, frr] =
     await Promise.all([
     db.from("locations").select("*").order("sort_order"),
@@ -3989,13 +4074,17 @@ async function loadAll() {
   allSharedTasks = allWt.data || [];
   trainingReports = Object.fromEntries((trr.data || []).map(r => [r.id, r]));
   trainingReportsError = trr.error ? trr.error.message : null;
-  await Promise.all([loadEvents(), loadInspections(), loadCourses(), loadSds(),
-    loadArticles(), loadSkills(), loadNews(), loadTrainingStatus(), loadCrane(), loadCompanyDocs(), loadTools(),
-    loadAgco(), loadMockSchedules(), loadSafetyDesk(), loadSafetyReportData(), loadCommunity(), loadFitness(), loadOnlineCourses(), loadForkliftCourse(), loadFkWaiting()]);
-
   // Only your own profile comes back for most people — that policy is the
   // point — so the page reads it out of the list rather than asking twice.
+  // Set before the rest loads, so nothing in it reads last time's.
   profile = people.find(r => r.id === me.id) || null;
+
+  const rest = Promise.all([loadEvents(), loadInspections(), loadCourses(), loadSds(),
+    loadArticles(), loadSkills(), loadNews(), loadTrainingStatus(), loadCrane(), loadCompanyDocs(), loadTools(),
+    loadAgco(), loadMockSchedules(), loadSafetyDesk(), loadSafetyReportData(), loadCommunity(), loadFitness(), loadOnlineCourses(), loadForkliftCourse(), loadFkWaiting()]);
+  // Wrapped, because an async function handing back a promise would wait for it.
+  if (restInBackground) return { rest };
+  await rest;
 }
 
 // ---------------------------------------------------------------- icons
@@ -4133,6 +4222,7 @@ const SAFETY_LINKS = [
 // ---------------------------------------------------------------- routing
 
 function showHome() {
+  viewShown = null; screenTouched = false;
   $("admin").classList.add("hidden");
   $("view").classList.add("hidden");
   $("home").classList.remove("hidden");
@@ -4224,6 +4314,7 @@ const SUPPORT_PAGES = ["requests", "request", "newrequest", "tools", "tool", "to
 const SOCIAL_PAGES = ["events", "event", "community", "communitypost", "fitness"];
 
 function showView(name) {
+  viewShown = name; screenTouched = false;
   $("home").classList.add("hidden");
   $("admin").classList.add("hidden");
   const host = $("view");
@@ -4263,6 +4354,7 @@ function showView(name) {
 }
 
 function showAdmin() {
+  viewShown = null; screenTouched = false;
   $("home").classList.add("hidden");
   $("view").classList.add("hidden");
   $("admin").classList.remove("hidden");
@@ -4290,6 +4382,7 @@ let adminTab = "people", safetyTab = "safetyoverview", trainingTab = "trainingov
 // current grouped together. For Training Managers; it shares the admin
 // workspace and its handlers, like Safety.
 function showTraining(tab) {
+  viewShown = null; screenTouched = false;
   if (!isTrainingManager()) return showHome();
   $("home").classList.add("hidden");
   $("view").classList.add("hidden");
@@ -4305,6 +4398,7 @@ function showTraining(tab) {
 }
 
 function showSafety(tab) {
+  viewShown = null; screenTouched = false;
   if (!isSafetyManager()) return showHome();
   $("home").classList.add("hidden");
   $("view").classList.add("hidden");
@@ -19821,6 +19915,7 @@ function ocAdminCard(c) {
     <p class="note oc-version">${v ? `Version ${v.version} · ${esc(v.title || "untitled package")} · starts at ${esc(v.launch_path)} · ${ocBytes(v.total_bytes)}${
         v.mastery_score != null ? ` · passing score ${esc(v.mastery_score)}` : ""} · uploaded ${newsDate(v.uploaded_at)}${v.uploaded_by_name ? ` by ${esc(v.uploaded_by_name)}` : ""}`
       : "Not uploaded yet."}<br>${passed} passed · ${going} in progress</p>
+    ${ocOldVersions(c)}
     <div class="row">
       <button type="button" data-oc-act="save">Save</button>
       ${v ? `<a class="pdf" href="${ocLink(c)}" target="_blank" rel="noopener" style="text-decoration:none">Open it</a>` : ""}
@@ -19831,10 +19926,55 @@ function ocAdminCard(c) {
   </div>`;
 }
 
+// Each upload keeps its files, so anyone partway through a version can finish
+// it. Once nobody is, an older version's files only take up room (the free
+// plan has 1 GB), so they can be removed. The version's record, and everyone's
+// results on it, stay.
+const ocUnfinished = (c, version) => ocAttempts.filter(a => a.course_id === c.id && a.version === version
+  && !a.completed_at && !["failed", "passed", "completed"].includes(a.status));
+function ocOldVersions(c) {
+  const old = ocVersions.filter(v => v.course_id === c.id && v.version !== c.current_version)
+    .sort((a, b) => b.version - a.version);
+  if (!old.length) return "";
+  return `<div class="oc-old"><b>Earlier versions</b>${old.map(v => {
+    const going = new Set(ocUnfinished(c, v.version).map(a => a.user_id)).size;
+    const state = !v.total_bytes ? "files removed"
+      : going ? `${going} ${going === 1 ? "person is" : "people are"} partway through it, so its files stay until they finish`
+      : `${ocBytes(v.total_bytes)}, nobody partway through`;
+    return `<div class="oc-old-row"><span>Version ${v.version} · uploaded ${newsDate(v.uploaded_at)} · ${state}</span>${
+      v.total_bytes && !going ? `<button type="button" class="ghost" data-oc-act="removeold" data-oc-version="${v.version}">Remove its files</button>` : ""}</div>`;
+  }).join("")}</div>`;
+}
+
+async function ocRemoveOld(c, version, card, button) {
+  if (ocUnfinished(c, version).length) return speak(card, "Someone has started that version since. Its files stay until they finish.", true);
+  if (!confirm(`Remove the files of version ${version} of "${c.title}"? Everyone's results on it stay; nobody can open that version again.`)) return;
+  button.disabled = true;
+  const { data: v, error } = await db.from("online_course_versions").select("files")
+    .eq("course_id", c.id).eq("version", version).maybeSingle();
+  if (error || !v) { button.disabled = false; return speak(card, error ? error.message : "That version couldn't be found.", true); }
+  const paths = Object.keys(v.files || {}).map(f => `${c.id}/${version}/${f}`);
+  for (let i = 0; i < paths.length; i += 100) {
+    const gone = await db.storage.from("online-courses").remove(paths.slice(i, i + 100));
+    if (gone.error) { button.disabled = false; return speak(card, `Some files couldn't be removed: ${gone.error.message}`, true); }
+  }
+  const marked = await db.from("online_course_versions").update({ files: {}, total_bytes: 0 })
+    .eq("course_id", c.id).eq("version", version);
+  if (marked.error) { button.disabled = false; return speak(card, marked.error.message, true); }
+  await loadOnlineCourses();
+  renderOltAdmin();
+  const again = document.querySelector(`[data-oc-course="${CSS.escape(c.id)}"]`);
+  if (again) speak(again, `Version ${version}'s files are removed.`, false);
+}
+
 $("admin").addEventListener("click", async (event) => {
   const b = event.target.closest("[data-oc-act]");
   if (!b || b.tagName === "INPUT") return;
   const card = b.closest(".card");
+  if (b.dataset.ocAct === "removeold") {
+    const c = ocCourses.find(x => x.id === card.dataset.ocCourse);
+    return ocRemoveOld(c, Number(b.dataset.ocVersion), card, b);
+  }
   if (b.dataset.ocAct === "add") {
     const file = $("ocNewZip").files[0];
     if (!file) return speak(card, "Pick the course's zip file first.", true);
