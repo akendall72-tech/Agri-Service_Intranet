@@ -4191,11 +4191,9 @@ const TRAINING_LINKS = [
   // The classes you're registered for, found by your email on that report's
   // rosters, as the app's My Classes. See myClassesView.
   { title: "My Classes", sub: "Where you're registered", view: "myclasses", tint: "deep", icon: "calendarCheck" },
-  // Who has and hasn't taken a class, for location admins and owners, as in the
-  // app. Reads the Training Status uploads; see courseReportView.
-  { title: "Course Report", sub: "Who has taken a class", view: "coursereport", tint: "slate",
-    icon: "people", adminOnly: true },
-  // AGCO hours, 609 and history: yours, your location's, or everyone's. See trainingStatusView.
+  // AGCO hours, 609 and history: yours, your location's, or everyone's. Its
+  // Classes tab, for location admins and owners, is who has and hasn't taken a
+  // class (it was the Course Report). See trainingStatusView.
   { title: "Training Status", sub: "AGCO hours, 609 and history", view: "trainingstatus", tint: "slate",
     icon: "training" },
   // The AGCO Development Map follows, as one wide button (agcoLinkCard), then
@@ -4521,7 +4519,8 @@ const VIEWS = {
   olt: () => onlineCoursesView(),
   skills: () => skillsView(),
   trainingstatus: () => trainingStatusView(),
-  coursereport: () => courseReportView(),
+  // The Course Report is Training Status's Classes tab now; an old link lands there.
+  coursereport: () => { tsState.tab = "classes"; return trainingStatusView(); },
   myclasses: () => myClassesView(),
   hr: () => hrView(),
   payroll: () => payrollView(),
@@ -14214,7 +14213,7 @@ const pageTitle = (id) => (FEATURES.find(f => f.id === id) || COMPANY_PAGES.find
   || { openseat: { title: "Open Seat Report" }, catalog: { title: "Course Catalog" }, olt: { title: "Online Courses" },
        skills: { title: "Skills" },
        trainingstatus: { title: "Training Status" },
-       coursereport: { title: "Course Report" },
+       coursereport: { title: "Training Status" },
        myclasses: { title: "My Classes" },
        agcomap: { title: "AGCO Development Map" },
        newspost: { title: (newsPosts.find(p => p.id === openNewsId) || {}).title || "News" },
@@ -18033,7 +18032,7 @@ function trainingStatusView() {
       : "Nobody at your location is on the latest reports."}</p></div>`;
   }
   const scope = isOwner() ? "All locations" : `Your location: ${esc(locations[profile.location_id] || "not set")}`;
-  const tabs = [["summary", "Summary"], ["techs", "Technicians"], ["history", "History"], ["plan", "Planning"]];
+  const tabs = [["summary", "Summary"], ["techs", "Technicians"], ["history", "History"], ["plan", "Planning"], ["classes", "Classes"]];
   return intro + `<div id="tsPage">
     <div class="row ts-tabs"><div class="chips" style="margin:0">${tabs.map(([id, label]) =>
       `<button class="chip${tsState.tab === id ? " on" : ""}" data-ts-tab="${id}">${label}</button>`).join("")}</div>
@@ -18083,6 +18082,8 @@ function tsBody(model) {
     case "techs": return tsTechsTab(model);
     case "history": return tsHistoryTab(model);
     case "plan": return tsPlanTab(model);
+    // Who has and hasn't taken a class, which was its own Course Report page.
+    case "classes": return `<div id="crPage">${crPageInner()}</div>`;
     default: return tsSummaryTab(model);
   }
 }
@@ -19731,10 +19732,10 @@ document.addEventListener("click", (event) => {
 
 // ---------------------------------------------------------------- course report
 //
-// One class, and who has and hasn't taken it: the app's Course Report
-// (CourseReportView.swift), for location admins and owners. It reads the same
-// uploads as Training Status, so it needs no data of its own and has the same
-// reach: an admin sees their own location, an owner everyone. That's the
+// One class, and who has and hasn't taken it: Training Status's Classes tab,
+// as in the app (CourseReportTab.swift), for location admins and owners. It
+// was its own Course Report page. It reads the same uploads as the rest of
+// Training Status, so it needs no data of its own and has the same reach: an admin sees their own location, an owner everyone. That's the
 // database's answer, not this page's, which is why the report says whose list
 // it is.
 //
@@ -20730,18 +20731,6 @@ $("admin").addEventListener("click", (event) => {
     alert(`That report couldn't be made: ${e.message}`);
   }
 });
-
-function courseReportView() {
-  const intro = hero("Course Report", "Pick a class to see who has taken it and who hasn't, from the latest UKG exports.");
-  if (!isAdmin()) {
-    return intro + `<div class="card"><p class="note" style="margin:0">The Course Report is for location admins and owners.</p></div>`;
-  }
-  if (trainingStatusError) {
-    return intro + `<div class="card"><p class="note" style="margin:0">${/does not exist|schema cache/i.test(trainingStatusError)
-      ? "Training Status isn't switched on yet." : esc(trainingStatusError)}</p></div>`;
-  }
-  return intro + `<div id="crPage">${crPageInner()}</div>`;
-}
 
 function crPageInner() {
   const model = tsModel();
