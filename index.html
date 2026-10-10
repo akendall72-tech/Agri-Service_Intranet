@@ -4205,7 +4205,7 @@ const TRAINING_LINKS = [
 // countdown (forkliftCourseCard, migration 0092).
 const FORKLIFT_LINKS = [
   { title: "Certification Report", sub: "Who is certified and when each card runs out.",
-    view: "certreport", tint: "slate", icon: "people" },
+    view: "certreport", tint: "slate", icon: "people", adminOnly: true },
   { title: "Forklift Driving Test", sub: "Evaluate someone on a truck and record the result.",
     view: "evaltest", tint: "teal", icon: "reminders" }
 ];
@@ -4487,7 +4487,9 @@ const VIEWS = {
     + linkGrid((isTrainingManager() ? linkCard({ title: `Driving Tests to Approve${pendingTests().length ? ` (${pendingTests().length})` : ""}`,
         sub: pendingTests().length ? "A test only counts once you approve it." : "Nothing waiting.", view: "approvals",
         tint: "amber", icon: "safety" }) : "")
-      + FORKLIFT_LINKS.map(linkCard).join("")),
+      // The report is a location admin's or an owner's (0095); anyone else
+      // would only find themselves, and their card is above.
+      + FORKLIFT_LINKS.filter(l => !l.adminOnly || isAdmin()).map(linkCard).join("")),
 
   approvals: () => approvalsView(),
 
@@ -4671,7 +4673,8 @@ function certsPerPerson() {
 
 function certReportView() {
   const filters = [["all", "All"], ["certified", "Certified"], ["expiring", "Expiring"], ["lapsed", "Not valid"]];
-  return hero("Certification Report", "Who is certified to drive a forklift, and when each card runs out.")
+  return hero("Certification Report", isOwner() ? "Who is certified to drive a forklift at every location, and when each card runs out."
+      : "Who at your location is certified to drive a forklift, and when each card runs out.")
     + `<div class="card">
         <div class="stats" id="certReportStats"></div>
         <div class="chips">${filters.map(([value, label]) => `<button type="button"
