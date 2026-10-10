@@ -4779,13 +4779,15 @@ function forkliftCourseCard() {
   }
   return `<div class="cab-card fk-card" style="${lit("green")}">
     <b>Get certified</b>
-    <p>You need a forklift card to drive one. Two steps:</p>
+    <p>You need a forklift card before you can drive a forklift. Three steps:</p>
     <ol class="fk-steps">
       <li><b>Take the online course</b><span>${link
-        ? "Here or in the app. Your place is saved, so you can stop and come back to it."
-        : "It isn't up yet. It'll be in Online Courses, in the Training Center, once the training department adds it."}</span></li>
-      <li><b>Get your driving test within 30 days</b><span>Once you pass, your location admin can give you the driving test.
-        You have 30 days to get it done.</span></li>
+        ? "Click below to start, or find it any time in Training Center → Online Courses, here or in the app. Pass the quiz at the end; if you don't, take it again. You can stop partway and pick up where you left off."
+        : "It isn't up yet. When the training department adds it, it'll be in Training Center → Online Courses."}</span></li>
+      <li><b>Get your driving test within 30 days</b><span>Once you pass, ask your location admin for the driving test. They
+        watch you inspect and drive the truck, and record it in the app or here. Miss the 30 days and you'll take the course again.</span></li>
+      <li><b>Your card shows up here</b><span>The Training Manager approves the test, then your card appears in this spot.
+        It's good for three years.</span></li>
     </ol>
     ${link ? `<a class="oc-go" href="${link}">Take the online course &rarr;</a>` : ""}
   </div>`;
