@@ -1030,6 +1030,9 @@
   button.sx-tile:hover { transform: translateY(-1px); box-shadow: 0 8px 22px rgba(20,28,34,.28); background: linear-gradient(#313B42, #262E34); }
   button.sx-tile:focus-visible, .sx button:focus-visible { outline: 2px solid var(--accent, var(--lit-ember)); outline-offset: 2px; }
   button.sx-tile[data-sx-go=""] { cursor: default; transform: none; }
+  button.sx-tile.open { box-shadow: 0 0 0 2px var(--accent), 0 8px 22px rgba(20,28,34,.28); background: linear-gradient(#313B42, #262E34); }
+  button.sx-tile.open::after { content: ""; position: absolute; left: 50%; bottom: -9px; width: 14px; height: 14px; margin-left: -7px;
+    transform: rotate(45deg); background: var(--accent); clip-path: polygon(100% 0, 100% 100%, 0 100%); }
   button.sx-tile.hot { background: linear-gradient(color-mix(in srgb, var(--accent) 16%, transparent), color-mix(in srgb, var(--accent) 6%, transparent)),
     linear-gradient(var(--cab-top), var(--cab-bottom)); border-color: color-mix(in srgb, var(--accent) 55%, var(--cab-edge)); }
   .sx-tile-label { color: var(--cab-sub); font: 600 10.5px var(--font-mono); letter-spacing: .12em; text-transform: uppercase; }
@@ -1242,6 +1245,14 @@
   .tx-plan input { width: auto; margin: 0; accent-color: var(--lit-teal); }
   .tx-plan:has(input:checked) { border-color: var(--lit-teal); color: var(--lit-teal); }
   .tx-plan:has(input:focus-visible) { outline: 2px solid var(--lit-teal); outline-offset: 2px; }
+  .tx-drill header { flex-wrap: wrap; }
+  .tx-drill header .sx-link + .sx-link { margin-left: 14px; }
+  .tx-drill .tx-who-list { max-height: 420px; }
+  .tx-drill > h4:first-of-type, .tx-drill > .sx-sub + h4 { margin-top: 4px; }
+  .tx-drill .tx-who-name b { white-space: normal; overflow-wrap: anywhere; }
+  .tx-who-row.tx-line { grid-template-columns: minmax(0, 1fr) auto; }
+  .tx-note { text-align: right; }
+  .tx-have { color: var(--lit-green); display: inline-flex; }
   .tx-mock { display: grid; gap: 4px; }
   .tx-mock b { font: 700 40px/1 var(--font-cab); color: var(--lit-amber); }
   .tx-mock b.ok { color: var(--lit-green); }
@@ -9975,6 +9986,8 @@ $("admin").addEventListener("click", async (event) => {
 // upload is. Every number opens the tab behind it. The Cab look, in teal.
 
 let txStore = "all";
+// The overview tile that's open, showing the people behind its number.
+let txDrill = null;
 
 // When each upload was made, as far as the files say. Older than a month and
 // it's worth a fresh one.
@@ -10045,6 +10058,84 @@ function txWhoRow(t, planning) {
   </div>`;
 }
 
+// The people behind one of the overview tiles. Every number on the tiles is
+// dealer-wide, so these are too, whatever location the list below is showing.
+function txDrillPanel(m, { goal, need, plan, close }) {
+  if (!txDrill) return "";
+  const shortBy = (t) => Math.max(0, t.required - (t.hours || 0));
+  const closest = (a, b) => shortBy(a) - shortBy(b) || a.name.localeCompare(b.name);
+  const most = (a, b) => (b.hours || 0) - (a.hours || 0) || a.name.localeCompare(b.name);
+  const notMet = m.techs.filter(t => !t.met).sort(closest);
+  const met = m.techs.filter(t => t.met).sort(most);
+  const list = (people, planning = false) => people.length
+    ? `<div class="tx-who-list">${people.map(t => txWhoRow(t, planning)).join("")}</div>`
+    : `<p class="sx-empty">Nobody.</p>`;
+  const line = (t, note) => `<div class="tx-who-row tx-line"><span class="tx-who-name"><b>${esc(t.name)}</b>
+      <small>${esc([t.store, (t.job || "").replace(/^\d+\s*-\s*/, "")].filter(Boolean).join(" · "))}</small></span>
+      <span class="tx-note">${note}</span></div>`;
+  const byLocation = (people, row) => m.stores.map(store => {
+    const here = people.filter(t => t.store === store);
+    return here.length ? `<h4>${esc(store)} · ${here.length}</h4><div class="tx-who-list">${here.map(row).join("")}</div>` : "";
+  }).join("");
+
+  let color, title, sub, body, link = "";
+  if (txDrill === "techs") {
+    color = "steel"; title = `Technicians · ${m.techs.length}`;
+    sub = "Jobs with Technician in the title, on All Employees";
+    link = `<button type="button" class="sx-link" data-tx-go="trainingstatus">Training Status &rsaquo;</button>`;
+    body = byLocation([...m.techs].sort(most), t => txWhoRow(t, false));
+  } else if (txDrill === "met") {
+    color = "green"; title = `Have ${need}+ hours · ${met.length}`;
+    sub = `${tsPct(m.pct)} of ${m.techs.length} technicians, most hours first`;
+    body = list(met);
+  } else if (txDrill === "short") {
+    color = "amber"; title = `Still need hours · ${notMet.length}`;
+    sub = close ? `Closest first · ${close} within 8 hours` : "Closest first";
+    const near = notMet.filter(t => t.hours !== null && shortBy(t) <= 8), far = notMet.filter(t => !near.includes(t));
+    body = near.length && far.length
+      ? `<h4>Within 8 hours · ${near.length}</h4>${list(near, true)}<h4>More than 8 to go · ${far.length}</h4>${list(far, true)}`
+      : list(notMet, true);
+  } else if (txDrill === "goal") {
+    color = m.pct >= tsGoal() ? "green" : "red";
+    title = m.pct >= tsGoal() ? `${goal}% goal met` : `${m.neededForGoal} more for ${goal}%`;
+    sub = `${m.goalCount} of ${m.techs.length} technicians is ${goal}% · ${m.metCount} have ${need}+ hours`;
+    const want = m.pct >= tsGoal() ? 0 : m.neededForGoal;
+    body = want
+      ? `<p class="sx-sub">Any ${want} of these reaching ${need} hours meets the goal. The ${want} closest are first.</p>
+         <h4>Closest ${want}</h4>${list(notMet.slice(0, want), true)}
+         ${notMet.length > want ? `<h4>Everyone else still short · ${notMet.length - want}</h4>${list(notMet.slice(want), true)}` : ""}`
+      : `<p class="sx-empty sx-clear">${icon("checkCircle", 18)} ${m.metCount} of ${m.techs.length} have ${need}+ hours, which is at least ${goal}%.</p>`;
+  } else if (txDrill === "plan") {
+    color = plan.projected >= tsGoal() ? "green" : "teal";
+    title = `With your plan · ${tsPct(plan.projected)}`;
+    sub = `${m.metCount} have ${need}+ hours, plus ${plan.planned} planned${plan.stillNeeded ? ` · ${plan.stillNeeded} more to reach ${goal}%` : ` · reaches ${goal}%`}`;
+    const planned = notMet.filter(t => tsPlan.has(t.key)), rest = notMet.filter(t => !tsPlan.has(t.key));
+    body = `<p class="sx-sub">Tick <b>Plan</b> for anyone you'll get to ${need} hours this year. The plan is saved to your account.</p>
+      <h4>Planned · ${planned.length}</h4>${planned.length ? list(planned, true) : `<p class="sx-empty">Nobody yet.</p>`}
+      ${rest.length ? `<h4>Not planned, closest first · ${rest.length}</h4>${list(rest, true)}` : ""}`;
+  } else if (txDrill === "epa") {
+    color = "violet";
+    const without = m.techs.filter(t => !t.epa609), with609 = m.techs.filter(t => t.epa609);
+    title = `EPA 609 · ${without.length} still need one`;
+    sub = `${with609.length} of ${m.techs.length} technicians have it, from the credits report`;
+    const byPlace = (a, b) => a.store.localeCompare(b.store) || a.name.localeCompare(b.name);
+    body = `<div class="tx-who">
+      <div><h4>Still need EPA 609 · ${without.length}</h4>${without.length
+        ? `<div class="tx-who-list">${without.sort(byPlace).map(t => line(t, `<span class="tx-need">needs it</span>`)).join("")}</div>`
+        : `<p class="sx-empty sx-clear">${icon("checkCircle", 18)} Every technician has it.</p>`}</div>
+      <div><h4>Have it · ${with609.length}</h4>${with609.length
+        ? `<div class="tx-who-list">${with609.sort(byPlace).map(t => line(t, `<span class="tx-have">${icon("checkCircle", 15)}</span>`)).join("")}</div>`
+        : `<p class="sx-empty">Nobody yet.</p>`}</div></div>`;
+  } else {
+    return "";
+  }
+  return `<section class="sx-panel tx-drill" id="txDrill" style="${lit(color)}" aria-label="${esc(title)}">
+    <header><h3>${esc(title)}</h3><span>${esc(sub)}</span>${link}
+      <button type="button" class="sx-link tx-drill-close" data-tx-drill="${txDrill}" aria-label="Close">Close &times;</button></header>
+    ${body}
+  </section>`;
+}
+
 function renderTrainingOverview() {
   const box = $("txOverview");
   if (!box) return;
@@ -10094,13 +10185,14 @@ function renderTrainingOverview() {
     </section>
 
     <div class="sx-tiles">
-      ${sxTile("Technicians", sxNum(m.techs.length), "on All Employees", { lit: "steel", go: "trainingstatus" })}
-      ${sxTile(`Have ${need}+ hours`, sxNum(m.metCount), `${tsPct(m.pct)} of technicians`, { lit: "green", good: metGoal })}
-      ${sxTile(`Still need hours`, sxNum(m.techs.length - m.metCount), close ? `${close} within 8 hours` : "Below the line", { lit: "amber" })}
-      ${sxTile(`More for ${goal}%`, metGoal ? "0" : sxNum(m.neededForGoal), metGoal ? "The goal is met" : `${m.goalCount} technicians is ${goal}%`, { lit: metGoal ? "green" : "red", hot: !metGoal })}
-      ${sxTile("With your plan", tsPct(plan.projected).replace("%", "<small>%</small>"), plan.planned ? `${plan.planned} planned · ${plan.stillNeeded ? `${plan.stillNeeded} more to go` : `reaches ${goal}%`}` : "Tick people below to plan", { lit: plan.projected >= tsGoal() ? "green" : "teal", good: plan.projected >= tsGoal() })}
-      ${sxTile("EPA 609", tsPct(m.techs.length ? m.epaCount / m.techs.length : 0).replace("%", "<small>%</small>"), `${m.techs.length - m.epaCount} still need one`, { lit: "violet" })}
+      ${sxTile("Technicians", sxNum(m.techs.length), "on All Employees", { lit: "steel", drill: "techs" })}
+      ${sxTile(`Have ${need}+ hours`, sxNum(m.metCount), `${tsPct(m.pct)} of technicians`, { lit: "green", good: metGoal, drill: "met" })}
+      ${sxTile(`Still need hours`, sxNum(m.techs.length - m.metCount), close ? `${close} within 8 hours` : "Below the line", { lit: "amber", drill: "short" })}
+      ${sxTile(`More for ${goal}%`, metGoal ? "0" : sxNum(m.neededForGoal), metGoal ? "The goal is met" : `${m.goalCount} technicians is ${goal}%`, { lit: metGoal ? "green" : "red", hot: !metGoal, drill: "goal" })}
+      ${sxTile("With your plan", tsPct(plan.projected).replace("%", "<small>%</small>"), plan.planned ? `${plan.planned} planned · ${plan.stillNeeded ? `${plan.stillNeeded} more to go` : `reaches ${goal}%`}` : "Tick people below to plan", { lit: plan.projected >= tsGoal() ? "green" : "teal", good: plan.projected >= tsGoal(), drill: "plan" })}
+      ${sxTile("EPA 609", tsPct(m.techs.length ? m.epaCount / m.techs.length : 0).replace("%", "<small>%</small>"), `${m.techs.length - m.epaCount} still need one`, { lit: "violet", drill: "epa" })}
     </div>
+    ${txDrillPanel(m, { goal, need, plan, close })}
 
     <div class="sx-grid">
       <section class="sx-panel sx-wide">
@@ -10161,10 +10253,28 @@ function renderTrainingOverview() {
 }
 
 $("admin").addEventListener("click", (event) => {
+  const drill = event.target.closest("[data-tx-drill]");
+  if (drill) {
+    const key = drill.dataset.txDrill;
+    txDrill = txDrill === key ? null : key;
+    renderTrainingOverview();
+    const tile = document.querySelector(`.sx-tile[data-tx-drill="${key}"]`);
+    if (tile) tile.focus({ preventScroll: true });
+    if (txDrill) $("txDrill").scrollIntoView({ block: "nearest", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    return;
+  }
   const store = event.target.closest("[data-tx-store]");
   if (store) { txStore = store.dataset.txStore === txStore ? "all" : store.dataset.txStore; return renderTrainingOverview(); }
   const go = event.target.closest("[data-tx-go]");
   if (go) document.querySelector(`#trainingNav [data-tab="${go.dataset.txGo}"]`).click();
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape" || !txDrill || !$("txDrill")) return;
+  const key = txDrill;
+  txDrill = null;
+  renderTrainingOverview();
+  const tile = document.querySelector(`.sx-tile[data-tx-drill="${key}"]`);
+  if (tile) tile.focus();
 });
 $("admin").addEventListener("change", (event) => {
   if (event.target.id === "txStore") { txStore = event.target.value; renderTrainingOverview(); }
@@ -10313,7 +10423,12 @@ function renderSafetyNavCounts() {
 }
 
 function sxTile(label, value, sub, opts = {}) {
-  return `<button type="button" class="sx-tile${opts.hot ? " hot" : ""}${opts.good ? " good" : ""}" data-sx-go="${opts.go || ""}" style="${lit(opts.lit || "ember")}">
+  // A tile either opens a tab (go), or opens the people behind its number
+  // under the row (drill, the Training dashboard), or does nothing.
+  const open = opts.drill && txDrill === opts.drill;
+  const action = opts.drill ? `data-tx-drill="${opts.drill}" aria-expanded="${open}" aria-controls="txDrill"`
+    : `data-sx-go="${opts.go || ""}"`;
+  return `<button type="button" class="sx-tile${opts.hot ? " hot" : ""}${opts.good ? " good" : ""}${open ? " open" : ""}" ${action} style="${lit(opts.lit || "ember")}">
     <span class="sx-tile-label">${esc(label)}</span>
     <b class="sx-tile-value">${value}</b>
     <span class="sx-tile-sub">${sub}</span>
