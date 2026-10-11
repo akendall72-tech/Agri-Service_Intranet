@@ -3217,10 +3217,11 @@
     <section id="tab-skillsadmin" class="hidden">
       <div class="card" id="techAdd">
         <h2>Skills competencies</h2>
-        <p class="note">The list technicians are signed off against, level by level. Sign-offs happen in the
-          Training Center — admins for their own location, owners for anyone. Retire a competency rather than
-          removing it: it comes off everyone's list and past sign-offs are kept. Adding one to a level never
-          moves a tech who already finished that level back down.</p>
+        <p class="note">The lists people are signed off against, level by level: one for service technicians and
+          one for Parts. Sign-offs happen in the Training Center — admins for their own location, owners for anyone.
+          Retire a competency rather than removing it: it comes off everyone's list and past sign-offs are kept.
+          Adding one to a level never moves someone who already finished that level back down.</p>
+        <div class="chips" id="skillsAdminTracks" style="margin:10px 0 4px"></div>
         <div id="skillsAdminStats" style="margin:10px 0 14px"></div>
         <div class="fields">
           <div class="wide"><label>New competency</label>
@@ -16422,23 +16423,31 @@ $("osrDrop").addEventListener("drop", (e) => {
 
 // ---------------------------------------------------------------- skills
 //
-// The Skills program (migration 0040, renamed from Tech Levels in 0064). A technician sees their own
-// progress; an admin sees the technicians at their location and signs them off; an
-// owner sees everyone and keeps the competency list in the admin area.
+// The Skills program (migration 0040, renamed from Tech Levels in 0064). Two lists since
+// 0096: the service technicians' and Parts, each with four levels. Someone on a list sees
+// their own progress on it; an admin sees each list's people at their location and signs
+// them off; an owner sees everyone and keeps both competency lists on the Training dashboard.
 //
 // The database decides who may see and sign off whom — these screens only
 // decide what to show, and never offer a button the database would refuse.
 
 let competencies = [], compSignoffs = [], levelsDone = [], techPeople = [], levelChanges = [];
 let skillsError = null;
-let skillsState = { personId: null, level: null };
+let skillsState = { personId: null, level: null, track: "service" };
 const SKILL_LEVELS = [1, 2, 3, 4];
+// The two lists: what each is called, and whether someone is on it.
+const SKILL_TRACKS = [
+  { id: "service", people: "Technicians", person: "technician", prefix: "", on: (p) => !!p.is_technician },
+  { id: "parts", people: "Parts", person: "parts person", prefix: "Parts ", on: (p) => !!p.is_parts }
+];
+const skillTrack = (id) => SKILL_TRACKS.find(t => t.id === id) || SKILL_TRACKS[0];
+const compTrack = (c) => c.track || "service";
 
 async function loadSkills() {
   const [c, p, s, d, h] = await Promise.all([
     db.from("competencies").select("*").order("sort_order"),
     // Someone who has left drops off the lists; their sign-offs stay.
-    db.from("profiles").select("id,full_name,location_id,is_technician").is("deactivated_at", null),
+    db.from("profiles").select("id,full_name,location_id,is_technician,is_parts").is("deactivated_at", null),
     db.from("competency_signoffs").select("*"),
     db.from("skill_level_completions").select("*"),
     db.from("skill_level_changes").select("*").order("changed_at", { ascending: false })
@@ -16452,11 +16461,12 @@ async function loadSkills() {
   levelChanges = h.data || [];
 }
 
-// Where one technician is: the level they're on and what's signed off.
-function techProgress(personId) {
-  const items = competencies.filter(c => c.is_active);
+// Where one person is on one list: the level they're on and what's signed off.
+function techProgress(personId, track = "service") {
+  const items = competencies.filter(c => c.is_active && compTrack(c) === track);
   const signed = new Map(compSignoffs.filter(x => x.technician_id === personId).map(x => [x.competency_id, x]));
-  const done = new Map(levelsDone.filter(x => x.technician_id === personId).map(x => [x.level, x]));
+  const done = new Map(levelsDone.filter(x => x.technician_id === personId && (x.track || "service") === track)
+    .map(x => [x.level, x]));
   const at = (level) => items.filter(c => c.level === level);
   const current = Math.min(Math.max(0, ...done.keys()) + 1, 4);
   return {
@@ -16484,11 +16494,11 @@ function refreshTechView() {
   window.scrollTo(0, y);
 }
 
-function techPersonCard(person, label) {
-  const pr = techProgress(person.id);
+function techPersonCard(person, label, track = "service") {
+  const pr = techProgress(person.id, track);
   const total = pr.at(pr.current).length;
   const pct = pr.finished ? 100 : (total ? Math.round(pr.count(pr.current) / total * 100) : 0);
-  return `<button type="button" class="skill-person skill-level-${pr.current}" data-skill-open="${esc(person.id)}">
+  return `<button type="button" class="skill-person skill-level-${pr.current}" data-skill-open="${esc(person.id)}" data-skill-track="${track}">
     <span class="skill-ring" style="--p:${pct}"><span>${pr.finished ? "✓" : pr.current}</span></span>
     <span style="flex:1;min-width:0"><b>${esc(label || techName(person))}</b>
       <span class="note" style="display:block">${esc(techSummary(pr))}${
@@ -16506,53 +16516,57 @@ function skillsView() {
   }
 
   const open = skillsState.personId && techPeople.find(p => p.id === skillsState.personId);
-  if (open) return techChecklist(open);
+  if (open) return techChecklist(open, skillsState.track || "service");
 
   const mine = techPeople.find(p => p.id === me.id);
+  const myTracks = mine ? SKILL_TRACKS.filter(t => t.on(mine)) : [];
   let html = hero("Skills",
-    "Four levels of competencies, each signed off by your location admin. Finish every item in a level to move up to the next.");
+    "Four levels of competencies for technicians, and four for Parts, each signed off by your location admin. Finish every item in a level to move up to the next.");
 
-  if (mine && mine.is_technician) {
+  if (myTracks.length) {
     html += `<div class="section-title">Your progress</div>
-      <div class="skill-people" style="margin-bottom:22px">${techPersonCard(mine, "You")}</div>`;
+      <div class="skill-people" style="margin-bottom:22px">${myTracks.map(t =>
+        techPersonCard(mine, myTracks.length > 1 ? `You · ${t.people}` : "You", t.id)).join("")}</div>`;
   }
 
   if (isAdmin()) {
-    const techs = techPeople.filter(p => p.is_technician && techManages(p))
-      .sort((a, b) => (locations[a.location_id] || "").localeCompare(locations[b.location_id] || "")
-        || techName(a).localeCompare(techName(b)));
-    const candidates = techPeople.filter(p => !p.is_technician && p.location_id && p.id !== me.id && techManages(p))
-      .sort((a, b) => techName(a).localeCompare(techName(b)));
-
-    html += `<div class="section-title">${isOwner() ? "Technicians" : "Technicians at your location"}</div>
-      ${techs.length ? `<div class="skill-people">${techs.map(t => techPersonCard(t)).join("")}</div>`
-        : `<p class="note">Nobody's enrolled yet. Add the technicians at your location below.</p>`}
-      ${candidates.length ? `<div class="card" id="techEnroll" style="margin-top:18px">
-        <h2>Add a technician</h2>
-        <div class="row" style="align-items:flex-end">
-          <div style="flex:1;min-width:200px"><label>Person</label>
-            <select data-enroll="person">${candidates.map(p =>
-              `<option value="${esc(p.id)}">${esc(techName(p))}${isOwner() ? " — " + esc(locations[p.location_id] || "") : ""}</option>`).join("")}</select></div>
-          <div><label>Working on</label>
-            <select data-enroll="level">${SKILL_LEVELS.map(l => `<option value="${l}">Level ${l}</option>`).join("")}</select></div>
-          <button data-skill-enroll>Add</button>
-        </div>
-        <p class="note" style="margin:8px 0 0">Anyone already working above Level 1: pick their level, and the
-          levels below are recorded as placed rather than signed off.</p>
-        <span class="msg"></span>
-      </div>` : ""}`;
+    SKILL_TRACKS.forEach(t => {
+      const onIt = techPeople.filter(p => t.on(p) && techManages(p))
+        .sort((a, b) => (locations[a.location_id] || "").localeCompare(locations[b.location_id] || "")
+          || techName(a).localeCompare(techName(b)));
+      const candidates = techPeople.filter(p => !t.on(p) && p.location_id && p.id !== me.id && techManages(p))
+        .sort((a, b) => techName(a).localeCompare(techName(b)));
+      html += `<div class="section-title" style="margin-top:8px">${isOwner() ? t.people : `${t.people} at your location`}</div>
+        ${onIt.length ? `<div class="skill-people">${onIt.map(p => techPersonCard(p, "", t.id)).join("")}</div>`
+          : `<p class="note">Nobody's on this list yet. Add the ${t.id === "parts" ? "parts people" : "technicians"} at your location below.</p>`}
+        ${candidates.length ? `<div class="card" data-enroll-box="${t.id}" style="margin:18px 0 24px">
+          <h2>Add a ${t.person}</h2>
+          <div class="row" style="align-items:flex-end">
+            <div style="flex:1;min-width:200px"><label>Person</label>
+              <select data-enroll="person">${candidates.map(p =>
+                `<option value="${esc(p.id)}">${esc(techName(p))}${isOwner() ? " — " + esc(locations[p.location_id] || "") : ""}</option>`).join("")}</select></div>
+            <div><label>Working on</label>
+              <select data-enroll="level">${SKILL_LEVELS.map(l => `<option value="${l}">${t.prefix}Level ${l}</option>`).join("")}</select></div>
+            <button data-skill-enroll="${t.id}">Add</button>
+          </div>
+          <p class="note" style="margin:8px 0 0">Anyone already working above Level 1: pick their level, and the
+            levels below are recorded as placed rather than signed off.</p>
+          <span class="msg"></span>
+        </div>` : ""}`;
+    });
   }
 
-  if (!(mine && mine.is_technician) && !isAdmin()) {
-    html += `<div class="card"><b>Skills is for service technicians.</b>
-      <p class="note" style="margin:6px 0 0">If you're a technician and don't see your progress here,
+  if (!myTracks.length && !isAdmin()) {
+    html += `<div class="card"><b>Skills is for service technicians and parts staff.</b>
+      <p class="note" style="margin:6px 0 0">If you're a technician or in Parts and don't see your progress here,
       ask your location admin to add you.</p></div>`;
   }
   return html;
 }
 
-function techChecklist(person) {
-  const pr = techProgress(person.id);
+function techChecklist(person, track = "service") {
+  const t = skillTrack(track);
+  const pr = techProgress(person.id, track);
   const level = skillsState.level || pr.current;
   const canSign = techManages(person) && person.id !== me.id;
   const own = person.id === me.id;
@@ -16569,10 +16583,11 @@ function techChecklist(person) {
   });
 
   return `
-  ${isAdmin() ? `<button type="button" class="ghost" data-skill-back style="margin-bottom:12px">&larr; All technicians</button>` : ""}
+  ${isAdmin() ? `<button type="button" class="ghost" data-skill-back style="margin-bottom:12px">&larr; Everyone in Skills</button>` : ""}
   <div class="card skill-level-${pr.current}">
     <div class="note" style="text-transform:uppercase;letter-spacing:.08em;font-weight:600">${esc(own ? "Your progress" : techName(person))}</div>
-    <h2 style="font-size:24px;margin:4px 0 10px">${pr.finished ? "All four levels complete" : `Level ${pr.current} technician`}</h2>
+    <h2 style="font-size:24px;margin:4px 0 10px">${pr.finished ? `All four ${t.prefix}levels complete`
+      : track === "parts" ? `Parts Level ${pr.current}` : `Level ${pr.current} technician`}</h2>
     ${pr.finished ? "" : `<div class="skill-bar"><i style="width:${total ? doneCount / total * 100 : 0}%"></i></div>
       <p class="note" style="margin:6px 0 0">${doneCount} of ${total} Level ${pr.current} competencies signed off · ${total - doneCount} to go</p>`}
     <div class="skill-chips">${SKILL_LEVELS.map(l => `<span class="skill-chip skill-level-${l}${
@@ -16594,7 +16609,7 @@ function techChecklist(person) {
     </details>` : ""}
   </div>
 
-  ${levelChanges.filter(x => x.technician_id === person.id).slice(0, 3).map(x => `
+  ${levelChanges.filter(x => x.technician_id === person.id && (x.track || "service") === track).slice(0, 3).map(x => `
     <div class="card skill-level-${x.to_level}" style="padding:12px 16px">
       <b style="color:var(--tl)">${x.to_level < x.from_level ? "↓ Moved down" : "↑ Moved up"} from ${
         x.from_level === 5 ? "all four finished" : "Level " + x.from_level} to Level ${x.to_level}</b>
@@ -16631,11 +16646,11 @@ function techChecklist(person) {
 document.addEventListener("click", async (event) => {
   const openBtn = event.target.closest("[data-skill-open]");
   if (openBtn) {
-    skillsState = { personId: openBtn.dataset.skillOpen, level: null };
+    skillsState = { personId: openBtn.dataset.skillOpen, level: null, track: openBtn.dataset.skillTrack || "service" };
     return showView("skills");
   }
   if (event.target.closest("[data-skill-back]")) {
-    skillsState = { personId: null, level: null };
+    skillsState = { personId: null, level: null, track: "service" };
     return showView("skills");
   }
   const levelBtn = event.target.closest("[data-skill-level]");
@@ -16680,7 +16695,8 @@ document.addEventListener("click", async (event) => {
     const level = Number(box.querySelector('[data-skill-change="level"]').value);
     const reason = box.querySelector('[data-skill-change="reason"]').value.trim();
     setBtn.disabled = true;
-    const { error } = await db.rpc("set_skill_level", { target: person.id, new_level: level, reason: reason || null });
+    const { error } = await db.rpc("set_skill_level", { target: person.id, for_track: skillsState.track || "service",
+      new_level: level, reason: reason || null });
     setBtn.disabled = false;
     // The database says exactly why a change isn't allowed; show that.
     if (error) return speak(box, error.message, true);
@@ -16691,11 +16707,12 @@ document.addEventListener("click", async (event) => {
 
   const enrollBtn = event.target.closest("[data-skill-enroll]");
   if (enrollBtn) {
-    const box = $("techEnroll");
+    const box = enrollBtn.closest("[data-enroll-box]");
     const target = box.querySelector('[data-enroll="person"]').value;
     const level = Number(box.querySelector('[data-enroll="level"]').value);
     enrollBtn.disabled = true;
-    const { error } = await db.rpc("set_technician", { target, enrolled: true, starting_level: level });
+    const { error } = await db.rpc("set_skills_track", { target, for_track: enrollBtn.dataset.skillEnroll || "service",
+      enrolled: true, starting_level: level });
     enrollBtn.disabled = false;
     if (error) return speak(box, error.message, true);
     await loadSkills();
@@ -16705,24 +16722,38 @@ document.addEventListener("click", async (event) => {
 
 // ---- admin: the competency list (owners) ------------------------------------------
 
+let skillsAdminTrack = "service";
+
 function renderSkillsAdmin() {
   const box = $("skillsAdminList");
   if (!box) return;
+  $("skillsAdminTracks").innerHTML = SKILL_TRACKS.map(t => `<button type="button" class="chip${
+    t.id === skillsAdminTrack ? " on" : ""}" data-skills-track="${t.id}">${t.id === "parts" ? "Parts" : "Service technicians"} · ${
+    competencies.filter(c => c.is_active && compTrack(c) === t.id).length}</button>`).join("");
   if (skillsError) {
     box.innerHTML = `<p class="error">${/does not exist|schema cache/i.test(skillsError)
       ? "Run migrations 0040 and 0064 in the SQL editor, then reload this page."
       : esc(skillsError)}</p>`;
     return;
   }
-  const active = competencies.filter(c => c.is_active);
+  const list = competencies.filter(c => compTrack(c) === skillsAdminTrack);
+  const active = list.filter(c => c.is_active);
   $("skillsAdminStats").innerHTML = SKILL_LEVELS.map(l =>
     `<span class="stat"><b>${active.filter(c => c.level === l).length}</b>Level ${l}</span>`).join("")
-    + `<span class="stat"><b>${competencies.length - active.length}</b>retired</span>`;
-  $("skillCategories").innerHTML = [...new Set(competencies.map(c => c.category))]
+    + `<span class="stat"><b>${list.length - active.length}</b>retired</span>`;
+  $("skillCategories").innerHTML = [...new Set(list.map(c => c.category))]
     .map(c => `<option value="${esc(c)}">`).join("");
+  $("techAdd").querySelector('[data-ca="name"]').placeholder = skillsAdminTrack === "parts"
+    ? "e.g. Process a warranty parts return" : "e.g. Perform a hydraulic flow test";
+  $("techAdd").querySelector('[data-ca="category"]').placeholder = skillsAdminTrack === "parts" ? "Counter" : "Hydraulics";
 
+  if (!list.length) {
+    box.innerHTML = `<p class="note" style="margin:0">No ${skillsAdminTrack === "parts" ? "Parts" : "service"} competencies yet.
+      Add the first above; they're sorted into Levels 1 to 4 as you go.</p>`;
+    return;
+  }
   box.innerHTML = SKILL_LEVELS.map(level => {
-    const rows = competencies.filter(c => c.level === level);
+    const rows = list.filter(c => c.level === level);
     return `<div class="section-title skill-level-${level}" style="margin-top:22px;color:var(--tl)">Level ${level}
       · ${rows.filter(c => c.is_active).length} competencies</div>
     ${rows.map(c => `<div class="skill-row${c.is_active ? "" : " retired"}" data-comp="${esc(c.id)}">
@@ -16741,6 +16772,8 @@ function renderSkillsAdmin() {
 }
 
 $("admin").addEventListener("click", async (event) => {
+  const trackBtn = event.target.closest("[data-skills-track]");
+  if (trackBtn) { skillsAdminTrack = trackBtn.dataset.skillsTrack; $("skillsAdminMsg").textContent = ""; return renderSkillsAdmin(); }
   const btn = event.target.closest("[data-comp-act], [data-comp-add]");
   if (!btn) return;
   const say = (text, bad) => { $("skillsAdminMsg").textContent = text; $("skillsAdminMsg").className = "msg " + (bad ? "error" : "ok"); };
@@ -16750,14 +16783,15 @@ $("admin").addEventListener("click", async (event) => {
     const get = (f) => form.querySelector(`[data-ca="${f}"]`).value.trim();
     if (!get("name") || !get("category")) return say("A competency needs a name and a category.", true);
     const level = Number(get("level"));
-    const order = competencies.filter(c => c.level === level).reduce((m, c) => Math.max(m, c.sort_order), 0) + 5;
+    const order = competencies.filter(c => c.level === level && compTrack(c) === skillsAdminTrack)
+      .reduce((m, c) => Math.max(m, c.sort_order), 0) + 5;
     const { data, error } = await db.from("competencies")
-      .insert({ name: get("name"), category: get("category"), level, sort_order: order }).select();
+      .insert({ name: get("name"), category: get("category"), level, sort_order: order, track: skillsAdminTrack }).select();
     if (error) return say(error.message, true);
     if (!data || !data.length) return say("Nothing added — only an owner can change the list.", true);
     form.querySelector('[data-ca="name"]').value = "";
     await loadSkills(); renderSkillsAdmin();
-    return say(`Added to Level ${level}. Anyone who already finished Level ${level} keeps it.`, false);
+    return say(`Added to ${skillsAdminTrack === "parts" ? "Parts " : ""}Level ${level}. Anyone who already finished it keeps it.`, false);
   }
 
   const row = btn.closest("[data-comp]");
