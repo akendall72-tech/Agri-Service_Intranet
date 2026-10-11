@@ -2953,10 +2953,12 @@
         <p class="note"><b>Owners also set a name and a location here.</b> Both are normally
           chosen by the person on first sign-in in the app, and after that both are locked:
           only an owner changes them, here. Anyone who only ever uses this page arrives with
-          neither. Type over the name; pick a location from the list. The lock matters for names
-          too: Training Status finds people without a work email by name, so a name people
-          could change themselves was a way into a colleague's record. These go through the
+          neither. Type over the name; pick a location from the list. These go through the
           same owner-only function deactivation does.</p>
+        <p class="note"><b>Employee # is what finds someone's training records.</b> Each Training
+          Status upload fills it in from All employees, by work email. Type it yourself only for
+          someone who signs in with a different email from the one UKG has. Nobody can change
+          their own, and no two accounts can have the same one.</p>
         <p class="note"><b>Deactivate, don't delete.</b> Deleting an account in Supabase is
           refused while it has lift plans, support requests or Skills history, so those
           records can't be lost with it. Only an account that never did anything can be
@@ -3537,10 +3539,13 @@
           <li><b>All employees</b> — everyone's job and store. Technicians are the jobs with
             "Technician" in the title.</li>
           <li><b>Credits All Time</b> — every credit each person has earned: AGCO training hours
-            toward the 24-hour credit for this year, and EPA 609. Matched to people by email.
+            toward the 24-hour credit for this year, and EPA 609.
             (The older Credit Rules Report still works, matched by name.)</li>
           <li><b>OLT and ILT</b> — course completions, for the history by location.</li>
         </ul>
+        <p class="note">People are matched across the three by their <b>Employee Number</b>, then
+          by email, and their records are kept under that number. Uploading also gives each app
+          account its employee number, by work email, so People shows it.</p>
         <p class="note">Nothing changes until you press <b>Publish</b>. Each report replaces the
           last copy of that report; the others stay as they are. Admins and owners see the
           result under Training Center → <b>Training Status</b>, in the app and on this page.</p>
@@ -4035,7 +4040,7 @@ async function loadAll({ restInBackground = false } = {}) {
     db.from("locations").select("*").order("sort_order"),
     db.from("forklift_certifications").select("*"),
     db.from("lift_plans").select("*").order("submitted_at", { ascending: false }),
-    db.from("profiles").select("id,full_name,email,role,location_id,groups,deactivated_at,created_at"),
+    db.from("profiles").select("id,full_name,email,role,location_id,groups,deactivated_at,created_at,employee_number"),
     db.from("support_roles").select("*, support_people(*)").order("sort_order"),
     db.from("weekly_tasks").select("*").eq("is_active", true).order("sort_order"),
     db.from("personal_tasks").select("*").is("archived_at", null),
@@ -6453,19 +6458,16 @@ function craneStatus(row) {
   return { kind: "qualified", completion, expires };
 }
 
-// The signed-in person's own training row: by work email. A name only stands in
-// for a row with no email at all, and only when one row has that name, as the
-// database's rule does: an owner or admin sees other people's rows, and a
-// namesake's must never come back as theirs.
-function craneMine() {
-  const email = (me.email || "").toLowerCase();
-  const fullName = ((profile && profile.full_name) || "").trim();
-  const nameKey = fullName ? tsNameKey(fullName, "") : "";
-  const byEmail = tsPeople.find(r => r.person_key === email);
-  if (byEmail || !nameKey) return byEmail || null;
-  const byName = tsPeople.filter(r => !r.email && tsNameKey(r.first_name, r.last_name) === nameKey);
-  return byName.length === 1 ? byName[0] : null;
+// The signed-in person's own training row: by their employee number, then
+// their work email, as the database's rule does. Never by name: an owner or
+// admin sees other people's rows, and a namesake's must never come back as theirs.
+function tsMine() {
+  const number = (profile && profile.employee_number) || "";
+  const email = ((me && me.email) || "").toLowerCase();
+  return (number && tsPeople.find(r => r.employee_number === number))
+    || (email && tsPeople.find(r => (r.email || "").toLowerCase() === email)) || null;
 }
+const craneMine = tsMine;
 
 const warnIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17.5v.01"/></svg>';
 
@@ -6513,7 +6515,7 @@ function craneCard() {
 // Admins and owners: everyone they look after, with Remove and Restore.
 function craneAdminSection() {
   if (!isAdmin() || trainingStatusError || craneError || !tsPeople.length) return "";
-  const myKey = (me.email || "").toLowerCase();
+  const myKey = (tsMine() || {}).person_key;
   const rows = tsPeople.map(r => ({ r, st: craneStatus(r) }))
     .filter(x => craneFilter === "all" || x.st.kind === craneFilter)
     .sort((a, b) => (a.r.store || "").localeCompare(b.r.store || "") || a.r.last_name.localeCompare(b.r.last_name));
@@ -6873,6 +6875,15 @@ function renderPeople() {
           held.includes(d) ? " checked" : ""}> ${esc(d.label)}</label>`).join("");
   };
 
+  // The UKG employee number, which finds their training records. Filled in from
+  // All employees by work email at each Training Status upload; an owner types
+  // it for someone who signs in with a different email.
+  const numberCell = (r) => editable(r)
+    ? `<label class="note" style="display:flex;align-items:center;gap:6px;font-size:12.5px;margin-top:6px">Employee #
+         <input data-number-for="${esc(r.id)}" value="${esc(r.employee_number || "")}" placeholder="from UKG"
+           inputmode="numeric" autocomplete="off" style="margin:0;width:90px;padding:4px 8px"></label>`
+    : r.employee_number ? `<div class="note" style="font-size:12.5px;margin-top:4px">Employee #${esc(r.employee_number)}</div>` : "";
+
   const shopPicker = (r) => `<select data-shop-for="${esc(r.id)}" style="margin:0;min-width:130px">
       <option value=""${!r.location_id ? " selected" : ""}>— not set —</option>
       ${allLocations.map(l => `<option value="${esc(l.id)}"${
@@ -6886,6 +6897,7 @@ function renderPeople() {
         : `<b>${esc(r.full_name || "—")}</b>`}
         <div class="note" style="font-size:12.5px;margin-top:4px;overflow-wrap:anywhere">${esc(
           [r.id === me.id ? "you" : "", r.email || "no email", groupNames(r.groups)].filter(Boolean).join(" · "))}</div>
+        ${numberCell(r)}
         ${account(r) ? `<div style="margin-top:6px">${account(r)}</div>` : ""}</td>
       <td>${editable(r) ? shopPicker(r)
         : r.location_id ? esc(locations[r.location_id] || r.location_id)
@@ -6975,6 +6987,33 @@ document.addEventListener("change", async (event) => {
 // migration 0007 refuses a second location from anyone signed in. The account
 // function holds the service key, where auth.uid() is null and that guard
 // stands aside. Owners only, like everything else it does.
+// An employee number: owners only, through set_employee_number(), which
+// refuses one another account already has.
+document.addEventListener("change", async (event) => {
+  const field = event.target.closest("[data-number-for]");
+  if (!field) return;
+  const person = people.find(r => r.id === field.dataset.numberFor);
+  if (!person) return;
+  const card = field.closest(".card") || $("peopleTable");
+  const typed = field.value.trim();
+  const clean = typed ? tsEmployeeNumber(typed) : "";
+  if (clean === (person.employee_number || "")) { field.value = clean; return; }
+  field.disabled = true;
+  const { data, error } = await db.rpc("set_employee_number", { target: person.id, new_number: typed });
+  field.disabled = false;
+  if (error) {
+    field.value = person.employee_number || "";
+    return speak(card, /already has employee number/.test(error.message) ? error.message
+      : /function|schema cache/i.test(error.message) ? "Run migration 0098 first." : `Not saved: ${error.message}`, true);
+  }
+  person.employee_number = data || null;
+  if (person.id === me.id && profile) profile.employee_number = person.employee_number;
+  field.value = person.employee_number || "";
+  speak(card, person.employee_number
+    ? `Saved — ${person.full_name || person.email} is employee #${person.employee_number}.`
+    : `Cleared ${person.full_name || person.email}'s employee number.`, false);
+});
+
 document.addEventListener("change", async (event) => {
   const field = event.target.closest("[data-name-for], [data-shop-for]");
   if (!field) return;
@@ -17813,8 +17852,9 @@ async function loadTrainingStatus() {
 
 const tsText = (value) => String(value ?? "").replace(/ /g, " ").replace(/\s+/g, " ").trim();
 
-// "Andrés  Pérez-Gómez" and "andres perez gomez" are the same person: the credit
-// report carries names but no email, so names are how it's matched.
+// People are matched by their UKG employee number (tsEmployeeNumber), then by
+// work email. A name only stands in for someone with neither, which today is
+// nobody: "Andrés  Pérez-Gómez" and "andres perez gomez" are the same key.
 //
 // THIS WRITES name_key, AND TWO OTHER PLACES READ IT. Change one and people
 // stop matching their own records — which is what happened with accents until
@@ -17829,6 +17869,15 @@ const tsText = (value) => String(value ?? "").replace(/ /g, " ").replace(/\s+/g
 // a gap. 0049 carries the list of names all three are checked against.
 const tsNameKey = (first, last) => `${first} ${last}`.normalize("NFD").replace(/[̀-ͯ]/g, "")
   .toLowerCase().replace(/[^a-z]+/g, " ").trim();
+
+// "004217", or "4217" from a spreadsheet that dropped the zeros: the same
+// person. Digits are padded back to six; anything else is kept, in capitals.
+// The database's employee_number_key() is the same rule.
+const tsEmployeeNumber = (value) => {
+  const text = tsText(value);
+  if (!text) return "";
+  return /^\d+$/.test(text) ? text.replace(/^0+/, "").padStart(6, "0") : text.toUpperCase();
+};
 
 const tsStoreName = (store) => tsText(store).replace(/^store\s*-\s*\d+\s*-\s*/i, "") || "No store";
 
@@ -17881,12 +17930,15 @@ function tsParse(rows, file) {
   if (!found) return null;
   const { kind, format, headerIndex, col } = found;
   const get = (row, name) => tsText(row[col[name]]);
+  // Exports from before UKG added the column have none; everyone falls back to email.
+  const number = (row) => "employee number" in col ? tsEmployeeNumber(row[col["employee number"]]) : "";
   const body = rows.slice(headerIndex + 1).filter(r => r && r.some(c => tsText(c)));
   const meta = { file: file.name, exported: tsExported(rows, headerIndex) };
 
   if (kind === "employees") {
     const list = body.map(r => ({
       first: get(r, "firstname"), last: get(r, "lastname"), email: get(r, "email").toLowerCase(),
+      number: number(r),
       department: tsText(r[col["department"]]).replace(/^department\s*-\s*\d+\s*-\s*/i, ""),
       job: get(r, "jobs"), store: tsStoreName(get(r, "store"))
     })).filter(p => p.first || p.last);
@@ -17895,7 +17947,7 @@ function tsParse(rows, file) {
 
   if (kind === "history") {
     const list = body.map(r => ({
-      email: get(r, "email").toLowerCase(), first: get(r, "firstname"), last: get(r, "lastname"),
+      email: get(r, "email").toLowerCase(), number: number(r), first: get(r, "firstname"), last: get(r, "lastname"),
       course: get(r, "course"), completed: tsDate(r[col["date completed"]]),
       percent: parseFloat(get(r, "% completed")) || 0
     })).filter(h => h.course && h.completed && (h.percent >= 100 || !("% completed" in col)))
@@ -17916,12 +17968,12 @@ function tsParse(rows, file) {
 
     const people = new Map();
     for (const r of body) {
-      const email = get(r, "email").toLowerCase();
+      const email = get(r, "email").toLowerCase(), num = number(r);
       const first = get(r, "firstname"), last = get(r, "lastname");
-      if (!email && !first && !last) continue;
-      const key = email || `name:${tsNameKey(first, last)}`;
+      if (!num && !email && !first && !last) continue;
+      const key = num || email || `name:${tsNameKey(first, last)}`;
       const person = people.get(key)
-        || { email, first, last, agcoHours: 0, agcoRequired: null, epa609: false, agcoEntries: [] };
+        || { number: num, email, first, last, agcoHours: 0, agcoRequired: null, epa609: false, agcoEntries: [] };
       const rule = get(r, "credits rule title");
       const credits = parseFloat(get(r, "credits number")) || 0;
       const earned = tsDate(r[col["earned at"]]);
@@ -17973,8 +18025,9 @@ function tsParse(rows, file) {
 
 // ---- the model --------------------------------------------------------------------------
 
-// The exports, joined into one row per employee, as the database stores them.
-// The credit report has names but no emails, so it's matched by name.
+// The exports, joined into one row per employee, as the database stores them:
+// by employee number, then by email. A name joins only the older Credit Rules
+// Report, which has neither.
 function tsPeopleFromRaw(raw) {
   const employees = (raw && raw.employees && raw.employees.rows) || [];
   const credits = (raw && raw.credits && raw.credits.rows) || [];
@@ -17982,22 +18035,30 @@ function tsPeopleFromRaw(raw) {
   // Credits All Time lists everyone with a credit, so anyone missing simply has
   // none. The older Credit Rules Report only lists technicians, by name.
   const allTime = !!(raw && raw.credits && raw.credits.format === "all-time" && raw.credits.rows);
+  const creditByNumber = new Map(credits.filter(c => c.number).map(c => [c.number, c]));
   const creditByEmail = new Map(credits.filter(c => c.email).map(c => [c.email, c]));
-  const creditByName = new Map(credits.map(c => [tsNameKey(c.first, c.last), c]));
-  const classesByEmail = new Map();
+  // Only the older report, with no emails, is ever joined by name.
+  const creditByName = new Map(credits.filter(c => !c.number && !c.email).map(c => [tsNameKey(c.first, c.last), c]));
+  const classesByNumber = new Map(), classesByEmail = new Map();
+  const file = (map, key, h) => { if (!map.has(key)) map.set(key, []); map.get(key).push(h); };
   for (const h of history) {
-    if (!h.email) continue;
-    if (!classesByEmail.has(h.email)) classesByEmail.set(h.email, []);
-    classesByEmail.get(h.email).push({ course: h.course, completed: h.completed });
+    if (h.number) file(classesByNumber, h.number, h);
+    if (h.email) file(classesByEmail, h.email, h);
   }
   const seen = new Set();
   return employees.map(e => {
     const key = tsNameKey(e.first, e.last);
-    const credit = (e.email && creditByEmail.get(e.email)) || creditByName.get(key);
-    const classes = (classesByEmail.get(e.email) || [])
+    const number = e.number || "";
+    const credit = (number && creditByNumber.get(number)) || (e.email && creditByEmail.get(e.email))
+      || creditByName.get(key);
+    // By number; a class reported without one (an older export) by email.
+    const theirs = number && classesByNumber.has(number)
+      ? [...classesByNumber.get(number), ...(classesByEmail.get(e.email) || []).filter(h => !h.number)]
+      : classesByEmail.get(e.email) || [];
+    const classes = theirs.map(h => ({ course: h.course, completed: h.completed }))
       .sort((a, b) => b.completed.localeCompare(a.completed) || a.course.localeCompare(b.course));
     return {
-      person_key: e.email || `name:${key}`, email: e.email || null,
+      person_key: number || e.email || `name:${key}`, employee_number: number || null, email: e.email || null,
       first_name: e.first, last_name: e.last, name_key: key,
       department: e.department || "", job: e.job || "", store: e.store || "",
       is_technician: tsIsTech(e.job),
@@ -18013,7 +18074,7 @@ function tsPeopleFromRaw(raw) {
 // Whatever rows this person may see, worked into the metric.
 function tsModel(rows = tsPeople) {
   const people = rows.map(r => ({
-    key: r.person_key, email: r.email || "", first: r.first_name, last: r.last_name,
+    key: r.person_key, number: r.employee_number || "", email: r.email || "", first: r.first_name, last: r.last_name,
     name: `${r.first_name} ${r.last_name}`.trim(), job: r.job, store: r.store || "No store",
     isTech: r.is_technician, hours: r.agco_hours === null || r.agco_hours === undefined ? null : Number(r.agco_hours),
     // "Met" is worked out here rather than read from agco_met, which was
@@ -18093,11 +18154,14 @@ function trainingStatusView() {
 
 // An employee's own record: hours toward 24, 609, and what they've taken.
 function tsSelfView(m) {
-  const mine = m.people.find(p => p.email && p.email === (me.email || "").toLowerCase()) || m.people[0];
+  const own = tsMine();
+  const mine = (own && m.people.find(p => p.key === own.person_key)) || m.people[0];
   if (!mine) {
+    const number = profile && profile.employee_number;
     return `<div class="card"><b>No training record found for you yet</b>
-      <p class="note" style="margin-bottom:0">Records are matched by your work email${me.email ? ` (${esc(me.email)})` : ""},
-        then by your name. If the reports list you under another address, ask the training department.</p></div>`;
+      <p class="note" style="margin-bottom:0">Records are matched by your employee number${number ? ` (#${esc(number)})` : ""},
+        then by your work email${me.email ? ` (${esc(me.email)})` : ""}. If UKG lists you under another number or
+        address, ask the training department.</p></div>`;
   }
   const years = {};
   mine.classes.forEach(c => { (years[c.completed.slice(0, 4)] ||= []).push(c); });
@@ -18357,13 +18421,19 @@ function renderTsImport(problems = []) {
   const m = tsModel(rows);
   const jobs = {};
   m.techs.forEach(t => { jobs[t.job] = (jobs[t.job] || 0) + 1; });
+  const has = (k) => merged[k] && merged[k].rows;
   const staff = (merged.employees && merged.employees.rows) || [];
+  const knownNumbers = new Set(staff.map(e => e.number).filter(Boolean));
   const knownNames = new Set(staff.map(e => tsNameKey(e.first, e.last)));
   const knownEmails = new Set(staff.map(e => e.email).filter(Boolean));
-  const unmatched = ((merged.credits && merged.credits.rows) || [])
-    .filter(c => !(c.email && knownEmails.has(c.email)) && !knownNames.has(tsNameKey(c.first, c.last)));
-  // The credit report has no emails, so its rows find their person by name;
-  // two employees with one name can't be told apart there.
+  const creditRows = (merged.credits && merged.credits.rows) || [];
+  const unmatched = creditRows.filter(c => !(c.number && knownNumbers.has(c.number))
+    && !(c.email && knownEmails.has(c.email)) && !(!c.number && !c.email && knownNames.has(tsNameKey(c.first, c.last))));
+  // Who has no employee number, so their records are kept against their email.
+  const unnumbered = has("employees") ? staff.filter(e => !e.number) : [];
+  // Only the older Credit Rules Report, with neither numbers nor emails, finds
+  // people by name; two employees with one name can't be told apart there.
+  const byNameOnly = creditRows.some(c => !c.number && !c.email);
   const nameCount = {};
   staff.forEach(e => { const k = tsNameKey(e.first, e.last); if (k) nameCount[k] = (nameCount[k] || 0) + 1; });
   const sharedNames = staff.filter((e, i, all) => nameCount[tsNameKey(e.first, e.last)] > 1
@@ -18372,7 +18442,6 @@ function renderTsImport(problems = []) {
   const appStores = new Set(allLocations.map(l => l.name.toLowerCase()));
   const strayStores = m.stores.filter(s => s !== "No store" && !appStores.has(s.toLowerCase())
     && m.people.some(p => p.store === s));
-  const has = (k) => merged[k] && merged[k].rows;
 
   box.innerHTML = `${problems.map(p => `<p class="error">${esc(p)}</p>`).join("")}
     ${kinds.length ? `<div class="role" style="margin-top:12px">
@@ -18389,9 +18458,13 @@ function renderTsImport(problems = []) {
         credits report (counted as not met): ${m.missingCredits.map(t => esc(t.name)).join(", ")}.</p>` : ""}
       ${unmatched.length && has("employees") ? `<p class="note" style="margin:0 0 6px">On the credits report but not
         in All employees, so left out: ${unmatched.map(c => esc(c.first + " " + c.last)).join(", ")}.</p>` : ""}
-      ${sharedNames.length && has("credits") ? `<p class="error" style="margin:0 0 6px">Two or more people on All employees
-        share a name: ${sharedNames.map(esc).join(", ")}. The credits report has no emails, so it finds people by name, and
-        their AGCO hours can't be told apart: check theirs by hand in UKG.</p>` : ""}
+      ${sharedNames.length && byNameOnly ? `<p class="error" style="margin:0 0 6px">Two or more people on All employees
+        share a name: ${sharedNames.map(esc).join(", ")}. This credits report has no employee numbers or emails, so it finds
+        people by name, and their AGCO hours can't be told apart: check theirs by hand in UKG.</p>` : ""}
+      ${unnumbered.length ? `<p class="note" style="margin:0 0 6px">${unnumbered.length === staff.length
+        ? `This All employees export has no Employee Number column, so everyone's records are kept against their email.
+           Export it again with the column to key them by number.`
+        : `No employee number on All employees, so kept against their email: ${unnumbered.map(e => esc(`${e.first} ${e.last}`.trim())).join(", ")}.`}</p>` : ""}
       ${strayStores.length ? `<p class="note" style="margin:0 0 6px">Stores with no location of the same name in the app,
         so no location admin sees them (owners still do): ${strayStores.map(esc).join(", ")}. Rename the location under
         Groups &amp; Locations to match.</p>` : ""}
@@ -18629,9 +18702,12 @@ async function loadAgco() {
 }
 
 const agcoName = (p) => `${p.first_name || ""} ${p.last_name || ""}`.trim();
+// A map's key is its person's training key: their employee number, once uploaded.
 const agcoMine = () => {
+  const number = (profile && profile.employee_number) || "";
   const email = ((me && me.email) || "").toLowerCase();
-  return agcoPeople.find(p => email && (p.email || "").toLowerCase() === email) || null;
+  return (number && agcoPeople.find(p => p.person_key === number))
+    || agcoPeople.find(p => email && (p.email || "").toLowerCase() === email) || null;
 };
 // The button is for technicians, and for the admins who look after them.
 const agcoShowsButton = () => !agcoError && (agcoPeople.length > 0 || isAdmin());
@@ -21347,18 +21423,18 @@ const PAYROLL_COLUMNS = ["Payroll #", "Pay Period Start", "Pay Period End",
 // by its column headings, so a blank sheet has to carry the exact ones it looks
 // for. tsIdentify and osrRead are where those lists live; if you change a
 // heading there, change it here.
-const TS_EMPLOYEE_COLUMNS = ["Firstname", "Lastname", "Email", "Jobs", "Store", "Department"];
+const TS_EMPLOYEE_COLUMNS = ["Firstname", "Lastname", "Email", "Jobs", "Store", "Department", "Employee Number"];
 
-const TS_HISTORY_COLUMNS = ["Firstname", "Lastname", "Email", "Course", "Date Completed",
+const TS_HISTORY_COLUMNS = ["Firstname", "Lastname", "Employee Number", "Email", "Course", "Date Completed",
   "% Completed"];
 
-const TS_CREDITS_COLUMNS = ["Firstname", "Lastname", "Email", "Credit Type", "Credits Number",
+const TS_CREDITS_COLUMNS = ["Firstname", "Lastname", "Employee Number", "Email", "Credit Type", "Credits Number",
   "Earned At", "Credits Rule Title", "Credits Period Cycle", "External Certificate Title"];
 
 const OSR_COLUMNS = ["Event Title", "Event City", "Status", "Event Start Date", "Event End Date",
   "Registered", "Available Seats"];
 
-const IN_CLASS_COLUMNS = ["Firstname", "Lastname", "Email", "Store", "Event Title", "Event Id",
+const IN_CLASS_COLUMNS = ["Firstname", "Lastname", "Employee Number", "Email", "Store", "Event Title", "Event Id",
   "Event City", "Event Start Date", "Instructor Names"];
 
 const TEMPLATES = {
@@ -21378,20 +21454,20 @@ const TEMPLATES = {
   tsEmployees: () => [
     TS_EMPLOYEE_COLUMNS,
     ["Jordan", "Miller", "jordanmiller@agri-service.com", "4070 - Technician Master",
-     "Store - 12 - Pasco", "Service"],
-    ["Sam", "Ruiz", "samruiz@agri-service.com", "4060 - Technician", "Store - 14 - Nampa", "Service"]
+     "Store - 12 - Pasco", "Service", "004217"],
+    ["Sam", "Ruiz", "samruiz@agri-service.com", "4060 - Technician", "Store - 14 - Nampa", "Service", "004388"]
   ],
   tsHistory: () => [
     TS_HISTORY_COLUMNS,
-    ["Jordan", "Miller", "jordanmiller@agri-service.com", "Lifting and Rigging ILT",
+    ["Jordan", "Miller", "004217", "jordanmiller@agri-service.com", "Lifting and Rigging ILT",
      "3/4/2026", "100%"],
-    ["Sam", "Ruiz", "samruiz@agri-service.com", "Forklift Certification", "4/18/2026", "100%"]
+    ["Sam", "Ruiz", "004388", "samruiz@agri-service.com", "Forklift Certification", "4/18/2026", "100%"]
   ],
   tsCredits: () => [
     TS_CREDITS_COLUMNS,
-    ["Jordan", "Miller", "jordanmiller@agri-service.com", "AGCO Training Hours", "8",
+    ["Jordan", "Miller", "004217", "jordanmiller@agri-service.com", "AGCO Training Hours", "8",
      "2/11/2026", "AGCO Training Hours - Number of Credits: 24", "2026", "Fendt 1000 Series"],
-    ["Sam", "Ruiz", "samruiz@agri-service.com", "EPA 609", "1",
+    ["Sam", "Ruiz", "004388", "samruiz@agri-service.com", "EPA 609", "1",
      "6/3/2026", "EPA 609 - Number of Credits: 1", "2026", "EPA 609 Certification"]
   ],
   openSeat: () => [
@@ -21405,7 +21481,7 @@ const TEMPLATES = {
     ["Export date: " + usDate(new Date().toISOString().slice(0, 10))],
     [],
     IN_CLASS_COLUMNS,
-    ["Jordan", "Miller", "jordanmiller@agri-service.com", "Store - 12 - Pasco",
+    ["Jordan", "Miller", "004217", "jordanmiller@agri-service.com", "Store - 12 - Pasco",
      "Fendt 1000 Series Service", "E10042", "Jackson, MN", "10/14/2026", "Chris Bauer"]
   ],
   payroll: () => [
