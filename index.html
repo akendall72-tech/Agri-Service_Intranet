@@ -4799,14 +4799,22 @@ function myCertification(list = approvedCerts()) {
   const byEmail = list.find(c => (c.email || "").toLowerCase() === email);
   if (byEmail) return byEmail;
 
-  const mine = tokens((profile && profile.full_name) || "");
-  if (!mine.size) return null;
+  // A name only for a record with no email (an old spreadsheet row), and only
+  // when it's one person's: an owner gets everyone's records, and a
+  // namesake's card must never show as theirs.
+  const myName = (profile && profile.full_name) || "";
+  if (!tokens(myName).size) return null;
+  const byName = list.filter(c => !(c.email || "").trim() && sameName(c.operator_name || "", myName));
+  // Every one has to be the same person written differently (a middle initial
+  // on one test, not on another); two people means no answer.
+  if (!byName.length || !byName.every(c => sameName(c.operator_name || "", byName[0].operator_name || ""))) return null;
+  return byName[0];
+}
 
-  return list.find(c => {
-    const theirs = tokens(c.operator_name || "");
-    if (!theirs.size) return false;
-    return [...theirs].every(w => mine.has(w)) || [...mine].every(w => theirs.has(w));
-  }) || null;
+// The same person written differently: every word of one name is in the other.
+function sameName(a, b) {
+  const x = tokens(a), y = tokens(b);
+  return x.size > 0 && y.size > 0 && ([...x].every(w => y.has(w)) || [...y].every(w => x.has(w)));
 }
 
 const tokens = (name) =>
@@ -6444,13 +6452,18 @@ function craneStatus(row) {
   return { kind: "qualified", completion, expires };
 }
 
-// The signed-in person's own training row: by work email, then by name.
+// The signed-in person's own training row: by work email. A name only stands in
+// for a row with no email at all, and only when one row has that name, as the
+// database's rule does: an owner or admin sees other people's rows, and a
+// namesake's must never come back as theirs.
 function craneMine() {
   const email = (me.email || "").toLowerCase();
   const fullName = ((profile && profile.full_name) || "").trim();
   const nameKey = fullName ? tsNameKey(fullName, "") : "";
-  return tsPeople.find(r => r.person_key === email)
-    || (nameKey && tsPeople.find(r => tsNameKey(r.first_name, r.last_name) === nameKey)) || null;
+  const byEmail = tsPeople.find(r => r.person_key === email);
+  if (byEmail || !nameKey) return byEmail || null;
+  const byName = tsPeople.filter(r => !r.email && tsNameKey(r.first_name, r.last_name) === nameKey);
+  return byName.length === 1 ? byName[0] : null;
 }
 
 const warnIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17.5v.01"/></svg>';
@@ -18315,6 +18328,13 @@ function renderTsImport(problems = []) {
   const knownEmails = new Set(staff.map(e => e.email).filter(Boolean));
   const unmatched = ((merged.credits && merged.credits.rows) || [])
     .filter(c => !(c.email && knownEmails.has(c.email)) && !knownNames.has(tsNameKey(c.first, c.last)));
+  // The credit report has no emails, so its rows find their person by name;
+  // two employees with one name can't be told apart there.
+  const nameCount = {};
+  staff.forEach(e => { const k = tsNameKey(e.first, e.last); if (k) nameCount[k] = (nameCount[k] || 0) + 1; });
+  const sharedNames = staff.filter((e, i, all) => nameCount[tsNameKey(e.first, e.last)] > 1
+    && all.findIndex(x => tsNameKey(x.first, x.last) === tsNameKey(e.first, e.last)) === i)
+    .map(e => `${e.first} ${e.last}`.trim());
   const appStores = new Set(allLocations.map(l => l.name.toLowerCase()));
   const strayStores = m.stores.filter(s => s !== "No store" && !appStores.has(s.toLowerCase())
     && m.people.some(p => p.store === s));
@@ -18335,6 +18355,9 @@ function renderTsImport(problems = []) {
         credits report (counted as not met): ${m.missingCredits.map(t => esc(t.name)).join(", ")}.</p>` : ""}
       ${unmatched.length && has("employees") ? `<p class="note" style="margin:0 0 6px">On the credits report but not
         in All employees, so left out: ${unmatched.map(c => esc(c.first + " " + c.last)).join(", ")}.</p>` : ""}
+      ${sharedNames.length && has("credits") ? `<p class="error" style="margin:0 0 6px">Two or more people on All employees
+        share a name: ${sharedNames.map(esc).join(", ")}. The credits report has no emails, so it finds people by name, and
+        their AGCO hours can't be told apart: check theirs by hand in UKG.</p>` : ""}
       ${strayStores.length ? `<p class="note" style="margin:0 0 6px">Stores with no location of the same name in the app,
         so no location admin sees them (owners still do): ${strayStores.map(esc).join(", ")}. Rename the location under
         Groups &amp; Locations to match.</p>` : ""}
