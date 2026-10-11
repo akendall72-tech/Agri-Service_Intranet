@@ -19947,6 +19947,7 @@ function ocAdminCard(c) {
       <button type="button" data-oc-act="save">Save</button>
       ${v ? `<a class="pdf" href="${ocLink(c)}" target="_blank" rel="noopener" style="text-decoration:none">Open it</a>` : ""}
       <label class="pdf oc-upload">Upload a new version<input type="file" accept=".zip,application/zip" data-oc-act="version" hidden></label>
+      <button type="button" class="ghost danger" data-oc-act="delete" style="margin-left:auto">${icon("trash", 15)}Delete course</button>
     </div>
     <div class="oc-progress" id="ocProgress-${esc(c.id)}"${ocBusy && ocBusy.courseId === c.id ? "" : " hidden"}>${ocBusy && ocBusy.courseId === c.id ? esc(ocBusy.text) : ""}</div>
     <p class="msg" style="margin:8px 0 0"></p>
@@ -19971,6 +19972,54 @@ function ocOldVersions(c) {
     return `<div class="oc-old-row"><span>Version ${v.version} · uploaded ${newsDate(v.uploaded_at)} · ${state}</span>${
       v.total_bytes && !going ? `<button type="button" class="ghost" data-oc-act="removeold" data-oc-version="${v.version}">Remove its files</button>` : ""}</div>`;
   }).join("")}</div>`;
+}
+
+// Deleting a course takes its versions with it, and with them every attempt
+// on it: people's places and passes. So the forklift course can't go while
+// it's the forklift course, and a course anyone has taken asks for its title
+// to be typed, with the count of what goes. The record comes out of the
+// database first and the files after, so a file that won't go leaves only
+// unused storage, never a course that can't open.
+async function ocDeleteCourse(c, card, button) {
+  if (c.purpose === "forklift") {
+    return speak(card, "This is the forklift certification course, which decides who can be given a driving test. "
+      + "Untick The forklift certification course and Save first.", true);
+  }
+  const attempts = ocAttempts.filter(a => a.course_id === c.id);
+  const people = new Set(attempts.map(a => a.user_id)).size;
+  const passed = new Set(attempts.filter(a => a.completed_at).map(a => a.user_id)).size;
+  if (!people) {
+    if (!confirm(`Delete "${c.title}"? It comes off Online Courses and its files are removed. This can't be undone.`)) return;
+  } else {
+    const typed = prompt(`${people} ${people === 1 ? "person has" : "people have"} taken "${c.title}"`
+      + (passed ? `, and ${passed} passed it` : "") + `. Deleting the course deletes their results too, for good.\n\n`
+      + `To delete it, type its title:`);
+    if (typed === null) return;
+    if (typed.trim().toLowerCase() !== c.title.trim().toLowerCase()) {
+      return speak(card, "That didn't match the course's title, so nothing was deleted.", true);
+    }
+  }
+  button.disabled = true;
+  speak(card, "Deleting…", false);
+  // Every version's files, read before the versions go with the course.
+  const { data: versions, error: listError } = await db.from("online_course_versions").select("version, files").eq("course_id", c.id);
+  if (listError) { button.disabled = false; return speak(card, listError.message, true); }
+  const paths = (versions || []).flatMap(v => Object.keys(v.files || {}).map(f => `${c.id}/${v.version}/${f}`));
+  const gone = await db.from("online_courses").delete().eq("id", c.id).select("id");
+  if (gone.error || !(gone.data || []).length) {
+    button.disabled = false;
+    return speak(card, gone.error ? gone.error.message : "It wasn't deleted: only owners and the Training Manager can.", true);
+  }
+  let stuck = 0;
+  for (let i = 0; i < paths.length; i += 100) {
+    const removed = await db.storage.from("online-courses").remove(paths.slice(i, i + 100));
+    if (removed.error) stuck += paths.slice(i, i + 100).length;
+  }
+  await loadOnlineCourses();
+  renderOltAdmin();
+  speak(document.querySelector("#oltAdmin .oc-admin"), stuck
+    ? `"${c.title}" is deleted. ${stuck} of its files couldn't be removed; they take up room but nothing uses them.`
+    : `"${c.title}" is deleted.`, !!stuck);
 }
 
 async function ocRemoveOld(c, version, card, button) {
@@ -19998,6 +20047,10 @@ $("admin").addEventListener("click", async (event) => {
   const b = event.target.closest("[data-oc-act]");
   if (!b || b.tagName === "INPUT") return;
   const card = b.closest(".card");
+  if (b.dataset.ocAct === "delete") {
+    const c = ocCourses.find(x => x.id === card.dataset.ocCourse);
+    return ocDeleteCourse(c, card, b);
+  }
   if (b.dataset.ocAct === "removeold") {
     const c = ocCourses.find(x => x.id === card.dataset.ocCourse);
     return ocRemoveOld(c, Number(b.dataset.ocVersion), card, b);
