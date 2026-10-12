@@ -2768,7 +2768,7 @@
       <button id="adminBtn" class="btn-secondary hidden">Admin</button>
       <button id="trainingBtn" class="btn-secondary btn-training hidden">Training</button>
       <button id="safetyBtn" class="btn-secondary btn-safety hidden">Safety</button>
-      <button id="locationBtn" class="btn-secondary btn-location hidden">Location</button>
+      <button id="locationBtn" class="btn-secondary btn-location hidden">Location Dashboard</button>
       <div class="who" id="who"></div>
       <button id="signOut" class="ghost hidden">Sign out</button>
     </div>
@@ -4102,7 +4102,6 @@ async function start() {
   $("safetyBtn").classList.toggle("hidden", !isSafetyManager());
   $("trainingBtn").classList.toggle("hidden", !isTrainingManager());
   $("locationBtn").classList.toggle("hidden", !isLocationAdmin());
-  $("locationBtn").textContent = lxName();
 
   showHome();
   // The rest, once it's in: the screen showing is drawn again with it, unless
@@ -14847,7 +14846,7 @@ function renderAppNav(active) {
     + (isSafetyManager() ? `<button class="nav-item" data-open-safety>${icon("safety", 18)}<span>Safety</span>${
         (n => n ? `<span class="nav-count">${n}</span>` : "")(srReports.filter(srPending).length)}</button>` : "")
     + (isLocationAdmin() ? `${isOwner() ? "" : `<div class="nav-group">Manage</div>`}
-        <button class="nav-item" data-open-location>${icon("building", 18)}<span>${esc(lxName())} Dashboard</span></button>` : "");
+        <button class="nav-item" data-open-location>${icon("building", 18)}<span>Location Dashboard</span></button>` : "");
   document.querySelectorAll("#appNav [data-nav]").forEach(b =>
     b.classList.toggle("active", b.dataset.nav === active));
 }
@@ -14868,7 +14867,9 @@ function setMode(mode, active) {
   $("adminBtn").textContent = admin ? "Exit admin" : "Admin";
   $("safetyBtn").textContent = safety ? "Exit safety" : "Safety";
   $("trainingBtn").textContent = training ? "Exit training" : "Training";
-  $("locationBtn").textContent = place ? `Exit ${lxName()}` : lxName();
+  // Not the location's name: a location can be called "Admin", which put two
+  // Admin buttons side by side.
+  $("locationBtn").textContent = place ? "Exit location" : "Location Dashboard";
   if (!admin && !safety && !training && !place) renderAppNav(active);
   document.body.classList.remove("nav-open");
 }
