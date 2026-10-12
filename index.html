@@ -4128,7 +4128,7 @@ async function start() {
   showHome();
   // The rest, once it's in: the screen showing is drawn again with it, unless
   // something on it has been typed into or picked since it opened.
-  rest.then(refreshShown, (error) => console.error("loading the rest of the page", error));
+  rest.then(() => { refreshShown(); agcoRepairMaps(); }, (error) => console.error("loading the rest of the page", error));
 }
 
 let viewShown = null, screenTouched = false;
@@ -19665,6 +19665,13 @@ const agcoTally = (people) => [0, 1, 2, 3, 4, 5, 6].map(n => people.filter(p => 
 async function agcoPublishAll(catalogSource) {
   const levels = agcoLevelsNow();
   if (!levels.length) return "Upload the Technical Training Catalog first.";
+  // The ticks as the database holds them now, not a copy from earlier.
+  // Publishing Training Status can move them to a new key on the server (an
+  // email to an employee number, 0098), and a stale copy then matched nobody:
+  // every map was published empty.
+  const fresh = await db.from("agco_course_marks").select("*");
+  if (fresh.error) return fresh.error.message;
+  agcoMarks = fresh.data || [];
   const old = (agcoCatalog && agcoCatalog.source) || {};
   const { error } = await db.rpc("publish_agco_development", {
     // Saved with the catalog's own courses only; the added ones live apart.
@@ -19675,6 +19682,36 @@ async function agcoPublishAll(catalogSource) {
   if (error) return error.message;
   await loadAgco();
   return null;
+}
+
+// Whether any technician's saved map disagrees with their ticks: no map, a map
+// under a key nobody on the roster has any more, or a different number of
+// courses on it. The maps are worked out on this page, so anything that
+// changes the ticks or the keys without redrawing them leaves them behind.
+function agcoMapsOutOfStep() {
+  const levels = agcoLevelsNow();
+  if (!levels.length || !tsPeople.length) return false;
+  const known = new Set(levels.flatMap(l => (l.courses || []).map(agcoCourseKey)));
+  const techs = agcoTechs(), keys = new Set(techs.map(t => t.person_key));
+  if (agcoPeople.some(p => !keys.has(p.person_key))) return true;
+  return techs.some(t => {
+    const row = agcoPeople.find(p => p.person_key === t.person_key);
+    const ticked = agcoMarks.filter(m => m.person_key === t.person_key && known.has(m.course_key)).length;
+    return !row || (row.courses || []).length !== ticked;
+  });
+}
+
+// Once a page load, for an owner: redraws every map if they've fallen out of
+// step with the ticks. Quietly; the maps are the only thing it changes.
+let agcoChecked = false;
+async function agcoRepairMaps() {
+  if (agcoChecked || !isOwner() || agcoError || !agcoCatalog) return;
+  agcoChecked = true;
+  if (!agcoMapsOutOfStep()) return;
+  const problem = await agcoRebuild();
+  if (problem) return console.error("redrawing the AGCO maps", problem);
+  renderAgcoLive(); renderAgcoTechs();
+  refreshShown();
 }
 
 // After a new roster is published. Returns what went wrong, if anything.
