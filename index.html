@@ -232,6 +232,13 @@
           border: 1px solid var(--line-strong); background: #fff; color: var(--ink-2); box-shadow: none; }
   button.chip:hover { background: var(--paper); color: var(--ink); border-color: var(--muted); }
   button.chip.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .covers { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
+  .cover-chip { display: inline-flex; align-items: center; gap: 2px; padding: 1px 3px 1px 10px; border-radius: 999px;
+    background: #F0EEEC; color: var(--ink-2); font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+  .cover-chip button { margin: 0; padding: 0 6px; height: auto; border: 0; background: none; box-shadow: none;
+    color: var(--muted); font-size: 15px; line-height: 1.4; cursor: pointer; }
+  .cover-chip button:hover { color: var(--red); background: none; }
+  .covers select { width: auto; margin: 0; padding: 3px 8px; font-size: 12.5px; min-width: 0; }
   .pill { display: inline-block; background: #F0EEEC; border-radius: 999px; padding: 1px 9px;
           font-size: 12px; color: var(--ink-2); }
 
@@ -2966,6 +2973,11 @@
           only an owner changes them, here. Anyone who only ever uses this page arrives with
           neither. Type over the name; pick a location from the list. These go through the
           same owner-only function deactivation does.</p>
+        <p class="note"><b>Also covers</b> is for an admin filling in at another location, when
+          one has lost its admin. Pick the location under their own and they're its admin too:
+          its lift plans, inspections, Skills sign-offs, Training Status, special tools and
+          Community, and the notifications that go with them. Their own home location doesn't
+          change. Take it away with &times; when the gap is filled.</p>
         <p class="note"><b>Employee # is what finds someone's training records.</b> Each Training
           Status upload fills it in from All employees, by work email. Type it yourself only for
           someone who signs in with a different email from the one UKG has. Nobody can change
@@ -3884,6 +3896,20 @@ const isAdmin = () => profile && (profile.role === "admin" || profile.role === "
 // change is decided by the database policies, which don't consult this.
 const isOwner = () => profile && profile.role === "owner";
 
+// Locations admins cover besides their own (migration 0099): every row for an
+// owner, your own for anyone else.
+let coveredLocations = [];
+// Where you act as the location admin: your home, and any an owner has you
+// covering. The database's admin_at() has the final word.
+const myLocations = () => {
+  const home = profile && profile.location_id;
+  const covers = isAdmin() && !isOwner() && me
+    ? coveredLocations.filter(c => c.person_id === me.id).map(c => c.location_id) : [];
+  return [...new Set([home, ...covers].filter(Boolean))];
+};
+const adminAt = (loc) => !!loc && isAdmin() && myLocations().includes(loc);
+const myLocationNames = () => myLocations().map(id => locations[id] || id);
+
 // ---------------------------------------------------------------- auth
 
 $("signIn").onclick = async () => {
@@ -4046,7 +4072,7 @@ function refreshShown() {
 // and lets the rest come in behind it (start); every other caller, after a
 // change on an admin page, waits for both as it always did.
 async function loadAll({ restInBackground = false } = {}) {
-  const [locs, c, p, pe, sr, wt, pt, ht, tc, tk, gr, pr, ph, dir, sl, allWt, trr, ds, pds, frm, frr] =
+  const [locs, c, p, pe, sr, wt, pt, ht, tc, tk, gr, pr, ph, dir, sl, allWt, trr, ds, pds, frm, frr, cov] =
     await Promise.all([
     db.from("locations").select("*").order("sort_order"),
     db.from("forklift_certifications").select("*"),
@@ -4070,7 +4096,8 @@ async function loadAll({ restInBackground = false } = {}) {
     db.from("designations").select("*").order("sort_order"),
     db.from("person_designations").select("person_id,designation_id,assigned_by_name,assigned_at"),
     db.rpc("forklift_removals"),
-    db.from("forklift_certification_removals").select("*")
+    db.from("forklift_certification_removals").select("*"),
+    db.from("covered_locations").select("person_id,location_id")
   ]);
 
   allLocations = locs.data || [];
@@ -4079,6 +4106,8 @@ async function loadAll({ restInBackground = false } = {}) {
   designations = ds.data || []; personDesignations = pds.data || [];
   forkliftRemovedAt = Object.fromEntries((frm.data || []).map(r => [r.person_key, r.removed_at]));
   forkliftRemovals = Object.fromEntries((frr.data || []).map(r => [r.person_key, r]));
+  // Before 0099 there's no such table, and nobody covers anywhere.
+  coveredLocations = cov.error ? [] : cov.data || [];
   designationsError = ds.error || pds.error ? (ds.error || pds.error).message : null;
   supportRoles = sr.data || [];
   sharedTasks = wt.data || []; personalTasks = pt.data || [];
@@ -5470,11 +5499,10 @@ const toolFieldText = (field, value) =>
 // Part numbers compare the way the database does: trimmed, single spaces, any case.
 const partKey = (p) => String(p || "").trim().replace(/\s+/g, " ").toUpperCase();
 
-// Owners anywhere; a location admin at their own location. The same rules as
-// manages_special_tool() in migration 0062, which has the final word.
-const canAddTools = () => isOwner() || (isAdmin() && !!(profile && profile.location_id));
-const canManageTool = (t) => isOwner()
-  || (isAdmin() && !!profile && !!profile.location_id && t.location_id === profile.location_id);
+// Owners anywhere; a location admin at the locations they look after. The
+// same rules as manages_special_tool() (0062, 0099), which has the final word.
+const canAddTools = () => isOwner() || (isAdmin() && myLocations().length > 0);
+const canManageTool = (t) => isOwner() || adminAt(t.location_id);
 
 function toolStatusText(t) {
   const out = toolOutCount(t), home = shopName(t.location_id);
@@ -5512,11 +5540,13 @@ function toolSentence(error, partNumber, refusal = NOT_YOURS) {
 // ---- special tools: the list
 
 function toolsView() {
-  const mine = profile && profile.location_id;
-  if (toolFilter === "mine" && !mine) toolFilter = "all";
+  // Your location, or every location you look after.
+  const mine = isAdmin() && !isOwner() ? myLocations() : [profile && profile.location_id].filter(Boolean);
+  if (toolFilter === "mine" && !mine.length) toolFilter = "all";
   const pills = [["all", "All", tools.length],
     ["out", "Checked out", tools.filter(t => toolOutCount(t) > 0).length]]
-    .concat(mine ? [["mine", shopName(mine), tools.filter(t => t.location_id === mine).length]] : []);
+    .concat(mine.length ? [["mine", mine.length > 1 ? "My locations" : shopName(mine[0]),
+      tools.filter(t => mine.includes(t.location_id)).length]] : []);
 
   return hero("Special Tools", "Where every special tool lives, and where it is right now.")
     + `<div class="st">
@@ -5535,10 +5565,10 @@ function toolsView() {
 }
 
 function toolRowsHtml() {
-  const mine = profile && profile.location_id;
+  const mine = isAdmin() && !isOwner() ? myLocations() : [profile && profile.location_id].filter(Boolean);
   const shown = tools.filter(t => toolMatches(t, toolQuery)
     && (toolFilter !== "out" || toolOutCount(t) > 0)
-    && (toolFilter !== "mine" || t.location_id === mine));
+    && (toolFilter !== "mine" || mine.includes(t.location_id)));
   if (!shown.length) {
     const why = !tools.length
         ? (canAddTools() ? "No special tools yet. Add the first with Add a tool." : "No special tools have been added yet.")
@@ -5770,8 +5800,11 @@ function toolFormView() {
     <p><button type="button" class="ghost" data-view="tools">Back to the list</button></p></div>`;
   const owner = isOwner();
   // Active locations, plus the tool's own if it has since been switched off, so
-  // an old tool's home still shows.
-  const shops = allLocations.filter(l => l.is_active !== false || l.id === d.location_id);
+  // an old tool's home still shows. An admin covering another location picks
+  // between the ones they look after.
+  const shops = allLocations.filter(l => (l.is_active !== false || l.id === d.location_id)
+    && (owner || myLocations().includes(l.id) || l.id === d.location_id));
+  const choose = owner || myLocations().length > 1;
   const fields = activeToolFields();
 
   return hero(d.mode === "add" ? "Add a Tool" : "Edit Tool",
@@ -5790,13 +5823,14 @@ function toolFormView() {
             <textarea id="tfDesc" rows="3" maxlength="1000"
               placeholder="Optional: what it's for, what it fits">${esc(d.description)}</textarea></div>
           <div class="wide"><label for="tfHome">Home location</label>
-            ${owner ? `<select id="tfHome"><option value="">Choose a location</option>${shops.map(l =>
+            ${choose ? `<select id="tfHome"><option value="">Choose a location</option>${shops.map(l =>
               `<option value="${esc(l.id)}"${l.id === d.location_id ? " selected" : ""}>${esc(l.name)}</option>`).join("")}</select>`
             : `<input id="tfHome" type="text" value="${esc(shopName(d.location_id))}" disabled>`}</div>
         </div>
         <p class="note">The part number is what makes a tool unique. No two tools share one, so a
           second of the same tool is its quantity going up. ${owner
           ? "The home location is where it lives when it isn't checked out."
+          : choose ? "Tools you add live at one of the locations you look after. An owner can move one anywhere."
           : "Tools you add live at your own location. An owner can move one to another location."}</p>
       </div>
       ${fields.length ? `<div class="card">
@@ -5862,7 +5896,7 @@ document.addEventListener("click", async (event) => {
     name: tidy($("tfName").value), part_number: tidy($("tfPart").value),
     // Line breaks kept: a description can be a short list.
     description: $("tfDesc").value.trim(),
-    location_id: isOwner() ? $("tfHome").value : d.location_id,
+    location_id: $("tfHome").tagName === "SELECT" ? $("tfHome").value : d.location_id,
     quantity: Number($("tfQty").value),
     extra
   };
@@ -6895,6 +6929,26 @@ function renderPeople() {
            inputmode="numeric" autocomplete="off" style="margin:0;width:90px;padding:4px 8px"></label>`
     : r.employee_number ? `<div class="note" style="font-size:12.5px;margin-top:4px">Employee #${esc(r.employee_number)}</div>` : "";
 
+  // Locations an admin covers besides their own (0099), for when a location
+  // has lost its admin. Owners add and take them away; anyone else reads them.
+  // Only admins: an owner sees everywhere already, and an employee covers nothing.
+  const coversCell = (r) => {
+    if (r.role !== "admin" || r.deactivated_at) return "";
+    const held = coveredLocations.filter(c => c.person_id === r.id).map(c => c.location_id);
+    const name = (id) => locations[id] || id;
+    if (!isOwner()) {
+      return held.length ? `<div class="note" style="font-size:12.5px;margin-top:6px">Also covers
+        ${esc(held.map(name).join(", "))}</div>` : "";
+    }
+    const options = allLocations.filter(l => l.is_active !== false && l.id !== r.location_id && !held.includes(l.id));
+    return `<div class="covers">${held.map(id => `<span class="cover-chip">${esc(name(id))}<button type="button"
+        data-cover-remove="${esc(id)}" data-person="${esc(r.id)}" aria-label="Stop covering ${esc(name(id))}"
+        title="Stop covering ${esc(name(id))}">&times;</button></span>`).join("")}
+      ${options.length ? `<select data-cover-add="${esc(r.id)}" aria-label="Locations ${esc(r.full_name || r.email || "they")} also covers">
+        <option value="">${held.length ? "Also covers another…" : "Also covers…"}</option>${options.map(l =>
+          `<option value="${esc(l.id)}">${esc(l.name)}</option>`).join("")}</select>` : ""}</div>`;
+  };
+
   const shopPicker = (r) => `<select data-shop-for="${esc(r.id)}" style="margin:0;min-width:130px">
       <option value=""${!r.location_id ? " selected" : ""}>— not set —</option>
       ${allLocations.map(l => `<option value="${esc(l.id)}"${
@@ -6912,7 +6966,7 @@ function renderPeople() {
         ${account(r) ? `<div style="margin-top:6px">${account(r)}</div>` : ""}</td>
       <td>${editable(r) ? shopPicker(r)
         : r.location_id ? esc(locations[r.location_id] || r.location_id)
-        : `<span class="error">not set</span>`}</td>
+        : `<span class="error">not set</span>`}${coversCell(r)}</td>
       <td>${isOwner() && !r.deactivated_at && r.id !== me.id
         ? `<select data-role-for="${esc(r.id)}" style="margin:0;min-width:110px">
             ${["employee", "admin", "owner"].map(role =>
@@ -6998,6 +7052,42 @@ document.addEventListener("change", async (event) => {
 // migration 0007 refuses a second location from anyone signed in. The account
 // function holds the service key, where auth.uid() is null and that guard
 // stands aside. Owners only, like everything else it does.
+// Covering a location: an owner adds one for an admin, or takes it away. The
+// database refuses anyone but an owner, and a location that's already theirs.
+document.addEventListener("change", async (event) => {
+  const pick = event.target.closest("[data-cover-add]");
+  if (!pick || !pick.value) return;
+  const person = people.find(r => r.id === pick.dataset.coverAdd);
+  if (!person) return;
+  const loc = pick.value, card = pick.closest(".card") || $("peopleTable");
+  pick.disabled = true;
+  const { error } = await db.from("covered_locations").insert({ person_id: person.id, location_id: loc });
+  if (error) {
+    pick.disabled = false; pick.value = "";
+    return speak(card, /covered_locations|schema cache|does not exist/i.test(error.message) ? "Run migration 0099 first."
+      : /row-level security/i.test(error.message) ? "Only an admin can cover a location, and not their own."
+      : `Not saved: ${error.message}`, true);
+  }
+  coveredLocations = [...coveredLocations, { person_id: person.id, location_id: loc }];
+  renderPeople();
+  speak(card, `${person.full_name || person.email} now also covers ${locations[loc] || loc}: they're its admin as well as their own location's.`, false);
+});
+document.addEventListener("click", async (event) => {
+  const b = event.target.closest("[data-cover-remove]");
+  if (!b) return;
+  const person = people.find(r => r.id === b.dataset.person);
+  if (!person) return;
+  const loc = b.dataset.coverRemove, card = b.closest(".card") || $("peopleTable");
+  const name = person.full_name || person.email;
+  if (!confirm(`Stop ${name} covering ${locations[loc] || loc}? They go back to looking after ${locations[person.location_id] || "their own location"} only.`)) return;
+  b.disabled = true;
+  const { error } = await db.from("covered_locations").delete().eq("person_id", person.id).eq("location_id", loc);
+  if (error) { b.disabled = false; return speak(card, `Not changed: ${error.message}`, true); }
+  coveredLocations = coveredLocations.filter(c => !(c.person_id === person.id && c.location_id === loc));
+  renderPeople();
+  speak(card, `${name} no longer covers ${locations[loc] || loc}.`, false);
+});
+
 // An employee number: owners only, through set_employee_number(), which
 // refuses one another account already has.
 document.addEventListener("change", async (event) => {
@@ -16635,9 +16725,9 @@ function techSummary(pr) {
     : `Level ${pr.current} · ${pr.count(pr.current)} of ${pr.at(pr.current).length} signed off`;
 }
 
-// An owner looks after everyone; an admin, the people at their own location.
-const techManages = (person) => isOwner()
-  || (isAdmin() && profile && profile.location_id && person.location_id === profile.location_id);
+// An owner looks after everyone; an admin, the people at the locations they
+// look after (their own, and any they're covering).
+const techManages = (person) => isOwner() || adminAt(person.location_id);
 
 const techName = (person) => (person.full_name || "").trim() || "No name yet";
 
@@ -18257,7 +18347,8 @@ function trainingStatusView() {
       ? "Upload them on the Training dashboard, under Uploads → <b>Training Status</b>." : "The training department uploads them.")
       : "Nobody at your location is on the latest reports."}</p></div>`;
   }
-  const scope = isOwner() ? "All locations" : `Your location: ${esc(locations[profile.location_id] || "not set")}`;
+  const scope = isOwner() ? "All locations" : myLocations().length > 1
+    ? `Your locations: ${esc(myLocationNames().join(", "))}` : `Your location: ${esc(locations[profile.location_id] || "not set")}`;
   const tabs = [["summary", "Summary"], ["techs", "Technicians"], ["history", "History"], ["plan", "Planning"], ["classes", "Classes"]];
   return intro + `<div id="tsPage">
     <div class="row ts-tabs"><div class="chips" style="margin:0">${tabs.map(([id, label]) =>
@@ -21151,7 +21242,7 @@ function downloadCourseReportPDF() {
   const noun = crState.techs ? "technicians" : "people";
   const filterLabel = CR_FILTERS.find(f => f[0] === crState.filter)[1];
   const scope = isOwner() ? "All locations"
-    : (locations[profile && profile.location_id] || (model.stores[0]) || "Your location");
+    : (myLocationNames().join(", ") || (model.stores[0]) || "Your location");
   const exported = tsSources && tsSources.history && tsSources.history.exported;
   const RED = [204, 0, 51], GREEN = [33, 112, 48], GREY = [90, 90, 90];
 
