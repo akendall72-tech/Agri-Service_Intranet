@@ -232,6 +232,16 @@
           border: 1px solid var(--line-strong); background: #fff; color: var(--ink-2); box-shadow: none; }
   button.chip:hover { background: var(--paper); color: var(--ink); border-color: var(--muted); }
   button.chip.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .fkreq-add { display: grid; gap: 6px; max-width: 640px; }
+  .fkreq-add input { margin: 0; }
+  .fkreq-matches { display: grid; gap: 4px; }
+  .fkreq-matches button { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto auto; column-gap: 12px;
+    align-items: center; width: 100%; margin: 0; height: auto; padding: 8px 12px; text-align: left; white-space: normal;
+    border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--ink); box-shadow: none; font-weight: 400; }
+  .fkreq-matches button:hover { border-color: var(--line-strong); background: #FAF9F8; }
+  .fkreq-matches b { font-weight: 600; } .fkreq-matches span { grid-row: 2; color: var(--muted); font-size: 12.5px; }
+  .fkreq-matches em { grid-row: 1 / 3; grid-column: 2; font-style: normal; font-weight: 600; color: var(--red); font-size: 13px; }
+  .fkreq-table td { vertical-align: middle; }
   .covers { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
   .cover-chip { display: inline-flex; align-items: center; gap: 2px; padding: 1px 3px 1px 10px; border-radius: 999px;
     background: #F0EEEC; color: var(--ink-2); font-size: 12.5px; font-weight: 600; white-space: nowrap; }
@@ -2850,6 +2860,7 @@
       <div class="nav-group">Equipment</div>
       <button data-tab="certs"><i data-icon="forklift"></i><span>Forklift Certifications</span><b class="nav-count" data-sx-count="certs"></b></button>
       <button data-tab="fkwaiting" data-title="Driving Tests Due"><i data-icon="clock"></i><span>Driving Tests Due</span><b class="nav-count" data-sx-count="fkwaiting"></b></button>
+      <button data-tab="fkrequired" data-title="Required Operators"><i data-icon="forklift"></i><span>Required Operators</span><b class="nav-count" data-sx-count="fkrequired"></b></button>
       <button data-tab="plans"><i data-icon="rigging"></i><span>Lift Plans</span><b class="nav-count" data-sx-count="plans"></b></button>
 
       <div class="nav-group">Reference</div>
@@ -2984,6 +2995,7 @@
       </div>
     </section>
     <section id="tab-fkwaiting" class="hidden"><div class="card" id="fkWaiting"></div></section>
+    <section id="tab-fkrequired" class="hidden"><div class="card" id="fkRequired"></div></section>
 
     <!-- Lift plans -->
     <section id="tab-plans" class="hidden">
@@ -4135,7 +4147,7 @@ function refreshShown() {
 // and lets the rest come in behind it (start); every other caller, after a
 // change on an admin page, waits for both as it always did.
 async function loadAll({ restInBackground = false } = {}) {
-  const [locs, c, p, pe, sr, wt, pt, ht, tc, tk, gr, pr, ph, dir, sl, allWt, trr, ds, pds, frm, frr, cov] =
+  const [locs, c, p, pe, sr, wt, pt, ht, tc, tk, gr, pr, ph, dir, sl, allWt, trr, ds, pds, frm, frr, cov, req] =
     await Promise.all([
     db.from("locations").select("*").order("sort_order"),
     db.from("forklift_certifications").select("*"),
@@ -4160,7 +4172,8 @@ async function loadAll({ restInBackground = false } = {}) {
     db.from("person_designations").select("person_id,designation_id,assigned_by_name,assigned_at"),
     db.rpc("forklift_removals"),
     db.from("forklift_certification_removals").select("*"),
-    db.from("covered_locations").select("person_id,location_id")
+    db.from("covered_locations").select("person_id,location_id"),
+    db.from("forklift_required").select("*").order("name")
   ]);
 
   allLocations = locs.data || [];
@@ -4171,6 +4184,9 @@ async function loadAll({ restInBackground = false } = {}) {
   forkliftRemovals = Object.fromEntries((frr.data || []).map(r => [r.person_key, r]));
   // Before 0099 there's no such table, and nobody covers anywhere.
   coveredLocations = cov.error ? [] : cov.data || [];
+  // Before 0100 there's no such table: nobody is required, and the tab says why.
+  forkliftRequired = req.error ? [] : req.data || [];
+  forkliftRequiredError = req.error ? req.error.message : null;
   designationsError = ds.error || pds.error ? (ds.error || pds.error).message : null;
   supportRoles = sr.data || [];
   sharedTasks = wt.data || []; personalTasks = pt.data || [];
@@ -4514,7 +4530,7 @@ function showSafety(tab) {
   document.body.dataset.page = "safety";
   evalAgreed = null; evalNotice = "";
   renderCerts(); renderEvalForm(); renderPlans(); renderSafetyAdmin(); renderSdsAdmin(); renderSdsPending();
-  renderSafetyReportAdmin(); renderSafetyReportsAdmin(); renderSafetyOverview(); renderFkWaiting();
+  renderSafetyReportAdmin(); renderSafetyReportsAdmin(); renderSafetyOverview(); renderFkWaiting(); renderFkRequired();
   document.querySelector(`#safetyNav [data-tab="${tab || safetyTab}"]`).click();
   window.scrollTo(0, 0);
 }
@@ -4631,6 +4647,11 @@ function renderLocationOverview() {
     waiting: cards.filter(x => x.st[1] === "b-pending")
   };
   const testsDue = evalPeople.filter(p => atLocation(p.email, p.name));
+  // The Safety Manager's required operators here (0100), not certified first.
+  const required = forkliftRequired.filter(r => here(fkReqStore_(r)))
+    .map(r => ({ r, st: fkReqStatus(r), name: fkReqName(r) }))
+    .sort((a, b) => (a.st.certified - b.st.certified) || a.name.localeCompare(b.name));
+  const reqNot = required.filter(x => !x.st.certified);
 
   // Crane qualifications, from the course on Training Status.
   const crane = roster.map(r => ({ r, st: craneStatus(r), name: `${r.first_name} ${r.last_name}`.trim() }))
@@ -4658,6 +4679,8 @@ function renderLocationOverview() {
 
   const plural = (n, one, many = one + "s") => `${n} ${n === 1 ? one : many}`;
   const todo = [
+    reqNot.length && { n: reqNot.length, tone: "red", text: `required forklift ${reqNot.length === 1 ? "operator isn't" : "operators aren't"} certified`,
+      items: reqNot.map(x => `${x.name} · ${x.st.label}${x.r.note ? ` · ${x.r.note}` : ""}`) },
     plansWaiting.length && { n: plansWaiting.length, tone: "red", text: `${plansWaiting.length === 1 ? "lift plan" : "lift plans"} waiting for approval`,
       items: plansWaiting.map(p => `${p.created_by_name || "Someone"}: ${firstLine(p.job_description) || "Untitled lift"}`), go: ["rigging", "Crane Center"] },
     inspTodo.length && { n: inspTodo.length, tone: "amber", text: `${inspTodo.length === 1 ? "inspection" : "inspections"} with the after-class part to finish`,
@@ -4702,8 +4725,10 @@ function renderLocationOverview() {
       ${sxTile("Technicians", sxNum(m.techs.length), `${plural(roster.length, "person", "people")} here`, { lit: "steel" })}
       ${sxTile(`Have ${need}+ hours`, sxNum(m.metCount), m.techs.length ? `${tsPct(m.pct)} of technicians` : "No technicians", { lit: "green", good: metGoal })}
       ${sxTile("EPA 609", sxNum(no609.length), no609.length ? "still need one" : "Every technician has it", { lit: "violet", hot: no609.length > 0 })}
-      ${sxTile("Forklift cards", sxNum(fk.certified.length + fk.expiring.length), fk.expiring.length || fk.expired.length
-        ? `${fk.expiring.length} expiring · ${fk.expired.length} expired` : "Current cards", { lit: fk.expired.length ? "red" : fk.expiring.length ? "amber" : "green" })}
+      ${sxTile("Forklift cards", sxNum(fk.certified.length + fk.expiring.length), reqNot.length
+        ? `${reqNot.length} required ${reqNot.length === 1 ? "operator" : "operators"} not certified`
+        : fk.expiring.length || fk.expired.length ? `${fk.expiring.length} expiring · ${fk.expired.length} expired` : "Current cards",
+        { lit: reqNot.length || fk.expired.length ? "red" : fk.expiring.length ? "amber" : "green", hot: reqNot.length > 0 })}
       ${sxTile("Crane qualified", sxNum(cr.qualified.length + cr.expiring.length), cr.expired.length || cr.expiring.length
         ? `${cr.expiring.length} expiring · ${cr.expired.length} expired` : "Current", { lit: cr.expired.length ? "red" : cr.expiring.length ? "amber" : "green" })}
       ${sxTile("Upcoming classes", sxNum(classes.length), classes.length ? `${plural(new Set(classes.flatMap(x => x.who.map(p => p.email || p.name))).size, "person", "people")} enrolled` : "Nobody enrolled", { lit: "teal" })}
@@ -4717,7 +4742,7 @@ function renderLocationOverview() {
             <ul>${t.items.map(i => `<li>${esc(i)}</li>`).join("")}</ul>
             ${t.go ? `<button type="button" class="sx-link" data-view="${t.go[0]}">Open the ${esc(t.go[1])} &rsaquo;</button>` : ""}
           </details>`).join("")}</div>`
-          : `<p class="sx-empty sx-clear">${icon("checkCircle", 18)} Nothing waiting at ${esc(name)}: no lift plans to approve, every technician has EPA 609, and no forklift card or crane qualification has run out.</p>`}
+          : `<p class="sx-empty sx-clear">${icon("checkCircle", 18)} Nothing waiting at ${esc(name)}: no lift plans to approve, every technician has EPA 609, every required forklift operator is certified, and no forklift card or crane qualification has run out.</p>`}
       </section>
 
       <section class="sx-panel" style="${lit("teal")}">
@@ -4750,8 +4775,11 @@ function renderLocationOverview() {
           : `<p class="sx-empty sx-clear">${icon("checkCircle", 18)} Every technician here has it.</p>`}` : `<p class="sx-empty">No technicians here.</p>`}
       </section>
 
-      <section class="sx-panel" style="${lit(fk.expired.length ? "red" : fk.expiring.length ? "amber" : "green")}">
+      <section class="sx-panel" style="${lit(reqNot.length || fk.expired.length ? "red" : fk.expiring.length ? "amber" : "green")}">
         <header><h3>Forklift cards</h3><span>${plural(cards.length, "card")}</span></header>
+        ${required.length ? `<h4 style="margin-top:0">Required operators · ${required.length - reqNot.length} of ${required.length} certified</h4>
+          ${list(required.map(x => line(x.name, x.r.note || "", esc(x.st.label), x.st.tone)), "")}
+          <h4>Everyone with a card</h4>` : ""}
         <div class="sx-trio"><div><b>${sxNum(fk.certified.length)}</b><span>Certified</span></div>
           <div class="amber"><b>${sxNum(fk.expiring.length)}</b><span>Expiring</span></div>
           <div class="red"><b>${sxNum(fk.expired.length)}</b><span>Expired</span></div></div>
@@ -10836,6 +10864,7 @@ function renderSafetyNavCounts() {
   set("certs", f.expiring.length + f.expired);
   set("plans", plans.filter(p => p.status === "submitted").length);
   set("fkwaiting", fkWaiting.filter(r => !r.ran_out).length);
+  set("fkrequired", forkliftRequired.filter(r => !fkReqStatus(r).certified).length);
 }
 
 function sxTile(label, value, sub, opts = {}) {
@@ -10961,6 +10990,7 @@ function renderSafetyOverview() {
           `<div><span>${esc(x.name)}</span><b>${x.days} day${x.days === 1 ? "" : "s"}</b></div>`).join("")}</div>`
           : `<p class="sx-empty">Nobody's card runs out in the next 60 days.</p>`}
         ${fork.waiting ? `<p class="sx-sub">${fork.waiting} driving test${fork.waiting === 1 ? "" : "s"} waiting for the Training Manager.</p>` : ""}
+        ${(n => n ? `<button type="button" class="sx-attn-row red" data-sx-go="fkrequired" style="margin-top:8px">${icon("forklift", 16)}<span>${n} required operator${n === 1 ? " isn't" : "s aren't"} certified</span></button>` : "")(forkliftRequired.filter(r => !fkReqStatus(r).certified).length)}
       </section>
 
       <section class="sx-panel" style="${lit("slate")}">
@@ -11744,6 +11774,167 @@ function renderFkWaiting() {
           <td>${esc(r.email || "—")}</td>${cells(r)}</tr>`).join("")}</tbody>
       </table></div>` : ""}`;
 }
+
+// ---- required forklift operators (0100) -------------------------------------------
+//
+// The Safety Manager's list of people who must hold a forklift certification.
+// Every other forklift report starts from the cards, so someone who drives one
+// and was never certified showed up nowhere. Each person is kept like their
+// training record: employee number, then email.
+let forkliftRequired = [], forkliftRequiredError = null;
+let fkReqView = "notcert", fkReqStore = "all", fkReqQuery = "";
+
+// Their row on the UKG roster, where they still are on it.
+function fkReqRoster(row) {
+  return tsPeople.find(t => t.person_key === row.person_key)
+    || (row.employee_number && tsPeople.find(t => t.employee_number === row.employee_number))
+    || (row.email && tsPeople.find(t => (t.email || "").toLowerCase() === row.email)) || null;
+}
+const fkReqStore_ = (row) => { const t = fkReqRoster(row); return (t && t.store) || row.store || "Not on the roster"; };
+const fkReqName = (row) => { const t = fkReqRoster(row); return t ? `${t.first_name} ${t.last_name}`.trim() : row.name || row.email || "Someone"; };
+
+// Whether they can drive today, and what to say: their newest card, by email,
+// or by name for an old card with none.
+function fkReqStatus(row) {
+  const t = fkReqRoster(row);
+  const number = (t && t.employee_number) || row.employee_number;
+  // Their emails: UKG's, the one kept with them here, and their app account's.
+  const account = number && people.find(p => p.employee_number === number);
+  const emails = new Set([t && t.email, row.email, account && account.email]
+    .map(e => (e || "").trim().toLowerCase()).filter(Boolean));
+  const nameKey = tsNameKey(fkReqName(row), "");
+  const card = certsPerPerson().find(c => {
+    const e = (c.email || "").trim().toLowerCase();
+    return e ? emails.has(e) : nameKey && tsNameKey(c.operator_name || "", "") === nameKey;
+  });
+  const due = evalPeople.find(p => emails.has((p.email || "").toLowerCase()));
+  if (card) {
+    const [label, cls] = certStatusNow(card);
+    if (cls === "b-current") return { label: `Certified until ${fmtDate(card.expiration_date)}`, tone: "ok", certified: true, card };
+    if (cls === "b-expiring") return { label: `Certified · ${label.replace(/^Expiring · /, "")} left`, tone: "warn", certified: true, card };
+    if (cls === "b-pending") return { label: "Test waiting for approval", tone: "warn", certified: false, card };
+    if (due) return { label: `${label} · driving test due by ${fmtDate(due.last_day)}`, tone: "bad", certified: false, card };
+    return { label: label === "Expired" ? `Expired ${fmtDate(card.expiration_date)}` : label, tone: "bad", certified: false, card };
+  }
+  if (due) return { label: `Not certified · passed the course, driving test due by ${fmtDate(due.last_day)}`, tone: "bad", certified: false };
+  return { label: "Not certified", tone: "bad", certified: false };
+}
+
+function renderFkRequired() {
+  const box = $("fkRequired");
+  if (!box) return;
+  if (forkliftRequiredError) {
+    box.innerHTML = `<h2>Required operators</h2><p class="error">${/forklift_required|does not exist|schema cache/i.test(forkliftRequiredError)
+      ? "Run migration 0100_forklift_required.sql in the SQL editor, then reload this page." : esc(forkliftRequiredError)}</p>`;
+    return;
+  }
+  const canChange = isSafetyManager();
+  const rows = forkliftRequired.map(r => ({ r, st: fkReqStatus(r), store: fkReqStore_(r), name: fkReqName(r) }));
+  const stores = [...new Set(rows.map(x => x.store))].sort();
+  if (fkReqStore !== "all" && !stores.includes(fkReqStore)) fkReqStore = "all";
+  const atStore = rows.filter(x => fkReqStore === "all" || x.store === fkReqStore);
+  const notCert = atStore.filter(x => !x.st.certified);
+  const shown = (fkReqView === "notcert" ? notCert : atStore)
+    .sort((a, b) => (a.st.certified - b.st.certified) || a.store.localeCompare(b.store) || a.name.localeCompare(b.name));
+  const emails = [...new Set(notCert.map(x => ((fkReqRoster(x.r) || {}).email || x.r.email || "").toLowerCase()).filter(e => /@/.test(e)))];
+  const { html: mailButtons } = bccButtons(emails);
+
+  // Adding: anyone on All employees who isn't on the list yet.
+  const on = new Set(forkliftRequired.map(r => r.person_key));
+  const words = fkReqQuery.toLowerCase().split(/\s+/).filter(Boolean);
+  const matches = words.length ? tsPeople.filter(t => !on.has(t.person_key)
+      && words.every(w => `${t.first_name} ${t.last_name} ${t.store} ${t.job}`.toLowerCase().includes(w)))
+    .sort((a, b) => a.last_name.localeCompare(b.last_name)).slice(0, 12) : [];
+  const tone = (t) => t === "ok" ? "b-current" : t === "warn" ? "b-expiring" : "b-expired";
+
+  box.innerHTML = `<h2>Required operators</h2>
+    <p class="note" style="margin:0 0 12px">Everyone who drives a forklift and must hold a certification. The certification
+      reports only show people who have a card; this list also catches anyone who drives one without. Their location's admin
+      sees anyone here who isn't certified at the top of the Location Dashboard.</p>
+    ${canChange ? `<div class="fkreq-add">
+      <label for="fkReqSearch">Require someone</label>
+      <input id="fkReqSearch" class="search" type="search" placeholder="Search All employees by name, location or job" autocomplete="off" value="${esc(fkReqQuery)}">
+      ${words.length ? (matches.length ? `<div class="fkreq-matches">${matches.map(t => `<button type="button" data-fkreq-add="${esc(t.person_key)}">
+          <b>${esc(`${t.first_name} ${t.last_name}`.trim())}</b><span>${esc([t.store, (t.job || "").replace(/^\d+\s*-\s*/, "")].filter(Boolean).join(" · "))}</span>
+          <em>Require</em></button>`).join("")}</div>`
+        : `<p class="note">${tsPeople.length ? "Nobody on All employees by that name who isn't on the list already." : "Training Status hasn't loaded All employees yet."}</p>`) : ""}
+    </div>` : `<p class="note">Only the Safety Manager adds people to this list.</p>`}
+    <div class="row" style="margin:14px 0 10px">
+      <select id="fkReqStore" style="max-width:260px;margin:0" aria-label="Location">
+        <option value="all">All locations</option>${stores.map(x => `<option${x === fkReqStore ? " selected" : ""}>${esc(x)}</option>`).join("")}
+      </select>
+    </div>
+    <div class="chips sd-missing-toggle">
+      <button type="button" class="chip${fkReqView === "notcert" ? " on" : ""}" data-fkreq-view="notcert">Not certified · ${notCert.length}</button>
+      <button type="button" class="chip${fkReqView === "all" ? " on" : ""}" data-fkreq-view="all">Everyone required · ${atStore.length}</button></div>
+    <p class="sd-missing-sum">${!forkliftRequired.length ? "Nobody is on the list yet."
+      : notCert.length ? `<b>${notCert.length}</b> of ${atStore.length} required ${atStore.length === 1 ? "operator" : "operators"} ${notCert.length === 1 ? "isn't" : "aren't"} certified.`
+      : `Every required operator${fkReqStore === "all" ? "" : ` at ${esc(fkReqStore)}`} is certified.`}</p>
+    ${fkReqView === "notcert" && emails.length ? `<div class="row sd-mail-row">${mailButtons}
+      <button type="button" class="ghost" data-sd-copy="${esc(emails.join("; "))}">Copy the addresses</button><span class="msg"></span></div>
+      <p class="note" style="margin:6px 0 12px">Opens a new email to the ones not certified, everyone in <b>BCC</b>.</p>` : ""}
+    ${shown.length ? `<div style="overflow-x:auto"><table class="sd-missing fkreq-table">
+      <thead><tr><th>Name</th><th>Location</th><th>Status</th><th>Why</th>${canChange ? "<th></th>" : ""}</tr></thead>
+      <tbody>${shown.map(x => `<tr>
+        <td><b>${esc(x.name)}</b><div class="note" style="font-size:12px">Added by ${esc(x.r.required_by_name || "the Safety Manager")}${
+          x.r.required_at ? `, ${esc(fmtDate(String(x.r.required_at).slice(0, 10)))}` : ""}</div></td>
+        <td>${esc(x.store)}</td>
+        <td><span class="badge ${tone(x.st.tone)}">${esc(x.st.label)}</span></td>
+        <td>${canChange ? `<input data-fkreq-note="${esc(x.r.person_key)}" value="${esc(x.r.note || "")}" maxlength="300"
+              placeholder="Optional: what they drive" style="margin:0;min-width:160px">` : esc(x.r.note || "—")}</td>
+        ${canChange ? `<td style="text-align:right"><button type="button" class="ghost" data-fkreq-remove="${esc(x.r.person_key)}">Remove</button></td>` : ""}
+      </tr>`).join("")}</tbody></table></div>` : ""}`;
+}
+
+$("admin").addEventListener("input", (event) => {
+  if (event.target.id !== "fkReqSearch") return;
+  fkReqQuery = event.target.value;
+  const at = event.target.selectionStart;
+  renderFkRequired();
+  const again = $("fkReqSearch");
+  if (again) { again.focus(); again.setSelectionRange(at, at); }
+});
+$("admin").addEventListener("change", async (event) => {
+  if (event.target.id === "fkReqStore") { fkReqStore = event.target.value; return renderFkRequired(); }
+  const note = event.target.closest("[data-fkreq-note]");
+  if (!note) return;
+  const row = forkliftRequired.find(r => r.person_key === note.dataset.fkreqNote);
+  if (!row) return;
+  const text = note.value.trim();
+  if (text === (row.note || "")) return;
+  const { error } = await db.from("forklift_required").update({ note: text }).eq("person_key", row.person_key);
+  if (error) { note.value = row.note || ""; return alert(`Not saved: ${error.message}`); }
+  row.note = text;
+});
+$("admin").addEventListener("click", async (event) => {
+  const view = event.target.closest("[data-fkreq-view]");
+  if (view) { fkReqView = view.dataset.fkreqView; return renderFkRequired(); }
+  const add = event.target.closest("[data-fkreq-add]");
+  if (add) {
+    const t = tsPeople.find(x => x.person_key === add.dataset.fkreqAdd);
+    if (!t) return;
+    add.disabled = true;
+    const row = { person_key: t.person_key, employee_number: t.employee_number || null,
+      email: (t.email || "").trim().toLowerCase() || null, name: `${t.first_name} ${t.last_name}`.trim(), store: t.store || "" };
+    const { data, error } = await db.from("forklift_required").insert(row).select();
+    if (error) { add.disabled = false; return alert(/row-level security/i.test(error.message)
+      ? "Only the Safety Manager can add people to this list." : `Not added: ${error.message}`); }
+    forkliftRequired = [...forkliftRequired, (data && data[0]) || { ...row, required_at: new Date().toISOString(), required_by_name: (profile && profile.full_name) || "" }];
+    fkReqQuery = "";
+    renderFkRequired(); renderSafetyNavCounts();
+    return $("fkReqSearch") && $("fkReqSearch").focus();
+  }
+  const remove = event.target.closest("[data-fkreq-remove]");
+  if (remove) {
+    const row = forkliftRequired.find(r => r.person_key === remove.dataset.fkreqRemove);
+    if (!row || !confirm(`Take ${fkReqName(row)} off the required operators list? Their certification records stay as they are.`)) return;
+    remove.disabled = true;
+    const { error } = await db.from("forklift_required").delete().eq("person_key", row.person_key);
+    if (error) { remove.disabled = false; return alert(`Not removed: ${error.message}`); }
+    forkliftRequired = forkliftRequired.filter(r => r.person_key !== row.person_key);
+    renderFkRequired(); renderSafetyNavCounts();
+  }
+});
 
 $("admin").addEventListener("click", (event) => {
   const view = event.target.closest("[data-fk-view]");
@@ -22151,7 +22342,7 @@ document.querySelectorAll(".tabs button[data-tab]").forEach(btn => {
     document.querySelectorAll(".tabs button[data-tab]").forEach(b =>
       b.classList.toggle("active", b === btn));
     ["certs", "plans", "people", "support", "payroll", "tools",
-      "directory", "logins", "reminders", "events", "fitness", "org", "openseat", "inspections", "courses", "articles", "skillsadmin", "sds", "news", "trainingstatus", "handbook", "agco", "mock", "safetydesk", "safetyreportform", "safetyreports", "safetyoverview", "fkwaiting", "trainingoverview", "agcocatalog", "rpagco", "rpclass", "oltadmin", "locationoverview"].forEach(name =>
+      "directory", "logins", "reminders", "events", "fitness", "org", "openseat", "inspections", "courses", "articles", "skillsadmin", "sds", "news", "trainingstatus", "handbook", "agco", "mock", "safetydesk", "safetyreportform", "safetyreports", "safetyoverview", "fkwaiting", "trainingoverview", "agcocatalog", "rpagco", "rpclass", "oltadmin", "locationoverview", "fkrequired"].forEach(name =>
       $("tab-" + name).classList.toggle("hidden", name !== btn.dataset.tab));
     $("adminTitle").textContent = btn.dataset.title || btn.querySelector("span").textContent.trim();
     if (btn.closest("#safetyNav")) safetyTab = btn.dataset.tab;
