@@ -1230,6 +1230,16 @@
   .lx-class b { font-size: 14px; } .lx-class small { color: var(--cab-detail); font-size: 12px; }
   .lx-class span { color: var(--cab-sub); font-size: 13px; }
   .lx-classes { display: grid; gap: 6px; max-height: 520px; overflow-y: auto; padding-right: 4px; }
+  .lx-safety-sum { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 12px; }
+  .lx-safety-sum div { display: grid; gap: 2px; padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,.04); }
+  .lx-safety-sum b { font: 700 30px/1 var(--font-cab); font-variant-numeric: tabular-nums; }
+  .lx-safety-sum b small { font-size: 15px; color: var(--cab-detail); font-weight: 600; }
+  .lx-safety-sum span { color: var(--cab-sub); font-size: 13px; }
+  .lx-safety { display: grid; gap: 4px; max-height: 480px; overflow-y: auto; padding-right: 4px; margin-top: 10px; }
+  .lx-safety-row { display: grid; grid-template-columns: minmax(0, 1fr) auto 96px; align-items: center; gap: 12px;
+    padding: 7px 10px; border-radius: 9px; background: rgba(255,255,255,.035); }
+  .lx-safety-row .tx-note:last-child { text-align: right; }
+  @media (max-width: 520px) { .lx-safety-row { grid-template-columns: minmax(0, 1fr) auto; } .lx-safety-row .tx-who-name { grid-column: 1 / -1; } }
   .sx-full { grid-column: 1 / -1; }
   .tx-hero { background: radial-gradient(90% 140% at 0% 100%, color-mix(in srgb, var(--lit-teal) 16%, transparent), transparent 60%),
       linear-gradient(135deg, #2A333A, #1B2227); }
@@ -4544,6 +4554,10 @@ function showSafety(tab) {
 // any. The database has already limited what's loaded to what this person may
 // see, so this only sorts it by location.
 let lxLocation = null;
+// The month the Safety Brief and Reports panel shows, and whether it lists
+// only the people missing something. The month is filled in on first draw:
+// sxMonthKey is defined further down the page.
+let lxSafetyMonth = null, lxSafetyFilter = "missing";
 
 function lxChoices() {
   if (!isAdmin()) return [];
@@ -4585,6 +4599,14 @@ function renderLocationNav() {
           !isOwner() && id !== (profile && profile.location_id) ? ` <small class="note">covering</small>` : ""}</span></button>`).join("")
     : "";
 }
+
+$("admin").addEventListener("change", (event) => {
+  if (event.target.id === "lxSafetyMonth") { lxSafetyMonth = event.target.value; renderLocationOverview(); }
+});
+$("admin").addEventListener("click", (event) => {
+  const pill = event.target.closest("[data-lx-safety]");
+  if (pill) { lxSafetyFilter = pill.dataset.lxSafety; renderLocationOverview(); }
+});
 
 document.addEventListener("click", (event) => {
   const pick = event.target.closest("[data-lx-location]");
@@ -4653,6 +4675,23 @@ function renderLocationOverview() {
     .sort((a, b) => (a.st.certified - b.st.certified) || a.name.localeCompare(b.name));
   const reqNot = required.filter(x => !x.st.certified);
 
+  // The Safety Brief and Safety Reports, for everyone with an account here by
+  // the month's end. A report is only a count (0101): who sent one is kept
+  // from everyone but the Safety Manager, and what it says from the admin.
+  const sKey = lxSafetyMonth || (lxSafetyMonth = sxMonthKey()), thisMonth = sKey === sxMonthKey();
+  const sBrief = safetyBriefs.find(b => b.is_published && String(b.month).slice(0, 7) === sKey) || null;
+  const sRows = sxPeopleIn(sKey).filter(p => p.location_id === loc).map(p => {
+    const res = sBrief ? briefResult(sBrief, p.id) : null;
+    return { p, name: p.full_name || p.email || "No name yet",
+      brief: !sBrief ? null : res && res.passed_at ? "passed" : res && res.tries ? "failed" : res ? "started" : "none",
+      reports: srCounts ? ((srCounts.find(c => c.person_id === p.id && c.month === sKey) || {}).reports || 0) : null };
+  }).sort((a, b) => a.name.localeCompare(b.name));
+  const briefPassed = sRows.filter(x => x.brief === "passed").length;
+  const reportSent = sRows.filter(x => x.reports > 0).length;
+  const needsBrief = sBrief ? sRows.filter(x => x.brief !== "passed") : [];
+  const needsReport = srCounts ? sRows.filter(x => !x.reports) : [];
+  const sMissing = sRows.filter(x => needsBrief.includes(x) || needsReport.includes(x));
+
   // Crane qualifications, from the course on Training Status.
   const crane = roster.map(r => ({ r, st: craneStatus(r), name: `${r.first_name} ${r.last_name}`.trim() }))
     .filter(x => x.st.kind !== "none");
@@ -4698,7 +4737,11 @@ function renderLocationOverview() {
     cr.expiring.length && { n: cr.expiring.length, tone: "amber", text: `crane ${cr.expiring.length === 1 ? "qualification runs" : "qualifications run"} out in the next 60 days`,
       items: cr.expiring.map(x => `${x.name} · ${short(x.st.expires)}`) },
     close.length && { n: close.length, tone: "teal", text: `${close.length === 1 ? "technician is" : "technicians are"} within 8 hours of ${need}`,
-      items: close.map(t => `${t.name} · needs ${shortBy(t)}`) }
+      items: close.map(t => `${t.name} · needs ${shortBy(t)}`) },
+    thisMonth && needsBrief.length && { n: needsBrief.length, tone: "ember", text: `${needsBrief.length === 1 ? "person hasn't" : "people haven't"} passed this month's Safety Brief`,
+      items: needsBrief.map(x => `${x.name} · ${x.brief === "failed" ? "not passed yet" : x.brief === "started" ? "started" : "not taken"}`) },
+    thisMonth && needsReport.length && { n: needsReport.length, tone: "ember", text: `${needsReport.length === 1 ? "person hasn't" : "people haven't"} sent a Safety Report this month`,
+      items: needsReport.map(x => x.name) }
   ].filter(Boolean);
 
   const line = (who, sub, note, tone) => `<div class="tx-who-row tx-line"><span class="tx-who-name"><b>${esc(who)}</b>${
@@ -4753,6 +4796,35 @@ function renderLocationOverview() {
             <span>${esc(who.map(p => p.name || `${p.first} ${p.last}`.trim()).join(", "))}</span></div>`).join("")}</div>`
           : `<p class="sx-empty">${internal ? `Nobody from ${esc(name)} is enrolled in an upcoming class on the latest Open Seat Report.`
             : "The Open Seat Report hasn't been published yet."}</p>`}
+      </section>
+
+      <section class="sx-panel sx-full" style="${lit("ember")}">
+        <header><h3>Safety Brief &amp; Reports</h3><span>${esc(sxMonthName(sKey))}</span>
+          <select id="lxSafetyMonth" class="tx-store" aria-label="Month">${sxMonthOptions(sKey)}</select></header>
+        ${sRows.length ? `<div class="lx-safety-sum">
+          <div><b>${sBrief ? `${briefPassed}<small> of ${sRows.length}</small>` : "—"}</b><span>${sBrief
+            ? `passed the ${esc(sxMonthName(sKey))} Safety Brief` : `No Safety Brief was published for ${esc(sxMonthName(sKey))}`}</span></div>
+          <div><b>${srCounts ? `${reportSent}<small> of ${sRows.length}</small>` : "—"}</b><span>${srCounts
+            ? "sent at least one Safety Report" : "Report counts need migration 0101"}</span></div>
+        </div>
+        <div class="sx-who-bar">
+          <div class="sx-who-pills">${[["missing", "Missing something", sMissing.length], ["all", "Everyone", sRows.length]].map(([id, label, n]) =>
+            `<button type="button" class="sx-who-pill${lxSafetyFilter === id ? " on" : ""}" data-lx-safety="${id}">${label}<span>${n}</span></button>`).join("")}</div>
+          ${(emails => emails.length && lxSafetyFilter === "missing" ? `<div class="row sx-who-mail">${bccButtons(emails).html}
+            <button type="button" class="ghost" data-sd-copy="${esc(emails.join("; "))}">Copy the addresses</button><span class="msg"></span></div>` : "")(
+            [...new Set(sMissing.map(x => (x.p.email || "").trim()).filter(e => /@/.test(e)))])}
+        </div>
+        ${(rows => rows.length ? `<div class="lx-safety">${rows.map(x => `<div class="lx-safety-row">
+            <span class="tx-who-name"><b>${esc(x.name)}</b></span>
+            <span class="tx-note lx-note-${x.brief === "passed" ? "ok" : x.brief === null ? "quiet" : x.brief === "none" ? "bad" : "warn"}">${
+              x.brief === null ? "No brief" : x.brief === "passed" ? "Brief passed" : x.brief === "failed" ? "Brief not passed yet" : x.brief === "started" ? "Brief started" : "Brief not taken"}</span>
+            <span class="tx-note lx-note-${x.reports === null ? "quiet" : x.reports ? "ok" : "bad"}">${
+              x.reports === null ? "—" : x.reports ? `${x.reports} report${x.reports === 1 ? "" : "s"}` : "No report"}</span>
+          </div>`).join("")}</div>`
+          : `<p class="sx-empty sx-clear">${icon("checkCircle", 18)} Everyone at ${esc(name)} has passed the brief and sent a report for ${esc(sxMonthName(sKey))}.</p>`)(
+          lxSafetyFilter === "missing" ? sMissing : sRows)}
+        <p class="sx-sub">Everyone with an app account at ${esc(name)} by the end of the month. Who sent a Safety Report is a count only; what it says stays with the Safety Manager.</p>`
+        : `<p class="sx-empty">Nobody at ${esc(name)} has an app account yet.</p>`}
       </section>
 
       <section class="sx-panel sx-full" style="${lit(metGoal ? "green" : "amber")}">
@@ -9592,11 +9664,15 @@ const isSafetyManager = () => isOwner() && personDesignations.some(pd =>
 // The table gives your own reports, or every one for the Safety Manager; the
 // log gives the approved ones everyone reads, without who sent them (0085).
 async function loadSafetyReportData() {
-  const [form, reports, log] = await Promise.all([
+  const [form, reports, log, counts] = await Promise.all([
     db.from("safety_report_form").select("*").eq("id", "current").maybeSingle(),
     db.from("safety_reports").select("*").order("created_at", { ascending: false }).limit(1000),
-    db.rpc("safety_report_log")
+    db.rpc("safety_report_log"),
+    db.rpc("safety_report_counts")
   ]);
+  // How many each person sent a month, for the people this person looks after
+  // (0101): counts only. Before 0101, null, and the Location Dashboard says so.
+  srCounts = counts.error ? null : counts.data || [];
   srFormError = form.error ? form.error.message : null;
   srForm = form.data || null;
   const own = reports.data || [], seen = new Set(own.map(r => r.id));
@@ -9604,6 +9680,7 @@ async function loadSafetyReportData() {
     .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
 }
 
+let srCounts = null;
 const srPending = (r) => (r.status || "pending") !== "approved";
 // The originals for the Safety Manager and the sender; the shared copies on a
 // report from the log, whose answers leave the originals out.
