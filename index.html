@@ -11191,7 +11191,8 @@ $("admin").addEventListener("click", (event) => {
 //
 // One month, for leadership: the headline numbers, the Safety Reports trend, the
 // month's Safety Brief by location and who hasn't passed it, the month's reports by
-// type and location, every report in full, and who sent one and who didn't.
+// type and location, who sent one and who didn't, the required forklift and crane
+// operators who don't hold it, and every report in full.
 // Confidential: it names who sent each report. jsPDF's fonts are Latin-1, so
 // emoji are dropped and dashes and quotes made plain.
 async function sxMonthlyPdf(key) {
@@ -11382,6 +11383,28 @@ async function sxMonthlyPdf(key) {
       y += 6;
     });
   }
+
+  // The Safety Manager's required operators (0100, 0102) who don't hold it. As
+  // of today, not the month's end: whether someone may drive or lift is a
+  // question about now, and the lists keep no history.
+  const asOf = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  section("Required operators", `People the Safety Manager requires to be forklift certified or crane qualified who aren't, as of ${asOf}.`);
+  [["forklift", "Forklift - not certified"], ["crane", "Crane & rigging - not qualified"]].forEach(([kind, title], n) => {
+    const k = reqKinds[kind];
+    const rows = k.rows.map(r => ({ r, st: k.status(r), store: reqStoreOf(r), name: reqName(r) }));
+    const not = rows.filter(x => !x.st.met).sort((a, b) => a.store.localeCompare(b.store) || a.name.localeCompare(b.name));
+    y += n ? 22 : 6;
+    ensure(40);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(9); doc.setTextColor(...ink);
+    doc.text(latin(`${title} (${not.length} of ${rows.length} required)`), M, y); y += 8;
+    const tones = new Map();
+    table([["Name", 140], ["Location", 100], ["Status", 170], ["Why they're required", CW - 410]],
+      not.map(x => { const row = [x.name, x.store, x.st.why ? `${x.st.label}: ${x.st.why}` : x.st.label, x.r.note || "-"];
+        tones.set(row, x.st.tone); return row; }),
+      { bold: 0, color: (row, i) => i === 2 ? (tones.get(row) === "warn" ? amber : red) : null,
+        empty: k.error ? `The list couldn't be read: ${k.error}`
+          : rows.length ? `Every required ${kind} operator is ${k.met}.` : "Nobody is on the list." });
+  });
 
   // Every report in full, last.
   if (reports.length) {
