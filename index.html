@@ -11022,6 +11022,16 @@ function renderSafetyOverview() {
       const n = reqNotMet(kind).length;
       return n && [`${n} required ${kind} operator${n === 1 ? " isn't" : "s aren't"} ${reqKinds[kind].met}`, go, ic, "red"];
     }),
+    // Passed the online course and waiting for their driving test (0093): red
+    // once anyone is in their last three days.
+    (() => {
+      const due = fkWaiting.filter(r => !r.ran_out);
+      if (!due.length) return 0;
+      const day0 = new Date(); day0.setHours(0, 0, 0, 0);
+      const close = due.filter(r => Math.round((fkDay(r.last_day) - day0) / 86400000) <= 3).length;
+      return [`${due.length} ${due.length === 1 ? "person" : "people"} waiting for a forklift driving test${close ? ` · ${close} in the last 3 days` : ""}`,
+        "fkwaiting", "clock", close ? "red" : "amber"];
+    })(),
     fork.expired && [`${fork.expired} forklift card${fork.expired === 1 ? "" : "s"} expired`, "certs", "forklift", "red"],
     fork.expiring.length && [`${fork.expiring.length} forklift card${fork.expiring.length === 1 ? "" : "s"} expiring within 60 days`, "certs", "forklift", "amber"],
     brief && brief.expected - brief.passed && [`${brief.expected - brief.passed} still to pass this month's Safety Brief`, "safetydesk", "doc", "amber"],
