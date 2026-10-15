@@ -11017,6 +11017,11 @@ function renderSafetyOverview() {
     waiting.length && [`${waiting.length} Safety Report${waiting.length === 1 ? "" : "s"} to approve`, "safetyreports", "megaphone", "amber"],
     follow && [`${follow} asking for a follow-up`, "safetyreports", "phone", "amber"],
     liftWaiting.length && [`${liftWaiting.length} lift plan${liftWaiting.length === 1 ? "" : "s"} waiting for approval`, "plans", "rigging", "amber"],
+    // The Safety Manager's required operators (0100, 0102) who don't hold it.
+    ...[["forklift", "fkrequired", "forklift"], ["crane", "crrequired", "rigging"]].map(([kind, go, ic]) => {
+      const n = reqNotMet(kind).length;
+      return n && [`${n} required ${kind} operator${n === 1 ? " isn't" : "s aren't"} ${reqKinds[kind].met}`, go, ic, "red"];
+    }),
     fork.expired && [`${fork.expired} forklift card${fork.expired === 1 ? "" : "s"} expired`, "certs", "forklift", "red"],
     fork.expiring.length && [`${fork.expiring.length} forklift card${fork.expiring.length === 1 ? "" : "s"} expiring within 60 days`, "certs", "forklift", "amber"],
     brief && brief.expected - brief.passed && [`${brief.expected - brief.passed} still to pass this month's Safety Brief`, "safetydesk", "doc", "amber"],
