@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Which version this is. publish.sh stamps the date and commit here, and
+     into version.json beside the page; "dev" is a copy that wasn't published. -->
+<meta name="app-version" content="2026-10-18.e4802db">
 <!-- Where this page may load things from and send things to. GitHub Pages
      can't send security headers, so it's here. Scripts come only from this
      site and the two script CDNs (each pinned with an integrity hash), and
@@ -1982,6 +1985,19 @@
   .inv-form .money span { color: var(--muted); }
   .inv-form .money input { margin: 0; }
   @media (max-width: 600px) { .inv-split { grid-template-columns: 1fr 1fr; } .inv-form .fields { grid-template-columns: 1fr; } }
+  /* A message along the bottom: part of the page failed, or a newer version is out. */
+  .page-banner { position: fixed; z-index: 90; left: 50%; transform: translateX(-50%);
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px)); width: min(680px, calc(100vw - 32px));
+    display: flex; align-items: center; gap: 10px; padding: 12px 12px 12px 18px; border-radius: 14px;
+    background: linear-gradient(var(--cab-top), var(--cab-bottom)); border: 1px solid var(--cab-edge); color: #fff;
+    box-shadow: 0 10px 30px rgba(20,28,34,.35); font-size: 14px; }
+  .page-banner::before { content: ""; position: absolute; left: 8px; top: 12px; bottom: 12px; width: 3px; border-radius: 3px;
+    background: var(--lit-amber); }
+  .page-banner span { flex: 1; min-width: 0; }
+  .page-banner button { margin: 0; flex: none; }
+  .page-banner button.ghost { color: #fff; background: transparent; border-color: rgba(255,255,255,.25); padding: 6px 11px; }
+  .app-version { margin: 18px 10px 0; color: var(--muted); font: 500 11px var(--font-mono); letter-spacing: .04em; }
+  .app-version:empty { display: none; }
   .st { --accent: var(--lit-amber); max-width: 1000px; }
   .st-controls { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
   .st-controls input.search { flex: 1; max-width: none; margin: 0; }
@@ -2928,6 +2944,7 @@
       <button data-tab="locationoverview" data-title="Location Dashboard"><i data-icon="building"></i><span>Overview</span></button>
       <div id="locationPicks"></div>
     </nav>
+    <p class="app-version" id="appVersion"></p>
   </aside>
   <div class="scrim" id="scrim"></div>
 
@@ -3929,6 +3946,8 @@
 // to jump to it — they're in this order.
 //
 //   THE FRAME
+//     faults & version  what happens when part of the page breaks, and
+//                       noticing a newer version has been published
 //     auth              signing in, the session, who is an owner or admin
 //     loading           db, the query helpers, the little loading states
 //     icons             the inline SVGs
@@ -3981,6 +4000,76 @@
 
 // The publishable key is a client key by design — row level security is what
 // protects the data, not this string. It is the same key the iOS app ships.
+// ---- faults & version ---------------------------------------------------------------
+//
+// A mistake in one part of the page mustn't blank the rest of it. Pages and
+// admin tabs are drawn through safely() and showView(), which catch an error
+// in one part, log it, and let the rest draw; anything else that throws, a
+// button's handler say, shows the same small banner. The console has the
+// details, and the person gets a way to reload. This comes first so that even
+// a library that failed to load from its CDN ends in a message, not a blank page.
+function reportFault(where, error) {
+  console.error(`Agri-Service: ${where} failed.`, error);
+  showBanner("faultBanner", "Part of this page didn't work. Reload to try again; if it keeps happening, tell the training department.");
+}
+
+// A message along the bottom of the window, once, with Reload and a close.
+function showBanner(id, text) {
+  if (document.getElementById(id) || !document.body) return;
+  const bar = document.createElement("div");
+  bar.id = id;
+  bar.className = "page-banner";
+  bar.setAttribute("role", "alert");
+  bar.innerHTML = `<span>${esc(text)}</span><button type="button" data-banner-reload>Reload</button>
+    <button type="button" class="ghost" data-banner-close aria-label="Close">&times;</button>`;
+  document.body.appendChild(bar);
+}
+
+// Each part drawn on its own: one that fails leaves the others standing.
+function safely(...parts) {
+  for (const part of parts) {
+    try { part(); } catch (error) { reportFault(part.name || "Part of the page", error); }
+  }
+}
+
+window.addEventListener("error", (event) => {
+  // Only this page's own mistakes: a browser extension's aren't ours to report.
+  if (event.filename && !event.filename.startsWith(location.origin)) return;
+  if (event.message === "Script error." || /ResizeObserver loop/.test(event.message || "")) return;
+  reportFault("Something on the page", event.error || event.message);
+});
+window.addEventListener("unhandledrejection", (event) => {
+  if (event.reason && event.reason.name === "AbortError") return;
+  reportFault("Something on the page", event.reason);
+});
+document.addEventListener("click", (event) => {
+  if (event.target.closest("[data-banner-reload]")) location.reload();
+  const close = event.target.closest("[data-banner-close]");
+  if (close) close.closest(".page-banner").remove();
+});
+
+// The version this page is, and whether a newer one has been published since
+// it was opened. A tab left open for days would keep running old code against
+// a database that has moved on, so every ten minutes, and whenever the tab
+// comes back into view, it asks for version.json and offers to reload.
+const PAGE_VERSION = (document.querySelector('meta[name="app-version"]') || {}).content || "dev";
+// Shown at the foot of the sidebar, so "which version are you on?" has an answer.
+if (PAGE_VERSION !== "dev") document.getElementById("appVersion").textContent = `Version ${PAGE_VERSION}`;
+
+async function checkVersion() {
+  if (PAGE_VERSION === "dev" || document.getElementById("versionBanner")) return;
+  try {
+    const response = await fetch(`version.json?t=${Date.now()}`, { cache: "no-store" });
+    if (!response.ok) return;
+    const { version } = await response.json();
+    if (version && version !== PAGE_VERSION) {
+      showBanner("versionBanner", "A newer version of this page has been published. Reload to get it; anything you haven't saved will be lost.");
+    }
+  } catch { /* no signal: ask again next time */ }
+}
+setInterval(checkVersion, 10 * 60 * 1000);
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") checkVersion(); });
+
 const SUPABASE_URL = "https://gzmtxsgaulzkghaqyibt.supabase.co";
 const SUPABASE_KEY = "sb_publishable_Yvapp2YhfG8tTRKw4ihCCg_OjmKkvNQ";
 
@@ -4083,13 +4172,13 @@ function noteActive() {
   const now = Date.now();
   if (now - lastActive < 15000) return;   // written every 15 seconds at most
   lastActive = now;
-  try { localStorage.setItem(IDLE_KEY, String(now)); } catch (e) {}
+  try { localStorage.setItem(IDLE_KEY, String(now)); } catch { /* private window: this tab only */ }
 }
 ["pointerdown", "pointermove", "keydown", "wheel", "touchstart", "scroll"].forEach(type =>
   addEventListener(type, noteActive, { passive: true, capture: true }));
 function idleFor() {
   let shared = 0;
-  try { shared = Number(localStorage.getItem(IDLE_KEY)) || 0; } catch (e) {}
+  try { shared = Number(localStorage.getItem(IDLE_KEY)) || 0; } catch { /* private window: this tab only */ }
   return Date.now() - Math.max(lastActive, shared);
 }
 async function signOutIfIdle() {
@@ -4142,7 +4231,7 @@ async function start() {
   if (!user) return;
   me = user;
   lastActive = Date.now();
-  try { localStorage.setItem(IDLE_KEY, String(lastActive)); } catch (e) {}
+  try { localStorage.setItem(IDLE_KEY, String(lastActive)); } catch { /* private window: this tab only */ }
 
   document.body.classList.add("signed-in");
   $("signOut").classList.remove("hidden");
@@ -4416,21 +4505,23 @@ function showHome() {
   $("homeLocation").innerHTML = shop ? `${icon("pin", 14)}${esc(shop)}` : "";
   $("homeDate").textContent = new Date().toLocaleDateString(undefined,
     { weekday: "long", month: "long", day: "numeric", year: "numeric" });
-  $("homeStats").innerHTML = homeStats();
-  $("homeStats").style.setProperty("--n", $("homeStats").children.length);
-
-  $("tiles").innerHTML = HOME_GROUPS.map(group => `
-    <section>
-      <h2 class="cab-heading">${esc(group.title)}</h2>
-      <div class="cab-grid ${group.rows ? "rows" : group.ids.length === 4 ? "tiles4" : ""}">
-        ${group.ids.map(id => homeTile(FEATURES.find(f => f.id === id), group.rows)).join("")}
-      </div>
-    </section>`).join("");
-
-  const news = homeNews();
-  $("homeNews").innerHTML = news;
-  $("homeNews").classList.toggle("hidden", !news);
-  $("homeGrid").classList.toggle("solo", !news);
+  safely(function homeSummary() {
+    $("homeStats").innerHTML = homeStats();
+    $("homeStats").style.setProperty("--n", $("homeStats").children.length);
+  }, function homeCenters() {
+    $("tiles").innerHTML = HOME_GROUPS.map(group => `
+      <section>
+        <h2 class="cab-heading">${esc(group.title)}</h2>
+        <div class="cab-grid ${group.rows ? "rows" : group.ids.length === 4 ? "tiles4" : ""}">
+          ${group.ids.map(id => homeTile(FEATURES.find(f => f.id === id), group.rows)).join("")}
+        </div>
+      </section>`).join("");
+  }, function homeNewsColumn() {
+    const news = homeNews();
+    $("homeNews").innerHTML = news;
+    $("homeNews").classList.toggle("hidden", !news);
+    $("homeGrid").classList.toggle("solo", !news);
+  });
   window.scrollTo(0, 0);
 }
 
@@ -4505,6 +4596,14 @@ function showView(name) {
   document.body.dataset.page = "view";
   if (name !== "evaltest") { evalAgreed = null; evalNotice = ""; }
   if (name !== "tool") toolCheckingOut = false;
+  let title = "Agri-Service", page;
+  try { title = pageTitle(name); } catch (error) { reportFault(`The title of ${name}`, error); }
+  try { page = VIEWS[name](); } catch (error) {
+    reportFault(`The ${title} page`, error);
+    page = hero(title) + `<div class="card"><b>This page didn't load.</b>
+      <p class="note">Something went wrong drawing it. Reload to try again; if it keeps happening, tell the training department.</p>
+      <button type="button" data-banner-reload>Reload</button></div>`;
+  }
   host.innerHTML = `<nav class="crumbs"><button data-home>Home</button><span>/</span>
     ${name === "newspost" ? `<button data-view="news">News</button><span>/</span>` : ""}
     ${["payroll", "inventory"].includes(name) ? `<button data-view="hr">HR</button><span>/</span>` : ""}
@@ -4522,7 +4621,7 @@ function showView(name) {
     ${name === "toolform" && toolDraft && toolDraft.mode === "edit"
       ? `<button data-view="tool">${esc(toolDraft.name)}</button><span>/</span>` : ""}
     ${["openseat", "myclasses", "catalog", "olt", "article", "skills", "trainingstatus", "coursereport", "agcomap"].includes(name) ? `<button data-view="training">Training Center</button><span>/</span>` : ""}
-    <span>${esc(pageTitle(name))}</span></nav>` + VIEWS[name]();
+    <span>${esc(title)}</span></nav>` + page;
   // A page that opens with its title gets the red band across the top, like
   // the app's title bar, with the way back inside it.
   const head = host.children[1];
@@ -4541,14 +4640,14 @@ function showAdmin() {
   setMode("admin");
   document.body.dataset.page = "admin";
   evalAgreed = null; evalNotice = "";
-  renderCerts(); renderEvalForm(); renderPlans(); renderPeople(); renderSupport(); renderToolsAdmin();
-  renderPayroll(); renderDirectory(); renderLogins(); renderSharedReminders();
-  renderEvents(); renderOrg(); renderOsrImport(); renderOsrLive(); renderInspectionsAdmin();
-  renderCoursesAdmin(); renderSdsAdmin(); renderSdsPending(); renderArticlesAdmin(); renderSkillsAdmin();
-  renderNewsAdmin(); renderTsImport(); renderTsLive(); renderHandbook(); renderAgcoImport(); renderAgcoLive();
-  renderAgcoTechs(); renderAgcoRules(); renderAgcoAdded(); renderAgcoBales(); renderMockSchedule(); renderSafetyAdmin();
-  renderSafetyReportAdmin(); renderSafetyReportsAdmin(); renderFitnessAdmin();
-  document.querySelector(`#adminNav [data-tab="${adminTab}"]`).click();
+  safely(renderCerts, renderEvalForm, renderPlans, renderPeople, renderSupport, renderToolsAdmin,
+    renderPayroll, renderDirectory, renderLogins, renderSharedReminders,
+    renderEvents, renderOrg, renderOsrImport, renderOsrLive, renderInspectionsAdmin,
+    renderCoursesAdmin, renderSdsAdmin, renderSdsPending, renderArticlesAdmin, renderSkillsAdmin,
+    renderNewsAdmin, renderTsImport, renderTsLive, renderHandbook, renderAgcoImport, renderAgcoLive,
+    renderAgcoTechs, renderAgcoRules, renderAgcoAdded, renderAgcoBales, renderMockSchedule, renderSafetyAdmin,
+    renderSafetyReportAdmin, renderSafetyReportsAdmin, renderFitnessAdmin);
+  (document.querySelector(`#adminNav [data-tab="${adminTab}"]`) || document.querySelector("#adminNav [data-tab]")).click();
   window.scrollTo(0, 0);
 }
 
@@ -4570,10 +4669,10 @@ function showTraining(tab) {
   setMode("training");
   document.body.dataset.page = "training";
   evalAgreed = null; evalNotice = "";
-  renderMockSchedule(); renderSkillsAdmin(); renderCoursesAdmin(); renderArticlesAdmin(); renderTsImport(); renderTsLive(); renderOsrImport(); renderOsrLive();
-  renderAgcoImport(); renderAgcoLive(); renderAgcoTechs(); renderAgcoRules(); renderAgcoAdded(); renderAgcoBales();
-  renderTrainingOverview(); renderReports(); renderOltAdmin();
-  document.querySelector(`#trainingNav [data-tab="${tab || trainingTab}"]`).click();
+  safely(renderMockSchedule, renderSkillsAdmin, renderCoursesAdmin, renderArticlesAdmin, renderTsImport, renderTsLive, renderOsrImport, renderOsrLive,
+    renderAgcoImport, renderAgcoLive, renderAgcoTechs, renderAgcoRules, renderAgcoAdded, renderAgcoBales,
+    renderTrainingOverview, renderReports, renderOltAdmin);
+  (document.querySelector(`#trainingNav [data-tab="${tab || trainingTab}"]`) || document.querySelector("#trainingNav [data-tab]")).click();
   window.scrollTo(0, 0);
 }
 
@@ -4586,9 +4685,10 @@ function showSafety(tab) {
   setMode("safety");
   document.body.dataset.page = "safety";
   evalAgreed = null; evalNotice = "";
-  renderCerts(); renderEvalForm(); renderPlans(); renderSafetyAdmin(); renderSdsAdmin(); renderSdsPending();
-  renderSafetyReportAdmin(); renderSafetyReportsAdmin(); renderSafetyOverview(); renderFkWaiting(); renderRequired("forklift"); renderRequired("crane");
-  document.querySelector(`#safetyNav [data-tab="${tab || safetyTab}"]`).click();
+  safely(renderCerts, renderEvalForm, renderPlans, renderSafetyAdmin, renderSdsAdmin, renderSdsPending,
+    renderSafetyReportAdmin, renderSafetyReportsAdmin, renderSafetyOverview, renderFkWaiting,
+    renderRequired.bind(null, "forklift"), renderRequired.bind(null, "crane"));
+  (document.querySelector(`#safetyNav [data-tab="${tab || safetyTab}"]`) || document.querySelector("#safetyNav [data-tab]")).click();
   window.scrollTo(0, 0);
 }
 
@@ -4629,7 +4729,7 @@ function showLocation() {
   $("admin").classList.remove("hidden");
   setMode("location");
   document.body.dataset.page = "location";
-  renderLocationOverview();
+  safely(renderLocationOverview);
   document.querySelector('#locationNav [data-tab="locationoverview"]').click();
   window.scrollTo(0, 0);
 }
@@ -5220,7 +5320,7 @@ function certReportView() {
 function certReportList() {
   const everyone = certsPerPerson();
   const kind = (r) => {
-    const [label, cls] = certStatusNow(r);
+    const [, cls] = certStatusNow(r);
     return cls === "b-current" ? "certified" : cls === "b-expiring" ? "expiring" : "lapsed";
   };
   const tally = { certified: 0, expiring: 0, lapsed: 0 };
@@ -5541,7 +5641,7 @@ function supportView() {
 // it stays open in this browser, as the app remembers it on the phone.
 const WHO_TO_CALL = "support.whoToCall.open";
 let whoToCallOpen = (() => {
-  try { return localStorage.getItem(WHO_TO_CALL) === "1"; } catch (e) { return false; }
+  try { return localStorage.getItem(WHO_TO_CALL) === "1"; } catch { return false; }
 })();
 
 function whoToCallHtml() {
@@ -5593,7 +5693,7 @@ function roleCardHtml(role) {
 document.addEventListener("click", (event) => {
   if (!event.target.closest("[data-who-to-call]")) return;
   whoToCallOpen = !whoToCallOpen;
-  try { localStorage.setItem(WHO_TO_CALL, whoToCallOpen ? "1" : "0"); } catch (e) { /* this visit only */ }
+  try { localStorage.setItem(WHO_TO_CALL, whoToCallOpen ? "1" : "0"); } catch { /* this visit only */ }
   $("whoToCall").innerHTML = whoToCallHtml();
 });
 
@@ -6749,7 +6849,7 @@ async function importTools(file) {
     ? `<ul>${items.slice(0, 20).map(x => `<li>${text(x)}</li>`).join("")}</ul>`
       + (items.length > 20 ? `<p class="note">…and ${items.length - 20} more.</p>` : "") : "";
 
-  toolImport = incoming.map(({ before, ...row }) => row);
+  toolImport = incoming.map(({ before: _before, ...row }) => row);
   result.innerHTML = `<div class="tool-preview">
     <p style="margin-top:0"><b>Check this before publishing.</b> ${added.length} new,
       ${changed.length} changed, ${unchanged} unchanged, ${removed.length} removed.</p>
@@ -7474,7 +7574,7 @@ async function accountAction(body) {
       try {
         const sent = await error.context.json();
         if (sent && sent.error) problem = sent.error;
-      } catch (e) { /* not JSON — keep the generic message */ }
+      } catch { /* not JSON — keep the generic message */ }
       if (/failed to send|404|not found/i.test(problem)) {
         problem = "The account function isn't deployed yet.";
       }
@@ -8951,7 +9051,7 @@ $("view").addEventListener("change", async (event) => {
     if (d.photo) URL.revokeObjectURL(d.photo.url);
     d.photo = { blob, url: URL.createObjectURL(blob) };
     cmRedrawComposer(key);
-  } catch (e) {
+  } catch {
     cmSay(key, "That photo couldn't be read. Try a JPEG or a PNG.");
   } finally {
     d.shrinking = false;
@@ -9619,7 +9719,7 @@ $("view").addEventListener("click", async (event) => {
 function eventOnlineLabel(e) {
   if (!e.is_online) return null;
   const host = (() => {
-    try { return new URL(e.meeting_url).host.toLowerCase(); } catch (x) { return ""; }
+    try { return new URL(e.meeting_url).host.toLowerCase(); } catch { return ""; }
   })();
   if (host.includes("teams.microsoft") || host.includes("teams.live")) return "Online · Teams";
   if (host.includes("zoom.")) return "Online · Zoom";
@@ -10150,7 +10250,7 @@ async function srDownloadPdf(r, box = document.querySelector(".srd-acts")) {
         const img = await new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = url; });
         const s = Math.min(cellW / img.width, cellH / img.height), w = img.width * s, h = img.height * s;
         doc.addImage(url, "JPEG", x + (cellW - w) / 2, y + (cellH - h) / 2, w, h);
-      } catch (e) { /* a photo that can't be fetched is left out */ }
+      } catch { /* a photo that can't be fetched is left out */ }
     }
     y += cellH + 12;
   }
@@ -10346,7 +10446,6 @@ function renderSafetyReportsAdmin() {
   }
   const waiting = srReports.filter(srPending), approved = srReports.filter(x => !srPending(x));
   const list = srrShowing === "approved" ? approved : waiting;
-  const day = (iso) => new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   box.innerHTML = `<div class="card">
     <h2>Safety Reports</h2>
     <p class="note">Every report waits here for a Safety Manager. <b>Review</b> one to read it, tidy the wording if it needs it, choose
@@ -10741,7 +10840,7 @@ function renderTrainingOverview() {
 
   // The Mock Schedule's year.
   let mock = null;
-  try { if (!mockError) { const st = mockStats(); mock = { st, year: mockYear, courses: mockCourses().filter(mockInYear).length }; } } catch (e) { mock = null; }
+  try { if (!mockError) { const st = mockStats(); mock = { st, year: mockYear, courses: mockCourses().filter(mockInYear).length }; } } catch { mock = null; }
   // AGCO Development, by the level each technician has reached.
   const tally = agcoError ? null : agcoTally(agcoPeople);
   const stale = uploads.filter(u => u.stale);
@@ -12244,7 +12343,7 @@ $("admin").addEventListener("click", async (event) => {
   const copy = event.target.closest("[data-sd-copy]");
   if (!copy) return;
   try { await navigator.clipboard.writeText(copy.dataset.sdCopy); speak(copy.closest(".row"), "Copied. Paste them into BCC.", false); }
-  catch (e) { speak(copy.closest(".row"), "Couldn't copy here. Select the emails in the list instead.", true); }
+  catch { speak(copy.closest(".row"), "Couldn't copy here. Select the emails in the list instead.", true); }
 });
 
 function renderSafetyAdmin() {
@@ -14991,7 +15090,7 @@ function inspFormView() {
     return hero("Inspection") + `<div class="card"><p class="note" style="margin:0">Nothing's being filled in.
       Start one from the <button type="button" class="linkish" data-view="inspection">Inspection Center</button>.</p></div>`;
   }
-  const { form, record, fields, asked, carried } = inspDraftParts();
+  const { form, record, asked, carried } = inspDraftParts();
   if (!form || (inspDraft.stage === "after" && !record)) {
     inspDiscardDraft();
     return hero("Inspection") + `<div class="card"><p class="note" style="margin:0">That inspection isn't available any more.</p></div>`;
@@ -15184,7 +15283,7 @@ document.addEventListener("change", async (event) => {
     try {
       const blob = await inspShrink(file);
       (inspDraft.photos[key] ||= []).push({ id: crypto.randomUUID(), blob, url: URL.createObjectURL(blob) });
-    } catch (e) { unread.push(file.name); }
+    } catch { unread.push(file.name); }
   }
   inspRedrawField(key);
   if (unread.length) alert(`These couldn't be read as photos here: ${unread.join(", ")}. A JPEG or PNG works in any browser.`);
@@ -15806,7 +15905,7 @@ async function storagePhotoData(bucket, path, urls = {}) {
     canvas.height = Math.round(bitmap.height * scale);
     canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
     return { url: canvas.toDataURL("image/jpeg", 0.8), width: canvas.width, height: canvas.height };
-  } catch (e) {
+  } catch {
     return null;
   }
 }
@@ -18141,7 +18240,7 @@ async function loadArticleStyles() {
   try {
     const response = await fetch("articles/article-styles.css");
     if (response.ok) articleCss = (await response.text()).replace(/<\/style/gi, "<\\/style");
-  } catch (e) { /* the link below stands in */ }
+  } catch { /* the link below stands in */ }
 }
 
 const ARTICLE_TAGS = new Set(["p", "h2", "h3", "h4", "ul", "ol", "li", "strong", "b", "em", "i",
@@ -18328,7 +18427,7 @@ function loadArticleEditorFrame(body) {
   frame.onload = () => {
     const doc = frame.contentDocument;
     if (!doc) return;
-    try { doc.execCommand("defaultParagraphSeparator", false, "p"); } catch (e) { /* older browsers */ }
+    try { doc.execCommand("defaultParagraphSeparator", false, "p"); } catch { /* older browsers */ }
     doc.addEventListener("input", () => { articleDirty = true; });
     // Links in the editor are for editing, not following.
     doc.addEventListener("click", (e) => { if (e.target.closest("a")) e.preventDefault(); });
@@ -18577,7 +18676,7 @@ async function signNewsImages() {
 const newsLive = () => newsPosts.filter(p => p.is_published);
 
 function newsHost(url) {
-  try { return new URL(url).hostname.replace(/^www\d?\./i, ""); } catch (e) { return ""; }
+  try { return new URL(url).hostname.replace(/^www\d?\./i, ""); } catch { return ""; }
 }
 
 const newsLink = (p) => p.kind === "link" && /^https?:\/\/\S+/i.test(p.url || "") ? p.url : null;
@@ -18654,7 +18753,7 @@ function newsParagraphs(text) {
       .replace(/\bhttps?:\/\/[^\s<]+[^\s<.,;:!?)\]'"]/gi,
         url => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`)
       .replace(/(^|[\s(])([\w.+-]+@[\w-]+(\.[\w-]+)+)/g,
-        (m, before, mail) => `${before}<a href="mailto:${mail}">${mail}</a>`)
+        (_m, before, mail) => `${before}<a href="mailto:${mail}">${mail}</a>`)
       .replace(/\n/g, "<br>")}</p>`).join("");
 }
 
@@ -18851,7 +18950,7 @@ $("newsPictureFile").addEventListener("change", async (event) => {
     newsDirty = true;
     speak(editor, "", false);
     drawNewsPreview();
-  } catch (e) {
+  } catch {
     speak(editor, "That picture couldn't be opened. Use a JPEG or PNG.", true);
   }
 });
@@ -18880,7 +18979,7 @@ async function fetchNewsLink() {
       try {
         const body = await error.context.json();
         if (body && body.error) message = body.error;
-      } catch (e) { /* no body to read */ }
+      } catch { /* no body to read */ }
       problem = /failed to send|fetch|404|not found/i.test(message)
         ? "The link reader isn't switched on yet." : message;
     } else if (data && data.error) {
@@ -18888,7 +18987,7 @@ async function fetchNewsLink() {
     } else {
       preview = data || {};
     }
-  } catch (e) {
+  } catch {
     problem = "The page couldn't be read.";
   }
   fetchButton.disabled = false;
@@ -19202,7 +19301,7 @@ function tsParse(rows, file) {
       course: get(r, "course"), completed: tsDate(r[col["date completed"]]),
       percent: parseFloat(get(r, "% completed")) || 0
     })).filter(h => h.course && h.completed && (h.percent >= 100 || !("% completed" in col)))
-      .map(({ percent, ...h }) => h);
+      .map(({ percent: _percent, ...h }) => h);
     return { kind, data: { ...meta, rows: list } };
   }
 
@@ -21271,7 +21370,7 @@ function ocListHtml() {
   const list = ocCourses.filter(c => c.is_published && c.current_version);
   if (!list.length) return `<div class="ev-card ev-note" style="${lit("teal")}"><b>No courses yet</b><p>New courses show up here as soon as they're added.</p></div>`;
   return list.map(c => {
-    const s = ocStanding(c), v = ocVersion(c);
+    const s = ocStanding(c);
     return `<div class="cab-card oc-card${s.kind === "done" ? " done" : ""}" style="${lit(s.kind === "done" ? "green" : c.purpose === "forklift" ? "amber" : "teal")}">
       <div class="oc-main">
         ${c.purpose === "forklift" ? `<span class="cab-tag">Forklift certification</span>` : ""}
@@ -22437,7 +22536,6 @@ function renderHandbook() {
 }
 
 async function uploadHandbook(file) {
-  const card = $("tab-handbook").querySelector(".card");
   const say = (text, bad) => { const m = $("handbookMsg"); m.textContent = text; m.className = "msg " + (bad ? "error" : "ok"); };
   if (!/pdf$/i.test(file.name) && file.type !== "application/pdf") {
     return say("The handbook needs to be a PDF.", true);
