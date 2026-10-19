@@ -207,7 +207,16 @@ $("signIn").onclick = async () => {
 
 // Set by the Sign out button, so its own sign-out isn't taken for one that ran out.
 let signingOut = false;
-$("signOut").onclick = async () => { signingOut = true; await db.auth.signOut(); location.reload(); };
+// The course player's worker keeps the sign-in so it can fetch course files
+// (course-sw.js). Signing out here takes it from there too.
+async function forgetCourseSignIn() {
+  try {
+    const worker = navigator.serviceWorker && await navigator.serviceWorker.getRegistration("course-files/");
+    if (worker && worker.active) worker.active.postMessage({ type: "signout" });
+  } catch { /* no worker: nothing kept */ }
+}
+
+$("signOut").onclick = async () => { signingOut = true; await forgetCourseSignIn(); await db.auth.signOut(); location.reload(); };
 
 // ---- signing out a computer left alone ----
 //
@@ -237,6 +246,7 @@ function idleFor() {
 async function signOutIfIdle() {
   if (!me || !isAdmin() || signingOut || ocBusy || idleFor() < IDLE_LIMIT) return;
   signingOut = true;
+  await forgetCourseSignIn();
   await db.auth.signOut().catch(() => {});
   location.replace(location.pathname + "?signedout=idle");
 }

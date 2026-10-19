@@ -566,6 +566,11 @@ button.news-pin:disabled { background: transparent; cursor: default; }
   .crane .crane-table thead th, .crane .crane-table tbody td { padding-left: 12px; padding-right: 12px; } }
 
 /* ---- Lift plans: the way in, a plan's own page, and the form (lift-plans.js) ---- */
+/* The online course behind a driving test, on the approvals page (0105). */
+.fk-course { display: flex; gap: 6px; align-items: flex-start; margin: 4px 0 6px; font-size: 13px; color: #17702F; }
+.fk-course svg { flex: none; margin-top: 1px; }
+.fk-course.quick { color: #8A5A00; font-weight: 600; }
+.note.fk-course { color: var(--muted); }
 .lp-start { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0 0 4px; }
 @container (max-width: 640px) { .lp-start { grid-template-columns: minmax(0, 1fr); } }
 label.cab-card.lp-new, div.cab-card.lp-new { position: relative; margin: 0; color: #fff; font-weight: 400;

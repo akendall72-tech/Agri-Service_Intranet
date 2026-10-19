@@ -19,7 +19,7 @@
 // The token comes from course.html by message, and is kept in IndexedDB too,
 // because the browser stops idle workers and this one starts again empty.
 
-const VERSION = "4";
+const VERSION = "5";
 const CACHE = "course-files-v1";
 const PREFIX = new URL("./", self.registration.scope).pathname;   // ".../course-files/"
 
@@ -34,6 +34,12 @@ self.addEventListener("message", (event) => {
   if (msg.type === "auth" && msg.token) {
     auth = { token: msg.token, url: msg.url, key: msg.key };
     event.waitUntil(store("auth", auth));
+  }
+  // Signed out on the main page: the token goes too, so it isn't left in the
+  // browser for whoever uses this computer next.
+  if (msg.type === "signout") {
+    auth = null;
+    event.waitUntil(store("auth", null));
   }
   if (msg.type === "sizes" && msg.key && msg.files) sizes.set(msg.key, msg.files);
   if (event.ports && event.ports[0]) event.ports[0].postMessage({ ok: true, version: VERSION });

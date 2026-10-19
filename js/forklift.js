@@ -23,8 +23,39 @@ const approvedCerts = () => certs.filter(c => (c.approval || "approved") === "ap
 const pendingTests = () => certs.filter(c => c.approval === "pending")
   .sort((a, b) => String(a.submitted_at || "").localeCompare(String(b.submitted_at || "")));
 
+// The online forklift course behind each test (0105): when it was passed and
+// how long after it was started, both timed by the database. A course reports
+// its own pass, so a pass a few minutes after starting is worth a question
+// before approving. Only the Training Manager and owners can ask; before 0105
+// is run, or for anyone else, the line just isn't shown.
+let fkPasses = null;
+const FK_QUICK_MINUTES = 10;
+
+async function loadFkPasses() {
+  const { data, error } = await db.rpc("forklift_course_record");
+  fkPasses = error ? false : Object.fromEntries((data || []).map(r => [String(r.email || "").toLowerCase(), r]));
+}
+
+const fkMinutes = (m) => m < 60 ? `${m} minute${m === 1 ? "" : "s"}`
+  : m < 1440 ? `${Math.floor(m / 60)} h ${m % 60} min` : `${Math.round(m / 1440)} day${Math.round(m / 1440) === 1 ? "" : "s"}`;
+
+function fkPassLine(t) {
+  if (!fkPasses) return "";
+  const r = fkPasses[String(t.email || "").toLowerCase()];
+  if (!r) return `<div class="note fk-course">No online course pass on record${t.email ? ` for ${esc(t.email)}` : ""}.</div>`;
+  const quick = r.minutes_to_pass < FK_QUICK_MINUTES;
+  const own = r.seconds_in_course ? ` The course's own clock says ${fkMinutes(Math.round(r.seconds_in_course / 60))}.` : "";
+  return `<div class="fk-course${quick ? " quick" : ""}">${icon(quick ? "warning" : "checkCircle", 15)}<span>Online course passed
+    ${esc(newsDate(String(r.passed_at).slice(0, 10)))}, ${fkMinutes(r.minutes_to_pass)} after starting it.${own}${quick
+      ? " That's quicker than the course takes: check they really did it before approving." : ""}</span></div>`;
+}
+
 function approvalsView() {
   const tests = pendingTests();
+  if (fkPasses === null) {
+    fkPasses = false;
+    loadFkPasses().then(() => { if (viewShown === "approvals" && fkPasses) showView("approvals"); });
+  }
   const tick = (ok, label) => `<div style="color:${ok ? "#137026" : "var(--red-dark)"}">${ok ? "✓" : "✗"} ${esc(label)}</div>`;
   return hero("Driving Tests to Approve",
               "A driving test only counts once you approve it. Someone who already holds a card keeps it meanwhile.")
@@ -37,6 +68,7 @@ function approvalsView() {
             ${(t.truck_classes || []).length ? ` · ${esc(t.truck_classes.join(", "))}` : ""}</div>
           <div style="margin:6px 0;font-size:13.5px">
             ${EVAL_CHECKS.map(([key, label]) => tick(!!t[key], label)).join("")}</div>
+          ${fkPassLine(t)}
           <div class="note">${t.passed_driving
             ? `Certified until ${fmtDate(t.expiration_date)} once you approve it.`
             : "Not passed, so no card either way. Approving puts the result on record."}</div>
