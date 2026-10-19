@@ -52,33 +52,53 @@ const STATUS_LABELS = {
 };
 const planLabel = (plan) => STATUS_LABELS[plan.status] || "—";
 
-// The form as it is now: version 2 dropped the below-the-hook device and hitch
-// type fields and added the picture of the lift (LiftPlan.currentFormVersion).
-const LP_FORM_VERSION = 2;
+// The form as it is now (LiftPlan.currentFormVersion). Version 2 dropped the
+// below-the-hook device and hitch type fields and added the picture of the
+// lift; version 3 takes the crane's capacity at this configuration in pounds.
+const LP_FORM_VERSION = 3;
 // LiftPlan.maxPhotos, and what the database allows.
 const LP_MAX_PHOTOS = 4;
 
 // ---- figures -----------------------------------------------------------------
 
-// The share of the crane's capacity a lift uses, worked out rather than typed:
-// the one figure on the form where a slip is most likely to hurt someone. Read
-// exactly as the app reads it (computedPercentCapacity), digits and points
-// only, so the two always agree about the same plan.
-function lpPercent(total, capacityText) {
-  const capacity = Number(String(capacityText ?? "").replace(/[^0-9.]/g, ""));
-  if (total == null || !Number.isFinite(total) || !Number.isFinite(capacity) || capacity <= 0) return null;
-  return total / capacity * 100;
+// A number of pounds as someone wrote it: "4000", "4,000" or "4,000 lbs".
+// One number, and no words but lb, lbs or pounds: "5 ton", "about 3,000",
+// "2,000 lbs at 10 ft" and "5 ton (10,000 lbs)" are null rather than a guess.
+// Until form version 3 every digit was read as one figure, so the last of
+// those was 510,000 and a lift looked like 1% of capacity.
+//
+// LiftPlan.pounds(in:) in the app reads exactly the same way. Change both or
+// neither.
+function lpPounds(text) {
+  // A comma between thousands is part of the number: "10,000" is one.
+  const plain = String(text ?? "").replace(/(?<=[0-9]),(?=[0-9]{3}(?![0-9]))/g, "");
+  const numbers = plain.match(/[0-9]+(?:\.[0-9]+)?/g) || [];
+  if (numbers.length !== 1) return null;
+  const words = plain.replace(numbers[0], "").toLowerCase().replace(/[^a-z]/g, "");
+  return ["", "lb", "lbs", "pound", "pounds"].includes(words) ? Number(numbers[0]) : null;
 }
+
+// How a capacity is kept on the plan, as the app keeps it: "4,000 lbs".
+const lpPoundsText = (n) => `${n.toLocaleString("en-US", { maximumFractionDigits: 2 })} lbs`;
+
+// The share of the crane's capacity a lift uses, worked out rather than typed:
+// the one figure on the form where a slip is most likely to hurt someone. As
+// the app works it out (computedPercentCapacity), and nothing rather than a
+// guess when the capacity isn't one number of pounds.
+function lpPercent(total, capacityText) {
+  const capacity = lpPounds(capacityText);
+  if (total == null || !Number.isFinite(Number(total)) || capacity == null || capacity <= 0) return null;
+  return Number(total) / capacity * 100;
+}
+// A saved plan's, worked out from what's on it, as the app shows it.
+const lpPlanPercent = (plan) => lpPercent(plan.total_weight, plan.capacity_at_config);
+// A total weight and a capacity in words, from before form version 3.
+const lpPercentUnknown = (plan) => lpPlanPercent(plan) == null && plan.total_weight != null
+  && !!String(plan.capacity_at_config || "").trim();
 
 // Caution from 80%, not only over 100: by the time a plan reads 100% it's
 // already wrong, and there's still time to change the set-up at 80.
 const lpLevel = (percent) => percent == null || percent < 80 ? "normal" : percent <= 100 ? "caution" : "over";
-
-// A weight as typed: "3400", "3,400" or "3400 lbs".
-function lpNumber(text) {
-  const t = String(text ?? "").replace(/[,\s]/g, "").replace(/lbs?\.?$/i, "");
-  return t !== "" && Number.isFinite(Number(t)) && Number(t) >= 0 ? Number(t) : null;
-}
 
 const lpLbs = (n) => n == null || n === "" ? "" : `${Math.round(Number(n)).toLocaleString("en-US")} lbs`;
 const lpWhen = (iso) => iso ? new Date(iso).toLocaleString("en-US",
@@ -150,7 +170,7 @@ const lpImg = (path) => lpPhotoUrls[path]
 function planRow(plan) {
   const own = plan.created_by === me.id;
   const photos = (plan.photo_paths || []).length;
-  const pct = plan.percent_capacity == null ? null : Number(plan.percent_capacity);
+  const pct = lpPlanPercent(plan);
 
   return `<div class="plan-card ${esc(plan.status || "")}">
     <button type="button" class="plan-main" data-lp-open="${esc(plan.id)}">
@@ -202,7 +222,7 @@ function liftPlanView() {
   // As the app: an admin acts on a plan until it's approved, never their own.
   const canReview = isAdmin() && !approved && !own;
   const canEdit = own && plan.status === "changes_requested";
-  const pct = plan.percent_capacity == null ? null : Number(plan.percent_capacity);
+  const pct = lpPlanPercent(plan);
   const level = lpLevel(pct);
   const reviewer = plan.reviewed_by && people.find(p => p.id === plan.reviewed_by);
   const rigging = (plan.rigging || []).filter(r => ["item", "type", "size", "wll", "qty", "angle"].some(k => String(r[k] || "").trim()));
@@ -264,7 +284,8 @@ function liftPlanView() {
           ${row("Weight determined by", (plan.weight_methods || []).map(m => WEIGHT_METHODS[m] || m).join(", "))}
           ${row("Source / reference", plan.weight_source)}
           ${row("Total weight", lpLbs(plan.total_weight))}
-          ${pct == null ? "" : `<div><dt>% of capacity</dt><dd class="lp-pct ${level}">${Math.round(pct)}%</dd></div>`}</dl>`)}
+          ${pct == null ? "" : `<div><dt>% of capacity</dt><dd class="lp-pct ${level}">${Math.round(pct)}%</dd></div>`}
+          ${lpPercentUnknown(plan) ? row("% of capacity", "Not worked out: the capacity isn't written as one number of pounds.") : ""}</dl>`)}
 
         ${rigging.length || plan.below_hook_device || plan.hitch_type ? section("link", "Rigging", `
           ${rigging.length ? `<div class="lp-rig-scroll"><table class="lp-rig-table">
@@ -305,7 +326,7 @@ function liftPlanView() {
         <button type="button" class="ghost pdf" data-plan="${esc(plan.id)}">${icon("doc", 15)}Export PDF</button>
         <span class="msg"></span>
       </div>
-      ${isAdmin() && own && !approved ? `<p class="note lp-own">${icon("info", 15)}This is your own plan, so someone else has to approve it.</p>` : ""}
+      ${isAdmin() && own && plan.status === "submitted" ? `<p class="note lp-own">${icon("info", 15)}This is your own plan, so someone else has to approve it.</p>` : ""}
     </div>`;
 }
 
@@ -363,6 +384,11 @@ function lpStartDraft(plan) {
     weight_methods: (v.weight_methods || []).filter(m => WEIGHT_METHODS[m]) };
   LP_TEXT_KEYS.forEach(k => { values[k] = String(v[k] ?? ""); });
   LP_SWITCHES.forEach(([k]) => { values[k] = v[k] === true; });
+  // The capacity is edited as a number of pounds. Words from before form
+  // version 3 stay on the plan, shown under the box, until a number replaces them.
+  const before = String(v.capacity_at_config ?? "").trim();
+  const pounds = lpPounds(before);
+  values.capacity_at_config = pounds == null ? "" : pounds.toLocaleString("en-US", { maximumFractionDigits: 2 });
   lpDraft = {
     // Made here, so the photos have a folder before the plan is sent, and a
     // second try after a lost answer finds the same plan instead of a new one.
@@ -375,6 +401,7 @@ function lpStartDraft(plan) {
     inspection: Object.fromEntries(INSPECTION_ITEMS.map(([k]) => [k, (v.inspection || {})[k] === true])),
     kept: [...(v.photo_paths || [])],      // on the plan already, when fixing one
     photos: [],                            // new: { id, blob, url }
+    capacityBefore: lpPounds(before) == null ? before : "", capacityEdited: false,
     photoProblem: "", preparing: false, showMissing: false, touched: false
   };
 }
@@ -389,7 +416,7 @@ function lpDiscardDraft() {
 const LP_REQUIRED = [["lift_date", "the date"], ["job_description", "the job description"],
   ["crane_type", "the crane type"], ["load_weight", "the load weight"], ["total_weight", "the total weight"]];
 const lpMissing = (d) => LP_REQUIRED.filter(([k]) => ["load_weight", "total_weight"].includes(k)
-  ? lpNumber(d.values[k]) === null : !String(d.values[k] || "").trim());
+  ? lpPounds(d.values[k]) === null : !String(d.values[k] || "").trim());
 
 function lpMissingText(d) {
   const missing = lpMissing(d).map(([k, words]) => String(d.values[k] || "").trim() && k.endsWith("weight")
@@ -410,7 +437,7 @@ function liftPlanFormView() {
       <p>It may have been approved, or isn't waiting on changes any more.</p>
       <p><button type="button" class="ghost" data-view="rigging">Back to the Crane Center</button></p></div>`;
   }
-  const pct = lpPercent(lpNumber(d.values.total_weight), d.values.capacity_at_config);
+  const pct = lpPercent(lpPounds(d.values.total_weight), lpCapacityText(d));
   const sec = (key, iconName, title, body) => `<section class="card lp-sec" id="lp-sec-${key}">
     <h2>${icon(iconName, 17)}${title}</h2>${body}</section>`;
 
@@ -436,7 +463,8 @@ function liftPlanFormView() {
               <span>${esc(label)}</span></label>`).join("")}</div>
         </div>
         ${lpField("rated_capacity", "Rated capacity (nameplate)")}
-        ${lpField("capacity_at_config", "Crane capacity at this radius / config", { hint: "The % of capacity is worked out from this." })}
+        <div class="lp-cap">${lpField("capacity_at_config", "Crane capacity at this radius / config (lbs)", { number: true })}
+          <span class="lp-hint${lpCapacityNote(d) === LP_CAP_NOTE ? "" : " lp-odd"}" id="lpCapNote">${esc(lpCapacityNote(d))}</span></div>
         <div class="lp-truck wide" data-lp-truck${d.values.crane_type === "truck" ? "" : " hidden"}><div class="fields">
           ${lpField("truck_details", "Truck crane details — boom length, outrigger spread, ground conditions", { multi: true, wide: true })}
           ${lpField("working_radius", "Working radius / boom angle")}
@@ -455,7 +483,7 @@ function liftPlanFormView() {
         </div>
         ${lpField("weight_source", "Source / reference (doc #, calc sheet, scale ticket)", { wide: true })}
         ${lpField("total_weight", "Total weight to be lifted — load + rigging + below-the-hook (lbs)", { number: true, required: true, wide: true })}
-        <div class="wide" id="lpGauge">${lpGaugeHtml(pct, d.values.capacity_at_config)}</div>
+        <div class="wide" id="lpGauge">${lpGaugeHtml(pct)}</div>
       </div>`)}
 
       ${sec("rigging", "link", "Rigging", `<div id="lpRigging">${lpRiggingHtml()}</div>`)}
@@ -500,13 +528,28 @@ function lpField(key, label, { multi, wide, required, number, date, hint } = {})
 const lpInspBox = (key, label) => `<label class="lp-box">
   <input type="checkbox" data-lp-insp="${key}"${lpDraft.inspection[key] ? " checked" : ""}><span>${esc(label)}</span></label>`;
 
-// The capacity box is words, as the paper form's is, and the % reads every
-// digit in it as one number, as the app does: "5 ton (10,000 lbs)" is read as
-// 510,000. Said here when there's more than one number, rather than read
-// differently from the app.
-const lpSeveralNumbers = (text) => (String(text || "").replace(/(\d),(?=\d{3})/g, "$1").match(/\d+(\.\d+)?/g) || []).length > 1;
+// The capacity at this configuration, as it'll be kept: the pounds as
+// "4,000 lbs", or what was written before form version 3 until a number
+// replaces it — as the app's form leaves it.
+function lpCapacityText(d) {
+  const typed = String(d.values.capacity_at_config || "").trim();
+  if (!typed) return d.capacityEdited ? "" : d.capacityBefore;
+  const n = lpPounds(typed);
+  return n == null ? typed : lpPoundsText(n);
+}
 
-function lpGaugeHtml(pct, capacityText) {
+// Under the capacity box: what the % is worked out from, or why it can't be.
+const LP_CAP_NOTE = "The % of capacity is worked out from this.";
+function lpCapacityNote(d) {
+  const typed = String(d.values.capacity_at_config || "").trim();
+  if (typed && lpPounds(typed) == null) return "Put the capacity in pounds as one number, like 4,000, so the % of capacity can be worked out.";
+  if (!typed && !d.capacityEdited && d.capacityBefore) {
+    return `Written before as “${d.capacityBefore}”. Put the capacity in pounds so the % of capacity can be worked out.`;
+  }
+  return LP_CAP_NOTE;
+}
+
+function lpGaugeHtml(pct) {
   if (pct == null) {
     return `<p class="lp-hint lp-gauge-empty">With the total weight and the crane's capacity at this configuration filled in,
       the share of its capacity this lift uses is worked out here.</p>`;
@@ -516,8 +559,6 @@ function lpGaugeHtml(pct, capacityText) {
     <div class="lp-gauge-top"><span>% of crane capacity used</span><b>${Math.round(pct)}%</b></div>
     <div class="lp-gauge-bar" aria-hidden="true"><i style="width:${Math.min(100, Math.max(0, pct)).toFixed(1)}%"></i><s></s></div>
     <span class="lp-hint">Calculated from total weight and the capacity at this configuration. Caution from 80%.</span>
-    ${lpSeveralNumbers(capacityText) ? `<span class="lp-odd">The capacity box has more than one number in it, and every digit is read
-      as one figure. Put the capacity in pounds on its own, like 4,000 lbs, for the % to be right.</span>` : ""}
   </div>`;
 }
 
@@ -551,8 +592,12 @@ function lpPhotosHtml() {
 // The parts that change as you type, drawn again on their own so the field
 // you're in keeps its place.
 function lpRedrawFigures() {
-  const pct = lpPercent(lpNumber(lpDraft.values.total_weight), lpDraft.values.capacity_at_config);
-  if ($("lpGauge")) $("lpGauge").innerHTML = lpGaugeHtml(pct, lpDraft.values.capacity_at_config);
+  const pct = lpPercent(lpPounds(lpDraft.values.total_weight), lpCapacityText(lpDraft));
+  if ($("lpGauge")) $("lpGauge").innerHTML = lpGaugeHtml(pct);
+  if ($("lpCapNote")) {
+    $("lpCapNote").textContent = lpCapacityNote(lpDraft);
+    $("lpCapNote").classList.toggle("lp-odd", lpCapacityNote(lpDraft) !== LP_CAP_NOTE);
+  }
   if ($("lpWarn")) $("lpWarn").innerHTML = lpWarningHtml(pct);
 }
 
@@ -609,7 +654,8 @@ async function lpAddPhotos(files) {
 // can't read, so a plan written here must look exactly like one from a phone.
 function lpBody(d, photoPaths) {
   const v = d.values;
-  const total = lpNumber(v.total_weight);
+  const total = lpPounds(v.total_weight);
+  const capacity = lpCapacityText(d);
   const body = {
     status: "submitted",
     form_version: LP_FORM_VERSION,
@@ -618,15 +664,16 @@ function lpBody(d, photoPaths) {
     center_of_gravity_confirmed: v.center_of_gravity_confirmed,
     within_rated_capacity: v.within_rated_capacity,
     load_chart_consulted: v.load_chart_consulted,
-    load_weight: lpNumber(v.load_weight),
+    load_weight: lpPounds(v.load_weight),
     weight_methods: Object.keys(WEIGHT_METHODS).filter(m => v.weight_methods.includes(m)),
     total_weight: total,
-    percent_capacity: lpPercent(total, v.capacity_at_config),
+    percent_capacity: lpPercent(total, capacity),
     rigging: d.rigging.map(r => ({ id: r.id, ...Object.fromEntries(LP_RIG_FIELDS.map(([k]) => [k, r[k].trim()])) })),
     inspection: { ...d.inspection },
     photo_paths: photoPaths
   };
   LP_TEXT_KEYS.forEach(k => { body[k] = v[k].trim(); });
+  body.capacity_at_config = capacity;
   return body;
 }
 
@@ -801,6 +848,7 @@ document.addEventListener("input", (event) => {
   if (t.dataset.lp) {
     lpDraft.values[t.dataset.lp] = t.value;
     lpDraft.touched = true;
+    if (t.dataset.lp === "capacity_at_config") lpDraft.capacityEdited = true;
     if (["total_weight", "capacity_at_config"].includes(t.dataset.lp)) lpRedrawFigures();
     if (lpDraft.showMissing) lpRedrawFlags();
   } else if (t.dataset.lpRig !== undefined) {
@@ -858,7 +906,7 @@ function renderPlans() {
 
   $("planTable").querySelector("tbody").innerHTML = rows.map(r => {
     const [label, cls] = badge[r.status] || ["—", "b-none"];
-    const pct = r.percent_capacity == null ? "—" : Math.round(r.percent_capacity) + "%";
+    const pct = lpPlanPercent(r) == null ? "—" : Math.round(lpPlanPercent(r)) + "%";
     return `<tr>
       <td>${r.submitted_at ? new Date(r.submitted_at).toLocaleDateString() : "—"}</td>
       <td>${esc(r.created_by_name || "—")}</td>
@@ -1037,14 +1085,13 @@ async function downloadPlanPDF(plan) {
 
   section("Load Weight");
   field("Load Description", plan.load_description);
-  pair("Load Weight (lbs)", plan.load_weight == null ? "" : Math.round(plan.load_weight),
-       "Total Weight (lbs)", plan.total_weight == null ? "" : Math.round(plan.total_weight));
+  pair("Load Weight", lpLbs(plan.load_weight), "Total Weight", lpLbs(plan.total_weight));
   field("How Was Weight Determined?",
         (plan.weight_methods || []).map(m => WEIGHT_METHODS[m] || m).join(", "));
   field("Source / Reference", plan.weight_source);
-  if (plan.percent_capacity != null) {
-    field("% of Crane Capacity Used", Math.round(plan.percent_capacity) + "%" +
-      (plan.percent_capacity > 100 ? "  - EXCEEDS RATED CAPACITY" : ""));
+  const percent = lpPlanPercent(plan);
+  if (percent != null) {
+    field("% of Crane Capacity Used", Math.round(percent) + "%" + (percent > 100 ? "  - EXCEEDS RATED CAPACITY" : ""));
   }
 
   const rigging = (plan.rigging || []).filter(r =>

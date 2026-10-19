@@ -566,8 +566,22 @@ button.news-pin:disabled { background: transparent; cursor: default; }
   .crane .crane-table thead th, .crane .crane-table tbody td { padding-left: 12px; padding-right: 12px; } }
 
 /* ---- Lift plans: the way in, a plan's own page, and the form (lift-plans.js) ---- */
-.lp-start { max-width: 620px; margin: 0 0 4px; }
-button.lp-new { display: flex; align-items: center; gap: 14px; padding: 14px 18px 14px 27px; }
+.lp-start { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0 0 4px; }
+@container (max-width: 640px) { .lp-start { grid-template-columns: minmax(0, 1fr); } }
+label.cab-card.lp-new, div.cab-card.lp-new { position: relative; margin: 0; color: #fff; font-weight: 400;
+  border: 1px solid var(--cab-edge); border-radius: 14px; background: linear-gradient(var(--cab-top), var(--cab-bottom));
+  box-shadow: 0 4px 14px rgba(20,28,34,.2); }
+label.cab-card.lp-new { cursor: pointer; transition: transform .12s ease, box-shadow .12s ease; }
+label.cab-card.lp-new:hover { background: linear-gradient(#313B42, #262E34); border-color: #4A5762; transform: translateY(-1px); }
+label.cab-card.lp-new.busy { cursor: progress; opacity: .8; }
+label.cab-card.lp-new::before, div.cab-card.lp-new::before { content: ""; position: absolute; left: 10px; top: 12px; bottom: 12px;
+  width: 3px; border-radius: 3px; background: var(--accent); box-shadow: 0 0 7px color-mix(in srgb, var(--accent) 65%, transparent); }
+.lp-new .lp-new-main span { white-space: normal; }
+.lp-ref-note { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 8px 2px 0; font-size: 13px; color: var(--ink-2); }
+label.linkish.crosby-replace { display: inline; margin: 0; color: var(--red); font-size: 13px; font-weight: 500; cursor: pointer; }
+label.linkish.crosby-replace:hover { text-decoration: underline; }
+.lp-cap .lp-hint.lp-odd { color: #8A5A00; font-weight: 500; }
+.lp-new { display: flex; align-items: center; gap: 14px; padding: 14px 18px 14px 27px; }
 .lp-new .cab-glyph { margin: 0; height: auto; }
 .lp-new-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .lp-new-main b { font: 600 17px/1.2 var(--font-cab); letter-spacing: .04em; text-transform: uppercase; }
