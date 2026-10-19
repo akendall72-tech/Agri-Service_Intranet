@@ -167,6 +167,8 @@ function tileCount(id) {
 const SUPPORT_PAGES = ["requests", "request", "newrequest", "tools", "tool", "toolform"];
 // Social's: Events and the Company community.
 const SOCIAL_PAGES = ["events", "event", "community", "communitypost", "fitness"];
+// The Crane Center's: a lift plan, and the form for one.
+const CRANE_PAGES = ["liftplan", "liftplanform"];
 
 function showView(name) {
   viewShown = name; screenTouched = false;
@@ -176,7 +178,7 @@ function showView(name) {
   host.classList.remove("hidden");
   setMode("app", ["openseat", "myclasses", "catalog", "olt", "article", "skills", "trainingstatus", "coursereport", "agcomap"].includes(name) ? "training"
     : name === "newspost" ? "news" : ["payroll", "inventory"].includes(name) ? "hr" : ["certreport", "evaltest", "approvals"].includes(name) ? "forklift" : name === "inspform" ? "inspection"
-    : SUPPORT_PAGES.includes(name) ? "support" : SOCIAL_PAGES.includes(name) ? "social" : SAFETY_PAGES.includes(name) ? "safety" : name);
+    : CRANE_PAGES.includes(name) ? "rigging" : SUPPORT_PAGES.includes(name) ? "support" : SOCIAL_PAGES.includes(name) ? "social" : SAFETY_PAGES.includes(name) ? "safety" : name);
   if (name !== "safetybrief" && briefTimer) { clearInterval(briefTimer); briefTimer = null; }
   document.body.dataset.page = "view";
   if (name !== "evaltest") { evalAgreed = null; evalNotice = ""; }
@@ -194,6 +196,9 @@ function showView(name) {
     ${["payroll", "inventory"].includes(name) ? `<button data-view="hr">HR</button><span>/</span>` : ""}
     ${["certreport", "evaltest", "approvals"].includes(name) ? `<button data-view="forklift">Forklift Center</button><span>/</span>` : ""}
     ${name === "inspform" ? `<button data-view="inspection">Inspection Center</button><span>/</span>` : ""}
+    ${CRANE_PAGES.includes(name) ? `<button data-view="rigging">Crane Center</button><span>/</span>` : ""}
+    ${name === "liftplanform" && lpDraft && lpDraft.editing
+      ? `<button data-lp-open="${esc(lpDraft.id)}">Lift Plan</button><span>/</span>` : ""}
     ${SOCIAL_PAGES.includes(name) ? `<button data-view="social">Social</button><span>/</span>` : ""}
     ${name === "event" ? `<button data-view="events">Event Center</button><span>/</span>` : ""}
     ${name === "communitypost" ? `<button data-view="community">Company</button><span>/</span>` : ""}
@@ -370,6 +375,8 @@ const VIEWS = {
   certreport: () => certReportView(),
   evaltest: () => evalTestView(),
   inspform: () => inspFormView(),
+  liftplan: () => liftPlanView(),
+  liftplanform: () => liftPlanFormView(),
   agcomap: () => agcoMapView()
 };
 
@@ -399,6 +406,8 @@ const pageTitle = (id) => (FEATURES.find(f => f.id === id) || COMPANY_PAGES.find
        certreport: { title: "Certification Report" },
        evaltest: { title: "Forklift Driving Test" },
        inspform: { title: inspDraft ? (inspDraft.stage === "after" ? "After Class" : "New Inspection") : "Inspection" },
+       liftplan: { title: "Lift Plan" },
+       liftplanform: { title: lpDraft && lpDraft.editing ? "Edit Lift Plan" : "New Lift Plan" },
        approvals: { title: "Driving Tests to Approve" },
        requests: { title: "Support Requests" },
        event: { title: (companyEvents.find(e => e.id === openEventId) || {}).title || "Event" },
