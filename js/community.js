@@ -181,9 +181,9 @@ const cmPostTitle = (p) => p.shoutout && (p.mentions || []).length
 
 function socialView() {
   setTimeout(cmRefresh);
-  // This month's leader, or your place, on the Fitness Challenge's door.
+  // This month's leader, or your place, on the Fitness Challenge's and Trivia's doors.
   setTimeout(async () => {
-    await loadFitness(fxThisMonth());
+    await Promise.all([loadFitness(fxThisMonth()), loadTrivia()]);
     const root = $("view").querySelector('[data-cm-page="social"]');
     if (root && !$("view").classList.contains("hidden")) root.outerHTML = cmSocialHtml();
   });
@@ -216,6 +216,7 @@ function cmSocialHtml() {
       </span>
     </button>
     ${fxDoorHtml()}
+    ${tvDoorHtml()}
   </div>`;
 }
 

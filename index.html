@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Which version this is. publish.sh stamps the date and commit here, and
      into version.json beside the page; "dev" is a copy that wasn't published. -->
-<meta name="app-version" content="2026-10-19.3320fe0">
+<meta name="app-version" content="2026-10-20.08dd107">
 <!-- Where this page may load things from and send things to. GitHub Pages
      can't send security headers, so it's here. Scripts come only from this
      site and the two script CDNs (each pinned with an integrity hash), and
@@ -34,7 +34,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
-<link rel="stylesheet" href="css/app.css?v=b8900c6c5c">
+<link rel="stylesheet" href="css/app.css?v=0879a2ea29">
 </head>
 <body>
 
@@ -92,6 +92,7 @@
       <button data-tab="news"><i data-icon="news"></i><span>News</span></button>
       <button data-tab="events"><i data-icon="events"></i><span>Events</span></button>
       <button data-tab="fitness" data-title="Fitness Challenge"><i data-icon="fitness"></i><span>Fitness Challenge</span></button>
+      <button data-tab="trivia" data-title="AGCO Trivia"><i data-icon="trivia"></i><span>Trivia</span></button>
       <button data-tab="handbook"><i data-icon="briefcase"></i><span>Employee Handbook</span></button>
       <button data-tab="reminders"><i data-icon="reminders"></i><span>Reminders</span></button>
       <button data-tab="support"><i data-icon="support"></i><span>Support Center</span></button>
@@ -1061,6 +1062,8 @@
     <!-- Events -->
     <!-- Each month's Fitness Challenge rules: renderFitnessAdmin(). -->
     <section id="tab-fitness" class="hidden"><div id="fitnessAdmin"></div></section>
+    <!-- Trivia's games, questions and categories: renderTriviaAdmin(). -->
+    <section id="tab-trivia" class="hidden"><div id="triviaAdmin"></div></section>
 
     <section id="tab-events" class="hidden">
       <div class="card" id="eventEditor">
@@ -1165,8 +1168,8 @@
      only names from an earlier file; boot.js starts the page and stays last.
      js/core.js has the rest. publish.sh adds ?v= to each, so a changed file is
      fetched fresh and an unchanged one comes from the browser's cache. -->
-<script src="js/core.js?v=fd3fc6d2d5"></script>
-<script src="js/shell.js?v=2e737baf8f"></script>
+<script src="js/core.js?v=8af6f704b0"></script>
+<script src="js/shell.js?v=31b97753f6"></script>
 <script src="js/location-dashboard.js?v=0bc38c65ce"></script>
 <script src="js/training-status.js?v=01856b512e"></script>
 <script src="js/forklift.js?v=db66a9afba"></script>
@@ -1177,8 +1180,9 @@
 <script src="js/reminders.js?v=90cd99e723"></script>
 <script src="js/people.js?v=43db7cf566"></script>
 <script src="js/events.js?v=060419257c"></script>
-<script src="js/community.js?v=94003c2dc7"></script>
+<script src="js/community.js?v=91e1526057"></script>
 <script src="js/fitness.js?v=820ac07555"></script>
+<script src="js/trivia.js?v=ed36435f8f"></script>
 <script src="js/safety-reports.js?v=a3073d1268"></script>
 <script src="js/training-dashboard.js?v=82f68f11f5"></script>
 <script src="js/safety-dashboard.js?v=845743b687"></script>

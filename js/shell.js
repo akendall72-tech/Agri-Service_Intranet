@@ -165,8 +165,8 @@ function tileCount(id) {
 
 // The Support Center's own pages, under it in the crumbs and the sidebar.
 const SUPPORT_PAGES = ["requests", "request", "newrequest", "tools", "tool", "toolform"];
-// Social's: Events and the Company community.
-const SOCIAL_PAGES = ["events", "event", "community", "communitypost", "fitness"];
+// Social's: Events, the Company community, the Fitness Challenge and Trivia.
+const SOCIAL_PAGES = ["events", "event", "community", "communitypost", "fitness", "trivia", "triviagame", "triviaplay"];
 // The Crane Center's: a lift plan, and the form for one.
 const CRANE_PAGES = ["liftplan", "liftplanform"];
 
@@ -202,6 +202,9 @@ function showView(name) {
     ${SOCIAL_PAGES.includes(name) ? `<button data-view="social">Social</button><span>/</span>` : ""}
     ${name === "event" ? `<button data-view="events">Event Center</button><span>/</span>` : ""}
     ${name === "communitypost" ? `<button data-view="community">Company</button><span>/</span>` : ""}
+    ${["triviagame", "triviaplay"].includes(name) ? `<button data-view="trivia">AGCO Trivia</button><span>/</span>` : ""}
+    ${name === "triviaplay" && tvPlay && tvGame(tvPlay.gameId)
+      ? `<button data-tv-game="${esc(tvPlay.gameId)}">${esc(tvGame(tvPlay.gameId).title)}</button><span>/</span>` : ""}
     ${SAFETY_PAGES.includes(name) ? `<button data-view="safety">Safety Center</button><span>/</span>` : ""}
     ${["safetybrief", "safetyreport"].includes(name) ? `<button data-view="safetydesk">Safety Desk</button><span>/</span>` : ""}
     ${name === "safetyreportone" ? `<button data-view="safetyreportlist">Safety Reports</button><span>/</span>` : ""}
@@ -236,7 +239,7 @@ function showAdmin() {
     renderCoursesAdmin, renderSdsAdmin, renderSdsPending, renderArticlesAdmin, renderSkillsAdmin,
     renderNewsAdmin, renderTsImport, renderTsLive, renderHandbook, renderAgcoImport, renderAgcoLive,
     renderAgcoTechs, renderAgcoRules, renderAgcoAdded, renderAgcoBales, renderMockSchedule, renderSafetyAdmin,
-    renderSafetyReportAdmin, renderSafetyReportsAdmin, renderFitnessAdmin);
+    renderSafetyReportAdmin, renderSafetyReportsAdmin, renderFitnessAdmin, renderTriviaAdmin);
   (document.querySelector(`#adminNav [data-tab="${adminTab}"]`) || document.querySelector("#adminNav [data-tab]")).click();
   window.scrollTo(0, 0);
 }
@@ -347,6 +350,9 @@ const VIEWS = {
   community: () => communityView(),
   communitypost: () => communityPostView(),
   fitness: () => fitnessView(),
+  trivia: () => triviaView(),
+  triviagame: () => triviaGameView(),
+  triviaplay: () => triviaPlayView(),
   events: () => eventsView(),
   event: () => eventView(),
   safetydesk: () => safetyDeskView(),
@@ -412,6 +418,8 @@ const pageTitle = (id) => (FEATURES.find(f => f.id === id) || COMPANY_PAGES.find
        requests: { title: "Support Requests" },
        event: { title: (companyEvents.find(e => e.id === openEventId) || {}).title || "Event" },
        events: { title: "Event Center" }, community: { title: "Company" }, fitness: { title: "Fitness Challenge" },
+       trivia: { title: "AGCO Trivia" }, triviagame: { title: (tvGame(tvGameId) || {}).title || "AGCO Trivia" },
+       triviaplay: { title: tvPlay ? (tvPlay.practice ? "Practice" : "Round") : "AGCO Trivia" },
        communitypost: { title: (cmPosts.find(p => p.id === openCommunityPostId) || {}).shoutout ? "Shout-out" : "Post" },
        safetydesk: { title: "Safety Desk" }, safetyreport: { title: "Safety Brief Report" },
        safetyform: { title: "Safety Report" }, safetyreportlist: { title: "Safety Reports" },
@@ -557,7 +565,7 @@ document.querySelectorAll(".tabs button[data-tab]").forEach(btn => {
     document.querySelectorAll(".tabs button[data-tab]").forEach(b =>
       b.classList.toggle("active", b === btn));
     ["certs", "plans", "people", "support", "payroll", "tools",
-      "directory", "logins", "reminders", "events", "fitness", "org", "openseat", "inspections", "courses", "articles", "skillsadmin", "sds", "news", "trainingstatus", "handbook", "agco", "mock", "safetydesk", "safetyreportform", "safetyreports", "safetyoverview", "fkwaiting", "trainingoverview", "agcocatalog", "rpagco", "rpclass", "oltadmin", "locationoverview", "fkrequired", "crrequired"].forEach(name =>
+      "directory", "logins", "reminders", "events", "fitness", "trivia", "org", "openseat", "inspections", "courses", "articles", "skillsadmin", "sds", "news", "trainingstatus", "handbook", "agco", "mock", "safetydesk", "safetyreportform", "safetyreports", "safetyoverview", "fkwaiting", "trainingoverview", "agcocatalog", "rpagco", "rpclass", "oltadmin", "locationoverview", "fkrequired", "crrequired"].forEach(name =>
       $("tab-" + name).classList.toggle("hidden", name !== btn.dataset.tab));
     $("adminTitle").textContent = btn.dataset.title || btn.querySelector("span").textContent.trim();
     if (btn.closest("#safetyNav")) safetyTab = btn.dataset.tab;
