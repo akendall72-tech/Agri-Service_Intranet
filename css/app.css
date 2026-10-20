@@ -1013,6 +1013,8 @@ button.sd-row { display: flex; align-items: center; justify-content: flex-start;
 .sd-doc-head svg { color: var(--accent); }
 .sd-doc-head b { font: 600 16px var(--font-cab); letter-spacing: .03em; }
 .sd-doc-head .sd-go { margin-left: auto; }
+.sd-audio audio { display: block; width: 100%; margin: 2px 0 8px; color-scheme: dark; }
+.sd-audio p { margin: 0; color: var(--cab-sub); font-size: 13.5px; }
 .sd-doc iframe { display: block; width: 100%; height: min(78vh, 900px); border: 0; border-radius: 8px; background: #fff; }
 .sd-body p { margin: 0 0 12px; font-size: 15.5px; line-height: 1.6; color: rgba(255,255,255,.94); max-width: 70ch; }
 .sd-body p:last-child { margin: 0; }

@@ -16,7 +16,9 @@
 let safetyBriefs = [], safetyResults = [], safetyKeys = [], safetyError = null;
 let openBriefId = null, safetyReportBrief = null, safetyReportFilter = "notpassed";
 let briefReadyAt = null, briefTimer = null, briefPicks = [], briefNotice = "", briefStartProblem = "", briefFor = null;
-let sdDraft = null, sdPdfFile = null;
+let sdDraft = null, sdPdfFile = null, sdAudioFile = null;
+// What the safety-briefs bucket takes as a recording (0106).
+const SD_AUDIO_TYPES = ["audio/mpeg", "audio/mp4", "audio/x-m4a", "audio/mp3"];
 
 const SAFETY_PAGES = ["safetydesk", "safetybrief", "safetyreport", "safetyform", "safetyreportlist", "safetyreportone"];
 
@@ -124,6 +126,12 @@ function safetyBriefView() {
     + `<div class="sd sd-brief" style="${lit("ember")}">
       ${passed ? `<div class="sd-card sd-passed">${icon("checkCircle", 26)}<span><b>Passed</b>
         <span>${esc(new Date(r.passed_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }))} · ${r.score} of ${n} right${r.tries > 1 ? ` · ${r.tries} tries` : ""}</span></span></div>` : ""}
+      ${b.audio_path ? `<div class="group-title">Listen</div>
+        <div class="sd-card sd-audio">
+          <div class="sd-doc-head">${icon("headphones", 20)}<b>Listen instead of reading</b></div>
+          <audio id="sdAudio" controls preload="none" aria-label="${esc(b.audio_name || "The recording of this brief")}"></audio>
+          <p>The same brief, read out. Listen, then answer the questions.</p>
+        </div>` : ""}
       ${b.document_path || briefParagraphs(b).length ? `<div class="group-title">Read</div>` : ""}
       ${b.document_path ? `<div class="sd-card sd-doc">
           <div class="sd-doc-head">${icon("doc", 20)}<b>${esc(b.document_name || "The document")}</b>
@@ -144,8 +152,14 @@ function safetyBriefView() {
     </div>`;
 }
 
-// After the page is drawn: the PDF's link, and the reading time.
+// After the page is drawn: the PDF's link, the recording, and the reading time.
 async function beginBrief(b) {
+  // Signed for longer than the PDF: a recording may be started well after
+  // the page was opened.
+  if (b.audio_path && $("sdAudio")) {
+    const { data } = await db.storage.from("safety-briefs").createSignedUrl(b.audio_path, 6 * 3600);
+    if (data && data.signedUrl && $("sdAudio")) $("sdAudio").src = data.signedUrl;
+  }
   if (b.document_path && $("sdPdf")) {
     const { data } = await db.storage.from("safety-briefs").createSignedUrl(b.document_path, 3600);
     if (data && data.signedUrl && $("sdPdf")) {
@@ -316,7 +330,7 @@ $("view").addEventListener("change", (event) => {
 function sdBlankDraft() {
   const next = new Date(); next.setDate(1); next.setMonth(next.getMonth() + 1);
   return { id: null, month: `${next.getFullYear()}-${pad2(next.getMonth() + 1)}`, title: "", summary: "", body: "",
-    document_path: null, document_name: null, read_minutes: 3, pass_mark: 4, is_published: false,
+    document_path: null, document_name: null, audio_path: null, audio_name: null, read_minutes: 3, pass_mark: 4, is_published: false,
     questions: Array.from({ length: 5 }, () => ({ q: "", kind: "choice", choices: ["", "", "", ""] })), answers: [null, null, null, null, null] };
 }
 
@@ -426,7 +440,7 @@ function renderSafetyAdmin() {
         : `<span class="badge b-current">Showing</span>`;
       return `<div class="role sd-admin-row"><div><b>${esc(briefMonthTitle(b))}</b> · ${esc(b.title)} ${state}
           <div class="note">${(b.questions || []).length} questions · pass ${briefNeeded(b)} · questions open after ${b.read_minutes} min
-            ${b.document_name ? ` · ${esc(b.document_name)}` : ""} · ${passed} passed</div></div>
+            ${b.document_name ? ` · ${esc(b.document_name)}` : ""}${b.audio_path ? " · with a recording" : ""} · ${passed} passed</div></div>
         <span class="sd-admin-acts"><button class="pdf" data-sd-reuse="${esc(b.id)}" title="Copy it to another month">Reuse</button>
           <button class="pdf" data-sd-edit="${esc(b.id)}">Edit</button></span></div>`;
     }).join("") || `<p class="note">No Safety Briefs yet.</p>`}</div>
@@ -441,8 +455,9 @@ function renderSafetyAdmin() {
   renderSdEditor();
 }
 
-// A reused brief shares its PDF, so a file only goes once no other brief uses it.
-const sdPdfInUse = (path, exceptId) => safetyBriefs.some(b => b.id !== exceptId && b.document_path === path);
+// A reused brief shares its PDF and recording, so a file only goes once no
+// other brief uses it.
+const sdPdfInUse = (path, exceptId) => safetyBriefs.some(b => b.id !== exceptId && (b.document_path === path || b.audio_path === path));
 
 // The first month from next month on with no brief yet, for a reused one.
 function sdNextFreeMonth() {
@@ -480,6 +495,14 @@ function renderSdEditor() {
             <button type="button" class="pdf" data-sd-act="remove-pdf">Remove</button>` : `<span class="note">None yet</span>`}
           <label class="pdf sd-file">${d.document_name ? "Replace" : "Choose a PDF"}<input type="file" accept="application/pdf" id="sdPdfFile" class="hidden"></label>
           ${sdPdfFile ? `<span class="note">New: ${esc(sdPdfFile.name)} — saved with the brief</span>` : ""}</div></div>
+      <div class="wide"><label>A recording to listen to (optional, MP3 or M4A)</label>
+        <div class="row" style="margin:0">${d.audio_name ? `<span>${esc(d.audio_name)}</span>
+            <button type="button" class="pdf" data-sd-act="remove-audio">Remove</button>` : `<span class="note">None</span>`}
+          <label class="pdf sd-file">${d.audio_name ? "Replace" : "Choose a recording"}<input type="file"
+            accept="audio/mpeg,audio/mp4,audio/x-m4a,.mp3,.m4a" id="sdAudioFile" class="hidden"></label>
+          ${sdAudioFile ? `<span class="note">New: ${esc(sdAudioFile.name)}, ${esc(fileSize(sdAudioFile.size))} — saved with the brief</span>` : ""}</div>
+        <p class="note" style="margin:6px 0 0">For anyone who'd rather listen than read. It plays on the brief's page in the app and
+          here, above the PDF. A Voice Memos recording from an iPhone is an M4A and works as it is.</p></div>
       <div class="wide"><label for="sdBody">Text to read (optional, with or instead of the PDF)</label>
         <textarea id="sdBody" rows="6" data-sdf="body" placeholder="Leave a blank line between paragraphs.">${esc(d.body || "")}</textarea></div>
       <div><label for="sdRead">Questions open after (minutes)</label><input id="sdRead" type="number" min="0" max="30" data-sdf="read_minutes" value="${d.read_minutes}"></div>
@@ -541,6 +564,13 @@ $("admin").addEventListener("change", (event) => {
     return renderSdEditor();
   }
   if (t.dataset.sdf === "is_published") sdDraft.is_published = t.value === "yes";
+  if (t.id === "sdAudioFile" && t.files[0]) {
+    const f = t.files[0];
+    if (!SD_AUDIO_TYPES.includes(f.type) && !/\.(mp3|m4a)$/i.test(f.name)) return speak($("sdEditor"), "That isn't an MP3 or M4A recording.", true);
+    if (f.size > 40 * 1024 * 1024) return speak($("sdEditor"), "That recording is over 40 MB. Export it at a lower quality and try again.", true);
+    sdAudioFile = f;
+    return renderSdEditor();
+  }
   if (t.id === "sdPdfFile" && t.files[0]) {
     if (t.files[0].type !== "application/pdf") return speak($("sdEditor"), "That isn't a PDF.", true);
     sdPdfFile = t.files[0];
@@ -557,7 +587,7 @@ $("admin").addEventListener("click", async (event) => {
     const reuse = edit.dataset.sdReuse !== undefined;
     const b = safetyBriefs.find(x => x.id === (reuse ? edit.dataset.sdReuse : edit.dataset.sdEdit));
     const key = (safetyKeys.find(k => k.brief_id === b.id) || {}).answers || [];
-    sdPdfFile = null;
+    sdPdfFile = null; sdAudioFile = null;
     sdDraft = { ...JSON.parse(JSON.stringify(b)), month: b.month.slice(0, 7),
       questions: (b.questions || []).map(q => sdIsTrueFalse(q)
         ? { q: q.q || "", kind: "truefalse", choices: ["True", "False"] }
@@ -577,12 +607,13 @@ $("admin").addEventListener("click", async (event) => {
   if (!button) return;
   const act = button.dataset.sdAct;
   if (act === "new") {
-    sdDraft = sdBlankDraft(); sdPdfFile = null; renderSdEditor();
+    sdDraft = sdBlankDraft(); sdPdfFile = null; sdAudioFile = null; renderSdEditor();
     return $("sdEditor").scrollIntoView({ behavior: "smooth", block: "start" });
   }
-  if (act === "cancel") { sdDraft = null; sdPdfFile = null; return renderSdEditor(); }
+  if (act === "cancel") { sdDraft = null; sdPdfFile = null; sdAudioFile = null; return renderSdEditor(); }
   if (act === "add-q") { sdDraft.questions.push({ q: "", kind: "choice", choices: ["", "", "", ""] }); sdDraft.answers.push(null); return renderSdEditor(); }
   if (act === "remove-pdf") { sdDraft.document_path = null; sdDraft.document_name = null; sdPdfFile = null; return renderSdEditor(); }
+  if (act === "remove-audio") { sdDraft.audio_path = null; sdDraft.audio_name = null; sdAudioFile = null; return renderSdEditor(); }
   if (act === "reminder") return saveSdReminder(button);
   if (act === "delete") return deleteSdBrief();
   if (act === "save") return saveSdBrief(button);
@@ -613,7 +644,8 @@ async function saveSdBrief(button) {
     : d.questions.some(q => !q.q.trim()) ? "Every question needs its wording."
     : d.questions.some(q => q.kind !== "truefalse" && q.choices.some(c => !c.trim())) ? "Every multiple-choice question needs all four answers."
     : d.answers.some(a => a === null || a === undefined) ? "Pick the right answer for every question."
-    : d.is_published && !d.document_path && !sdPdfFile && !(d.body || "").trim() ? "Add the PDF or some text to read before it shows."
+    : d.is_published && !d.document_path && !sdPdfFile && !d.audio_path && !sdAudioFile && !(d.body || "").trim()
+      ? "Add the PDF, a recording or some text to read before it shows."
     : !(d.read_minutes >= 0 && d.read_minutes <= 30) ? "The reading time has to be between 0 and 30 minutes."
     : !(d.pass_mark >= 1 && d.pass_mark <= 10) ? "Right answers to pass has to be between 1 and 10."
     : null;
@@ -629,7 +661,17 @@ async function saveSdBrief(button) {
     const up = await db.storage.from("safety-briefs").upload(path, sdPdfFile, { contentType: "application/pdf" });
     if (up.error) { button.disabled = false; return speak(box, `The PDF didn't upload: ${up.error.message}`, true); }
   }
+  let audioPath = d.audio_path, audioName = d.audio_name;
+  const audioBefore = d.id ? (safetyBriefs.find(b => b.id === d.id) || {}).audio_path : null;
+  if (sdAudioFile) {
+    const m4a = /\.m4a$/i.test(sdAudioFile.name) || /mp4|m4a/.test(sdAudioFile.type);
+    audioPath = `${crypto.randomUUID()}.${m4a ? "m4a" : "mp3"}`;
+    audioName = sdAudioFile.name;
+    const up = await db.storage.from("safety-briefs").upload(audioPath, sdAudioFile, { contentType: m4a ? "audio/mp4" : "audio/mpeg" });
+    if (up.error) { button.disabled = false; return speak(box, `The recording didn't upload: ${up.error.message}`, true); }
+  }
   const row = { month: `${d.month}-01`, title: d.title.trim(), summary: (d.summary || "").trim() || null,
+    audio_path: audioPath || null, audio_name: audioPath ? audioName : null,
     body: (d.body || "").trim() || null, document_path: path || null, document_name: path ? name : null,
     read_minutes: d.read_minutes, pass_mark: d.pass_mark, is_published: !!d.is_published,
     questions: d.questions.map(q => q.kind === "truefalse"
@@ -648,7 +690,8 @@ async function saveSdBrief(button) {
   const key = await db.from("safety_brief_keys").upsert({ brief_id: id, answers: d.answers }, { onConflict: "brief_id" });
   if (key.error) { button.disabled = false; return speak(box, `The brief saved, but its answers didn't: ${key.error.message}`, true); }
   if (before && before !== path && !sdPdfInUse(before, d.id)) await db.storage.from("safety-briefs").remove([before]);
-  sdDraft = null; sdPdfFile = null;
+  if (audioBefore && audioBefore !== audioPath && !sdPdfInUse(audioBefore, d.id)) await db.storage.from("safety-briefs").remove([audioBefore]);
+  sdDraft = null; sdPdfFile = null; sdAudioFile = null;
   await loadSafetyDesk();
   renderSafetyAdmin();
   speak($("sdAdminList"), "Saved.", false);
@@ -661,6 +704,7 @@ async function deleteSdBrief() {
   const { data, error } = await db.from("safety_briefs").delete().eq("id", d.id).select("id");
   if (error || !(data || []).length) return speak($("sdEditor"), error ? error.message : "Not deleted — only an owner can.", true);
   if (b.document_path && !sdPdfInUse(b.document_path, b.id)) await db.storage.from("safety-briefs").remove([b.document_path]);
+  if (b.audio_path && !sdPdfInUse(b.audio_path, b.id)) await db.storage.from("safety-briefs").remove([b.audio_path]);
   sdDraft = null;
   await loadSafetyDesk();
   renderSafetyAdmin();
