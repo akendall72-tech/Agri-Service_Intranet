@@ -21,14 +21,16 @@ const FEATURES = [
   { id: "rigging",   title: "Crane Center", sub: "Lift plans & approvals", accent: "steel" },
   { id: "support",   title: "Support Center", sub: "IT help & requests", accent: "slate" },
   { id: "inspection", title: "Inspection Center", sub: "Checks & walk-arounds", accent: "deep" },
-  { id: "social",    title: "Social", sub: "Shout-outs & events", accent: "amber" }
+  { id: "social",    title: "Social", sub: "Shout-outs & events", accent: "amber" },
+  { id: "fleet",     title: "Fleet Center", sub: "Vehicles, maintenance & equipment", accent: "teal" }
 ];
 
 // The home page's groups, as in the app's HomeGroup, with Social in "Your day"
 // beside Reminders.
 const HOME_GROUPS = [
   { title: "Your day", ids: ["reminders", "social"], rows: true },
-  { title: "On the job", ids: ["rigging", "inspection", "forklift", "safety"] },
+  // The Fleet Center is a full-width row under the four tiles, as in the app.
+  { title: "On the job", ids: ["rigging", "inspection", "forklift", "safety"], wide: ["fleet"] },
   { title: "Learning & help", ids: ["training", "support"] }
 ];
 
@@ -100,6 +102,7 @@ function showHome() {
         <div class="cab-grid ${group.rows ? "rows" : group.ids.length === 4 ? "tiles4" : ""}">
           ${group.ids.map(id => homeTile(FEATURES.find(f => f.id === id), group.rows)).join("")}
         </div>
+        ${group.wide ? `<div class="cab-grid rows one">${group.wide.map(id => homeTile(FEATURES.find(f => f.id === id), true)).join("")}</div>` : ""}
       </section>`).join("");
   }, function homeNewsColumn() {
     const news = homeNews();
@@ -155,6 +158,8 @@ function tileCount(id) {
   // For a Safety Manager, the reports waiting for their approval.
   if (id === "safety") return isSafetyManager() ? srReports.filter(srPending).length : 0;
   if (id === "forklift") return isTrainingManager() ? pendingTests().length : 0;
+  // The vehicles you drive that need a check, a service or new tires.
+  if (id === "fleet") return fvAttentionCount();
   if (id === "rigging") {
     return isAdmin()
       ? plans.filter(p => p.status === "submitted" && p.created_by !== me.id).length
@@ -167,6 +172,8 @@ function tileCount(id) {
 const SUPPORT_PAGES = ["requests", "request", "newrequest", "tools", "tool", "toolform"];
 // Social's: Events, the Company community, the Fitness Challenge and Trivia.
 const SOCIAL_PAGES = ["events", "event", "community", "communitypost", "fitness", "trivia", "triviagame", "triviaplay"];
+// The Fleet Center's: a vehicle, and the form for one.
+const FLEET_PAGES = ["fleetvehicle", "fleetform"];
 // The Crane Center's: a lift plan, and the form for one.
 const CRANE_PAGES = ["liftplan", "liftplanform"];
 
@@ -178,7 +185,7 @@ function showView(name) {
   host.classList.remove("hidden");
   setMode("app", ["openseat", "myclasses", "catalog", "olt", "article", "skills", "trainingstatus", "coursereport", "agcomap"].includes(name) ? "training"
     : name === "newspost" ? "news" : ["payroll", "inventory"].includes(name) ? "hr" : ["certreport", "evaltest", "approvals"].includes(name) ? "forklift" : name === "inspform" ? "inspection"
-    : CRANE_PAGES.includes(name) ? "rigging" : SUPPORT_PAGES.includes(name) ? "support" : SOCIAL_PAGES.includes(name) ? "social" : SAFETY_PAGES.includes(name) ? "safety" : name);
+    : CRANE_PAGES.includes(name) ? "rigging" : FLEET_PAGES.includes(name) ? "fleet" : SUPPORT_PAGES.includes(name) ? "support" : SOCIAL_PAGES.includes(name) ? "social" : SAFETY_PAGES.includes(name) ? "safety" : name);
   if (name !== "safetybrief" && briefTimer) { clearInterval(briefTimer); briefTimer = null; }
   document.body.dataset.page = "view";
   if (name !== "evaltest") { evalAgreed = null; evalNotice = ""; }
@@ -197,6 +204,9 @@ function showView(name) {
     ${["certreport", "evaltest", "approvals"].includes(name) ? `<button data-view="forklift">Forklift Center</button><span>/</span>` : ""}
     ${name === "inspform" ? `<button data-view="inspection">Inspection Center</button><span>/</span>` : ""}
     ${CRANE_PAGES.includes(name) ? `<button data-view="rigging">Crane Center</button><span>/</span>` : ""}
+    ${FLEET_PAGES.includes(name) ? `<button data-view="fleet">Fleet Center</button><span>/</span>` : ""}
+    ${name === "fleetform" && fvDraft && fvDraft.id && fvVehicle(fvDraft.id)
+      ? `<button data-fv-open="${esc(fvDraft.id)}">${esc(fvName(fvVehicle(fvDraft.id)))}</button><span>/</span>` : ""}
     ${name === "liftplanform" && lpDraft && lpDraft.editing
       ? `<button data-lp-open="${esc(lpDraft.id)}">Lift Plan</button><span>/</span>` : ""}
     ${SOCIAL_PAGES.includes(name) ? `<button data-view="social">Social</button><span>/</span>` : ""}
@@ -350,6 +360,9 @@ const VIEWS = {
   community: () => communityView(),
   communitypost: () => communityPostView(),
   fitness: () => fitnessView(),
+  fleet: () => fleetView(),
+  fleetvehicle: () => fleetVehicleView(),
+  fleetform: () => fleetFormView(),
   trivia: () => triviaView(),
   triviagame: () => triviaGameView(),
   triviaplay: () => triviaPlayView(),
@@ -413,6 +426,8 @@ const pageTitle = (id) => (FEATURES.find(f => f.id === id) || COMPANY_PAGES.find
        evaltest: { title: "Forklift Driving Test" },
        inspform: { title: inspDraft ? (inspDraft.stage === "after" ? "After Class" : "New Inspection") : "Inspection" },
        liftplan: { title: "Lift Plan" },
+       fleetvehicle: { title: (v => v ? fvName(v) : "Vehicle")(fvVehicle(openFleetId)) },
+       fleetform: { title: fvDraft && fvDraft.id ? "Edit Vehicle" : "Add a Vehicle" },
        liftplanform: { title: lpDraft && lpDraft.editing ? "Edit Lift Plan" : "New Lift Plan" },
        approvals: { title: "Driving Tests to Approve" },
        requests: { title: "Support Requests" },

@@ -2526,6 +2526,124 @@ input.fx-val { width: 96px; margin: 0; padding: 4px 8px; text-align: right; font
   color: var(--ink-2); font: 600 10.5px var(--font-mono); letter-spacing: .06em; text-transform: uppercase; }
 @media (max-width: 640px) { .fx-pick { grid-template-columns: auto minmax(0, 1fr); } .fx-pick-pts { grid-column: 2; } }
 
+/* ---- The Fleet Center (0111): vehicles, their service clocks, the mileage
+   chart, tires and equipment, in the Cab look; the forms on light cards. ---- */
+.cab-grid.rows.one { grid-template-columns: minmax(0, 1fr); }
+.cab-grid + .cab-grid { margin-top: 12px; }
+.fv .cm-card { --accent: var(--lit-teal); }
+.fv .cm-card.alert { --accent: var(--lit-red); border-color: color-mix(in srgb, var(--lit-red) 45%, transparent); }
+.fv .cm-eyebrow { color: var(--lit-teal); }
+.fv h2.fv-title { margin: 0 0 12px; color: #fff; font: 700 26px/1.1 var(--font-cab); letter-spacing: .02em; text-transform: uppercase; }
+.fv-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 14px; }
+.fv-stats > div .cm-stat b { color: var(--accent); }
+.fv-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.fv button.fv-go { gap: 8px; margin: 0; padding: 11px 18px; border-radius: 11px; color: #fff; box-shadow: none;
+  background: color-mix(in srgb, var(--lit-teal) 34%, #20272C); border: 1px solid color-mix(in srgb, var(--lit-teal) 70%, transparent);
+  font: 700 15px var(--font-cab); letter-spacing: .08em; text-transform: uppercase; }
+.fv button.fv-go:hover { background: color-mix(in srgb, var(--lit-teal) 48%, #20272C); }
+.fv button.fv-go.quiet { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.22); }
+.fv button.fv-go.quiet:hover { background: rgba(255,255,255,.12); }
+.fv button.fv-quiet { gap: 7px; margin: 0; padding: 8px 6px; background: none; border: 0; box-shadow: none; color: var(--ink-2);
+  font: 700 14px var(--font-cab); letter-spacing: .08em; text-transform: uppercase; }
+.fv .cm-card button.fv-quiet { color: var(--accent); }
+.fv button.fv-quiet:hover { background: none; color: var(--red); }
+.fv button.fv-quiet.danger { color: var(--red-dark); }
+.fv button:focus-visible { outline: 2px solid var(--lit-teal); outline-offset: 2px; }
+.fv button.fv-empty, .fv button.fv-card { display: block; width: 100%; margin: 0; text-align: left; white-space: normal; font-weight: 400;
+  color: #fff; cursor: pointer; }
+.fv button.fv-empty b { display: block; font: 700 19px var(--font-cab); letter-spacing: .04em; text-transform: uppercase; }
+.fv button.fv-empty span { display: block; color: var(--cab-sub); font-size: 14px; margin-top: 4px; }
+.fv button.fv-empty .cm-go { color: var(--lit-teal); font: 700 14px var(--font-cab); letter-spacing: .08em; text-transform: uppercase; margin-top: 8px; }
+.fv button.fv-card:hover, .fv button.fv-empty:hover { border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+.fv button.fv-card.retired { opacity: .7; }
+.fv-card-top { display: flex; align-items: flex-start; gap: 12px; }
+.fv-glyph { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 46px; height: 46px; border-radius: 12px;
+  color: var(--lit-teal); background: color-mix(in srgb, var(--lit-teal) 14%, transparent); border: 1px solid color-mix(in srgb, var(--lit-teal) 35%, transparent); }
+.fv-glyph.gear { width: 38px; height: 38px; border-radius: 10px; color: var(--lit-amber);
+  background: color-mix(in srgb, var(--lit-amber) 14%, transparent); border-color: color-mix(in srgb, var(--lit-amber) 35%, transparent); }
+.fv-who { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.fv-who b { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font: 700 19px var(--font-cab); letter-spacing: .04em; text-transform: uppercase; }
+.fv-who > span { color: var(--cab-sub); font-size: 14px; }
+.fv-who small { color: var(--cab-detail); font-size: 12.5px; }
+.fv .cab-tag { font: 600 10px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; padding: 1px 7px; border-radius: 99px;
+  border: 1px solid color-mix(in srgb, var(--accent, var(--lit-slate)) 55%, transparent); color: var(--accent, var(--cab-sub)); }
+.fv .cab-tag.fv-due-tag { background: var(--lit-amber); border-color: var(--lit-amber); color: #2A1E05; }
+.fv-ring { flex: none; }
+.fv-ring-track { fill: none; stroke: rgba(255,255,255,.08); stroke-width: 5; }
+.fv-ring-fill { fill: none; stroke: var(--accent); stroke-width: 5; stroke-linecap: round; filter: drop-shadow(0 0 3px var(--accent)); }
+.fv-ring text { fill: var(--accent); font: 700 11px system-ui, sans-serif; }
+.fv-bar { height: 6px; margin-top: 12px; border-radius: 99px; background: rgba(255,255,255,.08); overflow: hidden; }
+.fv-bar i { display: block; height: 100%; border-radius: 99px; background: var(--accent); }
+.fv-due { margin: 6px 0 0; color: var(--cab-sub); font-size: 13px; font-weight: 600; }
+.fv-due.soon { color: var(--lit-amber); }
+.fv-due.overdue { color: var(--lit-red); }
+.fv-card-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 10px; }
+.fv-odo, .fv-gear-count { color: var(--cab-sub); font-size: 13px; font-weight: 600; }
+.fv-tire { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 99px; font-size: 12.5px; font-weight: 600;
+  color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); }
+.fv-tire small { color: var(--cab-sub); font-size: 12px; }
+.fv-tabs { align-self: flex-start; margin: 4px 0 0; --accent: var(--lit-teal); }
+.fv button.fv-retired-toggle { align-self: flex-start; margin: 6px 0 0; padding: 4px 2px; background: none; border: 0; box-shadow: none;
+  color: var(--muted); font: 600 12px var(--font-mono); letter-spacing: .14em; text-transform: uppercase; }
+.fv-head .cm-eyebrow { margin-bottom: 6px; }
+.fv-odo-big { display: flex; align-items: baseline; gap: 8px; margin: 2px 0 10px; color: #fff; }
+.fv-odo-big b { font: 700 40px/1 var(--font-cab); font-variant-numeric: tabular-nums; }
+.fv-odo-big span { color: var(--cab-sub); font: 600 18px var(--font-cab); }
+.fv-odo-big small { margin-left: auto; color: var(--cab-detail); font-size: 12.5px; }
+.fv-warn { display: flex; align-items: center; gap: 7px; margin: 0 0 12px; color: var(--lit-amber); font-size: 14px; font-weight: 600; }
+.fv-note { margin: 8px 0 0; color: var(--cab-detail); font-size: 13px; max-width: 72ch; }
+.fv-service { display: flex; align-items: center; gap: 18px; }
+.fv-service small { color: var(--cab-detail); font-size: 12.5px; }
+.fv-level { font: 700 18px var(--font-cab); letter-spacing: .05em; text-transform: uppercase; }
+.fv-level.ok { color: var(--lit-green); } .fv-level.soon { color: var(--lit-amber); } .fv-level.overdue { color: var(--lit-red); }
+.fv-level.unknown { color: var(--cab-sub); }
+.fv-due-big { margin: 2px 0 4px; color: #fff; font-size: 15px; font-weight: 600; }
+.fv-chart { display: block; width: 100%; height: auto; }
+.fv-grid { stroke: rgba(255,255,255,.08); stroke-width: 1; }
+.fv-axis { fill: var(--cab-detail); font: 11px system-ui, sans-serif; }
+.fv-area-top { stop-color: var(--lit-teal); stop-opacity: .35; }
+.fv-area-bottom { stop-color: var(--lit-teal); stop-opacity: .02; }
+.fv-line { fill: none; stroke: var(--lit-teal); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.fv-due-line { stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 6 4; }
+.fv-due-label { fill: var(--accent); font: 700 11px system-ui, sans-serif; }
+.fv-event circle { fill: var(--lit-amber); stroke: #1B2125; stroke-width: 1.5; }
+.fv-event text { fill: #1B2125; font: 700 9px system-ui, sans-serif; }
+.fv-tread-bar { fill: var(--accent); }
+.fv-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; }
+.fv-row small { color: var(--cab-detail); font-size: 12.5px; }
+.fv-gear { --accent: var(--lit-amber); }
+.fv-gear-acts { display: flex; gap: 14px; margin-top: 8px; }
+.fv-log { padding-block: 6px; }
+.fv-log-row { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; }
+.fv-log-row + .fv-log-row { border-top: 1px solid rgba(255,255,255,.08); }
+.fv-log-row > span { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.fv-log-row b { font-size: 14.5px; font-weight: 600; }
+.fv-log-row small { color: var(--cab-detail); font-size: 12.5px; }
+.fv-log-row .fv-note { margin: 2px 0 0; color: var(--cab-sub); }
+.fv-log-row em { flex: none; font: 700 15px var(--font-cab); font-style: normal; font-variant-numeric: tabular-nums; }
+.fv button.fv-x { flex: none; margin: 0; padding: 0 6px; background: none; border: 0; box-shadow: none; color: var(--cab-detail); font-size: 18px; }
+.fv button.fv-x:hover { color: var(--lit-red); background: none; }
+.fv-details > div { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; }
+.fv-details span { color: var(--cab-detail); font-size: 13px; }
+.fv-details b { font: 600 14px var(--font-mono); }
+.fv-details p { margin: 8px 0 0; color: var(--cab-sub); font-size: 14px; }
+.fv-foot { display: flex; justify-content: center; gap: 22px; }
+.fv-msg { margin: 0; text-align: center; font-size: 14px; }
+.fv-msg.error { color: var(--red-dark); } .fv-msg.ok { color: var(--green); }
+.fv-panel { margin: 0; color: var(--ink); }
+.fv-tire-picks { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0 0 14px; }
+@media (max-width: 640px) { .fv-tire-picks { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.fv-tire-pick { display: flex; gap: 8px; align-items: flex-start; margin: 0; padding: 10px; border-radius: 10px; cursor: pointer;
+  border: 1px solid var(--line-strong); background: #fff; color: var(--ink); }
+.fv-tire-pick input { margin: 3px 0 0; accent-color: #0F766E; }
+.fv-tire-pick b { display: block; font-size: 14px; }
+.fv-tire-pick small { display: block; color: var(--muted); font-size: 12px; font-weight: 400; }
+.fv-tire-pick:has(input:checked) { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); background: color-mix(in srgb, var(--accent) 8%, #fff); }
+.fv-form h2 { margin-top: 18px; }
+.fv-form h2:first-child { margin-top: 0; }
+.fv-gear-row { align-items: end; padding: 10px 0; border-top: 1px solid var(--line); }
+.fv-gear-del button { margin-bottom: 12px; }
+
 /* ---- Trivia (0107): games, practice and a round on Social, in the Cab look,
    and the admin page's games, questions and categories. ---- */
 .tv .cm-card { --accent: var(--lit-violet); }

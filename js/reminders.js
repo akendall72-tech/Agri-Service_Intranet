@@ -30,8 +30,10 @@ function visibleTasks() {
 
   const shared = sharedTasks
     .filter(t => !hiddenTasks.includes(t.id))
+    // Fleet check is only for the people who drive a vehicle (0111).
+    .filter(t => t.ticked_by !== "fleet_check" || fvDrives())
     .map(t => ({ id: t.id, kind: "weekly", title: t.title, detail: t.detail,
-                 cadence: t.cadence || "weekly", ticksItself: ["safety_brief", "safety_report"].includes(t.ticked_by),
+                 cadence: t.cadence || "weekly", ticksItself: ["safety_brief", "safety_report", "fleet_check"].includes(t.ticked_by),
                  ticker: t.ticked_by,
                  done: done(t.id, t.cadence || "weekly") }));
 
@@ -56,7 +58,9 @@ function remindersView() {
       <span>
         <b class="${t.done ? "done" : ""}">${esc(t.title)}</b>
         ${t.detail ? `<br><span class="note">${esc(t.detail)}</span>` : ""}
-        <br>${t.ticker === "safety_report" ? `<button type="button" class="linkish" data-view="safetyform">${t.done
+        <br>${t.ticker === "fleet_check" ? `<button type="button" class="linkish" data-view="fleet">${t.done
+            ? "Done: your vehicles are checked this week" : "Open the Fleet Center. It ticks itself when you check your vehicles"} &rsaquo;</button>`
+          : t.ticker === "safety_report" ? `<button type="button" class="linkish" data-view="safetyform">${t.done
             ? `Done: you sent a Safety Report this ${t.cadence === "daily" ? "day" : t.cadence === "monthly" ? "month" : "week"}`
             : "Open the Safety Report form. It ticks itself when you send one"} &rsaquo;</button>` : (() => {
           // Straight to this month's brief, or the Safety Desk if it isn't up yet.
