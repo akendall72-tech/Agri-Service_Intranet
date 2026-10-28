@@ -113,7 +113,9 @@ function catalogView() {
           data-cat-audience="${esc(a)}">${esc(a)}</button>`).join("")}</div>` : ""}
     </div>
     <div id="catList"></div>
-    <p class="cat-foot">Questions: <a href="mailto:andrewkendall@agri-service.com">andrewkendall@agri-service.com</a></p>
+    ${(manager => manager ? `<p class="cat-foot">Questions? Ask ${esc(manager.full_name || "the Training Manager")}${
+      manager.full_name ? ", the Training Manager" : ""}: <a href="mailto:${esc(manager.email)}">${esc(manager.email)}</a></p>` : "")(
+      trainingManagerContact())}
   </div>`;
 }
 

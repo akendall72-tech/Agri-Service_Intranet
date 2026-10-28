@@ -17,9 +17,6 @@
 // Files are recognised by their column headings, not their names, since the
 // UKG exports get a new random suffix every time.
 
-// Where "Request Registration" emails go.
-const REGISTRATION_EMAIL = "andrewkendall@agri-service.com";
-
 let trainingReports = {}, trainingReportsError = null;
 let osrPending = { openSeat: null, inClass: null, agco: null };
 
@@ -600,7 +597,10 @@ $("view").addEventListener("click", (event) => {
     const subject = `Registration Request: ${title} — ${dates}`;
     const body = `Please register the following person for this class:\n\nName: ${name.trim()}` +
       `\n\nClass: ${title}\nLocation: ${city}\nDates: ${dates}`;
-    window.location.href = `mailto:${REGISTRATION_EMAIL}?subject=${encodeURIComponent(subject)}` +
+    // To the Training Manager, whoever holds it (0112); with nobody set, the
+    // draft opens with no address for the person to fill in.
+    const manager = trainingManagerContact();
+    window.location.href = `mailto:${manager ? manager.email : ""}?subject=${encodeURIComponent(subject)}` +
       `&body=${encodeURIComponent(body)}`;
   }
 });

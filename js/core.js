@@ -133,6 +133,11 @@ let me = null, profile = null;
 let certs = [], plans = [], people = [], supportRoles = [], locations = {};
 // Designations (migration 0066): what there is, and who holds which.
 let designations = [], personDesignations = [], designationsError = null;
+// The name and work email of whoever holds each designation (0112), for
+// everyone: profiles are private, so this is how anyone finds the Training
+// Manager. Empty before 0112.
+let designationContacts = [];
+const trainingManagerContact = () => designationContacts.find(c => c.designation_id === "training_manager" && c.email) || null;
 // Forklift certification removals (migration 0067): who, for everyone, and
 // why, for owners and the person themselves. Both keyed on match_key.
 let forkliftRemovedAt = {}, forkliftRemovals = {};
@@ -352,7 +357,7 @@ function refreshShown() {
 // and lets the rest come in behind it (start); every other caller, after a
 // change on an admin page, waits for both as it always did.
 async function loadAll({ restInBackground = false } = {}) {
-  const [locs, c, p, pe, sr, wt, pt, ht, tc, tk, gr, pr, ph, dir, sl, allWt, trr, ds, pds, frm, frr, cov, req, creq] =
+  const [locs, c, p, pe, sr, wt, pt, ht, tc, tk, gr, pr, ph, dir, sl, allWt, trr, ds, pds, frm, frr, cov, req, creq, dc] =
     await Promise.all([
     db.from("locations").select("*").order("sort_order"),
     db.from("forklift_certifications").select("*"),
@@ -379,7 +384,8 @@ async function loadAll({ restInBackground = false } = {}) {
     db.from("forklift_certification_removals").select("*"),
     db.from("covered_locations").select("person_id,location_id"),
     db.from("forklift_required").select("*").order("name"),
-    db.from("crane_required").select("*").order("name")
+    db.from("crane_required").select("*").order("name"),
+    db.rpc("designation_contacts")
   ]);
 
   allLocations = locs.data || [];
@@ -396,6 +402,7 @@ async function loadAll({ restInBackground = false } = {}) {
     k.error = r.error ? r.error.message : null;
   });
   designationsError = ds.error || pds.error ? (ds.error || pds.error).message : null;
+  designationContacts = dc.error ? [] : dc.data || [];
   supportRoles = sr.data || [];
   sharedTasks = wt.data || []; personalTasks = pt.data || [];
   hiddenTasks = (ht.data || []).map(r => r.task_id);
