@@ -46,11 +46,13 @@ async function loadFleet() {
   if (err) {
     fvError = err.message || "unknown";
     fvNotSetUp = /does not exist|schema cache/i.test(fvError);
-    return;
+  } else {
+    fvError = null; fvNotSetUp = false;
+    fvVehicles = v.data || []; fvEquipment = e.data || []; fvServices = s.data || []; fvChecks = c.data || [];
+    fvLoaded = true;
   }
-  fvError = null; fvNotSetUp = false;
-  fvVehicles = v.data || []; fvEquipment = e.data || []; fvServices = s.data || []; fvChecks = c.data || [];
-  fvLoaded = true;
+  // The Location Dashboard's Fleet panel may have drawn before this arrived.
+  if (document.body.classList.contains("location-mode")) safely(renderLocationOverview);
 }
 
 // ---- days, on the company's clock ----------------------------------------------

@@ -1308,6 +1308,33 @@ button.sx-attn-row:hover { background: rgba(255,255,255,.09); }
 .sx-trio b { display: block; font: 700 28px/1 var(--font-cab); color: var(--lit-green); }
 .sx-trio .amber b { color: var(--lit-amber); } .sx-trio .red b { color: var(--lit-red); }
 .sx-trio span { color: var(--cab-detail); font: 600 10px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
+
+/* The Location Dashboard's report button, above the hero. */
+.lx-pdfbar { display: flex; justify-content: flex-end; align-items: center; gap: 12px; }
+.lx-pdfbar .msg { margin: 0; color: var(--muted); font-size: 13px; }
+
+/* The Location Dashboard's Fleet panel: a row a vehicle, the most pressing first. */
+.sx-trio.lx-fleet-stats { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.sx-trio .teal b { color: var(--lit-teal); }
+.sx-trio b small { color: var(--cab-detail); font-size: 16px; }
+.lx-fleet-list { display: grid; gap: 6px; }
+button.lx-fleet-row { display: grid; grid-template-columns: auto minmax(150px, 1fr) minmax(170px, 1.2fr) minmax(0, 1.5fr); align-items: center;
+  gap: 14px; width: 100%; margin: 0; padding: 10px 12px; border: 1px solid rgba(255,255,255,.06); border-radius: 12px;
+  background: rgba(255,255,255,.04); box-shadow: none; color: #fff; text-align: left; white-space: normal; font-weight: 400; }
+button.lx-fleet-row:hover { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.14); }
+.lx-fleet-who { display: grid; gap: 2px; min-width: 0; }
+.lx-fleet-who b { font: 700 16px var(--font-cab); letter-spacing: .04em; text-transform: uppercase; }
+.lx-fleet-who small { color: var(--cab-detail); font-size: 12.5px; }
+.lx-fleet-due { min-width: 0; }
+.lx-fleet-due .fv-bar { margin-top: 0; }
+.lx-fleet-due .fv-due { margin-top: 5px; font-size: 12.5px; }
+.lx-fleet-tags { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 6px; }
+@media (max-width: 960px) { .sx-trio.lx-fleet-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  button.lx-fleet-row { grid-template-columns: auto minmax(0, 1fr) minmax(0, 1.2fr); }
+  .lx-fleet-tags { grid-column: 2 / -1; justify-content: flex-start; } }
+@media (max-width: 560px) { .sx-trio.lx-fleet-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  button.lx-fleet-row { grid-template-columns: auto minmax(0, 1fr); }
+  .lx-fleet-due, .lx-fleet-tags { grid-column: 1 / -1; } }
 .sx-list { display: grid; }
 .sx-list > div { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0;
   border-top: 1px solid rgba(255,255,255,.07); font-size: 14px; }
@@ -2565,9 +2592,9 @@ input.fx-val { width: 96px; margin: 0; padding: 4px 8px; text-align: right; font
 .fv-who b { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font: 700 19px var(--font-cab); letter-spacing: .04em; text-transform: uppercase; }
 .fv-who > span { color: var(--cab-sub); font-size: 14px; }
 .fv-who small { color: var(--cab-detail); font-size: 12.5px; }
-.fv .cab-tag { font: 600 10px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; padding: 1px 7px; border-radius: 99px;
+.fv .cab-tag, .lx-fleet .cab-tag { font: 600 10px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; padding: 1px 7px; border-radius: 99px;
   border: 1px solid color-mix(in srgb, var(--accent, var(--lit-slate)) 55%, transparent); color: var(--accent, var(--cab-sub)); }
-.fv .cab-tag.fv-due-tag { background: var(--lit-amber); border-color: var(--lit-amber); color: #2A1E05; }
+.fv .cab-tag.fv-due-tag, .lx-fleet .cab-tag.fv-due-tag { background: var(--lit-amber); border-color: var(--lit-amber); color: #2A1E05; }
 .fv-ring { flex: none; }
 .fv-ring-track { fill: none; stroke: rgba(255,255,255,.08); stroke-width: 5; }
 .fv-ring-fill { fill: none; stroke: var(--accent); stroke-width: 5; stroke-linecap: round; filter: drop-shadow(0 0 3px var(--accent)); }
