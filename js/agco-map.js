@@ -364,8 +364,29 @@ function renderAgcoLive() {
     ? `${esc(source.file || "Technical Training Catalog")}${source.dated ? `, from ${esc(source.dated)}` : ""} —
        ${levels.map(l => `Level ${l.level} ${l.courses.length}`).join(", ")} courses${agcoAdded().length
          ? `, the ${agcoAdded().length} added here included` : ""}.`
-    : "no catalog yet."}</p>`;
+    : "no catalog yet."}</p>${levels.length ? `<div class="row" style="margin:10px 0 0">
+      <button type="button" class="ghost" data-act="agco-export">${icon("doc", 15)}Export to CSV</button></div>` : ""}`;
 }
+
+// The catalog as the database holds it, for a spreadsheet: every course on each
+// level, the ones added here included, and how many of today's technicians are
+// ticked for it. What's published, not a catalog read and waiting to publish.
+function agcoExportCsv() {
+  const levels = agcoWithRules((agcoCatalog && agcoCatalog.levels) || []);
+  const source = ((agcoCatalog && agcoCatalog.source) || {}).catalog || {};
+  const techs = new Set(agcoTechs().map(t => t.person_key));
+  const ticked = (c) => new Set(agcoMarks.filter(m => m.course_key === agcoCourseKey(c) && techs.has(m.person_key))
+    .map(m => m.person_key)).size;
+  downloadCSV(`AGCO Catalog ${new Date().toLocaleDateString("en-CA")}.csv`, [
+    ["Level", "Level name", "Course title", "AGCO course code", "From", "Technicians ticked"],
+    ...levels.flatMap(l => l.courses.map(c => [l.level, l.name, c.title, c.code || "",
+      c.added ? "Added here" : [source.file || "Technical Training Catalog", source.dated].filter(Boolean).join(", "), ticked(c)]))
+  ]);
+}
+
+$("admin").addEventListener("click", (event) => {
+  if (event.target.closest('button[data-act="agco-export"]')) agcoExportCsv();
+});
 
 // ---- admin: ticking a technician's courses -------------------------------------------
 //
