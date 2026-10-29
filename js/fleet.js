@@ -79,7 +79,12 @@ const fvOthers = () => fvActive().filter(v => !me || v.driver_id !== me.id);
 const fvGearOn = (v) => fvEquipment.filter(e => e.vehicle_id === v.id && !e.retired_at);
 const fvLog = (v) => fvServices.filter(s => s.vehicle_id === v.id).sort((a, b) => b.done_on.localeCompare(a.done_on));
 const fvChecksOf = (v) => fvChecks.filter(c => c.vehicle_id === v.id).sort((a, b) => a.checked_on.localeCompare(b.checked_on));
-const fvName = (v) => `Fleet #${v.fleet_number}`;
+// "Fleet #214": a card's headline, with the nickname (0113) on its own line under it.
+const fvNumber = (v) => `Fleet #${v.fleet_number}`;
+const fvNick = (v) => String(v.nickname || "").trim();
+// "Fleet #214 · Big Red", or "Fleet #214": the vehicle named in a line of text.
+const fvName = (v) => fvNick(v) ? `${fvNumber(v)} · ${fvNick(v)}` : fvNumber(v);
+const fvNickHtml = (v) => fvNick(v) ? `<span class="fv-nick">${icon("tag", 14)}${esc(fvNick(v))}</span>` : "";
 const fvDescription = (v) => [v.year, v.make, v.model].filter(Boolean).join(" ");
 const fvCheckedThisWeek = (v) => { const monday = fvMonday(); return fvChecks.some(c => c.vehicle_id === v.id && c.checked_on >= monday); };
 
@@ -242,7 +247,7 @@ function fvCardHtml(v, showDriver) {
       v.retired_at ? " retired" : ""}" data-fv-open="${esc(v.id)}">
     <span class="fv-card-top">
       <span class="fv-glyph">${icon("fleet", 22)}</span>
-      <span class="fv-who"><b>${esc(fvName(v))} ${tag}</b>
+      <span class="fv-who"><b>${esc(fvNumber(v))} ${tag}</b>${fvNickHtml(v)}
         <span>${esc([fvDescription(v), FV_KINDS[v.kind]].filter(Boolean).join(" · "))}</span>
         ${showDriver ? `<small>${esc([v.driver_name || "No driver", locations[v.location_id]].filter(Boolean).join(" · "))}</small>` : ""}</span>
       ${fvRing(due, 50)}
@@ -505,6 +510,7 @@ function fleetFormView() {
         <div><label for="fvfKind">Kind</label><select id="fvfKind" data-fvf="kind">${Object.entries(FV_KINDS).map(([k, t]) =>
           `<option value="${k}"${d.kind === k ? " selected" : ""}>${t}</option>`).join("")}</select></div>
         ${f("fleet_number", "Fleet number (required)", d.fleet_number, 'maxlength="20" autocomplete="off"')}
+        ${f("nickname", "Nickname (optional)", d.nickname, 'maxlength="30" placeholder="Big Red" autocomplete="off"')}
         ${f("year", "Year", d.year, 'type="number" min="1950" max="2100"')}
         ${f("make", "Make", d.make, 'maxlength="60" placeholder="Ford"')}
         ${f("model", "Model", d.model, 'maxlength="60" placeholder="F-350"')}
@@ -517,7 +523,7 @@ function fleetFormView() {
               ? `<option value="${esc(d.driver_id)}" selected>${esc(d.driver_name || "Their driver")}</option>` : ""}
           </select></div>` : ""}
       </div>
-      <p class="note">The fleet number is the one painted on it. No two vehicles on the road share one.${manages ? " It's kept at the driver's location, and they get the Fleet check on their To-Do list every week." : ""}</p>
+      <p class="note">The fleet number is the one painted on it. No two vehicles on the road share one. A nickname, like Big Red, shows beside it to tell similar trucks apart.${manages ? " It's kept at the driver's location, and they get the Fleet check on their To-Do list every week." : ""}</p>
       <h2>Mileage and service</h2>
       <div class="fields">
         ${f("odometer", "Odometer (miles)", d.odometer, 'type="number" min="0" max="2000000"')}
@@ -553,11 +559,11 @@ function fleetFormView() {
 }
 
 function fvDraftFor(v) {
-  return v ? { id: v.id, kind: v.kind, fleet_number: v.fleet_number, year: v.year ?? "", make: v.make, model: v.model, vin: v.vin,
+  return v ? { id: v.id, kind: v.kind, fleet_number: v.fleet_number, nickname: v.nickname || "", year: v.year ?? "", make: v.make, model: v.model, vin: v.vin,
     plate: v.plate, driver_id: v.driver_id, driver_name: v.driver_name, odometer: v.odometer ?? "",
     service_every_miles: v.service_every_miles, service_every_months: v.service_every_months, tire_condition: v.tire_condition,
     tread_32nds: v.tread_32nds ?? "", notes: v.notes, gear: [] }
-    : { id: null, kind: "pickup", fleet_number: "", year: "", make: "", model: "", vin: "", plate: "", driver_id: me ? me.id : null,
+    : { id: null, kind: "pickup", fleet_number: "", nickname: "", year: "", make: "", model: "", vin: "", plate: "", driver_id: me ? me.id : null,
       driver_name: "", odometer: "", service_every_miles: 5000, service_every_months: 6, tire_condition: "good", tread_32nds: "",
       last_on: "", last_miles: "", notes: "", gear: [] };
 }
@@ -738,7 +744,7 @@ async function fvSaveVehicle(button) {
   const tread = n(d.tread_32nds);
   if (tread != null && !(Number.isInteger(tread) && tread >= 0 && tread <= 32)) return fvSay("Tread is a whole number of 32nds, from 0 to 32.");
   if (!d.id && d.last_on && d.last_miles === "") return fvSay("Give the mileage at the last service too, or leave the date empty.");
-  const row = { kind: d.kind, fleet_number: fleetNumber, year, make: String(d.make).trim(), model: String(d.model).trim(),
+  const row = { kind: d.kind, fleet_number: fleetNumber, nickname: String(d.nickname || "").trim(), year, make: String(d.make).trim(), model: String(d.model).trim(),
     vin: String(d.vin).trim(), plate: String(d.plate).trim(), odometer: n(d.odometer), tire_condition: d.tire_condition || null,
     tread_32nds: tread, service_every_miles: every, service_every_months: months, notes: String(d.notes).trim() };
   if (isOwner() || isAdmin()) row.driver_id = d.driver_id || (me && me.id);

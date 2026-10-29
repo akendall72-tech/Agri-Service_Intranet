@@ -412,7 +412,7 @@ function renderLocationOverview() {
           <div class="lx-fleet-list">${fleet.map(x => `<button type="button" class="lx-fleet-row" data-lx-fleet="${esc(x.v.id)}"
               aria-label="${esc(`${fvName(x.v)}: ${FV_LEVEL[x.due.level][0]}, ${fvDueText(x.due, "mi")}`)}">
             ${fvRing(x.due, 44)}
-            <span class="lx-fleet-who"><b>${esc(fvName(x.v))}</b>
+            <span class="lx-fleet-who"><b>${esc(fvNumber(x.v))}</b>${fvNickHtml(x.v)}
               <small>${esc([fvDescription(x.v) || FV_KINDS[x.v.kind], x.v.driver_name || "No driver"].join(" · "))}</small></span>
             <span class="lx-fleet-due">${fvBar(x.due, "mi")}</span>
             <span class="lx-fleet-tags">${fvTireChip(x.v)}${x.gear.map(g => `<span class="fv-tire" style="${lit(g.due.level === "overdue" ? "red" : "amber")}">${

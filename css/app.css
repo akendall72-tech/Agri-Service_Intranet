@@ -2591,6 +2591,8 @@ input.fx-val { width: 96px; margin: 0; padding: 4px 8px; text-align: right; font
 .fv-who { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .fv-who b { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font: 700 19px var(--font-cab); letter-spacing: .04em; text-transform: uppercase; }
 .fv-who > span { color: var(--cab-sub); font-size: 14px; }
+.fv-who > span.fv-nick, .fv-nick { display: inline-flex; align-items: center; gap: 5px; color: var(--lit-teal); font-size: 14.5px; font-weight: 600; }
+.lx-fleet-who .fv-nick { font-size: 13px; }
 .fv-who small { color: var(--cab-detail); font-size: 12.5px; }
 .fv .cab-tag, .lx-fleet .cab-tag { font: 600 10px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; padding: 1px 7px; border-radius: 99px;
   border: 1px solid color-mix(in srgb, var(--accent, var(--lit-slate)) 55%, transparent); color: var(--accent, var(--cab-sub)); }
