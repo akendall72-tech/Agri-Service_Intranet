@@ -435,7 +435,7 @@ const pageTitle = (id) => (FEATURES.find(f => f.id === id) || COMPANY_PAGES.find
        events: { title: "Event Center" }, community: { title: "Company" }, fitness: { title: "Fitness Challenge" },
        trivia: { title: "AGCO Trivia" }, triviagame: { title: (tvGame(tvGameId) || {}).title || "AGCO Trivia" },
        triviaplay: { title: tvPlay ? (tvPlay.practice ? "Practice" : "Round") : "AGCO Trivia" },
-       communitypost: { title: (cmPosts.find(p => p.id === openCommunityPostId) || {}).shoutout ? "Shout-out" : "Post" },
+       communitypost: { title: (p => cmIsArticle(p) ? "Article" : p.shoutout ? "Shout-out" : "Post")(cmPosts.find(p => p.id === openCommunityPostId) || {}) },
        safetydesk: { title: "Safety Desk" }, safetyreport: { title: "Safety Brief Report" },
        safetyform: { title: "Safety Report" }, safetyreportlist: { title: "Safety Reports" },
        safetyreportone: { title: (srReports.find(r => r.id === openSafetyReportId) || {}).answers?.title || "Safety Report" },

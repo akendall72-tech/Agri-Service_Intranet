@@ -1,7 +1,7 @@
 // Social: the Company community
 //
-// The Company feed: posts, shout-outs, comments, reactions, @mentions and
-// what's new since last read.
+// The Company feed: posts, shout-outs, articles, comments, reactions,
+// @mentions and what's new since last read.
 
 // ---- Social: the Company community (0088) -----------------------------------
 //
@@ -36,13 +36,97 @@ let cmPickAt = {};                 // draft -> the highlighted row in the @ list
 let cmPickOff = {};                // draft -> the @ list was closed with Escape
 
 function cmBlankDraft(shoutout = false) {
-  return { body: "", shoutout, mentions: [], photo: null, removePhoto: false, busy: false };
+  return { body: "", shoutout, mentions: [], photo: null, removePhoto: false, busy: false,
+    article: false, title: "", text: "", preview: false };
+}
+
+// ---- articles (0115) ---------------------------------------------------------
+//
+// An article is a post of kind "article": its body is the short description on
+// the feed, with a title and the article itself behind it. The text is written
+// plainly, read the same way as ArticleBlock.parse in the app
+// (CommunityArticle.swift): a blank line starts a paragraph, "#" a heading,
+// "- " a bullet; web links can be followed.
+
+const CM_TITLE_MAX = 120, CM_DESC_MAX = 300, CM_ARTICLE_MAX = 20000;
+const CM_ARTICLE_DRAFT = "cmArticleDraft";
+const cmIsArticle = (p) => p.kind === "article";
+const cmMinutes = (text) => Math.max(1, Math.round(String(text || "").split(/\s+/).filter(Boolean).length / 200));
+
+function cmArticleBlocks(text) {
+  const blocks = [];
+  let para = [], bullets = [];
+  const flush = () => {
+    if (para.length) { blocks.push({ kind: "p", text: para.join("\n") }); para = []; }
+    if (bullets.length) { blocks.push({ kind: "ul", items: bullets }); bullets = []; }
+  };
+  String(text || "").replace(/\r\n/g, "\n").split("\n").forEach(raw => {
+    const line = raw.trim();
+    if (!line) return flush();
+    if (line.startsWith("#")) {
+      flush();
+      const heading = line.replace(/^#+/, "").trim();
+      if (heading) blocks.push({ kind: "h", text: heading });
+      return;
+    }
+    const bullet = line.match(/^(?:- |\* |• )(.*)$/);
+    if (bullet) {
+      if (para.length) flush();
+      bullets.push(bullet[1].trim());
+      return;
+    }
+    if (bullets.length) flush();
+    para.push(line);
+  });
+  flush();
+  return blocks;
+}
+
+// Escaped, with web addresses made into links that open in a new tab.
+function cmLinked(text) {
+  return esc(text).replace(/\bhttps?:\/\/[^\s<]*[^\s<.,;:!?)'"]/g,
+    (url) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
+}
+
+function cmArticleHtml(text) {
+  return cmArticleBlocks(text).map(b => b.kind === "h" ? `<h3>${esc(b.text)}</h3>`
+    : b.kind === "ul" ? `<ul>${b.items.map(i => `<li>${cmLinked(i)}</li>`).join("")}</ul>`
+    : `<p>${cmLinked(b.text)}</p>`).join("");
+}
+
+// A new article in progress, kept in this browser so a closed tab doesn't lose it.
+function cmSaveArticleDraft(d) {
+  try { localStorage.setItem(CM_ARTICLE_DRAFT, JSON.stringify({ title: d.title, body: d.body, text: d.text })); }
+  catch { /* private window: this visit only */ }
+}
+function cmLoadArticleDraft() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(CM_ARTICLE_DRAFT) || "null");
+    return saved && (saved.title || saved.body || saved.text).trim() ? saved : null;
+  } catch { return null; }
+}
+function cmClearArticleDraft() {
+  try { localStorage.removeItem(CM_ARTICLE_DRAFT); } catch { /* nothing kept */ }
+}
+
+// What's wrong with an article before it's posted, or null.
+function cmArticleProblem(d, description) {
+  if (!d.title.trim()) return "Give the article a title.";
+  if (d.title.trim().length > CM_TITLE_MAX) return `Keep the title to ${CM_TITLE_MAX} characters.`;
+  if (!description) return "Write a short description for the feed.";
+  if (description.length > CM_DESC_MAX) return `Keep the short description to ${CM_DESC_MAX} characters: it's what shows on the feed.`;
+  if (!d.text.trim()) return "Write the article first.";
+  if (d.text.trim().length > CM_ARTICLE_MAX) return `The article is over ${CM_ARTICLE_MAX.toLocaleString("en-US")} characters. Trim it a little.`;
+  return null;
 }
 
 async function loadCommunity() {
-  const posts = await db.from("community_posts")
-    .select("id, community_id, author_id, author_name, author_location, body, shoutout, mentions, photo_path, created_at, edited_at, edited_by_name")
+  const columns = "id, community_id, author_id, author_name, author_location, body, shoutout, mentions, photo_path, created_at, edited_at, edited_by_name";
+  const read = (cols) => db.from("community_posts").select(cols)
     .eq("community_id", CM).order("created_at", { ascending: false }).limit(150);
+  let posts = await read(columns + ", kind, title, article");
+  // Before 0115 there are no articles: the posts are read without them.
+  if (posts.error && /kind|title|article/.test(posts.error.message || "")) posts = await read(columns);
   if (posts.error) {
     cmError = posts.error.message || "unknown";
     cmNotSetUp = /does not exist|schema cache/i.test(cmError);
@@ -174,8 +258,8 @@ function cmNames(names) {
 // whether to offer it.
 const cmCanChange = (p) => p.author_id === me.id || isOwner();
 const cmCommentsOn = (postId) => cmComments.filter(c => c.post_id === postId);
-const cmPostTitle = (p) => p.shoutout && (p.mentions || []).length
-  ? `Shout-out for ${cmNames(p.mentions.map(m => m.name))}` : `${p.author_name || "Someone"}'s post`;
+const cmPostTitle = (p) => cmIsArticle(p) ? p.title || "Article"
+  : p.shoutout && (p.mentions || []).length ? `Shout-out for ${cmNames(p.mentions.map(m => m.name))}` : `${p.author_name || "Someone"}'s post`;
 
 // ---- Social -----------------------------------------------------------------
 
@@ -296,22 +380,43 @@ function cmPostHtml(p, onPage) {
     return `<button type="button" class="cm-react${mine ? " mine" : ""}" data-cm-act="react" data-post="${esc(p.id)}" data-kind="${kind}"
       aria-pressed="${mine}" aria-label="${kind}, ${taps.length}"${who.length ? ` title="${esc(who.join(", "))}"` : ""}><span class="e">${emoji}</span>${taps.length ? `<b>${taps.length}</b>` : ""}</button>`;
   }).join("");
+  const tools = cmCanChange(p) && !editing ? `<span class="cm-tools">
+        <button type="button" class="cm-link" data-cm-act="edit" data-post="${esc(p.id)}">Edit</button>
+        <button type="button" class="cm-link danger" data-cm-act="delete" data-post="${esc(p.id)}">Delete</button></span>` : "";
+  const footer = `<footer class="cm-foot">
+      <span class="cm-reacts">${reactions}</span>
+      ${onPage ? "" : `<button type="button" class="cm-comments" data-view="communitypost" data-cm-post="${esc(p.id)}">${icon("chat", 15)}${
+        comments ? `${comments} comment${comments === 1 ? "" : "s"}` : "Comment"}</button>`}
+    </footer>`;
+  if (cmIsArticle(p) && !editing) {
+    const cover = !p.photo_path ? ""
+      : cmPhotoUrls[p.photo_path] ? `<img class="cm-cover" src="${esc(cmPhotoUrls[p.photo_path])}" alt="" loading="lazy">`
+      : `<div class="cm-cover cm-photo-wait" aria-hidden="true"></div>`;
+    const head = `<header class="cm-head">${cmAvatar(p.author_name, 40)}
+      <span class="cm-who"><b>${esc(p.author_name || "Someone")}</b><small>${esc(onPage ? `${meta} · ${cmMinutes(p.article)} min read` : meta)}</small></span>
+      <span class="cab-tag cm-art-tag">Article</span>
+      ${cmFresh.has(p.id) ? `<span class="cab-tag cm-new">New</span>` : ""}${tools}</header>`;
+    return onPage
+      ? `<article class="cm-card cm-post cm-art cm-art-full" id="cm-post-${esc(p.id)}" data-on-page="1">
+          ${cover}<h2 class="cm-art-title">${esc(p.title || "")}</h2>${head}
+          <p class="cm-art-lead">${cmBodyHtml(p.body, p.mentions)}</p>
+          <div class="cm-art-text">${cmArticleHtml(p.article)}</div>${footer}</article>`
+      : `<article class="cm-card cm-post cm-art" id="cm-post-${esc(p.id)}" data-on-page="0">
+          ${cover}${head}<h3 class="cm-art-title">${esc(p.title || "")}</h3>
+          <p class="cm-art-desc">${cmBodyHtml(p.body, p.mentions)}</p>
+          <button type="button" class="cm-read" data-view="communitypost" data-cm-post="${esc(p.id)}">Read the article · ${cmMinutes(p.article)} min &rarr;</button>
+          ${footer}</article>`;
+  }
   return `<article class="cm-card cm-post${p.shoutout ? " shout" : ""}" id="cm-post-${esc(p.id)}" data-on-page="${onPage ? 1 : 0}">
     ${p.shoutout ? `<div class="cm-shout"><span class="cm-shout-label">${icon("megaphone", 15)}Shout-out</span>
       <div class="cm-chips">${(p.mentions || []).map(m => `<span class="cm-chip">${cmAvatar(m.name, 22)}${esc(m.name)}<i aria-hidden="true">★</i></span>`).join("")}</div></div>` : ""}
     <header class="cm-head">${cmAvatar(p.author_name, 40)}
       <span class="cm-who"><b>${esc(p.author_name || "Someone")}</b><small>${esc(meta)}</small></span>
       ${cmFresh.has(p.id) ? `<span class="cab-tag cm-new">New</span>` : ""}
-      ${cmCanChange(p) && !editing ? `<span class="cm-tools">
-        <button type="button" class="cm-link" data-cm-act="edit" data-post="${esc(p.id)}">Edit</button>
-        <button type="button" class="cm-link danger" data-cm-act="delete" data-post="${esc(p.id)}">Delete</button></span>` : ""}
+      ${tools}
     </header>
     ${editing ? cmComposerHtml("edit") : `<div class="cm-body">${cmBodyHtml(p.body, p.mentions)}</div>${photo}`}
-    <footer class="cm-foot">
-      <span class="cm-reacts">${reactions}</span>
-      ${onPage ? "" : `<button type="button" class="cm-comments" data-view="communitypost" data-cm-post="${esc(p.id)}">${icon("chat", 15)}${
-        comments ? `${comments} comment${comments === 1 ? "" : "s"}` : "Comment"}</button>`}
-    </footer>
+    ${footer}
   </article>`;
 }
 
@@ -364,20 +469,29 @@ function cmComposerHtml(key) {
   const comment = key === "comment", edit = key === "edit";
   const existing = edit && !d.removePhoto && !d.photo ? (cmPosts.find(p => p.id === d.id) || {}).photo_path : null;
   const thumb = d.photo ? d.photo.url : existing ? cmPhotoUrls[existing] : null;
-  const label = comment ? "Add a comment" : edit ? `Edit the ${d.shoutout ? "shout-out" : "post"}`
+  const art = !comment && d.article;
+  const label = comment ? "Add a comment" : art ? "Short description, on the feed"
+    : edit ? `Edit the ${d.shoutout ? "shout-out" : "post"}`
     : d.shoutout ? "Who did something great?" : "Share something with everyone";
   const placeholder = comment ? "Say something. Type @ to tag someone."
+    : art ? "A sentence or two that makes people want to read it. Type @ to tag someone."
     : d.shoutout ? "Type @ and pick who it's for, then say what they did."
     : "A win, a photo, what's going on. Type @ to tag someone.";
-  const go = edit ? "Save" : comment ? "Send" : d.shoutout ? "Post shout-out" : "Post";
+  const go = edit ? "Save" : comment ? "Send" : art ? "Post article" : d.shoutout ? "Post shout-out" : "Post";
   const tags = cmTagsHtml(key);
-  return `<div class="cm-compose${edit ? " cm-inline" : " cm-card"}${comment ? " cm-reply" : ""}${d.shoutout ? " shout" : ""}" id="cm-compose-${key}">
-    ${comment ? "" : `<div class="cm-kind" role="group" aria-label="Kind of post">
-      <button type="button" class="${d.shoutout ? "" : "on"}" data-cm-act="kind" data-for="${key}" data-shout="0" aria-pressed="${!d.shoutout}">${icon("chat", 15)}Post</button>
-      <button type="button" class="${d.shoutout ? "on" : ""}" data-cm-act="kind" data-for="${key}" data-shout="1" aria-pressed="${d.shoutout}">${icon("megaphone", 15)}Shout-out</button></div>`}
-    <label class="cm-label" for="cm-text-${key}">${esc(label)}</label>
+  const kinds = edit ? (art ? [] : [["post", "chat", "Post"], ["shoutout", "megaphone", "Shout-out"]])
+    : [["post", "chat", "Post"], ["shoutout", "megaphone", "Shout-out"], ["article", "doc", "Article"]];
+  const now = art ? "article" : d.shoutout ? "shoutout" : "post";
+  return `<div class="cm-compose${edit ? " cm-inline" : " cm-card"}${comment ? " cm-reply" : ""}${d.shoutout ? " shout" : ""}${art ? " art" : ""}" id="cm-compose-${key}">
+    ${comment || !kinds.length ? "" : `<div class="cm-kind" role="group" aria-label="Kind of post">${kinds.map(([k, ic, text]) =>
+      `<button type="button" class="${now === k ? "on" : ""}" data-cm-act="kind" data-for="${key}" data-cm-kind="${k}" aria-pressed="${now === k}">${icon(ic, 15)}${text}</button>`).join("")}</div>`}
+    ${art ? `<label class="cm-label" for="cm-title-${key}">Title<span class="cm-counter" id="cm-count-title-${key}">${d.title.length}/${CM_TITLE_MAX}</span></label>
+      <input id="cm-title-${key}" class="cm-title-input" data-cm-field="title" data-for="${key}" maxlength="${CM_TITLE_MAX}"
+        placeholder="Pasco's new wash bay is open" value="${esc(d.title)}" autocomplete="off">
+      ${d.restored ? `<p class="cm-help">Your draft is back. <button type="button" class="cm-link" data-cm-act="startover" data-for="${key}">Start over</button></p>` : ""}` : ""}
+    <label class="cm-label" for="cm-text-${key}">${esc(label)}${art ? `<span class="cm-counter" id="cm-count-desc-${key}">${d.body.length}/${CM_DESC_MAX}</span>` : ""}</label>
     <div class="cm-field">
-      <textarea id="cm-text-${key}" data-cm-draft="${key}" rows="${comment ? 2 : edit ? 4 : 3}" maxlength="${comment ? 1000 : 2000}"
+      <textarea id="cm-text-${key}" data-cm-draft="${key}" rows="${comment ? 2 : art ? 2 : edit ? 4 : 3}" maxlength="${comment ? 1000 : art ? CM_DESC_MAX : 2000}"
         placeholder="${esc(placeholder)}" autocomplete="off">${esc(d.body)}</textarea>
       <div class="cm-pick" id="cm-pick-${key}" role="listbox" aria-label="People to tag" hidden></div>
     </div>
@@ -385,14 +499,32 @@ function cmComposerHtml(key) {
     ${comment ? "" : thumb
       ? `<div class="cm-thumb"><img src="${esc(thumb)}" alt="The photo going with it">
           <button type="button" class="cm-link danger" data-cm-act="unphoto" data-for="${key}">Remove photo</button></div>`
-      : `<label class="cm-addphoto">${icon("camera", 16)}<span>Add a photo</span>
+      : `<label class="cm-addphoto">${icon("camera", 16)}<span>${art ? "Add a cover photo" : "Add a photo"}</span>
           <input type="file" accept="image/*" data-cm-photo="${key}"></label>`}
+    ${art ? `<label class="cm-label cm-art-label" for="cm-article-${key}">The article<span class="cm-counter" id="cm-words-${key}">${cmWordsText(d.text)}</span></label>
+      <textarea id="cm-article-${key}" class="cm-article-input" data-cm-field="text" data-for="${key}" rows="14" maxlength="${CM_ARTICLE_MAX}"
+        placeholder="Tell the story. A blank line starts a new paragraph.">${esc(d.text)}</textarea>
+      <p class="cm-help">Start a line with ## for a heading, or - for a bullet. Web links can be followed.</p>
+      <button type="button" class="cm-quiet cm-preview-btn" data-cm-act="preview" data-for="${key}" aria-expanded="${d.preview}">${d.preview ? "Hide the preview" : "Preview"}</button>
+      ${d.preview ? `<div class="cm-preview" id="cm-preview-${key}">${cmPreviewHtml(d)}</div>` : ""}` : ""}
     <p class="cm-msg" id="cm-msg-${key}" role="alert"></p>
     <div class="cm-actions">
       ${edit ? `<button type="button" class="cm-quiet" data-cm-act="cancel" data-for="edit">Cancel</button>` : ""}
       <button type="button" class="cm-go-btn" data-cm-act="submit" data-for="${key}">${go}</button>
     </div>
   </div>`;
+}
+
+const cmWordsText = (text) => {
+  const words = String(text || "").split(/\s+/).filter(Boolean).length;
+  return words ? `${words.toLocaleString("en-US")} words · ${cmMinutes(text)} min` : "";
+};
+
+// The article as it'll look on its page, while it's being written.
+function cmPreviewHtml(d) {
+  return `<h2 class="cm-art-title">${esc(d.title.trim() || "Your title")}</h2>
+    <p class="cm-art-lead">${cmBodyHtml(d.body.trim() || "Your short description.", cmKept(d.mentions, d.body))}</p>
+    <div class="cm-art-text">${cmArticleHtml(d.text) || "<p>Your article.</p>"}</div>`;
 }
 
 function cmTagsHtml(key) {
@@ -498,10 +630,13 @@ async function cmSubmit(key, button) {
   if (!d || d.busy) return;
   const text = d.body.trim();
   cmSay(key, "");
+  const art = key !== "comment" && d.article;
+  if (art) { const problem = cmArticleProblem(d, text); if (problem) return cmSay(key, problem); }
   if (!text) return cmSay(key, "Write something first.");
   if (d.shrinking) return cmSay(key, "The photo is still getting ready. Try again in a second.");
   const tagged = cmKept(d.mentions, text);
-  if (key !== "comment" && d.shoutout && !tagged.length) {
+  const parts = art ? { kind: "article", title: d.title.trim(), article: d.text.trim() } : {};
+  if (key !== "comment" && !art && d.shoutout && !tagged.length) {
     return cmSay(key, "A shout-out calls someone out: type @ and pick who it's for.");
   }
   d.busy = true;
@@ -523,13 +658,14 @@ async function cmSubmit(key, button) {
       const id = crypto.randomUUID();
       const path = d.photo ? await cmUpload(d.photo.blob) : null;
       const { error } = await db.from("community_posts")
-        .insert({ id, community_id: CM, body: text, shoutout: d.shoutout, mentions: tagged, photo_path: path });
+        .insert({ id, community_id: CM, body: text, shoutout: d.shoutout && !art, mentions: tagged, photo_path: path, ...parts });
       if (error) {
         if (path) db.storage.from(CM_BUCKET).remove([path]).then(() => {}, () => {});
         throw new Error("That wasn't posted. Try again in a minute.");
       }
       if (tagged.length) notify("community_post", id);
       if (d.photo) URL.revokeObjectURL(d.photo.url);
+      if (art) cmClearArticleDraft();
       cmDrafts.new = cmBlankDraft();
       await loadCommunity();
       markCommunitySeen(false);
@@ -543,7 +679,8 @@ async function cmSubmit(key, button) {
       let path = d.removePhoto ? null : post.photo_path;
       if (d.photo) path = await cmUpload(d.photo.blob);
       const { data, error } = await db.from("community_posts")
-        .update({ body: text, shoutout: d.shoutout, mentions: tagged, photo_path: path }).eq("id", d.id).select("id");
+        .update({ body: text, shoutout: d.shoutout && !art, mentions: tagged, photo_path: path,
+          ...(art ? { title: parts.title, article: parts.article } : {}) }).eq("id", d.id).select("id");
       if (error) throw new Error("That wasn't saved. Try again in a minute.");
       if (!(data || []).length) throw new Error("That wasn't saved: it isn't yours to change.");
       if (post.photo_path && post.photo_path !== path) db.storage.from(CM_BUCKET).remove([post.photo_path]).then(() => {}, () => {});
@@ -576,7 +713,8 @@ function cmStartEdit(id) {
     cmDrafts.edit = null;
     cmRedrawPost(old.id);
   }
-  cmDrafts.edit = { ...cmBlankDraft(p.shoutout), id, body: p.body, mentions: (p.mentions || []).map(m => ({ ...m })) };
+  cmDrafts.edit = { ...cmBlankDraft(p.shoutout), id, body: p.body, mentions: (p.mentions || []).map(m => ({ ...m })),
+    article: cmIsArticle(p), title: p.title || "", text: p.article || "" };
   cmRedrawPost(id);
   const box = $("cm-text-edit");
   if (box) { box.focus(); box.setSelectionRange(box.value.length, box.value.length); }
@@ -586,7 +724,7 @@ async function cmDelete(id) {
   const p = cmPosts.find(x => x.id === id);
   if (!p) return;
   const whose = p.author_id === me.id ? "your" : `${p.author_name || "this person"}'s`;
-  if (!confirm(`Delete ${whose} ${p.shoutout ? "shout-out" : "post"}? It comes off the feed for everyone, with its comments and reactions.`)) return;
+  if (!confirm(`Delete ${whose} ${cmIsArticle(p) ? "article" : p.shoutout ? "shout-out" : "post"}? It comes off the feed for everyone, with its comments and reactions.`)) return;
   const { data, error } = await db.from("community_posts").delete().eq("id", id).select("id");
   if (error || !(data || []).length) return cmSay("feed", "That wasn't deleted. Try again in a minute.");
   if (p.photo_path) db.storage.from(CM_BUCKET).remove([p.photo_path]).then(() => {}, () => {});
@@ -630,11 +768,32 @@ $("view").addEventListener("input", (event) => {
   const key = box.dataset.cmDraft, d = cmDrafts[key];
   if (!d) return;
   d.body = box.value;
+  if (d.article) cmArticleTyped(key, d);
   cmPickAt[key] = 0;
   cmPickOff[key] = false;
   cmDrawPick(key);
   cmDrawTags(key);
 });
+
+// An article's title or text, typed.
+$("view").addEventListener("input", (event) => {
+  const field = event.target.closest("[data-cm-field]");
+  const d = field && cmDrafts[field.dataset.for];
+  if (!d) return;
+  d[field.dataset.cmField] = field.value;
+  cmArticleTyped(field.dataset.for, d);
+});
+
+// The counters and preview follow the typing, and a new article is kept as a draft.
+function cmArticleTyped(key, d) {
+  const set = (id, text) => { const el = $(id); if (el) el.textContent = text; };
+  set(`cm-count-title-${key}`, `${d.title.length}/${CM_TITLE_MAX}`);
+  set(`cm-count-desc-${key}`, `${d.body.length}/${CM_DESC_MAX}`);
+  set(`cm-words-${key}`, cmWordsText(d.text));
+  const preview = $(`cm-preview-${key}`);
+  if (preview) preview.innerHTML = cmPreviewHtml(d);
+  if (key === "new") cmSaveArticleDraft(d);
+}
 
 $("view").addEventListener("keydown", (event) => {
   const box = event.target.closest("textarea[data-cm-draft]");
@@ -694,7 +853,25 @@ $("view").addEventListener("click", (event) => {
       return cmRedrawPost(id);
     }
     case "kind":
-      if (d) { d.shoutout = button.dataset.shout === "1"; cmRedrawComposer(key, true); }
+      if (d) {
+        const kind = button.dataset.cmKind;
+        d.shoutout = kind === "shoutout";
+        d.article = kind === "article";
+        const saved = key === "new" && d.article && !d.title && !d.text && cmLoadArticleDraft();
+        if (saved) Object.assign(d, { title: saved.title || "", body: saved.body || d.body, text: saved.text || "", restored: true });
+        cmRedrawComposer(key, !d.article);
+        if (d.article) { const title = $(`cm-title-${key}`); if (title && !d.title) title.focus(); }
+      }
+      return;
+    case "preview":
+      if (d) { d.preview = !d.preview; cmRedrawComposer(key); }
+      return;
+    case "startover":
+      if (d) {
+        cmClearArticleDraft();
+        Object.assign(d, { title: "", body: "", text: "", mentions: [], restored: false });
+        cmRedrawComposer(key);
+      }
       return;
     case "unphoto":
       if (d) {
