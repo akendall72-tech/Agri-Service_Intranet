@@ -149,6 +149,28 @@ async function allRows(query, upTo = Infinity) {
   return { data: rows, error: null };
 }
 
+// Some lists keep everything ever written: support requests, lift plans, event
+// sign-ups, the safety report log, the news. Each loads what's current
+// (everything still open, and the recent past) and offers the rest behind a
+// Show older button, so opening the page doesn't download years of history.
+// sinceDay(90) is the date 90 days ago, as the database compares it. A
+// feature puts its loader in olderLoaders under the name its button carries;
+// the loader reads the rest and redraws its page.
+const sinceDay = (days) => new Date(Date.now() - days * 864e5).toISOString().slice(0, 10);
+const olderLoaders = {};
+function showOlderHtml(name, label, note = "") {
+  return `<div class="show-older">${note ? `<p class="note">${esc(note)}</p>` : ""}
+    <button type="button" class="ghost" data-show-older="${esc(name)}">${icon("clock", 16)}${esc(label)}</button></div>`;
+}
+document.addEventListener("click", async (event) => {
+  const button = event.target.closest("button[data-show-older]");
+  const load = button && olderLoaders[button.dataset.showOlder];
+  if (!load || button.disabled) return;
+  button.disabled = true;
+  button.textContent = "Loading…";
+  await load();
+});
+
 const $ = (id) => document.getElementById(id);
 let me = null, profile = null;
 let certs = [], plans = [], people = [], supportRoles = [], locations = {};
@@ -382,7 +404,7 @@ async function loadAll({ restInBackground = false } = {}) {
     await Promise.all([
     db.from("locations").select("*").order("sort_order"),
     allRows(() => db.from("forklift_certifications").select("*").order("id")),
-    allRows(() => db.from("lift_plans").select("*").order("submitted_at", { ascending: false }).order("id")),
+    readPlans(),
     db.from("profiles").select("id,full_name,email,role,location_id,groups,deactivated_at,created_at,employee_number"),
     db.from("support_roles").select("*, support_people(*)").order("sort_order"),
     db.from("weekly_tasks").select("*").eq("is_active", true).order("sort_order"),
@@ -390,8 +412,7 @@ async function loadAll({ restInBackground = false } = {}) {
     db.from("hidden_shared_tasks").select("task_id"),
     db.from("task_completions").select("task_id,week_start")
       .in("week_start", [periodKey("daily"), periodKey("weekly"), periodKey("monthly")]),
-    allRows(() => db.from("support_tickets").select("*, support_ticket_comments(*)")
-      .order("last_activity_at", { ascending: false }).order("id")),
+    readTickets(),
     db.from("groups").select("*").order("sort_order"),
     db.from("payroll_periods").select("*").order("payday"),
     db.from("payroll_holidays").select("*").order("sort_order"),

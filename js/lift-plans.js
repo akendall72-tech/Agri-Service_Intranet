@@ -122,10 +122,33 @@ function lpRefusal(error) {
 
 // Plans again after a change, so what's shown is what the database made of
 // it: the stamped name and location, the review, the new submitted time.
+// Every plan still waiting or sent back, and any submitted or reviewed in the
+// last 12 months. Older approved plans are one button away.
+const PLANS_RECENT_DAYS = 365;
+let plansAll = false;
+function readPlans() {
+  return allRows(() => {
+    const read = db.from("lift_plans").select("*"), since = sinceDay(PLANS_RECENT_DAYS);
+    return (plansAll ? read : read.or(`status.neq.approved,submitted_at.gte.${since},reviewed_at.gte.${since}`))
+      .order("submitted_at", { ascending: false }).order("id");
+  });
+}
+
 async function loadPlans() {
-  const { data, error } = await allRows(() => db.from("lift_plans").select("*").order("submitted_at", { ascending: false }).order("id"));
+  const { data, error } = await readPlans();
   if (!error) plans = data || [];
 }
+
+const plansOlderHtml = () => plansAll ? ""
+  : showOlderHtml("plans", "Show older lift plans", "Plans from the last 12 months are shown, and every one still waiting.");
+
+olderLoaders.plans = async () => {
+  plansAll = true;
+  await loadPlans();
+  const y = window.scrollY;
+  if (document.body.dataset.page === "safety") showSafety(safetyTab); else showView("rigging");
+  window.scrollTo(0, y);
+};
 
 // ---- where things are --------------------------------------------------------
 
@@ -921,6 +944,7 @@ function renderPlans() {
         <button class="ghost pdf" data-plan="${esc(r.id)}">PDF</button></div></td>
     </tr>`;
   }).join("") || `<tr><td colspan="9" class="note">No lift plans yet.</td></tr>`;
+  $("planOlder").innerHTML = plansOlderHtml();
 }
 
 $("planSearch").addEventListener("input", renderPlans);

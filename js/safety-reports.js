@@ -25,11 +25,18 @@ const isSafetyManager = () => isOwner() && personDesignations.some(pd =>
 
 // The table gives your own reports, or every one for the Safety Manager; the
 // log gives the approved ones everyone reads, without who sent them (0085).
+// The log keeps every report for good: the last 12 months come in to begin
+// with, older ones when someone asks.
+const SR_RECENT_DAYS = 365;
+let srAll = false;
 async function loadSafetyReportData() {
   const [form, reports, log, counts] = await Promise.all([
     db.from("safety_report_form").select("*").eq("id", "current").maybeSingle(),
     db.from("safety_reports").select("*").order("created_at", { ascending: false }).limit(1000),
-    allRows(() => db.rpc("safety_report_log").order("created_at", { ascending: false }).order("id")),
+    allRows(() => {
+      const read = db.rpc("safety_report_log");
+      return (srAll ? read : read.gte("created_at", sinceDay(SR_RECENT_DAYS))).order("created_at", { ascending: false }).order("id");
+    }),
     db.rpc("safety_report_counts")
   ]);
   // How many each person sent a month, for the people this person looks after
@@ -41,6 +48,16 @@ async function loadSafetyReportData() {
   srReports = own.concat((log.data || []).filter(r => !seen.has(r.id)))
     .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
 }
+
+olderLoaders.safetyreports = async () => {
+  srAll = true;
+  await loadSafetyReportData();
+  const y = window.scrollY;
+  showView("safetyreportlist");
+  window.scrollTo(0, y);
+};
+const srOlderHtml = () => srAll ? ""
+  : showOlderHtml("safetyreports", "Show older reports", "Approved reports from the last 12 months are shown, and all of your own.");
 
 let srCounts = null;
 const srPending = (r) => (r.status || "pending") !== "approved";
@@ -257,7 +274,7 @@ function safetyReportListView() {
     ? "Every report sent, waiting or approved. Sort and filter by any question; approve them on the Safety dashboard."
     : "Reports from across the company, approved by the Safety Manager. Sort and filter by any question.");
   if (!srReports.length) return head + `<div class="srl" style="${lit("ember")}"><p class="srf-note">${manager ? "No reports yet."
-    : "No reports have been approved yet. They show here once the Safety Manager approves them."}</p></div>`;
+    : "No reports have been approved yet. They show here once the Safety Manager approves them."}</p>${srOlderHtml()}</div>`;
   const qs = srQuestions();
   // Where it happened is left out of approved reports for everyone but the
   // Safety Manager (0086), so it's no use to sort or filter by.
@@ -312,6 +329,7 @@ function safetyReportListView() {
           a.where || "", r.reporter_name].filter(Boolean).map(esc).join(" · ")}</span>
       </button>`;
     }).join("") || `<p class="srf-note">${srReports.length ? "Nothing matches. Clear a filter to see more." : "No reports yet."}</p>`}</div>
+    ${srOlderHtml()}
   </div>`;
 }
 

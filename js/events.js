@@ -141,9 +141,11 @@ function renderEvents() {
     .sort((a, b) => (eventFilter === "past" ? -1 : 1) *
       (new Date(a.starts_at) - new Date(b.starts_at)));
 
+  const older = eventFilter === "past" && !eventsAll
+    ? showOlderHtml("events", "Show older events", `Events from the last 12 months are shown.`) : "";
   if (!list.length) {
     box.innerHTML = `<p class="note">${eventFilter === "past"
-      ? "Nothing in the past yet." : "Nothing coming up. Add one above."}</p>`;
+      ? (eventsAll ? "Nothing in the past yet." : "Nothing in the last 12 months.") : "Nothing coming up. Add one above."}</p>` + older;
     return;
   }
 
@@ -172,7 +174,7 @@ function renderEvents() {
         </div>
       </div>
       <span class="msg"></span>
-    </div>`).join("");
+    </div>`).join("") + older;
 }
 
 // Timed events edit as date and time; all-day ones as dates only. Switching
@@ -383,9 +385,17 @@ $("admin").addEventListener("click", async (event) => {
     : `${added ? "Added" : "Saved"} as a draft — nobody sees it until Showing is Yes.`, false);
 });
 
+// Everything coming up, and events from the last 12 months, with their lists
+// of who's going. Older ones are one button away, on the owners' Past tab.
+const EVENTS_RECENT_DAYS = 365;
+let eventsAll = false;
+
 async function loadEvents() {
   const [ev, att] = await Promise.all([
-    allRows(() => db.from("events").select("*").order("starts_at").order("id")),
+    allRows(() => {
+      const read = db.from("events").select("*");
+      return (eventsAll ? read : read.gte("starts_at", sinceDay(EVENTS_RECENT_DAYS))).order("starts_at").order("id");
+    }),
     loadAttendeesQuery()
   ]);
   eventsError = ev.error ? ev.error.message : null;
@@ -394,15 +404,29 @@ async function loadEvents() {
 }
 
 // Only the lists of events this person can see come back, and none for an
-// event that takes no sign-ups — the database's rule, not the page's.
-const loadAttendeesQuery = () => allRows(() => db.from("event_attendees")
-  .select("event_id,person_id,person_name,added_by,added_by_name,added_at").order("event_id").order("person_id"));
+// event that takes no sign-ups — the database's rule, not the page's. The
+// event comes along only to say when it starts; it's dropped once read.
+const loadAttendeesQuery = async () => {
+  const columns = "event_id,person_id,person_name,added_by,added_by_name,added_at";
+  const read = await allRows(() => (eventsAll ? db.from("event_attendees").select(columns)
+    : db.from("event_attendees").select(columns + ",events!inner(starts_at)").gte("events.starts_at", sinceDay(EVENTS_RECENT_DAYS)))
+    .order("event_id").order("person_id"));
+  if (read.error) return read;
+  read.data.forEach(going => delete going.events);
+  return read;
+};
 
 async function loadAttendees() {
   const { data, error } = await loadAttendeesQuery();
   if (!error) eventAttendees = data || [];
   return error;
 }
+
+olderLoaders.events = async () => {
+  eventsAll = true;
+  await loadEvents();
+  renderEvents();
+};
 
 // ---- the Event Center, for everyone ----------------------------------------
 //

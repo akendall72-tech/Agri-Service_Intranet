@@ -294,7 +294,7 @@ function renderSafetyOverview() {
           <small>${esc([p.created_by_name, locations[p.location_id]].filter(Boolean).join(" · "))}</small></span>
           <b>${p.percent_capacity == null ? "" : Math.round(p.percent_capacity) + "%"}</b></div>`).join("")}</div>`
           : `<p class="sx-empty sx-clear">${icon("checkCircle", 18)} No lift plans waiting.</p>`}
-        <p class="sx-sub">${sxNum(plans.filter(p => p.status === "approved").length)} approved · ${sxNum(plans.length)} in all</p>
+        <p class="sx-sub">${sxNum(plans.filter(p => p.status === "approved").length)} approved · ${sxNum(plans.length)} ${plansAll ? "in all" : "in the last 12 months"}</p>
         ${(n => n ? `<button type="button" class="sx-attn-row red" data-sx-go="crrequired" style="margin-top:8px">${icon("rigging", 16)}<span>${n} required crane operator${n === 1 ? " isn't" : "s aren't"} qualified</span></button>` : "")(reqNotMet("crane").length)}
       </section>
     </div>

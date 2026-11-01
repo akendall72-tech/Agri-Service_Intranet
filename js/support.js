@@ -170,11 +170,29 @@ $("view").addEventListener("click", async (event) => {
   }
 });
 
+// Every request still open, and closed ones with something said in the last
+// 90 days (a reply moves last_activity_at along). Older closed ones are the
+// record of what fixed what, so they're one button away, not gone.
+const TICKETS_RECENT_DAYS = 90;
+let ticketsAll = false;
+function readTickets() {
+  return allRows(() => {
+    const read = db.from("support_tickets").select("*, support_ticket_comments(*)");
+    return (ticketsAll ? read : read.or(`status.neq.closed,last_activity_at.gte.${sinceDay(TICKETS_RECENT_DAYS)}`))
+      .order("last_activity_at", { ascending: false }).order("id");
+  });
+}
+
 async function loadTickets() {
-  const { data, error } = await db.from("support_tickets").select("*, support_ticket_comments(*)")
-    .order("last_activity_at", { ascending: false });
+  const { data, error } = await readTickets();
   if (!error) tickets = data || [];
 }
+
+olderLoaders.tickets = async () => {
+  ticketsAll = true;
+  await loadTickets();
+  redraw("requests");
+};
 
 const TICKET_STATUS = {
   open: { label: "Open", tint: "red", badge: "b-open" },
@@ -221,7 +239,8 @@ function requestsView() {
   const [, , test] = TICKET_FILTERS.find(f => f[0] === ticketFilter) || TICKET_FILTERS[0];
   const shown = tickets.filter(test);
   const [heading, words] = ticketFilter === "closed"
-    ? ["Nothing closed yet", "Closed requests appear here with what fixed them, for the next person with the same problem."]
+    ? [ticketsAll ? "Nothing closed yet" : `Nothing closed in the last ${TICKETS_RECENT_DAYS} days`,
+       "Closed requests appear here with what fixed them, for the next person with the same problem."]
     : [ticketFilter === "mine" ? "You haven't asked anything yet" : "No open requests",
        "Raise one with New request. Everyone in the groups you pick can see it, so the next person with the same problem finds the answer."];
 
@@ -236,6 +255,9 @@ function requestsView() {
       </div>
       ${shown.length ? `<div class="sr-list">${shown.map(ticketRowHtml).join("")}</div>`
         : `<div class="sr-empty">${icon("tray", 34)}<b>${heading}</b><p>${words}</p></div>`}
+      ${ticketsAll || ticketFilter === "open" ? ""
+        : showOlderHtml("tickets", `Show closed requests from before ${fmtDate(sinceDay(TICKETS_RECENT_DAYS))}`,
+            `Closed requests with something in the last ${TICKETS_RECENT_DAYS} days are shown.`)}
       <div class="card sr-mine">
         <h2>Your groups</h2>
         ${chips((profile && profile.groups) || [], "mine")}

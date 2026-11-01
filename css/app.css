@@ -2098,6 +2098,11 @@ button.sr-row { display: flex; flex-direction: column; align-items: flex-start; 
 .sr-empty svg { color: var(--cab-detail); }
 .sr-empty b { font: 700 20px var(--font-cab); color: var(--ink); }
 .sr-empty p { margin: 0; max-width: 52ch; font-size: 14px; }
+/* The button under a list that only loaded its recent past (core.js). */
+.show-older { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 16px 0 6px;
+  text-align: center; }
+.show-older .note { margin: 0; }
+.show-older button { display: inline-flex; align-items: center; gap: 8px; }
 .sr-mine { margin: 22px 0 0; }
 .sr-mine .chips { margin-bottom: 8px; }
 .sr-mine p.note { margin: 0; }

@@ -211,6 +211,7 @@ function riggingView() {
     + group("Your plans", mine, "You haven't submitted a lift plan yet. Start one above, here or in the app.")
     + (isAdmin() ? group("Everything else at your location", others.filter(p => p.status !== "submitted"),
         "Nothing else here.") : "")
+    + plansOlderHtml()
     + craneAdminSection()
     + `</div>`;
 }

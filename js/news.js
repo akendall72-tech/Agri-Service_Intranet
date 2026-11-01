@@ -19,16 +19,32 @@ let newsFresh = new Set();         // new when News was opened, marked NEW
 let newsDraft = null;              // the story in the editor
 let newsDirty = false;
 
+// Stories from the last 12 months, every hidden one (they're still being
+// written), and any you've pinned to read later, however old. Older stories
+// are one button away.
+const NEWS_RECENT_DAYS = 365;
+let newsAll = false;
+const newsNewestFirst = (a, b) => String(b.published_on).localeCompare(String(a.published_on))
+  || String(b.created_at).localeCompare(String(a.created_at));
+
 async function loadNews() {
   const [posts, pins, reader] = await Promise.all([
-    allRows(() => db.from("news_posts").select("*")
-      .order("published_on", { ascending: false }).order("created_at", { ascending: false }).order("id")),
+    allRows(() => {
+      const read = db.from("news_posts").select("*");
+      return (newsAll ? read : read.or(`is_published.eq.false,published_on.gte.${sinceDay(NEWS_RECENT_DAYS)}`))
+        .order("published_on", { ascending: false }).order("created_at", { ascending: false }).order("id");
+    }),
     db.from("news_pins").select("post_id, pinned_at"),
     db.from("news_readers").select("seen_through")
   ]);
   newsError = posts.error ? posts.error.message : null;
   newsPosts = posts.data || [];
   newsPins = new Map((pins.data || []).map(p => [p.post_id, p.pinned_at]));
+  const pinnedOlder = [...newsPins.keys()].filter(id => !newsPosts.some(p => p.id === id));
+  if (pinnedOlder.length && !posts.error) {
+    const { data } = await db.from("news_posts").select("*").in("id", pinnedOlder);
+    newsPosts = newsPosts.concat(data || []).sort(newsNewestFirst);
+  }
   if (!reader.error) {
     const row = (reader.data || [])[0];
     if (row) {
@@ -182,8 +198,8 @@ function newsPageInner() {
   const live = newsLive();
   if (!live.length) {
     return `<div class="card" style="text-align:center;padding:34px 24px">
-      <b style="font-size:18px;display:block;margin-bottom:4px">No news yet</b>
-      <span class="note">Stories the training department posts will show up here.</span></div>`;
+      <b style="font-size:18px;display:block;margin-bottom:4px">${newsAll ? "No news yet" : "No news lately"}</b>
+      <span class="note">Stories the training department posts will show up here.</span></div>` + newsOlderHtml();
   }
   const pinned = live.filter(p => newsPins.has(p.id))
     .sort((a, b) => Date.parse(newsPins.get(b.id)) - Date.parse(newsPins.get(a.id)));
@@ -195,7 +211,8 @@ function newsPageInner() {
     + (latest.length
       ? (pinned.length ? `<div class="news-section">Latest</div>` : "")
         + `<div class="news-grid">${latest.map(p => newsCard(p)).join("")}</div>`
-      : "");
+      : "")
+    + newsOlderHtml();
 }
 
 function newsPostView() {
@@ -213,6 +230,16 @@ function newsPostView() {
     </div>
   </article>`;
 }
+
+const newsOlderHtml = () => newsAll ? ""
+  : showOlderHtml("news", "Show older stories", "Stories from the last 12 months are shown.");
+
+olderLoaders.news = async () => {
+  newsAll = true;
+  await loadNews();
+  redrawNews();
+  renderNewsAdmin();
+};
 
 // Whatever news is on screen, drawn again after a pin changes.
 function redrawNews() {
@@ -264,7 +291,7 @@ function renderNewsAdmin() {
       ${newsLink(p) ? `<a class="pdf" href="${esc(newsLink(p))}" target="_blank" rel="noopener noreferrer"
           style="font-size:13px">Open &nearr;</a>` : ""}
       <button class="pdf" data-act="news-edit">Edit</button>
-    </div>`).join("") : `<p class="note">No stories yet. Paste a link above to add the first one.</p>`;
+    </div>`).join("") + newsOlderHtml() : `<p class="note">No stories yet. Paste a link above to add the first one.</p>` + newsOlderHtml();
 }
 
 function newsUuid() {
