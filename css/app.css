@@ -87,14 +87,14 @@ body:not(.signed-in) .shell { display: none; }
 .nav-group { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
              color: var(--muted); margin: 18px 10px 6px; }
 .nav-group:first-child { margin-top: 4px; }
-.sidebar button.nav-item, .sidebar .tabs button {
-  width: 100%; display: flex; align-items: center; justify-content: flex-start; gap: 10px; text-align: left;
+.sidebar button.nav-item, .sidebar a.nav-item, .sidebar .tabs button {
+  width: 100%; display: flex; align-items: center; justify-content: flex-start; gap: 10px; text-align: left; text-decoration: none;
   background: transparent; color: var(--ink-2); border: 0; box-shadow: none;
   padding: 8px 10px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 500;
   height: auto; margin: 1px 0;
 }
-.sidebar button.nav-item svg, .sidebar .tabs button svg { color: var(--muted); flex: 0 0 18px; }
-.sidebar button.nav-item:hover, .sidebar .tabs button:hover { background: #EFEDEA; color: var(--ink); }
+.sidebar button.nav-item svg, .sidebar a.nav-item svg, .sidebar .tabs button svg { color: var(--muted); flex: 0 0 18px; }
+.sidebar button.nav-item:hover, .sidebar a.nav-item:hover, .sidebar .tabs button:hover { background: #EFEDEA; color: var(--ink); }
 .sidebar button.nav-item.active, .sidebar .tabs button.active {
   background: var(--red-soft); color: var(--red-dark); font-weight: 600;
 }
