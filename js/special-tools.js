@@ -32,11 +32,11 @@ const TOOL_READ_ONLY = ["Checked Out", "Where"];
 
 async function loadTools() {
   const [t, f] = await Promise.all([
-    db.from("special_tools")
+    allRows(() => db.from("special_tools")
       .select("id, part_number, name, description, extra, location_id, quantity, "
         + "special_tool_checkouts(id, to_location_id, quantity, note, checked_out_by_name, "
         + "checked_out_at, returned_at, returned_by_name)")
-      .order("name"),
+      .order("name").order("id")),
     db.from("special_tool_fields").select("*").order("sort_order")
   ]);
   // Before migration 0061 there's no table; the page leaves the section out.

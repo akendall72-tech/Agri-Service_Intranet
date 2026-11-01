@@ -100,7 +100,7 @@ document.addEventListener("click", async (event) => {
     ? "Only the Training Manager approves driving tests." : error.message);
   // Whoever recorded it is told how it went.
   notify("forklift_evaluation", test.id);
-  const fresh = await db.from("forklift_certifications").select("*");
+  const fresh = await allRows(() => db.from("forklift_certifications").select("*").order("id"));
   if (fresh.data) certs = fresh.data;
   showView("approvals");
 });
@@ -847,7 +847,7 @@ async function saveEvaluation(button) {
   evalState.checks.clear();
   $("evalName").value = "";
   renderEvalForm();
-  const fresh = await db.from("forklift_certifications").select("*");
+  const fresh = await allRows(() => db.from("forklift_certifications").select("*").order("id"));
   if (fresh.data) certs = fresh.data;
   renderCerts();
   // The Training Manager is told there's a test to approve.

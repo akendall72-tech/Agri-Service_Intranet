@@ -60,7 +60,7 @@ async function loadAgco() {
   const [people, catalog, marks] = await Promise.all([
     db.from("agco_development_people").select("*"),
     db.from("agco_catalog").select("*").eq("id", "current").maybeSingle(),
-    db.from("agco_course_marks").select("*")
+    allRows(() => db.from("agco_course_marks").select("*").order("person_key").order("course_key"))
   ]);
   agcoError = people.error ? people.error.message : null;
   agcoPeople = (people.data || []).slice().sort((a, b) => (a.store || "").localeCompare(b.store || "")
@@ -223,7 +223,7 @@ async function agcoPublishAll(catalogSource) {
   // Publishing Training Status can move them to a new key on the server (an
   // email to an employee number, 0098), and a stale copy then matched nobody:
   // every map was published empty.
-  const fresh = await db.from("agco_course_marks").select("*");
+  const fresh = await allRows(() => db.from("agco_course_marks").select("*").order("person_key").order("course_key"));
   if (fresh.error) return fresh.error.message;
   agcoMarks = fresh.data || [];
   const old = (agcoCatalog && agcoCatalog.source) || {};

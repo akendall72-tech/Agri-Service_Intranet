@@ -21,8 +21,8 @@ async function loadOnlineCourses() {
   const [courses, versions, attempts] = await Promise.all([
     db.from("online_courses").select("*").order("sort_order").order("title"),
     db.from("online_course_versions").select("course_id, version, title, launch_path, mastery_score, total_bytes, uploaded_at, uploaded_by_name"),
-    db.from("online_course_attempts").select("id, course_id, version, user_id, status, score_raw, score_max, started_at, updated_at, completed_at, total_seconds")
-      .order("started_at", { ascending: false })
+    allRows(() => db.from("online_course_attempts").select("id, course_id, version, user_id, status, score_raw, score_max, started_at, updated_at, completed_at, total_seconds")
+      .order("started_at", { ascending: false }).order("id"))
   ]);
   const err = courses.error || versions.error || attempts.error;
   if (err) {

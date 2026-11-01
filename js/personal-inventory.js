@@ -13,8 +13,8 @@
 let invItems = [], invError = null, invPerson = null, invPlace = "all", invQuery = "", invDraft = null;
 
 async function loadInventory() {
-  const { data, error } = await db.from("personal_inventory")
-    .select("id, person_id, description, make, quantity, value, location").order("description");
+  const { data, error } = await allRows(() => db.from("personal_inventory")
+    .select("id, person_id, description, make, quantity, value, location").order("description").order("id"));
   invError = error ? error.message : null;
   invItems = error ? [] : (data || []).map(r => ({ ...r, value: Number(r.value) || 0 }));
 }

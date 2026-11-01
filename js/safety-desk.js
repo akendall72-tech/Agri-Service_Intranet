@@ -25,7 +25,7 @@ const SAFETY_PAGES = ["safetydesk", "safetybrief", "safetyreport", "safetyform",
 async function loadSafetyDesk() {
   const [b, r, k] = await Promise.all([
     db.from("safety_briefs").select("*").order("month", { ascending: false }),
-    db.from("safety_brief_results").select("*"),
+    allRows(() => db.from("safety_brief_results").select("*").order("brief_id").order("person_id")),
     db.from("safety_brief_keys").select("*")       // owners only; nothing for anyone else
   ]);
   safetyError = b.error ? b.error.message : null;

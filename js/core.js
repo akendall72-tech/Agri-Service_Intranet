@@ -128,6 +128,27 @@ const SUPABASE_KEY = "sb_publishable_Yvapp2YhfG8tTRKw4ihCCg_OjmKkvNQ";
 
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// Supabase hands back at most 1,000 rows a read (the project's "Max rows") and
+// leaves the rest off without saying so. A list that keeps growing (Safety
+// Brief results, sign-offs, lift plans) reads fine for a year and then quietly
+// comes up short. allRows() reads it a page at a time until it's all in, and
+// answers { data, error } as the query itself would. Give it a function that
+// builds the query, ordered by something that never ties (end with the id),
+// or a row could slip between two pages. upTo stops early, for a list that
+// only ever wants its newest so many. The app's allRows() does the same.
+const PAGE_ROWS = 1000;
+async function allRows(query, upTo = Infinity) {
+  let rows = [];
+  while (rows.length < upTo) {
+    const size = Math.min(PAGE_ROWS, upTo - rows.length);
+    const { data, error } = await query().range(rows.length, rows.length + size - 1);
+    if (error) return { data: null, error };
+    rows = rows.concat(data || []);
+    if (!data || data.length < size) break;
+  }
+  return { data: rows, error: null };
+}
+
 const $ = (id) => document.getElementById(id);
 let me = null, profile = null;
 let certs = [], plans = [], people = [], supportRoles = [], locations = {};
@@ -360,8 +381,8 @@ async function loadAll({ restInBackground = false } = {}) {
   const [locs, c, p, pe, sr, wt, pt, ht, tc, tk, gr, pr, ph, dir, sl, allWt, trr, ds, pds, frm, frr, cov, req, creq, dc] =
     await Promise.all([
     db.from("locations").select("*").order("sort_order"),
-    db.from("forklift_certifications").select("*"),
-    db.from("lift_plans").select("*").order("submitted_at", { ascending: false }),
+    allRows(() => db.from("forklift_certifications").select("*").order("id")),
+    allRows(() => db.from("lift_plans").select("*").order("submitted_at", { ascending: false }).order("id")),
     db.from("profiles").select("id,full_name,email,role,location_id,groups,deactivated_at,created_at,employee_number"),
     db.from("support_roles").select("*, support_people(*)").order("sort_order"),
     db.from("weekly_tasks").select("*").eq("is_active", true).order("sort_order"),
@@ -369,8 +390,8 @@ async function loadAll({ restInBackground = false } = {}) {
     db.from("hidden_shared_tasks").select("task_id"),
     db.from("task_completions").select("task_id,week_start")
       .in("week_start", [periodKey("daily"), periodKey("weekly"), periodKey("monthly")]),
-    db.from("support_tickets").select("*, support_ticket_comments(*)")
-      .order("last_activity_at", { ascending: false }),
+    allRows(() => db.from("support_tickets").select("*, support_ticket_comments(*)")
+      .order("last_activity_at", { ascending: false }).order("id")),
     db.from("groups").select("*").order("sort_order"),
     db.from("payroll_periods").select("*").order("payday"),
     db.from("payroll_holidays").select("*").order("sort_order"),

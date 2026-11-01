@@ -29,7 +29,7 @@ async function loadSafetyReportData() {
   const [form, reports, log, counts] = await Promise.all([
     db.from("safety_report_form").select("*").eq("id", "current").maybeSingle(),
     db.from("safety_reports").select("*").order("created_at", { ascending: false }).limit(1000),
-    db.rpc("safety_report_log"),
+    allRows(() => db.rpc("safety_report_log").order("created_at", { ascending: false }).order("id")),
     db.rpc("safety_report_counts")
   ]);
   // How many each person sent a month, for the people this person looks after

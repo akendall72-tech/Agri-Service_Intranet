@@ -30,9 +30,9 @@ async function loadSkills() {
     db.from("competencies").select("*").order("sort_order"),
     // Someone who has left drops off the lists; their sign-offs stay.
     db.from("profiles").select("id,full_name,location_id,is_technician,is_parts").is("deactivated_at", null),
-    db.from("competency_signoffs").select("*"),
-    db.from("skill_level_completions").select("*"),
-    db.from("skill_level_changes").select("*").order("changed_at", { ascending: false })
+    allRows(() => db.from("competency_signoffs").select("*").order("id")),
+    allRows(() => db.from("skill_level_completions").select("*").order("technician_id").order("track").order("level")),
+    allRows(() => db.from("skill_level_changes").select("*").order("changed_at", { ascending: false }).order("id"))
   ]);
   const failed = [c, p, s, d, h].find(r => r.error);
   skillsError = failed ? failed.error.message : null;

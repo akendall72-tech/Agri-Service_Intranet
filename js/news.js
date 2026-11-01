@@ -21,8 +21,8 @@ let newsDirty = false;
 
 async function loadNews() {
   const [posts, pins, reader] = await Promise.all([
-    db.from("news_posts").select("*")
-      .order("published_on", { ascending: false }).order("created_at", { ascending: false }),
+    allRows(() => db.from("news_posts").select("*")
+      .order("published_on", { ascending: false }).order("created_at", { ascending: false }).order("id")),
     db.from("news_pins").select("post_id, pinned_at"),
     db.from("news_readers").select("seen_through")
   ]);

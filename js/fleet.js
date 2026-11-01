@@ -39,8 +39,8 @@ async function loadFleet() {
   const [v, e, s, c] = await Promise.all([
     db.from("fleet_vehicles").select("*").order("fleet_number"),
     db.from("fleet_equipment").select("*").order("created_at"),
-    db.from("fleet_services").select("*").order("done_on", { ascending: false }),
-    db.from("fleet_checks").select("*").order("checked_on", { ascending: false }).limit(2000)
+    allRows(() => db.from("fleet_services").select("*").order("done_on", { ascending: false }).order("id")),
+    allRows(() => db.from("fleet_checks").select("*").order("checked_on", { ascending: false }).order("id"), 2000)
   ]);
   const err = v.error || e.error || s.error || c.error;
   if (err) {

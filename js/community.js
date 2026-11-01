@@ -137,9 +137,10 @@ async function loadCommunity() {
   const ids = cmPosts.map(p => p.id);
   const none = Promise.resolve({ data: [] });
   const [taps, comments, reader, folks] = await Promise.all([
-    ids.length ? db.from("community_reactions").select("post_id, user_id, reaction").in("post_id", ids) : none,
-    ids.length ? db.from("community_comments").select("id, post_id, author_id, author_name, body, mentions, created_at")
-      .in("post_id", ids).order("created_at") : none,
+    ids.length ? allRows(() => db.from("community_reactions").select("post_id, user_id, reaction").in("post_id", ids)
+      .order("post_id").order("user_id").order("reaction")) : none,
+    ids.length ? allRows(() => db.from("community_comments").select("id, post_id, author_id, author_name, body, mentions, created_at")
+      .in("post_id", ids).order("created_at").order("id")) : none,
     db.from("community_readers").select("seen_through").eq("community_id", CM),
     cmPeople.length ? Promise.resolve({ data: cmPeople }) : db.rpc("community_people")
   ]);

@@ -385,7 +385,7 @@ $("admin").addEventListener("click", async (event) => {
 
 async function loadEvents() {
   const [ev, att] = await Promise.all([
-    db.from("events").select("*").order("starts_at"),
+    allRows(() => db.from("events").select("*").order("starts_at").order("id")),
     loadAttendeesQuery()
   ]);
   eventsError = ev.error ? ev.error.message : null;
@@ -395,8 +395,8 @@ async function loadEvents() {
 
 // Only the lists of events this person can see come back, and none for an
 // event that takes no sign-ups — the database's rule, not the page's.
-const loadAttendeesQuery = () => db.from("event_attendees")
-  .select("event_id,person_id,person_name,added_by,added_by_name,added_at");
+const loadAttendeesQuery = () => allRows(() => db.from("event_attendees")
+  .select("event_id,person_id,person_name,added_by,added_by_name,added_at").order("event_id").order("person_id"));
 
 async function loadAttendees() {
   const { data, error } = await loadAttendeesQuery();

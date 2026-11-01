@@ -62,7 +62,7 @@ async function loadTrivia() {
 // Owners only: every question, and how each has gone.
 async function loadTriviaQuestions() {
   const [qs, stats] = await Promise.all([
-    db.from("trivia_questions").select("*").order("created_at", { ascending: false }),
+    allRows(() => db.from("trivia_questions").select("*").order("created_at", { ascending: false }).order("id")),
     db.rpc("trivia_question_stats")]);
   const err = qs.error || stats.error;
   tvQError = err ? err.message : null;

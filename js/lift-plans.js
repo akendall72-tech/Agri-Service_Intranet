@@ -123,7 +123,7 @@ function lpRefusal(error) {
 // Plans again after a change, so what's shown is what the database made of
 // it: the stamped name and location, the review, the new submitted time.
 async function loadPlans() {
-  const { data, error } = await db.from("lift_plans").select("*").order("submitted_at", { ascending: false });
+  const { data, error } = await allRows(() => db.from("lift_plans").select("*").order("submitted_at", { ascending: false }).order("id"));
   if (!error) plans = data || [];
 }
 
