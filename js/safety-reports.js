@@ -61,6 +61,9 @@ const srOlderHtml = () => srAll ? ""
 
 let srCounts = null;
 const srPending = (r) => (r.status || "pending") !== "approved";
+// Approved and in everyone's Safety Reports (0117). Reports from the log, and
+// any from before 0117, carry no flag: they're published.
+const srPublished = (r) => !srPending(r) && r.published !== false;
 // The originals for the Safety Manager and the sender; the shared copies on a
 // report from the log, whose answers leave the originals out.
 function srPhotoPaths(r) {
@@ -365,7 +368,8 @@ function safetyReportOneView() {
     manager || a.where ? ["Where it happened", a.where ? (a.where === "N/A" ? "Not at a location" : a.where) : "—"] : null,
     ["Type of report", a.kind || "—"],
     manager ? ["Follow-up requested", a.follow_up === true ? "Yes — please follow up" : a.follow_up === false ? "No" : "—"] : null,
-    manager && !srPending(r) ? ["Approved", [day(r.approved_at), r.approved_by_name].filter(Boolean).join(" by ")] : null
+    manager && !srPending(r) ? ["Approved", [day(r.approved_at), r.approved_by_name].filter(Boolean).join(" by ")] : null,
+    manager && !srPending(r) ? ["Published", srPublished(r) ? "Yes, in everyone's Safety Reports" : "No, only the Safety Managers and the sender"] : null
   ].filter(Boolean);
   setTimeout(async () => {
     for (const [i, path] of photoPaths.entries()) {
@@ -377,8 +381,10 @@ function safetyReportOneView() {
   return hero(srTitle(r), [a.kind ? srShortKind(a.kind) : "", `Sent ${new Date(r.created_at).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })}`].filter(Boolean).join(" · "))
     + `<div class="srl srd" style="${lit("ember")}">
     ${srPending(r) ? `<div class="srf-card srd-wait">${icon("clock", 18)}<span>${manager
-      ? `Waiting for approval. <button type="button" class="linkish" data-sr-act="review">Edit and approve it on the Safety dashboard</button>; then everyone can read it.`
-      : "Waiting for the Safety Manager to approve it. Only you and they can see it until then."}</span></div>` : ""}
+      ? `Waiting for approval. <button type="button" class="linkish" data-sr-act="review">Edit and approve it on the Safety dashboard</button>; published, everyone can read it.`
+      : "Waiting for the Safety Manager to approve it. Only you and they can see it until then."}</span></div>`
+      : !srPublished(r) && !manager ? `<div class="srf-card srd-wait">${icon("checkCircle", 18)}<span>Approved, and kept unpublished: only you and the
+        Safety Managers can read it.</span></div>` : ""}
     ${manager ? `<div class="srd-acts"><button type="button" data-sr-act="pdf">${icon("doc", 16)}Download the PDF</button><span class="msg"></span></div>` : ""}
     <div class="srf-card srd-facts">
       ${facts.map(([k, v]) => `<div${k === "Follow-up requested" && a.follow_up === true ? ` class="hot"` : ""}><span>${k}</span><b>${esc(v)}</b></div>`).join("")}
@@ -609,7 +615,9 @@ $("admin").addEventListener("click", async (event) => {
 // wording first, and pick which photos everyone sees: those are copied under
 // approved/<report id>/, because the originals sit under the sender's own id.
 // The first edit keeps the sender's own words in original_answers, shown here.
-// Approved, it joins the Safety Reports everyone reads, without who sent it.
+// Approved and published, it joins the Safety Reports everyone reads, without
+// who sent it. Approved and not published (0117), only the Safety Managers
+// and the sender read it; it can be published, or unpublished, later.
 
 let srrOpenId = null, srrShowing = "waiting";
 // The list's sort: a column's key, and which way.
@@ -639,7 +647,8 @@ function srrColumns(approvedList) {
             { key: "shop", label: "Their location", show: (r) => srShop(r.reporter_location), sort: (r) => srShop(r.reporter_location).toLowerCase() });
   if (at >= 0) qs.slice(at).forEach(f => cols.push(question(f)));
   if (approvedList) cols.push({ key: "approved", label: "Approved",
-    show: (r) => [day(r.approved_at), r.approved_by_name].filter(Boolean).join(" · "), sort: (r) => r.approved_at || "" });
+    show: (r) => [day(r.approved_at), r.approved_by_name].filter(Boolean).join(" · "), sort: (r) => r.approved_at || "" },
+    { key: "published", label: "Published", show: (r) => srPublished(r) ? "Yes" : "No", sort: (r) => srPublished(r) ? "1" : "2" });
   return cols;
 }
 
@@ -672,8 +681,9 @@ function renderSafetyReportsAdmin() {
   box.innerHTML = `<div class="card">
     <h2>Safety Reports</h2>
     <p class="note">Every report waits here for a Safety Manager. <b>Review</b> one to read it, tidy the wording if it needs it, choose
-      which photos to share, and <b>Approve</b>. Approved reports are in the Safety Center for everyone to read, without the
-      sender's name, email or location. Their own words are always kept.</p>
+      which photos to share, and approve it. <b>Approve and publish</b> puts it in the Safety Center for everyone to read, without the
+      sender's name, email or location. <b>Approve, don't publish</b> keeps it on record for the Safety Managers and the sender only;
+      it can be published later. Their own words are always kept.</p>
     <div class="row srr-tabs">
       <button class="${srrShowing === "waiting" ? "" : "ghost"}" data-srr-show="waiting">Waiting for approval (${waiting.length})</button>
       <button class="${srrShowing === "approved" ? "" : "ghost"}" data-srr-show="approved">Approved (${approved.length})</button>
@@ -700,7 +710,8 @@ function renderSafetyReportsAdmin() {
           class="ghost pdf" data-srr-pdf="${esc(x.id)}" title="Download this report as a PDF">PDF</button><span class="msg"></span></span></td>${cols.map(c => {
           const v = c.show(x);
           return `<td class="${c.wide ? "wide" : ""}">${c.key === "q:title" ? `<b>${esc(v || srTitle(x))}</b>${x.edited_at ? ` <span class="badge b-none">Edited</span>` : ""}`
-            : c.key === "q:follow_up" && v === "Yes" ? `<span class="badge b-expiring">Yes</span>` : esc(v || "—")}</td>`;
+            : c.key === "q:follow_up" && v === "Yes" ? `<span class="badge b-expiring">Yes</span>`
+            : c.key === "published" && v === "No" ? `<span class="badge b-none">No</span>` : esc(v || "—")}</td>`;
         }).join("")}</tr>`).join("")}</tbody>
       </table></div>`;
     })() : `<p class="note">${srrShowing === "approved" ? "Nothing approved yet." : "Nothing waiting. Every report has been approved."}</p>`}
@@ -737,7 +748,8 @@ function renderSrrEditor(box, r) {
     <div class="row" style="justify-content:space-between;align-items:flex-start">
       <div><h2 style="margin:0">${esc(srTitle(r))}</h2>
         <p class="note" style="margin:4px 0 0">${srPending(r) ? `<span class="badge b-expiring">Waiting for approval</span>`
-          : `<span class="badge b-current">Approved</span> ${esc(new Date(r.approved_at).toLocaleDateString())}${r.approved_by_name ? ` by ${esc(r.approved_by_name)}` : ""}`}
+          : `<span class="badge b-current">Approved</span> ${srPublished(r) ? `<span class="badge b-current">Published</span>`
+            : `<span class="badge b-none">Not published</span>`} ${esc(new Date(r.approved_at).toLocaleDateString())}${r.approved_by_name ? ` by ${esc(r.approved_by_name)}` : ""}`}
           &nbsp;Sent by <b>${esc(r.reporter_name || "—")}</b>${r.reporter_email ? ` (${esc(r.reporter_email)})` : ""}${
           r.reporter_location ? `, ${esc(srShop(r.reporter_location))}` : ""}, ${esc(new Date(r.created_at).toLocaleString())}.
           Only Safety Managers see who sent it.</p></div>
@@ -746,8 +758,8 @@ function renderSrrEditor(box, r) {
     <div class="fields" style="margin-top:14px">${fields.map(f => `<div class="${["long_text", "people"].includes(f.type) ? "wide" : ""}">
       <label>${esc(f.label)}</label>${srrInput(r, f)}</div>`).join("")}</div>
     ${photos.length ? `<label style="display:block;margin-top:4px">Photos to share with everyone</label>
-      <p class="note" style="margin:2px 0 8px">Untick any that show a face, an injury, or anything else that shouldn't be shared. The
-        Safety Manager keeps every photo either way.</p>
+      <p class="note" style="margin:2px 0 8px">Untick any that show a face, an injury, or anything else that shouldn't be shared. They're
+        shared only while the report is published. The Safety Manager keeps every photo either way.</p>
       <div class="srr-photos">${photos.map((path, i) => `<label class="srr-photo">
         <img data-srr-img="${i}" alt="Photo ${i + 1}">
         <span><input type="checkbox" data-srr-photo="${esc(path)}"${srPending(r) || sharedNow.has(srrShared(r, path)) ? " checked" : ""}> Share</span>
@@ -755,8 +767,12 @@ function renderSrrEditor(box, r) {
     ${original ? `<details class="srr-original"><summary>Their own words, before ${esc(r.edited_by_name || "a Safety Manager")} edited it</summary>
       ${fields.map(f => `<p><b>${esc(f.label)}</b><br>${esc(show(original, f) || "—").replace(/\n/g, "<br>")}</p>`).join("")}</details>` : ""}
     <div class="row" style="margin-top:14px">
-      ${srPending(r) ? `<button data-srr-act="approve">Approve</button><button class="ghost" data-srr-act="save">Save changes</button>`
-        : `<button data-srr-act="save">Save changes</button><button class="ghost" data-srr-act="unapprove">Move back to waiting</button>`}
+      ${srPending(r) ? `<button data-srr-act="approve">Approve and publish</button>
+          <button class="ghost" data-srr-act="approve-private">Approve, don't publish</button>
+          <button class="ghost" data-srr-act="save">Save changes</button>`
+        : `<button data-srr-act="save">Save changes</button>
+          ${srPublished(r) ? `<button class="ghost" data-srr-act="unpublish">Unpublish</button>` : `<button class="ghost" data-srr-act="publish">Publish</button>`}
+          <button class="ghost" data-srr-act="unapprove">Move back to waiting</button>`}
       <button class="ghost" data-srr-act="delete" style="margin-left:auto">Delete</button><span class="msg"></span>
     </div>
   </div>`;
@@ -799,21 +815,44 @@ async function srrSharePhotos(box, r) {
   return copies;
 }
 
-async function srrSave(button, approve) {
+// What a button does: save the edits; approve, published or not; or, once
+// approved, publish or unpublish it. Published, the chosen photos are copied
+// where everyone can read them; not published, those copies go.
+const SRR_DONE = {
+  approve: "Approved and published. Everyone can read it in the Safety Center now.",
+  "approve-private": "Approved, not published. Only the Safety Managers and the sender can read it.",
+  publish: "Published. Everyone can read it in the Safety Center now.",
+  unpublish: "Unpublished. Only the Safety Managers and the sender can read it now.",
+  save: "Saved."
+};
+
+async function srrSave(button, act) {
   const box = button.closest("[data-srr-report]"), row = button.closest(".row");
   const r = srReports.find(x => x.id === box.dataset.srrReport);
   if (!r) return;
+  const approving = act === "approve" || act === "approve-private";
+  const publish = act === "approve" || act === "publish" ? true
+    : act === "approve-private" || act === "unpublish" ? false : srPublished(r);
   const answers = srrAnswers(box, r);
   const required = new Set(((srForm && srForm.fields) || []).filter(f => f.required).map(f => f.id));
   const missing = (r.fields_snapshot || []).filter(f => f.type !== "photos" && required.has(f.id) && answers[f.id] === undefined);
-  if (approve && missing.length) return speak(row, `Fill in ${missing.map(f => f.label.replace(/[?.:]+$/, "")).join("; ")} before approving.`, true);
-  const goingLive = approve || !srPending(r);
+  if ((approving || act === "publish") && missing.length) {
+    return speak(row, `Fill in ${missing.map(f => f.label.replace(/[?.:]+$/, "")).join("; ")} before ${approving ? "approving" : "publishing"}.`, true);
+  }
+  const approved = approving || !srPending(r);
   row.querySelectorAll("button").forEach(b => b.disabled = true);
-  speak(row, approve ? "Approving…" : "Saving…", false);
+  speak(row, approving ? "Approving…" : act === "publish" ? "Publishing…" : act === "unpublish" ? "Unpublishing…" : "Saving…", false);
   try {
     const change = { answers };
-    if (approve) change.status = "approved";
-    if (goingLive) change.shared_photos = await srrSharePhotos(box, r);
+    if (approving) change.status = "approved";
+    if (approved) {
+      change.published = publish;
+      if (publish) change.shared_photos = await srrSharePhotos(box, r);
+      else {
+        if ((r.shared_photos || []).length) await db.storage.from(SRR_BUCKET).remove(r.shared_photos);
+        change.shared_photos = [];
+      }
+    }
     const { data, error } = await db.from("safety_reports").update(change).eq("id", r.id).select("id");
     if (error) throw error;
     if (!(data || []).length) throw new Error("Not saved — only a Safety Manager can change reports.");
@@ -822,10 +861,9 @@ async function srrSave(button, approve) {
     return speak(row, e.message, true);
   }
   await loadSafetyReportData();
-  if (approve) { srrOpenId = null; srrShowing = "waiting"; }
+  if (approving) { srrOpenId = null; srrShowing = "waiting"; }
   renderSafetyReportsAdmin();
-  if (approve) speak($("srrAdmin").querySelector(".srr-tabs"), "Approved. Everyone can read it in the Safety Center now.", false);
-  else speak($("srrAdmin").querySelector("[data-srr-report] .row:last-child"), "Saved.", false);
+  speak($("srrAdmin").querySelector(approving ? ".srr-tabs" : "[data-srr-report] .row:last-child"), SRR_DONE[act], false);
 }
 
 $("admin").addEventListener("click", (event) => {
@@ -852,8 +890,7 @@ $("admin").addEventListener("click", async (event) => {
   if (!button) return;
   const act = button.dataset.srrAct;
   if (act === "back") { srrOpenId = null; return renderSafetyReportsAdmin(); }
-  if (act === "approve") return srrSave(button, true);
-  if (act === "save") return srrSave(button, false);
+  if (SRR_DONE[act]) return srrSave(button, act);
   const box = button.closest("[data-srr-report]"), row = button.closest(".row");
   const r = srReports.find(x => x.id === box.dataset.srrReport);
   if (act === "unapprove") {
