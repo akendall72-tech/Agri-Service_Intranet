@@ -174,24 +174,25 @@ function lxFigures(loc) {
     && (inspForms.find(f => f.id === r.form_id) || {}).has_after_class);
 
   // The vehicles kept here (0111), the most pressing first: service or
-  // equipment overdue or bald tires, then coming due or worn, then the ones
-  // with no service logged yet.
+  // equipment overdue, bald tires or something on the last check needing
+  // attention (0118), then coming due or worn, then the ones with no service
+  // logged yet.
   const fleet = fvLoaded ? fvActive().filter(v => v.location_id === loc).map(v => {
-    const due = fvDue(v);
+    const due = fvDue(v), flagged = fvFlagged(fvLastCheck(v));
     const gear = fvGearOn(v).map(e => ({ e, due: fvGearDue(e) })).filter(g => g.due && (g.due.level === "soon" || g.due.level === "overdue"));
-    const rank = due.level === "overdue" || v.tire_condition === "replace" || gear.some(g => g.due.level === "overdue") ? 0
+    const rank = due.level === "overdue" || v.tire_condition === "replace" || flagged.length || gear.some(g => g.due.level === "overdue") ? 0
       : due.level === "soon" || v.tire_condition === "worn" || gear.length ? 1 : due.level === "unknown" ? 2 : 3;
-    return { v, due, gear, rank, checked: fvCheckedThisWeek(v) };
+    return { v, due, gear, rank, flagged, checked: fvCheckedThisWeek(v) };
   }).sort((a, b) => a.rank - b.rank || b.due.used - a.due.used
     || String(a.v.fleet_number).localeCompare(String(b.v.fleet_number), "en", { numeric: true })) : [];
   const fleetOverdue = fleet.filter(x => x.due.level === "overdue"), fleetSoon = fleet.filter(x => x.due.level === "soon");
   const gearOverdue = fleet.flatMap(x => x.gear.filter(g => g.due.level === "overdue").map(g => ({ ...g, v: x.v })));
   const tiresOut = fleet.filter(x => x.v.tire_condition === "replace"), tiresWorn = fleet.filter(x => x.v.tire_condition === "worn");
-  const fleetChecked = fleet.filter(x => x.checked).length;
+  const fleetChecked = fleet.filter(x => x.checked).length, fleetFlagged = fleet.filter(x => x.flagged.length);
   const fleetYear = fvToday().slice(0, 4), fleetIds = new Set(fleet.map(x => x.v.id));
   const spent = fvServices.filter(s => fleetIds.has(s.vehicle_id) && String(s.done_on).startsWith(fleetYear) && s.cost != null)
     .reduce((total, s) => total + Number(s.cost), 0);
-  const fleetTone = fleetOverdue.length || tiresOut.length || gearOverdue.length ? "red"
+  const fleetTone = fleetOverdue.length || tiresOut.length || gearOverdue.length || fleetFlagged.length ? "red"
     : fleetSoon.length || tiresWorn.length || fleet.some(x => x.gear.length) ? "amber" : "teal";
 
   const todo = [
@@ -204,7 +205,10 @@ function lxFigures(loc) {
     inspTodo.length && { n: inspTodo.length, tone: "amber", text: `${inspTodo.length === 1 ? "inspection" : "inspections"} with the after-class part to finish`,
       items: inspTodo.map(r => `${(inspForms.find(f => f.id === r.form_id) || {}).name || "Inspection"} · ${r.created_by_name || ""}`), go: ["inspection", "Inspection Center"] },
     fleetOverdue.length && { n: fleetOverdue.length, tone: "red", text: `${fleetOverdue.length === 1 ? "vehicle is" : "vehicles are"} overdue for service`,
-      items: fleetOverdue.map(x => `${fvName(x.v)} · ${fvDueText(x.due, "mi")} · ${x.v.driver_name || "No driver"}`), go: ["fleet", "Fleet Center"] },
+      items: fleetOverdue.map(x => `${fvName(x.v)} · ${fvDueText(x.due, fvUnit(x.v))} · ${x.v.driver_name || "No driver"}`), go: ["fleet", "Fleet Center"] },
+    fleetFlagged.length && { n: fleetFlagged.length, tone: "red", text: `${fleetFlagged.length === 1 ? "vehicle has" : "vehicles have"} something on the weekly check needing attention`,
+      items: fleetFlagged.map(x => `${fvName(x.v)} · ${x.flagged.map(i => { const a = ((fvLastCheck(x.v) || {}).answers || {})[i.id] || {};
+        return a.note ? `${i.label}: ${a.note}` : i.label; }).join("; ")}`), go: ["fleet", "Fleet Center"] },
     tiresOut.length && { n: tiresOut.length, tone: "red", text: `${tiresOut.length === 1 ? "vehicle needs" : "vehicles need"} new tires`,
       items: tiresOut.map(x => `${fvName(x.v)}${x.v.tread_32nds != null ? ` · ${x.v.tread_32nds}/32"` : ""} · ${x.v.driver_name || "No driver"}`), go: ["fleet", "Fleet Center"] },
     gearOverdue.length && { n: gearOverdue.length, tone: "amber", text: `${gearOverdue.length === 1 ? "piece" : "pieces"} of equipment overdue for service`,
@@ -233,7 +237,7 @@ function lxFigures(loc) {
     name, today, short, roster, accounts, m, goal, need, shortBy, notMet, met, close, no609, metGoal, cards, fkDays,
     fk, testsDue, required, reqNot, craneRequired, craneReqNot, sKey, thisMonth, sBrief, sRows, briefPassed,
     reportSent, needsBrief, needsReport, sMissing, soon, cr, techsNoCrane, internal, classes, plansWaiting,
-    inspTodo, fleet, fleetOverdue, fleetSoon, gearOverdue, tiresOut, tiresWorn, fleetChecked, fleetYear, spent,
+    inspTodo, fleet, fleetOverdue, fleetSoon, gearOverdue, tiresOut, tiresWorn, fleetChecked, fleetFlagged, fleetYear, spent,
     fleetTone, todo
   };
 }
@@ -410,16 +414,17 @@ function renderLocationOverview() {
           </div>
           <h4>Next service</h4>
           <div class="lx-fleet-list">${fleet.map(x => `<button type="button" class="lx-fleet-row" data-lx-fleet="${esc(x.v.id)}"
-              aria-label="${esc(`${fvName(x.v)}: ${FV_LEVEL[x.due.level][0]}, ${fvDueText(x.due, "mi")}`)}">
+              aria-label="${esc(`${fvName(x.v)}: ${FV_LEVEL[x.due.level][0]}, ${fvDueText(x.due, fvUnit(x.v))}`)}">
             ${fvRing(x.due, 44)}
             <span class="lx-fleet-who"><b>${esc(fvNumber(x.v))}</b>${fvNickHtml(x.v)}
               <small>${esc([fvDescription(x.v) || FV_KINDS[x.v.kind], x.v.driver_name || "No driver"].join(" · "))}</small></span>
-            <span class="lx-fleet-due">${fvBar(x.due, "mi")}</span>
-            <span class="lx-fleet-tags">${fvTireChip(x.v)}${x.gear.map(g => `<span class="fv-tire" style="${lit(g.due.level === "overdue" ? "red" : "amber")}">${
+            <span class="lx-fleet-due">${fvBar(x.due, fvUnit(x.v))}</span>
+            <span class="lx-fleet-tags">${fvTireChip(x.v)}${x.flagged.length ? `<span class="fv-tire" style="${lit("red")}">${
+              x.flagged.length} flagged</span>` : ""}${x.gear.map(g => `<span class="fv-tire" style="${lit(g.due.level === "overdue" ? "red" : "amber")}">${
               esc(g.e.kind)} <small>· ${esc(fvDueText(g.due, "hr").split(" · ")[0])}</small></span>`).join("")}
               ${x.checked ? `<span class="cab-tag" style="${lit("green")}">Checked</span>` : `<span class="cab-tag fv-due-tag">Check due</span>`}</span>
           </button>`).join("")}</div>
-          <p class="sx-sub">Each vehicle is kept at its driver's location. The weekly check updates the miles and tires; open one for its chart and service log.</p>`}
+          <p class="sx-sub">Each vehicle is kept at its driver's location. The weekly check updates the meter, the tires and the checklist; open one for its chart, its last check and its service log.</p>`}
       </section>
     </div>
   </div>`;
@@ -633,17 +638,17 @@ function lxReportPdf(loc) {
 
   // The fleet.
   section("Fleet", f.fleet.length
-    ? `${lxPlural(f.fleet.length, "vehicle")} kept at ${f.name}: ${f.fleetOverdue.length} overdue for service, ${f.fleetSoon.length} due soon, ${worn} with worn tires; ${f.fleetChecked} of ${f.fleet.length} checked this week.${f.spent ? ` ${money(f.spent)} spent on service and repairs in ${f.fleetYear}.` : ""} The most pressing first.`
+    ? `${lxPlural(f.fleet.length, "vehicle")} kept at ${f.name}: ${f.fleetOverdue.length} overdue for service, ${f.fleetSoon.length} due soon, ${worn} with worn tires, ${f.fleetFlagged.length} with something on the weekly check needing attention; ${f.fleetChecked} of ${f.fleet.length} checked this week.${f.spent ? ` ${money(f.spent)} spent on service and repairs in ${f.fleetYear}.` : ""} The most pressing first.`
     : !fvLoaded ? "The Fleet Center couldn't be read." : `No vehicles at ${f.name} yet.`);
   if (f.fleet.length) {
     const levelColor = { ok: green, soon: amber, overdue: red, unknown: grey };
     const tireColor = { good: green, fair: amber, worn: ember, replace: red };
     const [rows, tones] = toned(f.fleet.map(x => [[`${fvName(x.v)}\n${fvDescription(x.v) || FV_KINDS[x.v.kind]}`, x.v.driver_name || "No driver",
-      x.v.odometer != null ? `${fvMiles(x.v.odometer)} mi` : "-", `${FV_LEVEL[x.due.level][0]}\n${fvDueText(x.due, "mi")}`,
+      fvReadingText(x.v, fvReading(x.v)) || (fvMeter(x.v) === "none" ? "No meter" : "-"), `${FV_LEVEL[x.due.level][0]}\n${fvDueText(x.due, fvUnit(x.v))}`,
       x.v.tire_condition ? `${FV_TIRES[x.v.tire_condition].title}${x.v.tread_32nds != null ? ` - ${x.v.tread_32nds}/32"` : ""}` : "Not checked",
       x.checked ? "Checked" : "Not yet"],
       { 3: levelColor[x.due.level], 4: tireColor[x.v.tire_condition] || grey, 5: x.checked ? green : amber }]));
-    table([["Vehicle", 112], ["Driver", 90], ["Odometer", 62, "r"], ["Next service", 132], ["Tires", 70], ["This week", CW - 466]], rows,
+    table([["Vehicle", 112], ["Driver", 90], ["Meter", 62, "r"], ["Next service", 132], ["Tires", 70], ["This week", CW - 466]], rows,
       { bold: 0, color: (row, i) => tones.get(row)[i] || null });
     const gear = f.fleet.flatMap(x => x.gear.map(g => ({ ...g, v: x.v })));
     if (gear.length) {

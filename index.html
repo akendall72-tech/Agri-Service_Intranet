@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Which version this is. publish.sh stamps the date and commit here, and
      into version.json beside the page; "dev" is a copy that wasn't published. -->
-<meta name="app-version" content="2026-11-02.6c014bb">
+<meta name="app-version" content="2026-11-03.8754402">
 <!-- Where this page may load things from and send things to. GitHub Pages
      can't send security headers, so it's here. Scripts come only from this
      site and the two script CDNs (each pinned with an integrity hash), and
@@ -34,7 +34,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
-<link rel="stylesheet" href="css/app.css?v=47d397e98c">
+<link rel="stylesheet" href="css/app.css?v=28560f804d">
 </head>
 <body>
 
@@ -95,6 +95,7 @@
       <button data-tab="trivia" data-title="AGCO Trivia"><i data-icon="trivia"></i><span>Trivia</span></button>
       <button data-tab="handbook"><i data-icon="briefcase"></i><span>Employee Handbook</span></button>
       <button data-tab="reminders"><i data-icon="reminders"></i><span>Reminders</span></button>
+      <button data-tab="fleetcheck" data-title="Weekly Fleet Check"><i data-icon="fleet"></i><span>Fleet Check</span></button>
       <button data-tab="support"><i data-icon="support"></i><span>Support Center</span></button>
       <button data-tab="logins"><i data-icon="key"></i><span>Shared Logins</span></button>
 
@@ -782,6 +783,9 @@
       </div>
     </section>
 
+    <!-- The weekly fleet check's checklist (0118), drawn by fleet.js -->
+    <section id="tab-fleetcheck" class="hidden"><div id="fleetCheckAdmin"></div></section>
+
     <!-- Inspections: forms, questions and submitted inspections, drawn by JS -->
     <section id="tab-inspections" class="hidden">
       <div id="inspAdmin"></div>
@@ -1170,8 +1174,8 @@
      js/core.js has the rest. publish.sh adds ?v= to each, so a changed file is
      fetched fresh and an unchanged one comes from the browser's cache. -->
 <script src="js/core.js?v=8b49caacef"></script>
-<script src="js/shell.js?v=2af86fbad9"></script>
-<script src="js/location-dashboard.js?v=3907286dbb"></script>
+<script src="js/shell.js?v=48397e542d"></script>
+<script src="js/location-dashboard.js?v=757cc12985"></script>
 <script src="js/training-status.js?v=01856b512e"></script>
 <script src="js/forklift.js?v=0ece5100f3"></script>
 <script src="js/crane.js?v=9e1c133916"></script>
@@ -1184,7 +1188,7 @@
 <script src="js/community.js?v=a10d66d4a9"></script>
 <script src="js/fitness.js?v=820ac07555"></script>
 <script src="js/trivia.js?v=2a5fc43bf6"></script>
-<script src="js/fleet.js?v=a6a9c3ce5b"></script>
+<script src="js/fleet.js?v=240b3006b6"></script>
 <script src="js/safety-reports.js?v=41b236b372"></script>
 <script src="js/training-dashboard.js?v=82f68f11f5"></script>
 <script src="js/safety-dashboard.js?v=306bd5d5a6"></script>

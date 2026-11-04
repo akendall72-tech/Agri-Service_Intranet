@@ -591,7 +591,8 @@
         number on the app icon too, and on <em>View a Safety Report</em> inside, and it goes down as they're approved
         on the web page. The web page's Safety Center tile shows the same.</p>
       <p>The Fleet Center's number is the vehicles you drive that need something: this week's check
-        not done, service overdue, tires to replace, or equipment overdue.</p>
+        not done, service overdue, tires to replace, something on the last check needing attention, or
+        equipment overdue.</p>
       <p>Location admins and owners also get a number on the Forklift Center: driving tests
         recorded since they last opened it. Opening the Center clears it, on every device.
         It isn't added to the number on the app icon.</p>
@@ -1145,19 +1146,25 @@
         summary is in the app from build 13.</p>
 
       <h3 id="fleet">Fleet Center</h3>
-      <p>Pickups and service trucks: mileage, tires, service, and the equipment on board. Every vehicle has its
-        <strong>fleet number</strong>, the one painted on it, and goes by it: <em>Fleet #214</em>. From build 31,
-        and on the web page as <strong>Fleet Center</strong> in the sidebar.</p>
+      <p>Pickups, service trucks and forklifts: mileage (a forklift's hours), tires, a weekly checklist, service,
+        and the equipment on board. Every vehicle has its <strong>fleet number</strong>, the one painted on it, and
+        goes by it: <em>Fleet #214</em>. From build 31, and on the web page as <strong>Fleet Center</strong> in the
+        sidebar. Forklifts and the checklist are in the app from build 39.</p>
       <p><strong>Add a vehicle</strong> asks for everything the Center needs from day one:</p>
       <ul class="plain">
-        <li><strong>The vehicle</strong> — Pickup or Service Truck, the fleet number (required; no two vehicles still
+        <li><strong>The vehicle</strong> — Pickup, Service Truck or Forklift, the fleet number (required; no two vehicles still
           in service can share one), an optional <strong>nickname</strong> (like Big Red, up to 30 characters), year, make,
           model, and the VIN and plate if you have them. The nickname shows under the fleet number on every card, and
           beside it wherever a vehicle is named ("Fleet #214 · Big Red"), to tell a row of F-250s apart. From build 33.</li>
+        <li><strong>Meter</strong> — a forklift only: <em>Hour meter</em>, or <em>No meter</em> for one without.
+          A pickup or service truck always has its mileage.</li>
         <li><strong>Mileage and service</strong> — the odometer, and how often it's due: every 5,000 miles or 6
-          months to start, whichever comes first.</li>
-        <li><strong>Last service</strong> — the date and the mileage, off the oil change sticker. That starts the
-          service clock. Don't know it? Switch it off, and the clock starts with the first service you log.</li>
+          months to start, whichever comes first. A forklift with an hour meter has <strong>Hours and
+          service</strong> instead: the hour meter, and every 250 hours or so many months (leave the hours empty
+          for the calendar alone). One with no meter is serviced by the calendar: every so many months.</li>
+        <li><strong>Last service</strong> — the date and the mileage (or the hours), off the service sticker. That
+          starts the service clock. Don't know it? Switch it off, and the clock starts with the first service you
+          log.</li>
         <li><strong>Tire wear</strong> — Good, Fair, Worn or Replace, and the tread depth in 32nds if you measured
           it.</li>
         <li><strong>Equipment on it</strong> — a welder, compressor, generator, crane, pressure washer or fuel tank,
@@ -1165,15 +1172,18 @@
       </ul>
       <p>An owner or location admin also picks who drives it. A vehicle is kept at its driver's location. Anyone
         else adding one is its driver.</p>
-      <p><strong>The vehicle's page</strong> is the cab: the odometer, then a gauge showing how much of the service
-        interval is used. <em>Service OK</em> is green, <em>Service soon</em> amber (the last 15% of the miles, or 3
-        weeks), <em>Service overdue</em> red. Under it, <strong>Mileage &amp; maintenance</strong> charts the miles
+      <p><strong>The vehicle's page</strong> is the cab: the odometer (a forklift's hours, or <em>No meter</em>),
+        then a gauge showing how much of the service interval is used. <em>Service OK</em> is green, <em>Service
+        soon</em> amber (the last 15% of the miles or hours, or 3 weeks), <em>Service overdue</em> red. Under it,
+        <strong>Mileage &amp; maintenance</strong> (<em>Hours &amp; maintenance</em> on a forklift) charts the reading
         from each weekly check, with each service marked on the line and a dashed line where the next one's due.
-        Then the tires at each check, the equipment, the service log with what was spent this year, and the
-        details.</p>
+        Then <strong>The last check</strong>: who did it, every checklist item as they answered it, with anything
+        needing attention first in amber with their note. Then the tires at each check, the equipment, the service
+        log with what was spent this year, and the details.</p>
       <p><strong>Log service</strong> records an oil change, tires, brakes, an inspection, a repair or anything else,
-        with the date, the mileage, the cost and notes. A routine <em>Service (oil &amp; filters)</em> restarts the
-        service clock from that mileage and date; anything else is for the record.</p>
+        with the date, the mileage (a forklift's hours; nothing for one with no meter), the cost and notes. A
+        routine <em>Service (oil &amp; filters)</em> restarts the service clock from that reading and date; anything
+        else is for the record. A reading higher than the vehicle's moves it forward.</p>
       <p><strong>Equipment</strong> keeps its own service clock, by hours, by months, or both (250 hours or 12 months
         to start). Its clock starts with the first service logged for it, so new equipment isn't shown overdue.
         <em>Take it off this vehicle</em> keeps its history.</p>
@@ -1183,12 +1193,19 @@
 
       <h3>The weekly check</h3>
       <p>Every Monday, <strong>Fleet check</strong> appears on the To-Do list of anyone who drives a vehicle. It
-        can't be ticked by hand. On each vehicle, tap <em>Weekly check</em>, then give today's odometer and pick
-        the tire condition. If you measured the tread, type the shallowest tire's depth in 32nds under
-        <em>Tread, shallowest tire</em>; leave it empty if you didn't, and the vehicle keeps its last measurement.
-        Add a note if there's something to report. Once every vehicle you
-        drive has this week's check, the reminder ticks itself. Each check also adds a point to the mileage
-        chart. Anyone who doesn't drive a vehicle never sees the reminder.</p>
+        can't be ticked by hand. On each vehicle, tap <em>Weekly check</em>, then give today's odometer (the hour
+        meter on a forklift; nothing on one with no meter) and pick the tire condition. If you measured the tread,
+        type the shallowest tire's depth in 32nds under <em>Tread, shallowest tire</em>; leave it empty if you
+        didn't, and the vehicle keeps its last measurement.</p>
+      <p>Then the <strong>checklist</strong>: engine oil, coolant, lights, brakes and the like, the items for that
+        kind of vehicle. Answer each one <em>OK</em> or <em>Needs attention</em>, and say what needs doing; the check
+        saves once every item is answered. Add a note under <em>Anything else?</em> if there's something more to
+        report. Anything needing attention shows on the vehicle's page, its card in the list, the Fleet Center's
+        number and the Location Dashboard's To do, until the next check. Owners keep the list on the web page
+        (<em>Fleet Check</em> under Admin); a change reaches every phone at once, and a check already done keeps
+        the items as they were worded that day.</p>
+      <p>Once every vehicle you drive has this week's check, the reminder ticks itself. Each check also adds a
+        point to the chart. Anyone who doesn't drive a vehicle never sees the reminder.</p>
 
       <h3>Who sees which vehicle</h3>
       <div class="table-wrap">
@@ -1934,6 +1951,7 @@
             <tr><td>Events</td><td>Add, edit, copy or delete company events; keep one as a draft until it's ready. Enter times as the clock reads at the venue — picking the hosting location sets its time zone. Mark an event online and add its joining link. Choose its sign-up: none, open or private. The <b>Past</b> tab starts with the last 12 months; <b>Show older events</b> brings back the rest</td></tr>
             <tr><td>Employee Handbook</td><td>Upload the handbook PDF. A new one replaces it in the app and on this page</td></tr>
             <tr><td>Reminders</td><td>Add, change, switch off or delete the reminders everyone gets</td></tr>
+            <tr><td>Fleet Check</td><td>The checklist on every vehicle's weekly check: add, reword, reorder, hide or delete items, each with optional help under it, and tick the kinds of vehicle it's for (pickups, service trucks, forklifts; none ticked for all). Each is answered OK or Needs attention. Rewording or deleting one never changes a check already done</td></tr>
             <tr><td>Support Center</td><td>Edit the cards, add and remove the people in them</td></tr>
             <tr><td>Shared Logins</td><td>Change the apparel store password</td></tr>
             <tr><td>Payroll</td><td>Import the payroll calendar</td></tr>
@@ -1971,8 +1989,9 @@
         <li><strong>Fleet</strong> — at the bottom: the vehicles kept at the location (each is kept at its driver's
           location), with how many are overdue or due soon for service, how many have worn tires, how many have this
           week's check in, and what was spent on service and repairs this year. Then each vehicle, the most pressing
-          first: its service gauge and what's left, its tires, any equipment coming due, and whether it's been checked
-          this week. Click one to open its page in the Fleet Center. The app has the same card, from build 32.</li>
+          first: its service gauge and what's left, its tires, anything its last weekly check flagged (on To do too,
+          with the notes), any equipment coming due, and whether it's been checked this week. Click one to open its
+          page in the Fleet Center. The app has the same card, from build 32.</li>
       </ul>
       <p><strong>Export PDF</strong>, above the dashboard, downloads it as a letter-size report for a meeting or the
         file: the headline figures (AGCO dealer metric, Safety Brief, Safety Reports, forklift cards, crane
@@ -2375,7 +2394,7 @@
     </section>
 
     <footer>
-      Agri-Service internal use. Updated for the app's build 36 and the web page, 1 November 2026.
+      Agri-Service internal use. Updated for the app's build 39 and the web page, 3 November 2026.
       The app changes often — where this guide and the app disagree, the app is right,
       and the training department will update this.
     </footer>

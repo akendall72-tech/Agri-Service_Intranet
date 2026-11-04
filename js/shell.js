@@ -249,7 +249,7 @@ function showAdmin() {
     renderCoursesAdmin, renderSdsAdmin, renderSdsPending, renderArticlesAdmin, renderSkillsAdmin,
     renderNewsAdmin, renderTsImport, renderTsLive, renderHandbook, renderAgcoImport, renderAgcoLive,
     renderAgcoTechs, renderAgcoRules, renderAgcoAdded, renderAgcoBales, renderMockSchedule, renderSafetyAdmin,
-    renderSafetyReportAdmin, renderSafetyReportsAdmin, renderFitnessAdmin, renderTriviaAdmin);
+    renderSafetyReportAdmin, renderSafetyReportsAdmin, renderFitnessAdmin, renderTriviaAdmin, renderFleetCheckAdmin);
   (document.querySelector(`#adminNav [data-tab="${adminTab}"]`) || document.querySelector("#adminNav [data-tab]")).click();
   window.scrollTo(0, 0);
 }
@@ -582,7 +582,7 @@ document.querySelectorAll(".tabs button[data-tab]").forEach(btn => {
     document.querySelectorAll(".tabs button[data-tab]").forEach(b =>
       b.classList.toggle("active", b === btn));
     ["certs", "plans", "people", "support", "payroll", "tools",
-      "directory", "logins", "reminders", "events", "fitness", "trivia", "org", "openseat", "inspections", "courses", "articles", "skillsadmin", "sds", "news", "trainingstatus", "handbook", "agco", "mock", "safetydesk", "safetyreportform", "safetyreports", "safetyoverview", "fkwaiting", "trainingoverview", "agcocatalog", "rpagco", "rpclass", "oltadmin", "locationoverview", "fkrequired", "crrequired"].forEach(name =>
+      "directory", "logins", "reminders", "fleetcheck", "events", "fitness", "trivia", "org", "openseat", "inspections", "courses", "articles", "skillsadmin", "sds", "news", "trainingstatus", "handbook", "agco", "mock", "safetydesk", "safetyreportform", "safetyreports", "safetyoverview", "fkwaiting", "trainingoverview", "agcocatalog", "rpagco", "rpclass", "oltadmin", "locationoverview", "fkrequired", "crrequired"].forEach(name =>
       $("tab-" + name).classList.toggle("hidden", name !== btn.dataset.tab));
     $("adminTitle").textContent = btn.dataset.title || btn.querySelector("span").textContent.trim();
     if (btn.closest("#safetyNav")) safetyTab = btn.dataset.tab;

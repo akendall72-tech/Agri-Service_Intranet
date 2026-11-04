@@ -2708,6 +2708,34 @@ input.fx-val { width: 96px; margin: 0; padding: 4px 8px; text-align: right; font
 .fv-form h2:first-child { margin-top: 0; }
 .fv-gear-row { align-items: end; padding: 10px 0; border-top: 1px solid var(--line); }
 .fv-gear-del button { margin-bottom: 12px; }
+/* The weekly check's checklist (0118): each item OK or Needs attention, with
+   a note box once it needs attention. */
+.fv-items { display: grid; gap: 8px; margin: 0 0 14px; }
+.fv-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; align-items: center; padding: 10px 12px;
+  border: 1px solid var(--line-strong); border-radius: 10px; background: #fff; }
+.fv-item-text b { display: block; font-size: 14px; }
+.fv-item-text small { display: block; color: var(--muted); font-size: 12px; }
+.fv-item-pick { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.fv-item-pick label { display: inline-flex; align-items: center; gap: 5px; margin: 0; padding: 5px 10px; border: 1px solid var(--line-strong);
+  border-radius: 999px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.fv-item-pick input { margin: 0; accent-color: #0F766E; }
+.fv-item-pick label:has(input:checked) { border-color: #0F766E; background: color-mix(in srgb, #0F766E 10%, #fff); }
+.fv-item-pick label.bad:has(input:checked) { border-color: var(--red); background: color-mix(in srgb, var(--red) 10%, #fff); color: var(--red-dark); }
+.fv-item-note { display: none; grid-column: 1 / -1; margin: 0; }
+.fv-item:has(input[value="attention"]:checked) { border-color: var(--red); }
+.fv-item:has(input[value="attention"]:checked) .fv-item-note { display: block; }
+@media (max-width: 560px) { .fv-item { grid-template-columns: 1fr; } .fv-item-pick { justify-content: flex-start; } }
+/* The last check on a vehicle's page, in the Cab look. */
+.fv-answers { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
+.fv-answers li { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; }
+.fv-answers li svg { flex: none; margin-top: 2px; color: var(--lit-green); }
+.fv-answers li.bad svg, .fv-answers li.bad em { color: var(--lit-red); }
+.fv-answers li span { display: flex; flex-direction: column; gap: 1px; }
+.fv-answers li em { font-style: normal; font-size: 12.5px; font-weight: 700; }
+.fv-answers li small { color: var(--cab-sub); font-size: 13px; }
+/* The checklist on the Admin dashboard. */
+.fva-kinds { display: flex; flex-wrap: wrap; gap: 6px 16px; padding-top: 4px; }
+.fva-kind { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-weight: 500; }
 
 /* ---- Trivia (0107): games, practice and a round on Social, in the Cab look,
    and the admin page's games, questions and categories. ---- */
