@@ -8,7 +8,9 @@
 // any item takes the crane out of service until it passes again, and the
 // location's admins and the Safety Manager get a push. A location's admins
 // add the cranes; the Safety Manager keeps the checklist, on the Safety
-// dashboard. "Today" is the location's own day, in its time zone.
+// dashboard. "Today" is the location's own day, in its time zone, and an
+// inspection is due Monday to Friday; a crane used at the weekend can still
+// be inspected then.
 
 let ciCranes = [], ciItems = [], ciInspections = [], ciItemsError = null;
 let ciLoaded = false, ciError = null, ciNotSetUp = false;
@@ -52,6 +54,9 @@ const ciTime = (r) => new Date(r.created_at).toLocaleTimeString("en-US",
   { hour: "numeric", minute: "2-digit", timeZone: ciZone(r.location_id) });
 const ciDay = (ymd, year) => dateOnly(ymd).toLocaleDateString("en-US",
   year ? { weekday: "short", month: "short", day: "numeric", year: "numeric" } : { month: "short", day: "numeric" });
+// Inspections are due on weekdays only (Andrew, 4 Nov 2026).
+const ciWorkday = (ymd) => ![0, 6].includes(dateOnly(ymd).getDay());
+const ciNeededToday = (crane) => ciWorkday(ciToday(crane.location_id));
 
 // ---- what's shown ------------------------------------------------------------------------
 
@@ -63,26 +68,28 @@ const ciLast = (crane) => ciOf(crane)[0] || null;
 // Today's latest: what decides whether it can be used today.
 const ciTodays = (crane) => ciOf(crane).find(r => r.inspected_on === ciToday(crane.location_id)) || null;
 // "ok" passed today, "problem" failed today, "out" not yet today and failed
-// its last one, "due" not yet today.
+// its last one, "due" not yet today, "off" not yet today and not needed: the
+// weekend.
 function ciState(crane) {
   const today = ciTodays(crane);
   if (today) return today.safe ? "ok" : "problem";
   const last = ciLast(crane);
-  return last && !last.safe ? "out" : "due";
+  return last && !last.safe ? "out" : ciNeededToday(crane) ? "due" : "off";
 }
 // The items an inspection found a problem with, as worded that day.
 const ciFailed = (r) => r ? (r.items || []).filter(i => ((r.answers || {})[i.id] || {}).status === "problem") : [];
 // The items asked on a crane: those for its kind, or for every kind.
 const ciItemsFor = (crane) => ciItems.filter(i => i.is_active && (!(i.kinds || []).length || i.kinds.includes(crane.kind)));
-// Cranes at your location (and any you look after) not inspected yet today:
-// the Crane Center's count, on the app's home page as here.
-const ciDueHere = () => ciActive().filter(c => myLocations().includes(c.location_id) && !ciTodays(c));
+// Cranes at your location (and any you look after) not inspected yet on a
+// weekday: the Crane Center's count, on the app's home page as here.
+const ciDueHere = () => ciActive().filter(c => myLocations().includes(c.location_id) && !ciTodays(c) && ciNeededToday(c));
 const ciCanKeep = (loc) => isOwner() || adminAt(loc);
 // Where a new crane can go: your locations, or any for an owner.
 const ciPlaces = () => isOwner() ? allLocations.filter(l => l.is_active !== false).map(l => l.id) : myLocations();
 
 const CI_STATE = {
-  ok: ["Inspected", "green"], problem: ["Out of service", "red"], out: ["Out of service", "red"], due: ["Due today", "amber"]
+  ok: ["Inspected", "green"], problem: ["Out of service", "red"], out: ["Out of service", "red"], due: ["Due today", "amber"],
+  off: ["Not due today", "slate"]
 };
 
 // "Inspected by Dana Price at 7:42 AM", "Failed today: Upper limit switch".
@@ -93,13 +100,14 @@ function ciStatusLine(crane) {
     today.created_by_name || "someone"}, ${ciTime(today)}`;
   if (state === "out") return `Not inspected today. Failed on ${ciDay(last.inspected_on)}: ${
     ciFailed(last).map(i => i.label).join(", ") || "a problem was found"}`;
+  if (state === "off") return `Not due at the weekend: inspect it first if it's used.${last ? ` Last passed ${ciDay(last.inspected_on)}.` : ""}`;
   return last ? `Not inspected today. Last passed ${ciDay(last.inspected_on)}.` : "Not inspected yet.";
 }
 
 function ciTag(crane) {
   const [label, accent] = CI_STATE[ciState(crane)];
   return crane.retired_at ? `<span class="cab-tag">Retired</span>`
-    : ciState(crane) === "ok" ? `<span class="cab-tag" style="${lit(accent)}">${label}</span>`
+    : ["ok", "off"].includes(ciState(crane)) ? `<span class="cab-tag" style="${lit(accent)}">${label}</span>`
     : `<span class="cab-tag ci-tag-${ciState(crane) === "due" ? "due" : "out"}">${label}</span>`;
 }
 
@@ -114,9 +122,9 @@ function ciSectionHtml() {
   const keepsAny = ciPlaces().some(ciCanKeep);
   if (!shown.length && !keepsAny) return `<div class="cm fv ci" id="ciSection"></div>`;
   const mine = shown.filter(c => myLocations().includes(c.location_id));
-  const done = mine.filter(c => ciTodays(c)).length;
+  const done = mine.filter(c => ciTodays(c)).length, weekday = mine.some(ciNeededToday);
   // At each location, the ones out of service first, then those still to do.
-  const rank = { problem: 0, out: 0, due: 1, ok: 2 };
+  const rank = { problem: 0, out: 0, due: 1, off: 2, ok: 2 };
   const byLocation = {};
   shown.slice().sort((a, b) => rank[ciState(a)] - rank[ciState(b)] || a.name.localeCompare(b.name))
     .forEach(c => { (byLocation[c.location_id] = byLocation[c.location_id] || []).push(c); });
@@ -125,8 +133,9 @@ function ciSectionHtml() {
     || (locations[a] || "~").localeCompare(locations[b] || "~"));
   const retired = ciCranes.filter(c => c.retired_at && ciCanKeep(c.location_id));
   return `<div class="cm fv ci" id="ciSection">
-    <h2 class="group-title">Daily crane inspections${mine.length ? ` <span class="ci-count">${done} of ${mine.length} done today</span>` : ""}</h2>
-    <p class="cm-none">Inspect each crane before its first use of the day: a short function test with no load. Anyone at the location can sign it off.</p>
+    <h2 class="group-title">Daily crane inspections${mine.length ? ` <span class="ci-count">${weekday ? `${done} of ${mine.length} done today`
+      : "None due at the weekend"}</span>` : ""}</h2>
+    <p class="cm-none">Inspect each crane before its first use of the day, Monday to Friday: a short function test with no load. Anyone at the location can sign it off.</p>
     ${shown.length ? order.map(loc => `${order.length > 1 ? `<h3 class="ci-place">${esc(locations[loc] || loc)}</h3>` : ""}
       ${byLocation[loc].map(ciCardHtml).join("")}`).join("")
       : `<div class="cm-card cm-empty"><b>No cranes yet</b><p>Add each crane at ${esc(myLocationNames().join(" and ") || "your location")},
@@ -148,7 +157,7 @@ function ciCardHtml(crane) {
         ${crane.retired_at ? "" : `<small class="ci-line ${state}">${esc(ciStatusLine(crane))}</small>`}</span>
     </span>
     <span class="fv-actions ci-actions">
-      ${crane.retired_at ? "" : `<button type="button" class="fv-go${state === "ok" ? " quiet" : ""}" data-ci-inspect="${esc(crane.id)}">${
+      ${crane.retired_at ? "" : `<button type="button" class="fv-go${["ok", "off"].includes(state) ? " quiet" : ""}" data-ci-inspect="${esc(crane.id)}">${
         icon("checkCircle", 17)}${state === "ok" ? "Inspect again" : "Inspect"}</button>`}
       <button type="button" class="fv-go quiet" data-ci-open="${esc(crane.id)}">${icon("clock", 17)}History</button>
     </span>
@@ -185,7 +194,7 @@ function ciCraneHtml() {
         ((showing.answers || {})[i.id] || {}).note ? `<small>${esc(showing.answers[i.id].note)}</small>` : ""}</span></li>`).join("")}</ul>
         <p class="fv-warn">${icon("warning", 15)}Don't use it until it's fixed and passes an inspection.</p>` : ""}
       <div class="fv-actions">
-        <button type="button" class="fv-go${state === "ok" ? " quiet" : ""}" data-ci-inspect="${esc(crane.id)}">${icon("checkCircle", 17)}${
+        <button type="button" class="fv-go${["ok", "off"].includes(state) ? " quiet" : ""}" data-ci-inspect="${esc(crane.id)}">${icon("checkCircle", 17)}${
           state === "ok" ? "Inspect again" : "Inspect now"}</button>
         ${keeps ? `<button type="button" class="fv-go quiet" data-ci-edit="${esc(crane.id)}">${icon("pencil", 17)}Edit</button>` : ""}
       </div>`}
@@ -205,20 +214,22 @@ function ciCraneHtml() {
     </div>` : ""}`;
 }
 
-// A square for each of the last 30 days, oldest first: passed, failed, or not inspected.
+// A square for each of the last 30 days, oldest first: passed, failed, not
+// inspected, or a weekend it wasn't needed.
 function ciStripHtml(crane) {
   const today = dateOnly(ciToday(crane.location_id)), days = [];
+  let weekdays = 0, passed = 0;
   for (let back = 29; back >= 0; back--) {
     const d = new Date(today); d.setDate(d.getDate() - back);
     const ymd = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
-    const that = ciOf(crane).filter(r => r.inspected_on === ymd);
-    const state = !that.length ? "none" : that[0].safe ? "ok" : "problem";
-    days.push(`<i class="${state}" title="${esc(`${ciDay(ymd, true)}: ${state === "none" ? "not inspected"
+    const that = ciOf(crane).filter(r => r.inspected_on === ymd), workday = ciWorkday(ymd);
+    const state = that.length ? (that[0].safe ? "ok" : "problem") : workday ? "none" : "off";
+    if (workday) { weekdays++; if (state === "ok") passed++; }
+    days.push(`<i class="${state}" title="${esc(`${ciDay(ymd, true)}: ${state === "none" ? "not inspected" : state === "off" ? "weekend"
       : state === "ok" ? `passed, ${that[0].created_by_name || ""}` : `failed, ${that[0].created_by_name || ""}`}`)}"></i>`);
   }
-  const passed = days.filter(d => d.includes('class="ok"')).length;
-  return `<div class="ci-strip" role="img" aria-label="Inspections over the last 30 days: ${passed} days passed">${days.join("")}</div>
-    <p class="fv-note ci-key"><i class="ok"></i> Passed <i class="problem"></i> Failed <i class="none"></i> Not inspected · ${passed} of 30 days passed</p>`;
+  return `<div class="ci-strip" role="img" aria-label="Passed on ${passed} of the last ${weekdays} weekdays">${days.join("")}</div>
+    <p class="fv-note ci-key"><i class="ok"></i> Passed <i class="problem"></i> Failed <i class="none"></i> Not inspected <i class="off"></i> Weekend · passed on ${passed} of ${weekdays} weekdays</p>`;
 }
 
 function ciLogRowHtml(r, keeps) {

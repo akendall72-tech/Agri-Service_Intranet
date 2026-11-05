@@ -2765,6 +2765,8 @@ input.fx-val { width: 96px; margin: 0; padding: 4px 8px; text-align: right; font
 .ci-strip i, .ci-key i { display: block; aspect-ratio: 1; max-width: 100%; border-radius: 3px; background: rgba(255,255,255,.1); }
 .ci-strip i.ok, .ci-key i.ok { background: var(--lit-green); }
 .ci-strip i.problem, .ci-key i.problem { background: var(--lit-red); }
+.ci-strip i.off, .ci-key i.off { background: none; box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); }
+.ci .ci-line.off { color: var(--cab-sub); }
 .ci-key { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .ci-key i { display: inline-block; width: 11px; height: 11px; margin-left: 6px; }
 .ci-key i:first-child { margin-left: 0; }

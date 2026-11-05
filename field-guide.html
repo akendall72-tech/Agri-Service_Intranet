@@ -590,8 +590,8 @@
       <p>A Safety Manager gets a number on the Safety Center: Safety Reports waiting for their approval. It's in the
         number on the app icon too, and on <em>View a Safety Report</em> inside, and it goes down as they're approved
         on the web page. The web page's Safety Center tile shows the same.</p>
-      <p>The Crane Center's number adds the cranes at your location still to be inspected today to any lift
-        plans waiting on you.</p>
+      <p>The Crane Center's number adds the cranes at your location still to be inspected today, Monday to Friday,
+        to any lift plans waiting on you.</p>
       <p>The Fleet Center's number is the vehicles you drive that need something: this week's check
         not done, service overdue, tires to replace, something on the last check needing attention, or
         equipment overdue.</p>
@@ -840,14 +840,16 @@
         of the rest; <strong>Show older plans</strong> at the bottom brings back older approved ones.</p>
 
       <h3 id="crane-inspections">Daily crane inspections</h3>
-      <p>Every crane gets a short function test before its first use each day, as OSHA asks (the daily
-        "frequent inspection": 1910.179 for bridge cranes, 1910.180 for truck cranes). It's first in the Crane
+      <p>Every crane gets a short function test before its first use each weekday, as OSHA asks (the daily
+        "frequent inspection": 1910.179 for bridge cranes, 1910.180 for truck cranes). Nothing is due on Saturday or
+        Sunday, but a crane used at the weekend should be inspected first, and can be. It's first in the Crane
         Center, as <strong>Daily Crane Inspections</strong> in the app (from build 40) and at the top of the page on
         the web.</p>
       <ul class="plain">
         <li><strong>The list</strong> — the cranes at your location, each with today's state: <em>Out of
           service</em> first, then <em>Due today</em>, then <em>Inspected</em> with who did it and when. "Today" is
-          the location's own day, so Pasco's starts an hour after Twin Falls'.</li>
+          the location's own day, so Pasco's starts an hour after Twin Falls'. At the weekend the others read <em>Not due
+          today</em>.</li>
         <li><strong>Inspect</strong> — each item is answered <strong>OK</strong> or <strong>Problem</strong>, with
           no load on the hook: the controls and emergency stop, the hook and latch, the wire rope or chain, and for
           a bridge crane the hoist, the upper limit switch and the bridge and trolley travel, or for a truck crane
@@ -858,7 +860,7 @@
           red on the list and its page says not to use it. The location's admins and the Safety Manager get a push
           straight away.</li>
         <li><strong>A crane's page</strong> (History) — the last 30 days as a square a day (passed, failed, not
-          inspected), and every inspection with who signed it off and what failed. It loads the last five weeks;
+          inspected, or an outlined weekend), how many weekdays it passed, and every inspection with who signed it off and what failed. It loads the last five weeks;
           <strong>Show older inspections</strong> brings back the rest.</li>
         <li><strong>Adding cranes</strong> — a location's admins (and owners) add each crane with a name everyone
           will recognise ("Shop bridge crane", "Fleet #214 crane"), its kind, bridge or service truck, which decides
