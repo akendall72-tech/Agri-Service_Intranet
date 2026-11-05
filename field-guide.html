@@ -590,6 +590,8 @@
       <p>A Safety Manager gets a number on the Safety Center: Safety Reports waiting for their approval. It's in the
         number on the app icon too, and on <em>View a Safety Report</em> inside, and it goes down as they're approved
         on the web page. The web page's Safety Center tile shows the same.</p>
+      <p>The Crane Center's number adds the cranes at your location still to be inspected today to any lift
+        plans waiting on you.</p>
       <p>The Fleet Center's number is the vehicles you drive that need something: this week's check
         not done, service overdue, tires to replace, something on the last check needing attention, or
         equipment overdue.</p>
@@ -833,9 +835,41 @@
         <strong>Driving Tests to Approve</strong> page in its Forklift Center.</p>
 
       <h3>Crane Center</h3>
-      <p>Your Crane &amp; Rigging Qualification, and where a lift plan is written, reviewed
-        and kept. The lists of plans show every one still waiting or sent back, and the last 12 months
+      <p>Today's crane inspections, your Crane &amp; Rigging Qualification, and where a lift plan is written,
+        reviewed and kept. The lists of plans show every one still waiting or sent back, and the last 12 months
         of the rest; <strong>Show older plans</strong> at the bottom brings back older approved ones.</p>
+
+      <h3 id="crane-inspections">Daily crane inspections</h3>
+      <p>Every crane gets a short function test before its first use each day, as OSHA asks (the daily
+        "frequent inspection": 1910.179 for bridge cranes, 1910.180 for truck cranes). It's first in the Crane
+        Center, as <strong>Daily Crane Inspections</strong> in the app (from build 40) and at the top of the page on
+        the web.</p>
+      <ul class="plain">
+        <li><strong>The list</strong> — the cranes at your location, each with today's state: <em>Out of
+          service</em> first, then <em>Due today</em>, then <em>Inspected</em> with who did it and when. "Today" is
+          the location's own day, so Pasco's starts an hour after Twin Falls'.</li>
+        <li><strong>Inspect</strong> — each item is answered <strong>OK</strong> or <strong>Problem</strong>, with
+          no load on the hook: the controls and emergency stop, the hook and latch, the wire rope or chain, and for
+          a bridge crane the hoist, the upper limit switch and the bridge and trolley travel, or for a truck crane
+          the boom and rotation, hydraulic leaks, the safety devices and load chart, and the outriggers. A Problem
+          needs a note saying what's wrong. <strong>Sign off</strong> records your name and the time; anyone at the
+          location can do it.</li>
+        <li><strong>A Problem tags the crane out of service</strong> until it passes an inspection again: it shows
+          red on the list and its page says not to use it. The location's admins and the Safety Manager get a push
+          straight away.</li>
+        <li><strong>A crane's page</strong> (History) — the last 30 days as a square a day (passed, failed, not
+          inspected), and every inspection with who signed it off and what failed. It loads the last five weeks;
+          <strong>Show older inspections</strong> brings back the rest.</li>
+        <li><strong>Adding cranes</strong> — a location's admins (and owners) add each crane with a name everyone
+          will recognise ("Shop bridge crane", "Fleet #214 crane"), its kind, bridge or service truck, which decides
+          the inspection it gets, and its rated capacity if you know it. No two cranes in service at a location share
+          a name. <em>Retire</em> takes one off the daily list and keeps its record; <em>Delete</em> removes it and
+          its inspections. An admin can delete an inspection entered by mistake; nobody can change one.</li>
+      </ul>
+      <p>Everyone sees the cranes at their own location, an admin those at every location they look after, and owners
+        all of them; the database enforces it. The Safety Manager keeps the list of items on the Safety dashboard
+        (<em>Crane Inspection</em>). A change reaches every phone at once, and an inspection already signed off keeps
+        the items as they were worded that day.</p>
 
       <h3>Crane &amp; Rigging Qualification</h3>
       <p>The top of the Crane Center says whether you're qualified for crane and rigging work.
@@ -1865,6 +1899,7 @@
             <tr><td>Someone replies to a support request</td><td>Whoever asked</td></tr>
             <tr><td>A technician finishes a skill level</td><td>That technician, and the owners</td></tr>
             <tr><td>A driving test is recorded, or approved or turned down</td><td>The Training Manager, then whoever recorded it</td></tr>
+            <tr><td>A crane fails its daily inspection</td><td>The admins at that location and the Safety Manager. It says which crane and what failed</td></tr>
             <tr><td>A Safety Report is sent</td><td>Every Safety Manager, to approve it, unless they sent it. Tapping it opens Safety Reports, and it adds one to the app icon's number</td></tr>
             <tr><td>Someone @mentions you in a post, a shout-out or a comment</td><td>Whoever's tagged. Tapping it opens the post on the Social tab</td></tr>
             <tr><td>A class you're registered for is a week away, and the day before</td><td>Everyone on its roster. Sent around 9&nbsp;AM (8 in winter); tapping it opens My Classes</td></tr>
@@ -1894,7 +1929,7 @@
           <tbody>
             <tr><td>Reminders</td><td>A nudge each morning when a list resets; on the 1st, this month's Safety Brief</td><td>On time</td></tr>
             <tr><td>Support requests</td><td>New requests and replies for your groups</td><td>Pushed, and after you open the app</td></tr>
-            <tr><td>Crane Center</td><td>A plan awaiting you, yours sent back or approved</td><td>Pushed, and after you open the app</td></tr>
+            <tr><td>Crane Center</td><td>A plan awaiting you, yours sent back or approved; for admins, a crane at their location failing its daily inspection</td><td>Pushed, and after you open the app</td></tr>
             <tr><td>Forklift Center</td><td>Two months and a week before your card expires; a week and a day before your driving test is due; driving tests waiting or decided</td><td>On time; pushed</td></tr>
             <tr><td>Safety Reports</td><td>A report sent for you to approve. Safety Managers only</td><td>Pushed</td></tr>
             <tr><td>Training Center</td><td>A week and the day before your classes; Skills levels finished</td><td>Pushed</td></tr>
@@ -2074,6 +2109,7 @@
             <tr><td>Required Forklift Operators</td><td>The people who must hold a forklift certification — everyone who drives one. The other reports start from the cards, so someone who drives a forklift without ever being certified shows up only here. <b>Only the Safety Manager</b> adds people: search All employees and press <b>Require</b>, and add a note on what they drive. Each person shows their status from their newest card: certified (and until when), expiring, waiting for approval, expired, or not certified at all, with a driving test due date if they've passed the online course. <b>Not certified</b> lists the ones who can't drive yet; <b>Email all</b> writes to them in BCC. The menu shows how many aren't certified, the Overview flags them, and their location's admin sees them first on the Location Dashboard. <b>Remove</b> takes someone off the list; their records stay</td></tr>
             <tr><td>Lift Plans</td><td>Every plan, sortable by submitter. <b>Open</b> shows one in full, where it's approved or sent back; <b>PDF</b> downloads it</td></tr>
             <tr><td>Required Crane Operators</td><td>The same list for the Crane &amp; Rigging Qualification: the people who must hold it — anyone who runs a crane or rigs a lift. The crane reports start from the course, so someone doing the work without ever taking it shows up only here. <b>Only the Safety Manager</b> adds people, the same way, with a note on which crane or what they lift. Each person shows their status from the course on their training history: qualified (and until when, if it expires), running out in the next 60 days, expired, removed, or not qualified because they haven't taken it. Requiring someone doesn't qualify them; only the course does. <b>Not qualified</b> lists the ones who can't do the work yet; <b>Email all</b> writes to them in BCC. The menu shows how many aren't qualified, the Overview flags them under Lift plans, and their location's admin sees them first on the Location Dashboard, on the web page and in the app (from build 27). <b>Remove</b> takes someone off the list; their qualification stays as it is</td></tr>
+            <tr><td>Crane Inspection</td><td>The daily crane inspection: add, reword, reorder, hide or delete items, each with how to check it shown under it, and tick the kinds of crane it's for (bridge, service truck; none ticked for both). Each is answered OK or Problem, and a Problem tags the crane out of service. Keep it short: it's done every day. Rewording or deleting one never changes an inspection already signed off</td></tr>
             <tr><td>Safety Data Sheets</td><td>Drop in any number of SDS PDFs at once, check the product names, and upload. A name already in the library replaces that sheet, so new revisions go in the same way. Rename, open, replace or delete sheets in the library</td></tr>
           </tbody>
         </table>
@@ -2394,7 +2430,7 @@
     </section>
 
     <footer>
-      Agri-Service internal use. Updated for the app's build 39 and the web page, 3 November 2026.
+      Agri-Service internal use. Updated for the app's build 40 and the web page, 4 November 2026.
       The app changes often — where this guide and the app disagree, the app is right,
       and the training department will update this.
     </footer>

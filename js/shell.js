@@ -160,13 +160,16 @@ function tileCount(id) {
   if (id === "forklift") return isTrainingManager() ? pendingTests().length : 0;
   // The vehicles you drive that need a check, a service or new tires.
   if (id === "fleet") return fvAttentionCount();
-  if (id === "rigging") {
-    return isAdmin()
-      ? plans.filter(p => p.status === "submitted" && p.created_by !== me.id).length
-      : plans.filter(p => p.status === "changes_requested").length;
-  }
+  // Lift plans waiting on you, and the cranes at your location still to be
+  // inspected today.
+  if (id === "rigging") return planCount() + ciDueHere().length;
   return 0;
 }
+
+// Lift plans waiting for an admin's approval, or come back to their writer.
+const planCount = () => isAdmin()
+  ? plans.filter(p => p.status === "submitted" && p.created_by !== me.id).length
+  : plans.filter(p => p.status === "changes_requested").length;
 
 // The Support Center's own pages, under it in the crumbs and the sidebar.
 const SUPPORT_PAGES = ["requests", "request", "newrequest", "tools", "tool", "toolform"];
@@ -174,8 +177,8 @@ const SUPPORT_PAGES = ["requests", "request", "newrequest", "tools", "tool", "to
 const SOCIAL_PAGES = ["events", "event", "community", "communitypost", "fitness", "trivia", "triviagame", "triviaplay"];
 // The Fleet Center's: a vehicle, and the form for one.
 const FLEET_PAGES = ["fleetvehicle", "fleetform"];
-// The Crane Center's: a lift plan, and the form for one.
-const CRANE_PAGES = ["liftplan", "liftplanform"];
+// The Crane Center's: a lift plan and its form, a crane, its inspection, and its form.
+const CRANE_PAGES = ["liftplan", "liftplanform", "crane", "craneinspect", "craneform"];
 
 function showView(name) {
   viewShown = name; screenTouched = false;
@@ -290,7 +293,7 @@ function showSafety(tab) {
   evalAgreed = null; evalNotice = "";
   safely(renderCerts, renderEvalForm, renderPlans, renderSafetyAdmin, renderSdsAdmin, renderSdsPending,
     renderSafetyReportAdmin, renderSafetyReportsAdmin, renderSafetyOverview, renderFkWaiting,
-    renderRequired.bind(null, "forklift"), renderRequired.bind(null, "crane"));
+    renderRequired.bind(null, "forklift"), renderRequired.bind(null, "crane"), renderCraneInspectionAdmin);
   (document.querySelector(`#safetyNav [data-tab="${tab || safetyTab}"]`) || document.querySelector("#safetyNav [data-tab]")).click();
   window.scrollTo(0, 0);
 }
@@ -396,6 +399,9 @@ const VIEWS = {
   inspform: () => inspFormView(),
   liftplan: () => liftPlanView(),
   liftplanform: () => liftPlanFormView(),
+  crane: () => craneView(),
+  craneinspect: () => craneInspectView(),
+  craneform: () => craneFormView(),
   agcomap: () => agcoMapView()
 };
 
@@ -426,6 +432,9 @@ const pageTitle = (id) => (FEATURES.find(f => f.id === id) || COMPANY_PAGES.find
        evaltest: { title: "Forklift Driving Test" },
        inspform: { title: inspDraft ? (inspDraft.stage === "after" ? "After Class" : "New Inspection") : "Inspection" },
        liftplan: { title: "Lift Plan" },
+       crane: { title: (ciCrane(openCraneId) || {}).name || "Crane" },
+       craneinspect: { title: "Daily Crane Inspection" },
+       craneform: { title: ciDraft && ciDraft.id ? "Edit Crane" : "Add a Crane" },
        fleetvehicle: { title: (v => v ? fvName(v) : "Vehicle")(fvVehicle(openFleetId)) },
        fleetform: { title: fvDraft && fvDraft.id ? "Edit Vehicle" : "Add a Vehicle" },
        liftplanform: { title: lpDraft && lpDraft.editing ? "Edit Lift Plan" : "New Lift Plan" },
@@ -554,9 +563,13 @@ function homeStats() {
 
   const afterClass = inspections.filter(r => !r.post_submitted_at &&
     (inspForms.find(f => f.id === r.form_id) || {}).has_after_class).length;
-  if (isAdmin() && tileCount("rigging")) {
-    cards.push({ view: "rigging", icon: "rigging", label: "Lift plans", value: `${tileCount("rigging")} waiting`,
+  const cranesDue = ciDueHere().length;
+  if (isAdmin() && planCount()) {
+    cards.push({ view: "rigging", icon: "rigging", label: "Lift plans", value: `${planCount()} waiting`,
       sub: "Waiting on your approval" });
+  } else if (cranesDue) {
+    cards.push({ view: "rigging", icon: "rigging", label: "Crane inspections", value: `${cranesDue} due today`,
+      sub: "Before each crane's first use" });
   } else if (afterClass) {
     cards.push({ view: "inspection", icon: "inspection", label: "Inspections", value: `${afterClass} to finish`,
       sub: "After-class part still to do" });
@@ -582,7 +595,7 @@ document.querySelectorAll(".tabs button[data-tab]").forEach(btn => {
     document.querySelectorAll(".tabs button[data-tab]").forEach(b =>
       b.classList.toggle("active", b === btn));
     ["certs", "plans", "people", "support", "payroll", "tools",
-      "directory", "logins", "reminders", "fleetcheck", "events", "fitness", "trivia", "org", "openseat", "inspections", "courses", "articles", "skillsadmin", "sds", "news", "trainingstatus", "handbook", "agco", "mock", "safetydesk", "safetyreportform", "safetyreports", "safetyoverview", "fkwaiting", "trainingoverview", "agcocatalog", "rpagco", "rpclass", "oltadmin", "locationoverview", "fkrequired", "crrequired"].forEach(name =>
+      "directory", "logins", "reminders", "fleetcheck", "events", "fitness", "trivia", "org", "openseat", "inspections", "courses", "articles", "skillsadmin", "sds", "news", "trainingstatus", "handbook", "agco", "mock", "safetydesk", "safetyreportform", "safetyreports", "safetyoverview", "fkwaiting", "trainingoverview", "agcocatalog", "rpagco", "rpclass", "oltadmin", "locationoverview", "fkrequired", "crrequired", "craneinspection"].forEach(name =>
       $("tab-" + name).classList.toggle("hidden", name !== btn.dataset.tab));
     $("adminTitle").textContent = btn.dataset.title || btn.querySelector("span").textContent.trim();
     if (btn.closest("#safetyNav")) safetyTab = btn.dataset.tab;

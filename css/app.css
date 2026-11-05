@@ -2737,6 +2737,55 @@ input.fx-val { width: 96px; margin: 0; padding: 4px 8px; text-align: right; font
 .fva-kinds { display: flex; flex-wrap: wrap; gap: 6px 16px; padding-top: 4px; }
 .fva-kind { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-weight: 500; }
 
+/* ---- Daily crane inspections (0119): the Crane Center's list, a crane's page
+   and its inspection, in the Fleet Center's Cab cards (.fv), coloured steel. */
+.ci { max-width: 900px; margin: 0 0 22px; }
+.ci .cm-card { --accent: var(--lit-steel); }
+.ci .cm-card.alert { --accent: var(--lit-red); border-color: color-mix(in srgb, var(--lit-red) 45%, transparent); }
+.ci .cm-eyebrow { color: var(--lit-steel); }
+.ci .fv-glyph { color: var(--lit-steel); background: color-mix(in srgb, var(--lit-steel) 14%, transparent);
+  border-color: color-mix(in srgb, var(--lit-steel) 35%, transparent); }
+.ci .group-title .ci-count { margin-left: auto; font-weight: 600; }
+.ci h3.ci-place { margin: 6px 2px 0; color: var(--cab-heading); font: 600 12px var(--font-mono); letter-spacing: .14em; text-transform: uppercase; }
+.ci .cab-tag.ci-tag-due { background: var(--lit-amber); border-color: var(--lit-amber); color: #2A1E05; }
+.ci .cab-tag.ci-tag-out { background: var(--lit-red); border-color: var(--lit-red); color: #fff; }
+.ci .ci-card.retired { opacity: .7; }
+.ci .ci-line { color: var(--cab-sub); font-size: 13px; font-weight: 600; }
+.ci .ci-line.ok { color: var(--lit-green); }
+.ci .ci-line.due { color: var(--lit-amber); }
+.ci .ci-line.problem, .ci .ci-line.out { color: var(--lit-red); }
+.ci p.ci-line { margin: 0 0 10px; font-size: 14px; }
+.ci .ci-actions { margin-top: 12px; }
+.ci .ci-actions button.fv-go { padding: 8px 14px; font-size: 13.5px; }
+.ci-big { margin: 2px 0 6px; color: #fff; font: 700 32px/1.1 var(--font-cab); letter-spacing: .03em; text-transform: uppercase; }
+.ci .fv-head.alert .ci-big { color: var(--lit-red); }
+.ci .fv-answers { margin: 0 0 12px; }
+/* The last 30 days: a square a day. */
+.ci-strip { display: grid; grid-template-columns: repeat(30, minmax(0, 1fr)); gap: 3px; }
+.ci-strip i, .ci-key i { display: block; aspect-ratio: 1; max-width: 100%; border-radius: 3px; background: rgba(255,255,255,.1); }
+.ci-strip i.ok, .ci-key i.ok { background: var(--lit-green); }
+.ci-strip i.problem, .ci-key i.problem { background: var(--lit-red); }
+.ci-key { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.ci-key i { display: inline-block; width: 11px; height: 11px; margin-left: 6px; }
+.ci-key i:first-child { margin-left: 0; }
+.ci-log { padding-top: 6px; padding-bottom: 6px; }
+.ci-log-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--cab-divider, rgba(255,255,255,.08)); }
+.ci-log-row:last-child { border-bottom: 0; }
+.ci-log-mark { flex: none; margin-top: 1px; color: var(--lit-green); }
+.ci-log-row.bad .ci-log-mark { color: var(--lit-red); }
+.ci-log-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ci-log-main b { font-size: 14.5px; }
+.ci-log-main small { color: var(--cab-sub); font-size: 13px; }
+.ci-log-main em { color: var(--lit-red); font-style: normal; font-size: 13px; font-weight: 600; }
+.ci button.ci-del { padding: 2px 4px; font-size: 12px; }
+/* The inspection itself, on a light card like the weekly fleet check. */
+.ci-form { max-width: 760px; }
+.ci-item:has(input[value="problem"]:checked) { border-color: var(--red); }
+.ci-item:has(input[value="problem"]:checked) .ci-item-note { display: block; }
+.ci-sign { margin: 14px 0 4px; color: var(--muted); font-size: 14px; }
+.ci-sign b { color: var(--ink); }
+#ciSign.danger { background: var(--red); border-color: var(--red); }
+
 /* ---- Trivia (0107): games, practice and a round on Social, in the Cab look,
    and the admin page's games, questions and categories. ---- */
 .tv .cm-card { --accent: var(--lit-violet); }

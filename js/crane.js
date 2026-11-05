@@ -192,6 +192,8 @@ document.addEventListener("click", async (event) => {
 });
 
 function riggingView() {
+  // Today's crane inspections may have moved on since the page loaded.
+  setTimeout(async () => { await loadCraneInspections(); ciRedraw(); });
   const mine = plans.filter(p => p.created_by === me.id);
   const others = plans.filter(p => p.created_by !== me.id);
 
@@ -201,7 +203,9 @@ function riggingView() {
     ${rows.length ? `<div class="crane-list">${rows.map(planRow).join("")}</div>` : `<p class="crane-empty">${empty}</p>`}`;
 
   return hero("Crane Center",
-      "Your crane and rigging qualification, lift plans you've submitted, and the ones waiting on you.")
+      "Today's crane inspections, your crane and rigging qualification, lift plans you've submitted, and the ones waiting on you.")
+    // First: the daily inspections are what someone comes here for most.
+    + ciSectionHtml()
     + `<div class="crane">`
     + craneCard()
     // As the app's Crane Center: the way into a new plan, and the Crosby guide.
