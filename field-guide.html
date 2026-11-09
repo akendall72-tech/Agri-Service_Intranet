@@ -641,9 +641,13 @@
         each shows its dates, start time, town and instructor. <strong>Add to my
         calendar</strong> puts it in your calendar (in the app you pick which one; on the web
         page it downloads a file to open in Outlook).</p>
-      <p>It's as current as the last Open Seat Report upload, so a class you signed up for
-        since then isn't there yet. AGCO Academy classes aren't listed, as their report has no
-        rosters. Nothing coming up? It points you to the Open Seat Report to find one.</p>
+      <p>A UKG class is as current as the last Open Seat Report upload, so one you signed up for
+        in UKG since then isn't there yet. A class the Training Manager scheduled here is current:
+        register for it and it's on My Classes straight away, with <strong>Cancel my seat</strong>.
+        A full one you're waiting for is under <em>On the waitlist</em>, with your place and
+        <strong>Leave the waitlist</strong> (in the app from build 42). AGCO Academy classes aren't
+        listed, as their report has no rosters. Nothing coming up? It points you to the Open Seat
+        Report to find one.</p>
       <p>You also get a notification a week before each class and the day before. Settings →
         Training Center switches them off.</p>
       <p><a href="#techlevels">Skills</a> and <a href="#trainingstatus">Training Status</a>
@@ -691,6 +695,25 @@
       </ul>
       <p>Emails open in your own mail app and nothing sends until you press Send.
         Classes drop off once they've finished.</p>
+      <p><strong>Registering for a class scheduled here.</strong> A class the Training Manager put on
+        the Class Schedule says who can register, under its seats:</p>
+      <ul class="plain">
+        <li><strong>Open to everyone</strong>: <em>Register</em> signs you up. Location admins can
+          also register their people.</li>
+        <li><strong>Admin only</strong>: your location admin registers you (admins can register
+          themselves and their people).</li>
+        <li><strong>Training Manager only</strong>: <em>Request Registration</em> asks the Training
+          Manager, as for a UKG class.</li>
+      </ul>
+      <p>A full class offers <em>Join the waitlist</em> instead. When a seat opens, the first person
+        waiting moves up and gets a notification. Once you're on, the card says <em>You're
+        registered</em> or your place on the waitlist, with <em>Cancel my seat</em> or <em>Leave the
+        waitlist</em>; your seat goes to the next person waiting. Registering closes on the class's
+        register-by date, or when it starts; after that, ask the Training Manager. The roster and the
+        waitlist are under <em>Who's enrolled</em>. On the web page, an admin opens a class to register
+        their people (search by name or location) and cancel them; the Training Manager can do that for
+        anyone, any time. Registering is in the app from build 42; on the web page, register for
+        yourself, your people, or anyone, depending on your role.</p>
       <p>The Training Manager can also put a class on the schedule on the Training dashboard, and it
         shows here with UKG's, straight away and without an upload. Those classes have no roster
         until registration in the app opens.</p>
@@ -1923,6 +1946,9 @@
             <tr><td>A Safety Report is sent</td><td>Every Safety Manager, to approve it, unless they sent it. Tapping it opens Safety Reports, and it adds one to the app icon's number</td></tr>
             <tr><td>Someone @mentions you in a post, a shout-out or a comment</td><td>Whoever's tagged. Tapping it opens the post on the Social tab</td></tr>
             <tr><td>A class you're registered for is a week away, and the day before</td><td>Everyone on its roster. Sent around 9&nbsp;AM (8 in winter); tapping it opens My Classes</td></tr>
+            <tr><td>Someone else registers you for a class scheduled here, puts you on its waitlist, or cancels you</td><td>You, unless you did it yourself. Tapping it opens My Classes</td></tr>
+            <tr><td>A seat opens and you move up from the waitlist</td><td>You: <em>You're in</em></td></tr>
+            <tr><td>Your class is moved, cancelled or put back on</td><td>Everyone registered or waiting, with the new day, time and place</td></tr>
           </tbody>
         </table>
       </div>
@@ -2079,7 +2105,7 @@
           </thead>
           <tbody>
             <tr><td>Overview</td><td>The dashboard above</td></tr>
-            <tr><td>Class Schedule</td><td>Put a class on the schedule from the catalog: the first and last day, the hours each day (on the clock where it's held), where (one of the locations with an optional room, somewhere else with an address, or online with a Teams link to add when you have it), instructor, seats, a register-by date, training hours and AGCO credit (from the catalog, changeable for the class), who can register (open to everyone, admin only, or Training Manager only; kept for when registering in the app opens), and details. <b>Put it on the schedule</b> puts it on the company calendar and the Open Seat Report at once; <b>Save as draft</b> keeps it here only. <b>Change</b> it and the calendar and the report follow; each change once it's on the schedule goes in its <em>History</em>. <b>Cancel class</b> takes it off both, and <b>Put back on the schedule</b> brings it back. Drafts and cancelled classes can be deleted. A one-day class is a timed event on the calendar; one over several days is an all-day event across them, with the hours in its details. Schedule a class here or in UKG, not both, or it shows twice</td></tr>
+            <tr><td>Class Schedule</td><td>Put a class on the schedule from the catalog: the first and last day, the hours each day (on the clock where it's held), where (one of the locations with an optional room, somewhere else with an address, or online with a Teams link to add when you have it), instructor, seats, a register-by date, training hours and AGCO credit (from the catalog, changeable for the class), who can register (open to everyone, admin only, or Training Manager only; kept for when registering in the app opens), and details. <b>Put it on the schedule</b> puts it on the company calendar and the Open Seat Report at once; <b>Save as draft</b> keeps it here only. <b>Change</b> it and the calendar and the report follow; each change once it's on the schedule goes in its <em>History</em>. <b>Cancel class</b> takes it off both, and <b>Put back on the schedule</b> brings it back. Drafts and cancelled classes can be deleted. Each class on the schedule shows how many are registered and waiting; <b>Roster</b> lists them, with <b>Cancel</b> for anyone and a search to register more (into the waitlist when it's full). More seats moves the waitlist up, and moving, cancelling or putting a class back on tells everyone on it. A one-day class is a timed event on the calendar; one over several days is an all-day event across them, with the hours in its details. Schedule a class here or in UKG, not both, or it shows twice</td></tr>
             <tr><td>Mock Schedule</td><td>Plan a year's training on a calendar and see how many technicians it gets to the hours. See below</td></tr>
             <tr><td>AGCO Development</td><td><b>Courses added here</b> adds a course AGCO's catalog doesn't list (the Level 3 online test-out is the first) to any level, and keeps it through new catalogs. <b>Technicians</b> shows how far everyone has got, then lists everyone Training Status calls a technician: the Training Manager opens one and ticks the courses they've completed; other owners can look but not tick. <b>By course</b> lists every course with how many have it ticked (search by name or code; sort by level, most or fewest ticked); open one to see who has it and who hasn't, by location, and tick it for everyone at a class at once <b>Level rules</b> sets how many Level 5 courses complete Level 5. <b>Haystack labels</b> are the words on the Level 6 bales; change any, or leave one blank for the automatic label. Maps update by themselves after a tick, an added or removed course, a rule change, a new catalog, or a new All employees upload</td></tr>
             <tr><td>Skills</td><td>The competency list: add, edit, move between levels, reorder, retire and restore. Sign-offs aren't here — they're in the Training Center</td></tr>

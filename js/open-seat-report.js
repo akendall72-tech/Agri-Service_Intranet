@@ -438,8 +438,9 @@ function openSeatView() {
     const mail = `mailto:?bcc=${emails.join(",")}&subject=${encodeURIComponent(`${c.title} — ${plain}`)}`;
     // The registration request says when it starts too.
     const plainWhen = c.startTime ? `${plain}, starts ${c.startTime}` : plain;
+    const ours = c.source === "scheduled" && c.classId;
     return `
-      <div class="osr-card">
+      <div class="osr-card"${ours ? ` data-osr-class-id="${esc(c.classId)}"` : ""}>
         <div class="osr-card-top">
           <button type="button" class="osr-head" data-osr-toggle="${i}" aria-expanded="false">
             <div class="osr-head-main">
@@ -453,16 +454,17 @@ function openSeatView() {
               <div><strong>${c.registered}</strong> / ${cap} enrolled</div>
               <div class="osr-bar"><div style="width:${pct}%"></div></div>
               <div class="osr-open">${c.available} seat${c.available === 1 ? "" : "s"} open</div>
+              ${ours ? crNoteHtml(c) : ""}
             </div>
           </button>
           <div class="osr-actions">
             ${emails.length ? `<a class="osr-email" href="${esc(mail)}">${icon("mail", 14)} Email Class</a>`
               : `<span class="osr-email disabled" title="No students enrolled">${icon("mail", 14)} Email Class</span>`}
-            ${osrRequestButton(c.title, c.city, plainWhen)}
+            ${ours ? crActionsHtml(c, plainWhen) : osrRequestButton(c.title, c.city, plainWhen)}
           </div>
         </div>
         <div class="osr-body" id="osr-class-${i}" hidden>
-          ${c.roster.length ? `<table class="osr-roster"><thead><tr><th>#</th><th>Name</th>
+          ${ours ? crRosterHtml(c) : c.roster.length ? `<table class="osr-roster"><thead><tr><th>#</th><th>Name</th>
             <th>Store / Location</th><th>Email</th></tr></thead><tbody>
             ${c.roster.map((p, n) => `<tr><td class="osr-num">${n + 1}</td><td class="osr-name">${esc(p.name)}</td>
               <td>${esc(p.store)}</td><td><a href="mailto:${esc(p.email)}">${esc(p.email)}</a></td></tr>`).join("")}
@@ -525,7 +527,8 @@ function openSeatView() {
 
     <section${osrState.tab === "classes" ? "" : " hidden"} data-osr-panel="classes">
       <div class="osr-desc">Click a class to view its enrolled roster. Use "Email Class" to message everyone
-        currently registered, or "Request Registration" to ask the training team to sign someone up.</div>
+        currently registered. Register for a class the training department scheduled here, or use "Request
+        Registration" to ask them to sign someone up.</div>
       ${classCards}
     </section>
 

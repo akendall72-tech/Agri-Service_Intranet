@@ -10,6 +10,12 @@
 let scClasses = [], scError = null, scNotSetUp = false, scOlderLoaded = false;
 // The class open in the form: null for a new one.
 let scEditing = null;
+// Rosters left open, so a redraw doesn't close them.
+const csOpenRosters = new Set();
+document.addEventListener("toggle", (event) => {
+  const roster = event.target.closest && event.target.closest("[data-cs-roster]");
+  if (roster) csOpenRosters[roster.open ? "add" : "delete"](roster.dataset.csRoster);
+}, true);
 
 // Classes that ended more than this many days ago load behind Show older.
 const SC_DAYS = 90;
@@ -196,6 +202,8 @@ function scListHtml() {
 }
 
 function scClassHtml(c) {
+  // The class as the Open Seat Report has it, with its roster (0123).
+  const doc = c.status === "scheduled" ? crClass(c.id) : null;
   const day = dateOnly(c.starts_on);
   const past = c.ends_on < tcToday();
   const facts = [`${c.seats} ${c.seats === 1 ? "seat" : "seats"}`, c.register_by && `Register by ${scDay(c.register_by)}`,
@@ -216,6 +224,10 @@ function scClassHtml(c) {
         ${c.status === "cancelled" ? ` <span class="badge b-expired">Cancelled</span>` : ""}
         <div class="note">${esc(scWhen(c))} · ${esc(scPlace(c))}${c.is_online && !c.meeting_url ? " (link to follow)" : ""}</div>
         <div class="note">${facts.map(esc).join(" · ")}</div>
+        ${doc ? `<div class="note cs-taken"><b>${doc.registered} of ${c.seats} registered</b>${(doc.waitlist || []).length
+          ? ` · ${doc.waitlist.length} on the waitlist` : ""}</div>
+        <details class="cs-roster" data-cs-roster="${esc(c.id)}"${csOpenRosters.has(c.id) ? " open" : ""}>
+          <summary>Roster</summary>${crRosterHtml(doc)}</details>` : ""}
         ${history.length ? `<details class="cs-history"><summary>History (${history.length})</summary><ul>${history.map(h =>
           `<li><span>${esc(h.what)}</span><small>${esc(h.by || "")}${h.by ? " · " : ""}${esc(newsDate(String(h.at).slice(0, 10)))}</small></li>`).join("")}</ul></details>` : ""}
       </div>
@@ -268,6 +280,7 @@ function scRow() {
 async function scReload() {
   const [, , reports] = await Promise.all([loadScheduledClasses(), loadEvents(), db.from("training_reports").select("*")]);
   if (!reports.error) trainingReports = Object.fromEntries((reports.data || []).map(r => [r.id, r]));
+  await loadClassRegistrations();
   renderClassSchedule();
   safely(renderEvents, renderOsrLive);
 }
@@ -286,6 +299,8 @@ async function scSave(button, status) {
   button.disabled = false;
   if (error) return speak(box, error.message, true);
   if (!(data || []).length) return speak(box, "Not saved: only the Training Manager schedules classes.", true);
+  // Moving a class tells the people on it (0123).
+  notify("class_notices", data[0].id);
   scEditing = null;
   await scReload();
   const on = status === "draft" ? "Saved as a draft. It isn't on the calendar until you put it on the schedule."
@@ -297,6 +312,7 @@ async function scSave(button, status) {
 async function scSetStatus(id, status) {
   const { data, error } = await db.from("scheduled_classes").update({ status }).eq("id", id).select("id");
   if (error || !(data || []).length) return alert(error ? error.message : "Not saved: only the Training Manager changes classes.");
+  notify("class_notices", id);
   await scReload();
 }
 

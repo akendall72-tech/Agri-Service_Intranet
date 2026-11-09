@@ -22,6 +22,14 @@ function myClasses() {
     .sort((a, b) => (a.startDate || "9999").localeCompare(b.startDate || "9999") || a.title.localeCompare(b.title));
 }
 
+// Upcoming classes you're on the waitlist for, with your place (0123).
+function myWaitlist() {
+  const today = osrToday();
+  return crScheduled().filter(c => (c.endDate || c.startDate || "9999") >= today)
+    .map(c => ({ c, mine: crMine(c) })).filter(x => x.mine && x.mine.state === "waitlisted")
+    .sort((a, b) => (a.c.startDate || "9999").localeCompare(b.c.startDate || "9999"));
+}
+
 const mcKey = (c) => `${c.title}|${c.city}|${c.startDate || ""}`;
 const mcFormat = (ymd, options) => dateOnly(ymd).toLocaleDateString("en-US", options);
 const mcDaysBetween = (a, b) => Math.round((dateOnly(b) - dateOnly(a)) / 86400000);
@@ -47,14 +55,14 @@ function mcWhen(c) {
   return `Day ${1 - until} of ${total}`;
 }
 
-function mcCard(c, next) {
+function mcCard(c, next, waiting) {
   const meta = (name, text) => `<li>${icon(name, 15)}<span>${esc(text)}</span></li>`;
   return `<article class="mc-card${next ? " next" : ""}">
     <div class="mc-date" aria-hidden="true">${c.startDate
       ? `<small>${esc(mcFormat(c.startDate, { month: "short" }).toUpperCase())}</small><b>${esc(mcFormat(c.startDate, { day: "numeric" }))}</b>`
       : `<small>DATE</small><b class="tbd">TBD</b>`}</div>
     <div class="mc-body">
-      <div class="mc-when">${esc(mcWhen(c))}</div>
+      <div class="mc-when">${esc(waiting ? `On the waitlist, #${waiting}` : mcWhen(c))}</div>
       <h3 class="mc-title">${esc(c.title)}</h3>
       <ul class="mc-meta">
         ${meta("calendar", mcRange(c))}
@@ -62,7 +70,9 @@ function mcCard(c, next) {
         ${c.city ? meta("pin", c.city) : ""}
         ${c.instructors ? meta("person", c.instructors) : ""}
       </ul>
-      ${c.startDate ? `<button type="button" class="mc-action" data-mc-ics="${esc(mcKey(c))}">Add to my calendar ›</button>` : ""}
+      ${c.startDate && !waiting ? `<button type="button" class="mc-action" data-mc-ics="${esc(mcKey(c))}">Add to my calendar ›</button>` : ""}
+      ${c.source === "scheduled" && c.classId && !crClosed(c) ? `<button type="button" class="mc-action mc-leave" data-cr-leave="${esc(c.classId)}">${waiting
+        ? "Leave the waitlist" : "Cancel my registration"}</button>` : ""}
     </div>
   </article>`;
 }
@@ -73,16 +83,21 @@ function myClassesView() {
   if (!internal) {
     return intro + `<div class="card"><p class="note" style="margin:0">The training department hasn't published the Open Seat Report yet.</p></div>`;
   }
-  const list = myClasses();
+  const list = myClasses(), waiting = myWaitlist();
   const exported = internal.inClassExported || internal.openSeatExported;
   const foot = `<p class="note mc-foot">From the Open Seat Report${exported ? ` exported ${esc(exported.replace(" MDT", ""))}` : ""},
-    matched on ${esc(me.email)}. A class you registered for after that shows up with the next upload.${list.length
+    matched on ${esc(me.email)}. A class you registered for in UKG after that shows up with the next upload; one you register
+    for here shows straight away.${list.length
       ? " The calendar button downloads a file: open it to add the class to Outlook or your calendar." : ""}</p>`;
+  const waitlist = waiting.length ? `<h2 class="cab-heading mc-later"><span>On the waitlist</span>
+      <span class="trail">${waiting.length === 1 ? "1 class" : `${waiting.length} classes`}</span></h2>
+      ${waiting.map(x => mcCard(x.c, false, x.mine.place)).join("")}` : "";
+  if (!list.length && waiting.length) return intro + `<div class="mc-list">${waitlist}</div>` + foot;
   if (!list.length) {
     return intro + `<div class="mc-list"><article class="mc-card">
         <div class="mc-body"><h3 class="mc-title">No classes yet</h3>
           <p class="mc-empty">You're not on the roster for any upcoming Agri-Service class. The Open Seat Report shows
-            the classes with seats left, and you can ask to be registered from there.</p>
+            the classes with seats left, and you can register, or ask to be registered, from there.</p>
           <button type="button" class="mc-action" data-view="openseat">See the open seats ›</button></div>
       </article></div>` + foot;
   }
@@ -92,6 +107,7 @@ function myClassesView() {
       ${list.length > 1 ? `<h2 class="cab-heading mc-later"><span>Also registered</span>
         <span class="trail">${list.length - 1 === 1 ? "1 class" : `${list.length - 1} classes`}</span></h2>
         ${list.slice(1).map(c => mcCard(c, false)).join("")}` : ""}
+      ${waitlist}
     </div>` + foot;
 }
 
