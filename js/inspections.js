@@ -634,8 +634,9 @@ function inspFieldHtml(field, record) {
           <img src="${esc(p.url)}" alt="">
           <button type="button" data-insp-unphoto="${key}" data-photo-id="${esc(p.id)}" aria-label="Remove photo">×</button>
         </span>`).join("")}</div>` : ""}
-        <label class="pdf insp-add-photo" for="insp-in-${key}">${icon("inspection", 15)} ${list.length ? "Add more photos" : "Add photos"}</label>
-        <input type="file" id="insp-in-${key}" accept="image/*" multiple data-insp-photos="${key}" class="hidden">`;
+        <p class="note insp-photo-count">${esc(photoCountText(list.length))}</p>
+        ${list.length < PHOTOS_PER_QUESTION ? `<label class="pdf insp-add-photo" for="insp-in-${key}">${icon("inspection", 15)} ${list.length ? "Add more photos" : "Add photos"}</label>
+        <input type="file" id="insp-in-${key}" accept="image/*" multiple data-insp-photos="${key}" class="hidden">` : ""}`;
       break;
     }
     default:
@@ -842,16 +843,19 @@ document.addEventListener("input", (event) => {
 document.addEventListener("change", async (event) => {
   const key = event.target.dataset && event.target.dataset.inspPhotos;
   if (!key || !inspDraft) return;
-  const files = [...event.target.files];
+  const picked = [...event.target.files];
+  const files = picked.slice(0, Math.max(0, PHOTOS_PER_QUESTION - (inspDraft.photos[key] || []).length));
   event.target.value = "";
   const unread = [];
   for (const file of files) {
     try {
       const blob = await inspShrink(file);
-      (inspDraft.photos[key] ||= []).push({ id: crypto.randomUUID(), blob, url: URL.createObjectURL(blob) });
+      if ((inspDraft.photos[key] ||= []).length >= PHOTOS_PER_QUESTION) break;
+      inspDraft.photos[key].push({ id: crypto.randomUUID(), blob, url: URL.createObjectURL(blob) });
     } catch { unread.push(file.name); }
   }
   inspRedrawField(key);
+  if (picked.length > files.length) alert(photoTrimText(files.length));
   if (unread.length) alert(`These couldn't be read as photos here: ${unread.join(", ")}. A JPEG or PNG works in any browser.`);
 });
 

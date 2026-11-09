@@ -139,7 +139,8 @@ function srFieldHtml(f, shop) {
   else if (f.type === "photos") input = `<div class="srf-photos" data-srf-photos="${esc(f.id)}">
       <div class="srf-thumbs">${(srPhotos[f.id] || []).map((p, j) => `<span class="srf-thumb"><img src="${p.url}" alt=""><button type="button"
         data-sr-unphoto="${j}" data-srf="${esc(f.id)}" aria-label="Remove photo">✕</button></span>`).join("")}</div>
-      <label class="srf-quiet srf-file">${icon("camera", 16)} Add photos<input type="file" id="${id}" accept="image/*" multiple data-srf-file="${esc(f.id)}" class="hidden"></label></div>`;
+      <p class="srf-photo-count">${esc(photoCountText((srPhotos[f.id] || []).length))}</p>
+      ${(srPhotos[f.id] || []).length < PHOTOS_PER_QUESTION ? `<label class="srf-quiet srf-file">${icon("camera", 16)} Add photos<input type="file" id="${id}" accept="image/*" multiple data-srf-file="${esc(f.id)}" class="hidden"></label>` : ""}</div>`;
   return `<div class="srf-card" data-srf-field="${esc(f.id)}">${label}${input}</div>`;
 }
 
@@ -183,11 +184,14 @@ $("view").addEventListener("change", async (event) => {
   const file = event.target.closest("[data-srf-file]");
   if (!file) return;
   const id = file.dataset.srfFile;
-  for (const f of [...file.files].slice(0, 10)) {
+  const picked = [...file.files];
+  const chosen = picked.slice(0, Math.max(0, PHOTOS_PER_QUESTION - (srPhotos[id] || []).length));
+  for (const f of chosen) {
     const shrunk = await srShrink(f);
-    if (shrunk) (srPhotos[id] = srPhotos[id] || []).push(shrunk);
+    if (shrunk && (srPhotos[id] = srPhotos[id] || []).length < PHOTOS_PER_QUESTION) srPhotos[id].push(shrunk);
   }
   srRedrawField(id);
+  if (picked.length > chosen.length) alert(photoTrimText(chosen.length));
 });
 
 $("view").addEventListener("click", (event) => {

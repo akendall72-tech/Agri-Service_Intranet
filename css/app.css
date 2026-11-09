@@ -1127,6 +1127,7 @@ button.srf-match span { color: var(--cab-detail); font-size: 13px; }
   font: 600 14px var(--font-cab); letter-spacing: .06em; text-transform: uppercase; }
 .srf-quiet:hover { background: rgba(255,255,255,.12); }
 .srf-file:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.srf-photo-count { margin: 8px 0; color: var(--cab-sub); font-size: 13px; }
 .srf-problem { margin: 4px 2px 10px; color: var(--red); font-weight: 600; font-size: 14px; }
 .srf-problem:empty { display: none; }
 .srf button.srf-submit { width: 100%; padding: 13px; height: auto; border-radius: 10px; font: 700 16px var(--font-cab); letter-spacing: .05em;
@@ -3355,6 +3356,7 @@ label.insp-add-photo { display: inline-flex; align-items: center; gap: 6px; curs
   padding: 7px 13px; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); background: #fff;
   font-size: 13.5px; font-weight: 600; color: var(--ink-2); text-transform: none; letter-spacing: 0; }
 label.insp-add-photo:hover { border-color: var(--muted); color: var(--ink); }
+.insp-photo-count { margin: 8px 0; }
 p.error#inspMissing:empty { display: none; }
 .insp-actions { margin-top: 4px; }
 button.linkish { background: none; border: 0; box-shadow: none; padding: 0; color: var(--red); font: inherit; }

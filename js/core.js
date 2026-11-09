@@ -171,6 +171,14 @@ document.addEventListener("click", async (event) => {
   await load();
 });
 
+// The most photos one question takes, on an inspection or a Safety Report. The
+// database holds to it too (0120), and DraftPhoto.limit in the app.
+const PHOTOS_PER_QUESTION = 5;
+const photoCountText = (n) => !n ? `Up to ${PHOTOS_PER_QUESTION} photos.`
+  : n >= PHOTOS_PER_QUESTION ? `${n} of ${PHOTOS_PER_QUESTION} photos. Remove one to add another.`
+  : `${n} of ${PHOTOS_PER_QUESTION} photos.`;
+const photoTrimText = (added) => `A question takes up to ${PHOTOS_PER_QUESTION} photos, so only ${added} of those ${added === 1 ? "was" : "were"} added.`;
+
 const $ = (id) => document.getElementById(id);
 let me = null, profile = null;
 let certs = [], plans = [], people = [], supportRoles = [], locations = {};
