@@ -201,7 +201,12 @@ function fillCourseForm(course, { copy = false } = {}) {
   set("subtitle", course && course.subtitle);
   set("category", course && course.category);
   set("level", course && course.level);
-  set("credits", course && course.credits);
+  set("training_hours", course && course.training_hours != null ? Number(course.training_hours) : "");
+  set("record_name", course && course.record_name);
+  editor.querySelector('[data-c="counts_for_agco"]').checked = !!(course && course.counts_for_agco);
+  // The Training Manager sets a course's credits; other owners see them.
+  ["training_hours", "counts_for_agco", "record_name"].forEach(f =>
+    editor.querySelector(`[data-c="${f}"]`).disabled = !isTrainingManager());
   set("duration", course && course.duration);
   set("description", course && course.description);
   set("topics", course ? (course.topics || []).join("\n") : "");
@@ -269,12 +274,19 @@ $("admin").addEventListener("click", async (event) => {
   const audiences = [...editor.querySelectorAll("#courseAudienceChoices button.on")].map(b => b.dataset.audience);
   if (pending && !audiences.some(a => a.toLowerCase() === pending.toLowerCase())) audiences.push(pending);
 
+  const hours = get("training_hours");
+  if (hours !== "" && !(Number(hours) >= 0 && Number(hours) <= 1000)) return speak(editor, "Training hours are a number from 0 to 1000.", true);
   const row = {
     title: get("title"),
     subtitle: get("subtitle") || null,
     category: get("category"),
     level: get("level") || null,
-    credits: get("credits") || null,
+    // Sent only by the Training Manager: the database refuses anyone else's change.
+    ...(isTrainingManager() ? {
+      training_hours: hours === "" ? null : Number(hours),
+      counts_for_agco: editor.querySelector('[data-c="counts_for_agco"]').checked,
+      record_name: get("record_name") || null
+    } : {}),
     duration: get("duration") || null,
     audiences,
     description: get("description") || null,
@@ -300,6 +312,7 @@ $("admin").addEventListener("click", async (event) => {
   await loadCourses();
   fillCourseForm(null);
   renderCoursesAdmin();
+  renderCourseCredits();
   speak(editor, `${added ? "Added" : "Saved"}${row.is_active ? ". Phones show it next time the catalog is opened."
     : " — not showing in the catalog until Showing is Yes."}`, false);
 });

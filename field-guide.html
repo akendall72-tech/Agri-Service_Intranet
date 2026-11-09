@@ -876,8 +876,10 @@
       <h3>Crane &amp; Rigging Qualification</h3>
       <p>The top of the Crane Center says whether you're qualified for crane and rigging work.
         You are once the <strong>Lifting and Rigging ILT</strong> course shows on your training
-        history — the same OLT and ILT report behind Training Status. The OLT course on its own
-        doesn't count. It doesn't expire today, but it can: the Training Manager can set how many
+        history — the same OLT and ILT report behind Training Status — or once the Training Manager
+        has given you credit for <strong>Lifting and Rigging</strong> from the Course Catalog
+        (Training dashboard → <em>Give Credit</em>), which goes on your record under that same name.
+        The OLT course on its own doesn't count. It doesn't expire today, but it can: the Training Manager can set how many
         months it lasts from the day the course was completed (for example 24), and taking the course
         again starts it over. If the course is ever renamed, the name is changed in the same place,
         the Training dashboard's Training Status upload, and nobody has to be re-qualified.</p>
@@ -1488,6 +1490,13 @@
         the hours; the app and the web page use new figures straight away. The <strong>Crane
         &amp; rigging qualification</strong> box below it names the course that qualifies
         someone for crane work.</p>
+      <h3>Credit given by hand</h3>
+      <p>For a course someone completed that UKG doesn't have — a class run on paper, one taken
+        somewhere else — the Training Manager uses <strong>Give Credit</strong> on the Training
+        dashboard. It goes on their record straight away, marked <em>Given by hand</em>,
+        and counts everywhere the uploads count: training hours toward the AGCO total when the course
+        counts for AGCO, classes taken, and crane qualification for Lifting and Rigging. Each new
+        Training Status upload keeps it. Removing it takes it back off.</p>
 
       <h3>Who can do what</h3>
       <div class="table-wrap">
@@ -1500,6 +1509,7 @@
             <tr><td>Plan</td><td class="no">No</td><td class="yes">Their location</td><td class="yes">Everyone</td></tr>
             <tr><td>Upload the reports</td><td class="no">No</td><td class="no">No</td><td class="yes">Yes</td></tr>
             <tr><td>Change the goal or hours</td><td class="no">No</td><td class="no">No</td><td class="yes">Yes</td></tr>
+            <tr><td>Give or remove credit by hand</td><td class="no">No</td><td class="no">No</td><td class="yes">Training Manager</td></tr>
           </tbody>
         </table>
       </div>
@@ -2041,7 +2051,7 @@
       <p>Owners who hold the <strong>Training Manager</strong> designation get a <strong>Training</strong> button
         between Admin and Safety in the top bar (in the menu on a phone). It opens their own side of the page, in
         the Cab look, with its own sidebar: the dashboard, <em>Planning</em> (the Mock Schedule),
-        <em>Development</em> (AGCO Development and Skills), <em>Content</em> (Online Courses, Course Catalog and Training Articles), <em>Reports</em> and <em>Uploads</em>, everything that needs a file to
+        <em>Development</em> (AGCO Development and Skills), <em>Content</em> (Online Courses, Course Catalog, Course Credits and Training Articles), <em>Records</em> (Give Credit), <em>Reports</em> and <em>Uploads</em>, everything that needs a file to
         bring it up to date, in one place. A <b>!</b> beside an upload means it's out of date or missing.</p>
       <p><strong>The Overview</strong> leads with the dealer metric: the share of technicians with 24+ AGCO hours,
         on a gauge with the 65% goal marked, and how many more it takes. Tiles for technicians, who has the hours,
@@ -2065,7 +2075,9 @@
             <tr><td>Mock Schedule</td><td>Plan a year's training on a calendar and see how many technicians it gets to the hours. See below</td></tr>
             <tr><td>AGCO Development</td><td><b>Courses added here</b> adds a course AGCO's catalog doesn't list (the Level 3 online test-out is the first) to any level, and keeps it through new catalogs. <b>Technicians</b> shows how far everyone has got, then lists everyone Training Status calls a technician: the Training Manager opens one and ticks the courses they've completed; other owners can look but not tick. <b>By course</b> lists every course with how many have it ticked (search by name or code; sort by level, most or fewest ticked); open one to see who has it and who hasn't, by location, and tick it for everyone at a class at once <b>Level rules</b> sets how many Level 5 courses complete Level 5. <b>Haystack labels</b> are the words on the Level 6 bales; change any, or leave one blank for the automatic label. Maps update by themselves after a tick, an added or removed course, a rule change, a new catalog, or a new All employees upload</td></tr>
             <tr><td>Skills</td><td>The competency list: add, edit, move between levels, reorder, retire and restore. Sign-offs aren't here — they're in the Training Center</td></tr>
-            <tr><td>Course Catalog</td><td>Add, edit, copy, hide or delete courses: title, category, level, credits, length, who it's for, description, key topics and prerequisites. Order arranges both the courses and their categories</td></tr>
+            <tr><td>Course Catalog</td><td>Add, edit, copy, hide or delete courses: title, category, level, training hours, whether it counts as AGCO credit, the name it goes by on training records, length, who it's for, description, key topics and prerequisites. Order arranges both the courses and their categories. Only the Training Manager changes hours, AGCO credit and the record name; the Credits line on the catalog is written from them</td></tr>
+            <tr><td>Course Credits</td><td>Every course's training hours and its AGCO credit tick on one page, by category, to go through when AGCO changes which courses count. <b>Save</b> saves every change at once; each course shows when it was last changed and by whom. Credit already given keeps the hours and AGCO setting it was given with</td></tr>
+            <tr><td>Give Credit</td><td>Give someone credit for a course UKG doesn't have. Pick the course (from the catalog, or type any name), the people (search by name, number or location), the date it was completed, the hours (filled in from the catalog) and whether it counts as AGCO credit, with an optional note. It shows the name it goes on records as, and whether it qualifies for crane work or opens the forklift driving test. It warns before giving the same course twice on the same day. <b>Given by hand</b> lists the last year's credits (Show older for the rest), searchable, with <b>Remove</b>. AGCO Development isn't ticked from it: that stays by hand</td></tr>
             <tr><td>Training Articles</td><td>Edit the articles under Read up in the Training Center right on the page — headings, bold, lists, links — or in HTML for layout like the level cards. Add, hide, reorder or delete articles</td></tr>
             <tr><td>Training Status (upload)</td><td>Upload the All employees, Credits All Time and OLT and ILT exports from UKG. Set the dealer metric's goal and hours, the course that qualifies someone for crane work, and how many months that qualification lasts (empty: no expiration). Shows the technician count and percentage before you publish</td></tr>
             <tr><td>Open Seat Report (upload)</td><td>Upload the UKG Open Seat Report and In-Class Event Report CSVs, and the AGCO Technical Training Catalog (or just its Open Seat Report sheet), then Publish. Files are recognised by their columns, the two CSVs publish together, and the page warns if rosters and seat counts disagree</td></tr>

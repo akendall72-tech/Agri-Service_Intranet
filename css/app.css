@@ -390,6 +390,29 @@ button.skill-tab.on { background: var(--tl); color: #fff; }
 .ts-table tr.ts-group td { background: var(--paper); font-weight: 700; font-size: 13px; }
 .ts-table tr.ts-group td span { font-weight: 500; color: var(--muted); margin-left: 6px; }
 .ts-table tr.ts-met td { color: var(--muted); }
+/* Give Credit and Course Credits (0121) */
+.ts-given { margin-left: 6px; font-size: 11px; padding: 1px 7px; vertical-align: 1px; }
+.tc-form .fields { align-items: start; }
+.tc-check { display: inline-flex; align-items: center; gap: 8px; min-height: 38px; margin: 0; font-weight: 500; text-transform: none; letter-spacing: 0; }
+.tc-check input { margin: 0; width: auto; }
+.tc-course-note { margin: 6px 0 0; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.tc-course-note:empty { display: none; }
+.tc-picked { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+.tc-picked:empty { display: none; }
+.tc-matches { display: grid; gap: 4px; margin-top: 6px; }
+.tc-matches:empty { display: none; }
+button.tc-match { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 12px; width: 100%; margin: 0; padding: 8px 12px;
+  text-align: left; background: #fff; color: var(--ink); border: 1px solid var(--line-strong); border-radius: var(--radius-sm); box-shadow: none; font-weight: 400; }
+button.tc-match:hover { border-color: var(--muted); }
+button.tc-match span { color: var(--muted); font-size: 13px; }
+.tc-table td small, .cc-table td small { display: block; color: var(--muted); font-size: 12.5px; }
+.tc-table tr.tc-removed td { color: var(--muted); text-decoration: line-through; }
+.tc-table tr.tc-removed td small { text-decoration: none; }
+.cc-table td input[type="number"] { width: 90px; margin: 0; text-align: right; }
+.cc-table td input[type="checkbox"] { width: auto; margin: 0; }
+.cc-table tr.cc-dirty td { background: var(--caution-soft); }
+.cc-table tr.cc-off td b { color: var(--muted); }
+.cc-bar { margin-top: 12px; }
 .ts-hours { display: flex; align-items: center; gap: 10px; min-width: 150px; }
 .ts-hours span { font-variant-numeric: tabular-nums; font-size: 13px; white-space: nowrap; }
 .ts-bar { flex: 1; height: 8px; border-radius: 99px; background: #ECE7E3; overflow: hidden; max-width: 140px; }

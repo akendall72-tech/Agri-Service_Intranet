@@ -336,10 +336,13 @@ function tsModel(rows = tsPeople) {
 const tsPeriod = () => (tsSources && tsSources.credits && tsSources.credits.period) || "";
 const tsHoursHead = () => `AGCO hours${tsPeriod() ? ` (${esc(tsPeriod())})` : ""}`;
 
+// A course or credit the Training Manager gave by hand (0121), not from UKG.
+const tsGivenTag = (c) => c && c.source === "manual" ? ` <span class="badge b-none ts-given">Given by hand</span>` : "";
+
 // "16 hrs · Level 4 Balers · Feb 11" for each credit that makes up the hours.
 function tsEntries(t) {
   if (!t.entries || !t.entries.length) return "";
-  return `<div class="ts-entries">${t.entries.map(e => `<span>${esc(e.hours)} hrs${e.title ? ` · ${esc(e.title)}` : ""}${
+  return `<div class="ts-entries">${t.entries.map(e => `<span>${esc(e.hours)} hrs${e.title ? ` · ${esc(e.title)}` : ""}${tsGivenTag(e)}${
     e.earned ? ` · ${esc(newsDate(e.earned).replace(/, \d{4}$/, ""))}` : ""}</span>`).join("")}</div>`;
 }
 
@@ -400,7 +403,7 @@ function tsSelfView(m) {
     <div class="card"><h2>Classes completed</h2>
       ${Object.keys(years).length ? Object.keys(years).sort().reverse().map(y => `<div class="ts-year">${y}
         <span>${years[y].length}</span></div><ul class="ts-classes">${years[y].map(c =>
-        `<li><span>${esc(c.course)}</span><time>${esc(newsDate(c.completed))}</time></li>`).join("")}</ul>`).join("")
+        `<li><span>${esc(c.course)}${tsGivenTag(c)}</span><time>${esc(newsDate(c.completed))}</time></li>`).join("")}</ul>`).join("")
       : `<p class="note">None on the OLT and ILT report yet.</p>`}
     </div>`;
 }
@@ -508,7 +511,7 @@ function tsHistoryTab(m) {
         ${p.isTech ? `<div class="ts-tags">${p.hours !== null ? `<span class="pill">${p.hours} AGCO hrs</span>` : ""}
           <span class="pill">${p.epa609 ? "609 ✓" : "No 609"}</span></div>` : ""}</td>
       <td>${classes.length ? `<ul class="ts-classes">${classes.map(c =>
-        `<li><span>${esc(c.course)}</span><time>${esc(newsDate(c.completed))}</time></li>`).join("")}</ul>` : "—"}</td>
+        `<li><span>${esc(c.course)}${tsGivenTag(c)}</span><time>${esc(newsDate(c.completed))}</time></li>`).join("")}</ul>` : "—"}</td>
       <td class="num">${classes.length}</td></tr>`;
   }).join("");
   return `<div class="chips">${m.stores.filter(s => count(s)).map(s =>
