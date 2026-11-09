@@ -413,6 +413,41 @@ button.tc-match span { color: var(--muted); font-size: 13px; }
 .cc-table tr.cc-dirty td { background: var(--caution-soft); }
 .cc-table tr.cc-off td b { color: var(--muted); }
 .cc-bar { margin-top: 12px; }
+/* Class Schedule (0122) */
+.cs-form .fields { align-items: start; }
+.cs-label { display: block; font-size: 12.5px; font-weight: 500; color: var(--ink-2); margin-bottom: 5px; }
+.cs-where { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.cs-where label { display: inline-flex; align-items: center; gap: 7px; margin: 0; padding: 7px 12px; border: 1px solid var(--line-strong);
+  border-radius: 999px; font-size: 14px; color: var(--ink); cursor: pointer; }
+.cs-where label:has(input:checked) { border-color: var(--ink); background: var(--paper); font-weight: 600; }
+.cs-where input, .cs-who input { margin: 0; width: auto; }
+.cs-who { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; }
+label.cs-who-option { display: flex; gap: 10px; align-items: flex-start; margin: 0; padding: 10px 12px; border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm); font-weight: 400; color: var(--ink); cursor: pointer; }
+label.cs-who-option input { margin-top: 3px; }
+label.cs-who-option:has(input:checked) { border-color: var(--ink); background: var(--paper); }
+.cs-who-option b { display: block; font-size: 14px; }
+.cs-who-option small { display: block; color: var(--muted); font-size: 12.5px; line-height: 1.35; margin-top: 2px; }
+.cs-form textarea { width: 100%; }
+.cs-class { display: flex; gap: 14px; align-items: flex-start; padding: 12px 0; border-top: 1px solid var(--line); }
+.cs-class:first-of-type { border-top: 0; }
+.cs-class.cs-open { background: var(--paper); margin: 0 -12px; padding: 12px; border-radius: var(--radius-sm); }
+.cs-date { flex: none; width: 48px; text-align: center; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); overflow: hidden; background: #fff; }
+.cs-date small { display: block; background: var(--red); color: #fff; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 2px 0; }
+.cs-date b { display: block; font-size: 19px; line-height: 1.6; font-variant-numeric: tabular-nums; }
+.cs-main { flex: 1; min-width: 0; }
+.cs-title { font-size: 15.5px; }
+.cs-main .note { margin: 2px 0 0; }
+.cs-actions { flex: none; gap: 6px; }
+.cs-draft .cs-date, .cs-cancelled .cs-date { opacity: .55; }
+.cs-cancelled .cs-title { color: var(--muted); text-decoration: line-through; }
+.cs-history { margin-top: 6px; font-size: 13px; }
+.cs-history summary { cursor: pointer; color: var(--muted); }
+.cs-history ul { margin: 6px 0 0; padding-left: 18px; }
+.cs-history li { margin: 2px 0; }
+.cs-history li small { color: var(--muted); margin-left: 6px; }
+@media (max-width: 640px) { .cs-class { flex-wrap: wrap; } .cs-actions { width: 100%; padding-left: 62px; } }
+.ev-class { align-items: center; max-width: 320px; justify-content: flex-end; text-align: right; }
 .ts-hours { display: flex; align-items: center; gap: 10px; min-width: 150px; }
 .ts-hours span { font-variant-numeric: tabular-nums; font-size: 13px; white-space: nowrap; }
 .ts-bar { flex: 1; height: 8px; border-radius: 99px; background: #ECE7E3; overflow: hidden; max-width: 140px; }

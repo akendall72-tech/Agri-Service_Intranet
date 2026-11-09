@@ -471,7 +471,7 @@ async function loadAll({ restInBackground = false } = {}) {
 
   const rest = Promise.all([loadEvents(), loadInspections(), loadCourses(), loadSds(),
     loadArticles(), loadSkills(), loadNews(), loadTrainingStatus(), loadCrane(), loadCompanyDocs(), loadTools(),
-    loadAgco(), loadMockSchedules(), loadSafetyDesk(), loadSafetyReportData(), loadCommunity(), loadFitness(), loadTrivia(), loadFleet(), loadCraneInspections(), loadTrainingCredits(), loadOnlineCourses(), loadForkliftCourse(), loadFkWaiting(), loadInventory()]);
+    loadAgco(), loadMockSchedules(), loadSafetyDesk(), loadSafetyReportData(), loadCommunity(), loadFitness(), loadTrivia(), loadFleet(), loadCraneInspections(), loadTrainingCredits(), loadScheduledClasses(), loadOnlineCourses(), loadForkliftCourse(), loadFkWaiting(), loadInventory()]);
   // Wrapped, because an async function handing back a promise would wait for it.
   if (restInBackground) return { rest };
   await rest;

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Which version this is. publish.sh stamps the date and commit here, and
      into version.json beside the page; "dev" is a copy that wasn't published. -->
-<meta name="app-version" content="2026-11-09.7e99055">
+<meta name="app-version" content="2026-11-09.ddebc41">
 <!-- Where this page may load things from and send things to. GitHub Pages
      can't send security headers, so it's here. Scripts come only from this
      site and the two script CDNs (each pinned with an integrity hash), and
@@ -34,7 +34,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
-<link rel="stylesheet" href="css/app.css?v=f394b58b08">
+<link rel="stylesheet" href="css/app.css?v=e7fac1a60e">
 </head>
 <body>
 
@@ -117,6 +117,7 @@
       <button data-tab="trainingoverview" data-title="Training Dashboard"><i data-icon="training"></i><span>Overview</span></button>
 
       <div class="nav-group">Planning</div>
+      <button data-tab="classschedule" data-title="Class Schedule"><i data-icon="calendar"></i><span>Class Schedule</span></button>
       <button data-tab="mock"><i data-icon="calendarCheck"></i><span>Mock Schedule</span></button>
 
       <div class="nav-group">Development</div>
@@ -714,6 +715,7 @@
 
     <!-- Course catalog -->
     <section id="tab-givecredit" class="hidden"><div id="giveCredit"></div></section>
+    <section id="tab-classschedule" class="hidden"><div id="classSchedule"></div></section>
     <section id="tab-coursecredits" class="hidden"><div id="courseCredits"></div></section>
 
     <section id="tab-courses" class="hidden">
@@ -1188,8 +1190,8 @@
      only names from an earlier file; boot.js starts the page and stays last.
      js/core.js has the rest. publish.sh adds ?v= to each, so a changed file is
      fetched fresh and an unchanged one comes from the browser's cache. -->
-<script src="js/core.js?v=66d000c9ee"></script>
-<script src="js/shell.js?v=34c80da768"></script>
+<script src="js/core.js?v=d126fedc54"></script>
+<script src="js/shell.js?v=00e1193895"></script>
 <script src="js/location-dashboard.js?v=757cc12985"></script>
 <script src="js/training-status.js?v=dd9504a838"></script>
 <script src="js/forklift.js?v=0ece5100f3"></script>
@@ -1200,7 +1202,7 @@
 <script src="js/special-tools.js?v=fbaac4f097"></script>
 <script src="js/reminders.js?v=360d96f67d"></script>
 <script src="js/people.js?v=43db7cf566"></script>
-<script src="js/events.js?v=7e866d68cb"></script>
+<script src="js/events.js?v=6ceccf0d2a"></script>
 <script src="js/community.js?v=a10d66d4a9"></script>
 <script src="js/fitness.js?v=820ac07555"></script>
 <script src="js/trivia.js?v=2a5fc43bf6"></script>
@@ -1217,6 +1219,7 @@
 <script src="js/personal-inventory.js?v=7b4a6a4372"></script>
 <script src="js/course-catalog.js?v=2f8f411546"></script>
 <script src="js/training-credits.js?v=dfbf08d54b"></script>
+<script src="js/class-schedule.js?v=409c1970bb"></script>
 <script src="js/safety-data-sheets.js?v=2d8ed6ca78"></script>
 <script src="js/shared-logins.js?v=2c3a2968bf"></script>
 <script src="js/skills.js?v=8efb8a0583"></script>

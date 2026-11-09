@@ -277,7 +277,7 @@ function showTraining(tab) {
   evalAgreed = null; evalNotice = "";
   safely(renderMockSchedule, renderSkillsAdmin, renderCoursesAdmin, renderArticlesAdmin, renderTsImport, renderTsLive, renderOsrImport, renderOsrLive,
     renderAgcoImport, renderAgcoLive, renderAgcoTechs, renderAgcoRules, renderAgcoAdded, renderAgcoBales,
-    renderTrainingOverview, renderReports, renderOltAdmin, renderGiveCredit, renderCourseCredits);
+    renderTrainingOverview, renderReports, renderOltAdmin, renderGiveCredit, renderCourseCredits, renderClassSchedule);
   (document.querySelector(`#trainingNav [data-tab="${tab || trainingTab}"]`) || document.querySelector("#trainingNav [data-tab]")).click();
   window.scrollTo(0, 0);
 }
@@ -595,7 +595,7 @@ document.querySelectorAll(".tabs button[data-tab]").forEach(btn => {
     document.querySelectorAll(".tabs button[data-tab]").forEach(b =>
       b.classList.toggle("active", b === btn));
     ["certs", "plans", "people", "support", "payroll", "tools",
-      "directory", "logins", "reminders", "fleetcheck", "events", "fitness", "trivia", "org", "openseat", "inspections", "courses", "articles", "skillsadmin", "sds", "news", "trainingstatus", "handbook", "agco", "mock", "safetydesk", "safetyreportform", "safetyreports", "safetyoverview", "fkwaiting", "trainingoverview", "agcocatalog", "rpagco", "rpclass", "oltadmin", "locationoverview", "fkrequired", "crrequired", "craneinspection", "givecredit", "coursecredits"].forEach(name =>
+      "directory", "logins", "reminders", "fleetcheck", "events", "fitness", "trivia", "org", "openseat", "inspections", "courses", "articles", "skillsadmin", "sds", "news", "trainingstatus", "handbook", "agco", "mock", "safetydesk", "safetyreportform", "safetyreports", "safetyoverview", "fkwaiting", "trainingoverview", "agcocatalog", "rpagco", "rpclass", "oltadmin", "locationoverview", "fkrequired", "crrequired", "craneinspection", "givecredit", "coursecredits", "classschedule"].forEach(name =>
       $("tab-" + name).classList.toggle("hidden", name !== btn.dataset.tab));
     $("adminTitle").textContent = btn.dataset.title || btn.querySelector("span").textContent.trim();
     if (btn.closest("#safetyNav")) safetyTab = btn.dataset.tab;

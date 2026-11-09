@@ -167,11 +167,14 @@ function renderEvents() {
             · ${eventGoing(e).length} on the list ·
             <button type="button" class="linkish" data-view="event" data-event="${esc(e.id)}">Open Who's going</button></div>` : ""}
         </div>
-        <div class="row" style="gap:6px">
+        ${e.scheduled_class_id ? `<div class="row ev-class" style="gap:6px">
+          <span class="note">A scheduled class: it changes with the class.</span>
+          ${isTrainingManager() ? `<button class="pdf" data-cs-open="${esc(e.scheduled_class_id)}">Change it on the Class Schedule</button>` : ""}
+        </div>` : `<div class="row" style="gap:6px">
           <button class="pdf" data-act="edit-event">Edit</button>
           <button class="pdf" data-act="copy-event" title="Start a new event with these details">Copy</button>
           <button class="pdf" data-act="delete-event">Delete</button>
-        </div>
+        </div>`}
       </div>
       <span class="msg"></span>
     </div>`).join("") + older;
