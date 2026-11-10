@@ -498,6 +498,35 @@ button.mc-action.mc-leave { margin-left: 16px; opacity: .75; }
 .cg-walkin { margin-top: 12px; max-width: 520px; }
 .cg-bar { margin-top: 12px; gap: 8px; }
 @media (max-width: 640px) { .cg-book { margin-left: 0; } }
+/* Changeover (0125) */
+.co-now { border-left: 4px solid var(--line-strong); }
+.co-now.here { border-left-color: var(--green, #1E8A3C); }
+.co-label { display: block; font-size: 11.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.co-now > b { display: block; font-size: 20px; margin: 2px 0 6px; }
+.co-step { display: flex; gap: 14px; padding: 14px 0; border-top: 1px solid var(--line); }
+.co-step:first-of-type { border-top: 0; padding-top: 4px; }
+.co-n { flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 700;
+  border: 2px solid var(--line-strong); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.co-step.done .co-n { background: var(--green-soft); border-color: var(--green-soft); color: #17702F; }
+.co-body { flex: 1; min-width: 0; }
+.co-body h3 { margin: 4px 0 4px; font-size: 15.5px; }
+.co-body .note { margin: 0 0 8px; }
+.co-same { margin: 8px 0 0; }
+.co-diffs td small { display: block; color: var(--muted); font-size: 12.5px; }
+.co-upload-note { padding: 10px 12px; border-radius: var(--radius-sm); background: var(--green-soft); color: #17702F; }
+/* EPA 609 (0126) */
+.epa-sum { margin: 4px 0 10px; }
+.epa-filters { gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+.epa-filters .chip { margin: 0; }
+.epa-filters .epa-gap { width: 10px; }
+.epa-filters input { flex: 1; min-width: 200px; max-width: 320px; margin: 0; }
+.epa-table td small { display: block; color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+.epa-table td.epa-act { white-space: nowrap; text-align: right; }
+.epa-table td.epa-act button { margin-left: 6px; }
+.epa-table tr.epa-open td { background: var(--paper); }
+.epa-table tr.epa-editor td { background: var(--paper); padding: 12px 14px; }
+.epa-missing { color: #92590A; font-size: 13px; }
+.epa-form .fields { align-items: start; }
 @media (max-width: 640px) { button.mc-action.mc-leave { margin-left: 0; display: flex; } }
 .ts-hours { display: flex; align-items: center; gap: 10px; min-width: 150px; }
 .ts-hours span { font-variant-numeric: tabular-nums; font-size: 13px; white-space: nowrap; }

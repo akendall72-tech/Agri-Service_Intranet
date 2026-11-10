@@ -194,13 +194,18 @@ function tsParse(rows, file) {
       const first = get(r, "firstname"), last = get(r, "lastname");
       if (!num && !email && !first && !last) continue;
       const key = num || email || `name:${tsNameKey(first, last)}`;
+      // agcoAll keeps every year's AGCO hours, for the training history (0125);
+      // agcoEntries and agcoHours are the AGCO year's, as before.
       const person = people.get(key)
-        || { number: num, email, first, last, agcoHours: 0, agcoRequired: null, epa609: false, agcoEntries: [] };
+        || { number: num, email, first, last, agcoHours: 0, agcoRequired: null, epa609: false, agcoEntries: [], agcoAll: [] };
       const rule = get(r, "credits rule title");
       const credits = parseFloat(get(r, "credits number")) || 0;
       const earned = tsDate(r[col["earned at"]]);
       if (isAgco(r)) {
-        const inPeriod = period ? get(r, "credits period cycle") === period
+        const cycle = get(r, "credits period cycle");
+        person.agcoAll.push({ hours: credits, earned, title: get(r, "external certificate title"),
+          year: yearOf(cycle) || (earned || "").slice(0, 4) });
+        const inPeriod = period ? cycle === period
           : !!earned && earned.startsWith(exportYear);
         if (inPeriod) {
           person.agcoHours += credits;
@@ -216,7 +221,8 @@ function tsParse(rows, file) {
     const list = [...people.values()].map(p => ({
       ...p, agcoRequired: p.agcoRequired || tsRequiredHours(),
       agcoMet: p.agcoHours >= tsRequiredHours(),
-      agcoEntries: p.agcoEntries.sort((a, b) => (a.earned || "").localeCompare(b.earned || ""))
+      agcoEntries: p.agcoEntries.sort((a, b) => (a.earned || "").localeCompare(b.earned || "")),
+      agcoAll: p.agcoAll.sort((a, b) => (a.earned || "").localeCompare(b.earned || ""))
     }));
     return { kind, data: { ...meta, format, period: yearOf(period) || period || exportYear, rows: list } };
   }
@@ -410,8 +416,17 @@ function tsSelfView(m) {
     </div>`;
 }
 
+// Records built here from the history and the credits, not the uploads (0125).
+const tsBuiltHere = () => !!(tsSources && tsSources.records_from === "here");
+
 function tsSourcesNote(sources) {
   if (!sources) return "";
+  if (sources.records_from === "here") {
+    const part = (label, block) => block && (block.file || block.exported)
+      ? `${label}${block.exported ? ` exported ${esc(block.exported)}` : ""}` : `${label} not uploaded`;
+    return `Built here from the training history${sources.history_taken_at ? ` (taken ${esc(newsDate(String(sources.history_taken_at).slice(0, 10)))})` : ""}
+      and the credits given and classes completed since, with ${part("All employees", sources.employees)}.`;
+  }
   const part = (label, block) => block && (block.file || block.exported)
     ? `${label}${block.exported ? ` exported ${esc(block.exported)}` : ""}` : `${label} not uploaded`;
   return `From ${part("All employees", sources.employees)}; ${part(sources.credits && sources.credits.format === "rules"
@@ -633,12 +648,24 @@ async function tsReadFiles(files) {
     const parsed = tsParse(rows, file);
     if (!parsed) { problems.push(`${file.name}: not one of the three reports — its columns don't match.`); continue; }
     if (!parsed.data.rows.length) { problems.push(`${file.name}: the ${TS_KINDS[parsed.kind]} report has no rows.`); continue; }
+    if (parsed.kind !== "employees" && tsBuiltHere()) {
+      problems.push(`${file.name}: training records are built here now, so ${TS_KINDS[parsed.kind]} isn't uploaded any more. `
+        + "Only All employees is. (The Changeover tab switches back to the uploads.)");
+      continue;
+    }
     tsPending[parsed.kind] = parsed.data;
   }
   renderTsImport(problems);
 }
 
 function renderTsImport(problems = []) {
+  // Once records are built here (0125), only All employees is uploaded.
+  const here = $("tsHereNote");
+  if (here) {
+    here.hidden = !tsBuiltHere();
+    here.innerHTML = tsBuiltHere() ? `Training records are built here now (<b>Changeover</b>): only <b>All employees</b> is uploaded,
+      to keep who works here, their jobs and locations up to date. Credits All Time and OLT and ILT aren't needed.` : "";
+  }
   const box = $("tsResult");
   if (!box) return;
   const kinds = Object.keys(TS_KINDS).filter(k => tsPending[k]);

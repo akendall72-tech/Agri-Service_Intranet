@@ -1453,7 +1453,8 @@
           <dt>Technicians</dt>
           <dd>Everyone with "Technician" in their job title: Expert, Journeyman and Master.</dd>
           <dt>Also tracked</dt>
-          <dd>EPA 609: whether each technician holds at least one 609 credit.</dd>
+          <dd>EPA 609: whether each technician is certified, as the Training Manager keeps it on the Training
+            dashboard's EPA 609 tab, with a picture of their certificate.</dd>
           <dt>When AGCO changes it</dt>
           <dd>Owners change both numbers on the admin page, and the app and the web page use them straight away.</dd>
         </dl>
@@ -1504,9 +1505,13 @@
       <ol class="steps">
         <li><strong>All employees</strong> — everyone's job and store.</li>
         <li><strong>Credits All Time</strong> — every credit earned: AGCO hours, counted for the
-          year the export was taken, and EPA 609.</li>
+          year the export was taken. (EPA 609 isn't taken from it any more: it's kept on the
+          Training dashboard's EPA 609 tab.)</li>
         <li><strong>OLT and ILT</strong> — completed classes.</li>
       </ol>
+      <p>Once the Training Manager has switched records over on the Training dashboard's
+        <strong>Changeover</strong> tab, only <strong>All employees</strong> is uploaded: records are
+        built here, from the history taken from UKG and everything given and completed since.</p>
       <p>Each is recognised by its columns, so the file names don't matter, and any one can be
         updated on its own. Check the summary it shows — the number of technicians and the
         percentage — then press <strong>Publish</strong>.</p>
@@ -2092,7 +2097,7 @@
       <p>Owners who hold the <strong>Training Manager</strong> designation get a <strong>Training</strong> button
         between Admin and Safety in the top bar (in the menu on a phone). It opens their own side of the page, in
         the Cab look, with its own sidebar: the dashboard, <em>Planning</em> (the Class Schedule and the Mock Schedule),
-        <em>Development</em> (AGCO Development and Skills), <em>Content</em> (Online Courses, Course Catalog, Course Credits and Training Articles), <em>Records</em> (Give Credit), <em>Reports</em> and <em>Uploads</em>, everything that needs a file to
+        <em>Development</em> (AGCO Development and Skills), <em>Content</em> (Online Courses, Course Catalog, Course Credits and Training Articles), <em>Records</em> (Give Credit and EPA 609), <em>Reports</em> and <em>Uploads</em>, everything that needs a file to
         bring it up to date, in one place. A <b>!</b> beside an upload means it's out of date or missing.</p>
       <p><strong>The Overview</strong> leads with the dealer metric: the share of technicians with 24+ AGCO hours,
         on a gauge with the 65% goal marked, and how many more it takes. Tiles for technicians, who has the hours,
@@ -2123,6 +2128,8 @@
             <tr><td>Training Articles</td><td>Edit the articles under Read up in the Training Center right on the page — headings, bold, lists, links — or in HTML for layout like the level cards. Add, hide, reorder or delete articles</td></tr>
             <tr><td>Training Status (upload)</td><td>Upload the All employees, Credits All Time and OLT and ILT exports from UKG. Set the dealer metric's goal and hours, the course that qualifies someone for crane work, and how many months that qualification lasts (empty: no expiration). Shows the technician count and percentage before you publish</td></tr>
             <tr><td>Open Seat Report (upload)</td><td>Upload the UKG Open Seat Report and In-Class Event Report CSVs, and the AGCO Technical Training Catalog (or just its Open Seat Report sheet), then Publish. Files are recognised by their columns, the two CSVs publish together, and the page warns if rosters and seat counts disagree</td></tr>
+            <tr><td>EPA 609</td><td>Who's EPA 609 certified. It's a certification tracked here, not a course. The Training Manager ticks people off (<b>Tick off</b>: the date certified and certificate number if you have them, a picture of the certificate as a photo or PDF, and a note), <b>Change</b>s one to add or replace the picture, or <b>Remove</b>s it. It's on their training record at once: Training Status, the dashboard's EPA 609 tile and the reports read it there, whether records come from the uploads or are built here. Shows technicians or everyone; filter by certified, not yet, or no picture yet; search by name, location or job. <b>View certificate</b> opens the picture. Pictures are private: the person, their location admin and owners can see them. Nothing was carried over from UKG, so everyone starts as not yet</td></tr>
+            <tr><td>Changeover</td><td>Moving training records off the UKG uploads, in four steps. <b>Upload one last time</b>: Credits All Time and OLT and ILT, with this version of the page, which keeps every year's AGCO hours, not only this year's. <b>Take the history</b> copies what the uploads hold (courses completed, and AGCO hours for every year) into a history kept here; take it again after each upload. <b>A month side by side</b>: keep uploading, and <b>Check the differences</b> compares everyone's record built here with the uploads' (a course only one has, or AGCO hours): none right after taking the history, then whatever UKG records since. <b>Build records here from now on</b> switches over: records come from the history and everything given and completed here, OLT and ILT and Credits All Time stop being uploaded (All employees carries on), UKG online courses need Give Credit, and the AGCO year follows the calendar, starting again by itself on January 1st. <b>Switch back to the UKG uploads</b> undoes it, rebuilding from the last uploads. Only the Training Manager takes the history and switches</td></tr>
             <tr><td>AGCO Catalog (upload)</td><td>Upload AGCO's Technical Training Catalog; the card says which one is in use. Its Level 1–6 courses are what you tick on AGCO Development, and a new copy keeps the ticks. <b>Export to CSV</b> downloads the catalog in use, for a spreadsheet: each course's level, name and AGCO code, whether it came from the catalog or was added here, and how many technicians are ticked for it</td></tr>
           </tbody>
         </table>
