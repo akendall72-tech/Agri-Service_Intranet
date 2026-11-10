@@ -337,7 +337,9 @@ const tsPeriod = () => (tsSources && tsSources.credits && tsSources.credits.peri
 const tsHoursHead = () => `AGCO hours${tsPeriod() ? ` (${esc(tsPeriod())})` : ""}`;
 
 // A course or credit the Training Manager gave by hand (0121), not from UKG.
-const tsGivenTag = (c) => c && c.source === "manual" ? ` <span class="badge b-none ts-given">Given by hand</span>` : "";
+// Credits this system wrote (0121): given by hand, or from a completed class (0124).
+const tsGivenTag = (c) => c && c.source === "manual"
+  ? ` <span class="badge b-none ts-given">${c.kind === "class" ? "From a class" : "Given by hand"}</span>` : "";
 
 // "16 hrs · Level 4 Balers · Feb 11" for each credit that makes up the hours.
 function tsEntries(t) {

@@ -152,8 +152,10 @@ function tcDrawMatches() {
 function tcListHtml() {
   if (tcError && !tcNotSetUp) return `<div class="card"><p class="error">${esc(tcError)}</p></div>`;
   const q = tcSearch.toLowerCase();
-  const removed = tcCredits.filter(c => c.removed_at).length;
-  const shown = tcCredits.filter(c => (tcShowRemoved || !c.removed_at)
+  // Credits from a completed class (0124) follow its grades, so they're there, not here.
+  const byHand = tcCredits.filter(c => c.source !== "class");
+  const removed = byHand.filter(c => c.removed_at).length;
+  const shown = byHand.filter(c => (tcShowRemoved || !c.removed_at)
     && (!q || `${c.person_name} ${c.course} ${c.note} ${c.given_by_name}`.toLowerCase().includes(q)));
   return `<div class="card">
       <h2>Given by hand</h2>

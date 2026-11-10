@@ -483,6 +483,21 @@ button.cr-leave:hover { opacity: 1; background: none; }
 .cs-roster .osr-roster a { color: var(--slate, #2F5D7C); }
 .cs-roster .osr-empty { color: var(--muted); }
 button.mc-action.mc-leave { margin-left: 16px; opacity: .75; }
+/* Grades (0124) */
+.cg-line { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.cs-actions button.pdf.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+.cg-book { margin: 0 0 14px 62px; padding: 14px 16px; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); background: var(--paper); }
+.cg-book .cr-head { margin-top: 0; }
+.cg-table td { vertical-align: middle; }
+.cg-table td small { display: block; color: var(--muted); font-size: 12.5px; }
+.cg-table select, .cg-table input { margin: 0; min-width: 112px; }
+.cg-table td:first-child { min-width: 130px; }
+.cg-table input { width: 110px; min-width: 0; }
+.cg-table tr.cg-dirty td { background: var(--caution-soft); }
+.cg-quick { gap: 8px; margin-top: 8px; }
+.cg-walkin { margin-top: 12px; max-width: 520px; }
+.cg-bar { margin-top: 12px; gap: 8px; }
+@media (max-width: 640px) { .cg-book { margin-left: 0; } }
 @media (max-width: 640px) { button.mc-action.mc-leave { margin-left: 0; display: flex; } }
 .ts-hours { display: flex; align-items: center; gap: 10px; min-width: 150px; }
 .ts-hours span { font-variant-numeric: tabular-nums; font-size: 13px; white-space: nowrap; }

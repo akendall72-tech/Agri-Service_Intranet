@@ -209,7 +209,7 @@ function scClassHtml(c) {
   const facts = [`${c.seats} ${c.seats === 1 ? "seat" : "seats"}`, c.register_by && `Register by ${scDay(c.register_by)}`,
     scWhoLabel(c.registration), c.training_hours != null && `${tcHours(c.training_hours)} training ${Number(c.training_hours) === 1 ? "hour" : "hours"}`,
     c.counts_for_agco && "AGCO credit", c.instructor && `Instructor: ${c.instructor}`].filter(Boolean);
-  const actions = c.status === "scheduled" ? `<button type="button" class="pdf" data-cs-edit="${esc(c.id)}">Change</button>
+  const actions = c.status === "scheduled" ? `${cgButtonHtml(c)}<button type="button" class="pdf" data-cs-edit="${esc(c.id)}">Change</button>
       ${past ? "" : `<button type="button" class="pdf" data-cs-cancel="${esc(c.id)}">Cancel class</button>`}`
     : c.status === "draft" ? `<button type="button" class="pdf" data-cs-edit="${esc(c.id)}">Change</button>
       <button type="button" class="pdf" data-cs-delete="${esc(c.id)}">Delete</button>`
@@ -224,6 +224,7 @@ function scClassHtml(c) {
         ${c.status === "cancelled" ? ` <span class="badge b-expired">Cancelled</span>` : ""}
         <div class="note">${esc(scWhen(c))} · ${esc(scPlace(c))}${c.is_online && !c.meeting_url ? " (link to follow)" : ""}</div>
         <div class="note">${facts.map(esc).join(" · ")}</div>
+        ${cgSummaryHtml(c)}
         ${doc ? `<div class="note cs-taken"><b>${doc.registered} of ${c.seats} registered</b>${(doc.waitlist || []).length
           ? ` · ${doc.waitlist.length} on the waitlist` : ""}</div>
         <details class="cs-roster" data-cs-roster="${esc(c.id)}"${csOpenRosters.has(c.id) ? " open" : ""}>
@@ -232,7 +233,7 @@ function scClassHtml(c) {
           `<li><span>${esc(h.what)}</span><small>${esc(h.by || "")}${h.by ? " · " : ""}${esc(newsDate(String(h.at).slice(0, 10)))}</small></li>`).join("")}</ul></details>` : ""}
       </div>
       <div class="row cs-actions">${actions}</div>
-    </div>`;
+    </div>${cgBookHtml(c)}`;
 }
 
 // ---- saving ----------------------------------------------------------------------------------

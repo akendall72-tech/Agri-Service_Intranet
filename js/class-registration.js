@@ -25,7 +25,10 @@ const crName = (p) => `${p.first_name || ""} ${p.last_name || ""}`.trim() || p.e
 
 async function loadClassRegistrations() {
   if (!isAdmin()) return;
-  const ids = crScheduled().map(c => c.classId);
+  // Those still on the Open Seat Report, and, for the Training Manager's
+  // gradebooks (0124), those already under way or over.
+  const ids = [...new Set(crScheduled().map(c => c.classId)
+    .concat(scClasses.filter(c => c.status === "scheduled" && c.starts_on <= tcToday()).map(c => c.id)))];
   if (!ids.length) { crRegs = []; return; }
   const { data, error } = await allRows(() => db.from("class_registrations").select("*")
     .in("class_id", ids).order("listed_at").order("id"));

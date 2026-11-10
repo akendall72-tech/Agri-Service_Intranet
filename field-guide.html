@@ -645,7 +645,8 @@
         in UKG since then isn't there yet. A class the Training Manager scheduled here is current:
         register for it and it's on My Classes straight away, with <strong>Cancel my seat</strong>.
         A full one you're waiting for is under <em>On the waitlist</em>, with your place and
-        <strong>Leave the waitlist</strong> (in the app from build 42). AGCO Academy classes aren't
+        <strong>Leave the waitlist</strong> (in the app from build 42). Once a class is completed,
+        <em>Your results</em> lists it with passed or not passed and your score, if there was one. AGCO Academy classes aren't
         listed, as their report has no rosters. Nothing coming up? It points you to the Open Seat
         Report to find one.</p>
       <p>You also get a notification a week before each class and the day before. Settings →
@@ -710,10 +711,15 @@
         registered</em> or your place on the waitlist, with <em>Cancel my seat</em> or <em>Leave the
         waitlist</em>; your seat goes to the next person waiting. Registering closes on the class's
         register-by date, or when it starts; after that, ask the Training Manager. The roster and the
-        waitlist are under <em>Who's enrolled</em>. On the web page, an admin opens a class to register
-        their people (search by name or location) and cancel them; the Training Manager can do that for
-        anyone, any time. Registering is in the app from build 42; on the web page, register for
-        yourself, your people, or anyone, depending on your role.</p>
+        waitlist are under <em>Who's enrolled</em>.</p>
+      <p><strong>Registering your people.</strong> A location admin registers the people at the locations
+        they look after, on a class open to everyone or admin only, until its register-by date. The Training
+        Manager registers anyone, on any class, at any time. In the app, <em>Register Your People</em> on the
+        class (<em>Manage Roster</em> for the Training Manager) opens its roster: who's registered and who's
+        waiting, with a minus to cancel someone, and <strong>+</strong> to search your people by name, location
+        or job and tick everyone to register. On the web page, open the class on the Open Seat Report for the
+        same. Anyone past the last seat goes on the waitlist. Everyone with the app is told. All of this is in
+        the app from build 42.</p>
       <p>The Training Manager can also put a class on the schedule on the Training dashboard, and it
         shows here with UKG's, straight away and without an upload. Those classes have no roster
         until registration in the app opens.</p>
@@ -1519,7 +1525,8 @@
       <h3>Credit given by hand</h3>
       <p>For a course someone completed that UKG doesn't have — a class run on paper, one taken
         somewhere else — the Training Manager uses <strong>Give Credit</strong> on the Training
-        dashboard. It goes on their record straight away, marked <em>Given by hand</em>,
+        dashboard. It goes on their record straight away, marked <em>Given by hand</em> (a pass in a
+        completed class on the Class Schedule is marked <em>From a class</em>),
         and counts everywhere the uploads count: training hours toward the AGCO total when the course
         counts for AGCO, classes taken, and crane qualification for Lifting and Rigging. Each new
         Training Status upload keeps it. Removing it takes it back off.</p>
@@ -1949,6 +1956,7 @@
             <tr><td>Someone else registers you for a class scheduled here, puts you on its waitlist, or cancels you</td><td>You, unless you did it yourself. Tapping it opens My Classes</td></tr>
             <tr><td>A seat opens and you move up from the waitlist</td><td>You: <em>You're in</em></td></tr>
             <tr><td>Your class is moved, cancelled or put back on</td><td>Everyone registered or waiting, with the new day, time and place</td></tr>
+            <tr><td>Your class is completed, or your result changes after</td><td>You: passed (with your score, and that it's on your training record) or not passed</td></tr>
           </tbody>
         </table>
       </div>
@@ -2105,7 +2113,7 @@
           </thead>
           <tbody>
             <tr><td>Overview</td><td>The dashboard above</td></tr>
-            <tr><td>Class Schedule</td><td>Put a class on the schedule from the catalog: the first and last day, the hours each day (on the clock where it's held), where (one of the locations with an optional room, somewhere else with an address, or online with a Teams link to add when you have it), instructor, seats, a register-by date, training hours and AGCO credit (from the catalog, changeable for the class), who can register (open to everyone, admin only, or Training Manager only; kept for when registering in the app opens), and details. <b>Put it on the schedule</b> puts it on the company calendar and the Open Seat Report at once; <b>Save as draft</b> keeps it here only. <b>Change</b> it and the calendar and the report follow; each change once it's on the schedule goes in its <em>History</em>. <b>Cancel class</b> takes it off both, and <b>Put back on the schedule</b> brings it back. Drafts and cancelled classes can be deleted. Each class on the schedule shows how many are registered and waiting; <b>Roster</b> lists them, with <b>Cancel</b> for anyone and a search to register more (into the waitlist when it's full). More seats moves the waitlist up, and moving, cancelling or putting a class back on tells everyone on it. A one-day class is a timed event on the calendar; one over several days is an all-day event across them, with the hours in its details. Schedule a class here or in UKG, not both, or it shows twice</td></tr>
+            <tr><td>Class Schedule</td><td>Put a class on the schedule from the catalog: the first and last day, the hours each day (on the clock where it's held), where (one of the locations with an optional room, somewhere else with an address, or online with a Teams link to add when you have it), instructor, seats, a register-by date, training hours and AGCO credit (from the catalog, changeable for the class), who can register (open to everyone, admin only, or Training Manager only; kept for when registering in the app opens), and details. <b>Put it on the schedule</b> puts it on the company calendar and the Open Seat Report at once; <b>Save as draft</b> keeps it here only. <b>Change</b> it and the calendar and the report follow; each change once it's on the schedule goes in its <em>History</em>. <b>Cancel class</b> takes it off both, and <b>Put back on the schedule</b> brings it back. Drafts and cancelled classes can be deleted. Each class on the schedule shows how many are registered and waiting; <b>Roster</b> lists them, with <b>Cancel</b> for anyone and a search to register more (into the waitlist when it's full). More seats moves the waitlist up, and moving, cancelling or putting a class back on tells everyone on it. <b>Grade</b>, once a class has started, opens its gradebook: attended or no-show, passed or not passed, and an optional score (0–100) for each person; <b>Mark everyone attended</b> and <b>Pass everyone who attended</b> fill it in quickly. Someone on the waitlist who came is marked attended and moves onto the roster; <b>Add someone who came</b> adds a walk-in. <b>Complete class</b>, once everyone is graded and saved, gives everyone who passed the course on their training record, under its name on records (so Lifting and Rigging qualifies them for crane work), with the class's training hours and AGCO setting, and tells them their result. A grade changed after that moves the credit with it: not passed or no-show takes it off, passed puts it back. Only the Training Manager grades. AGCO Development isn't ticked from it. A one-day class is a timed event on the calendar; one over several days is an all-day event across them, with the hours in its details. Schedule a class here or in UKG, not both, or it shows twice</td></tr>
             <tr><td>Mock Schedule</td><td>Plan a year's training on a calendar and see how many technicians it gets to the hours. See below</td></tr>
             <tr><td>AGCO Development</td><td><b>Courses added here</b> adds a course AGCO's catalog doesn't list (the Level 3 online test-out is the first) to any level, and keeps it through new catalogs. <b>Technicians</b> shows how far everyone has got, then lists everyone Training Status calls a technician: the Training Manager opens one and ticks the courses they've completed; other owners can look but not tick. <b>By course</b> lists every course with how many have it ticked (search by name or code; sort by level, most or fewest ticked); open one to see who has it and who hasn't, by location, and tick it for everyone at a class at once <b>Level rules</b> sets how many Level 5 courses complete Level 5. <b>Haystack labels</b> are the words on the Level 6 bales; change any, or leave one blank for the automatic label. Maps update by themselves after a tick, an added or removed course, a rule change, a new catalog, or a new All employees upload</td></tr>
             <tr><td>Skills</td><td>The competency list: add, edit, move between levels, reorder, retire and restore. Sign-offs aren't here — they're in the Training Center</td></tr>
