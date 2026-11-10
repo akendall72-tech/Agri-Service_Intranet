@@ -361,8 +361,8 @@ const tsPct = (n) => `${(Math.round(n * 1000) / 10).toFixed(1)}%`;
 function trainingStatusView() {
   const admin = isAdmin();
   const intro = hero(admin ? "Training Status" : "My Training",
-    admin ? "Technician AGCO training hours against the dealer metric, EPA 609, and training history, from the latest UKG exports."
-          : "Your AGCO training hours, EPA 609 and the classes you've completed, from the latest UKG exports.");
+    admin ? "Technician AGCO training hours against the dealer metric, EPA 609, and training history."
+          : "Your AGCO training hours, EPA 609 and the classes you've completed.");
   if (trainingStatusError) {
     return intro + `<div class="card"><p class="note">${/does not exist|schema cache/i.test(trainingStatusError)
       ? "Training Status isn't switched on yet." : esc(trainingStatusError)}</p></div>`;
@@ -648,9 +648,10 @@ async function tsReadFiles(files) {
     const parsed = tsParse(rows, file);
     if (!parsed) { problems.push(`${file.name}: not one of the three reports — its columns don't match.`); continue; }
     if (!parsed.data.rows.length) { problems.push(`${file.name}: the ${TS_KINDS[parsed.kind]} report has no rows.`); continue; }
-    if (parsed.kind !== "employees" && tsBuiltHere()) {
-      problems.push(`${file.name}: training records are built here now, so ${TS_KINDS[parsed.kind]} isn't uploaded any more. `
-        + "Only All employees is. (The Changeover tab switches back to the uploads.)");
+    // All internal (0127): training records are kept here, so only All employees is uploaded.
+    if (parsed.kind !== "employees") {
+      problems.push(`${file.name}: that's ${TS_KINDS[parsed.kind]}, which isn't uploaded any more: training records are kept here. `
+        + "Upload All employees.");
       continue;
     }
     tsPending[parsed.kind] = parsed.data;
@@ -659,13 +660,6 @@ async function tsReadFiles(files) {
 }
 
 function renderTsImport(problems = []) {
-  // Once records are built here (0125), only All employees is uploaded.
-  const here = $("tsHereNote");
-  if (here) {
-    here.hidden = !tsBuiltHere();
-    here.innerHTML = tsBuiltHere() ? `Training records are built here now (<b>Changeover</b>): only <b>All employees</b> is uploaded,
-      to keep who works here, their jobs and locations up to date. Credits All Time and OLT and ILT aren't needed.` : "";
-  }
   const box = $("tsResult");
   if (!box) return;
   const kinds = Object.keys(TS_KINDS).filter(k => tsPending[k]);
@@ -743,8 +737,6 @@ function renderTsLive() {
   if (goalInput && document.activeElement !== goalInput) goalInput.value = tsGoalPercent();
   const hoursInput = $("tsHoursInput");
   if (hoursInput && document.activeElement !== hoursInput) hoursInput.value = tsRequiredHours();
-  const courseInput = $("craneCourseInput");
-  if (courseInput && document.activeElement !== courseInput) courseInput.value = craneCourse();
   const monthsInput = $("craneMonthsInput");
   if (monthsInput && document.activeElement !== monthsInput) monthsInput.value = craneValidMonths() || "";
   if (!tsSources || !(tsSources.employees && tsSources.employees.file)) {
@@ -752,7 +744,7 @@ function renderTsLive() {
     return;
   }
   const m = tsModel();
-  box.innerHTML = `<ul class="note" style="margin:0 0 8px">${Object.entries(TS_KINDS).map(([k, label]) => {
+  box.innerHTML = `<ul class="note" style="margin:0 0 8px">${Object.entries(TS_KINDS).filter(([k]) => k === "employees").map(([k, label]) => {
       const block = tsSources[k];
       return `<li><b>${label}</b>: ${block && block.file ? `${esc(block.file)}${block.exported
         ? `, exported ${esc(block.exported)}` : ""}` : "not uploaded yet"}</li>`;
@@ -833,35 +825,6 @@ $("admin").addEventListener("click", async (event) => {
   renderTsLive();
   redrawCrane();
   speak(card, months ? `Saved. A qualification now lasts ${months} months.` : "Saved. The qualification doesn't expire.", false);
-});
-
-$("admin").addEventListener("click", async (event) => {
-  const button = event.target.closest('button[data-act="crane-course"]');
-  if (!button) return;
-  const card = $("craneCourseCard");
-  const value = $("craneCourseInput").value.trim().replace(/\s+/g, " ");
-  if (!value) return speak(card, "Type the course name as it appears on the report.", true);
-
-  // Saving a name nothing matches would quietly un-qualify everyone, so say
-  // so first. It can still be saved — the report may be uploaded later.
-  const matches = tsPeople.filter(r => (r.classes || [])
-    .some(c => craneCourseKey(c.course) === craneCourseKey(value))).length;
-  if (!matches && !confirm(
-        `Nothing on the current report is called "${value}".\n\n` +
-        `Saving this means nobody is qualified for crane and rigging work ` +
-        `until a report with that course is uploaded.\n\nSave it anyway?`)) return;
-
-  button.disabled = true;
-  const { data, error } = await db.from("training_status")
-    .upsert({ id: "current", crane_course: value }, { onConflict: "id" }).select("crane_course");
-  button.disabled = false;
-  if (error) return speak(card, error.message, true);
-  if (!data || !data.length) return speak(card, "Not saved — only an owner can change this.", true);
-  await loadTrainingStatus();
-  renderTsLive();
-  redrawCrane();
-  speak(card, `Saved. ${matches} ${matches === 1 ? "person is" : "people are"} qualified by `
-             + `"${value}".`, false);
 });
 
 $("admin").addEventListener("click", async (event) => {

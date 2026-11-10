@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Which version this is. publish.sh stamps the date and commit here, and
      into version.json beside the page; "dev" is a copy that wasn't published. -->
-<meta name="app-version" content="2026-11-10.a2b5e57">
+<meta name="app-version" content="2026-11-10.b1e4604">
 <!-- Where this page may load things from and send things to. GitHub Pages
      can't send security headers, so it's here. Scripts come only from this
      site and the two script CDNs (each pinned with an integrity hash), and
@@ -138,11 +138,13 @@
       <button data-tab="rpagco" data-title="AGCO Training Hours"><i data-icon="level"></i><span>AGCO Training Hours</span></button>
       <button data-tab="rpclass" data-title="Class Report"><i data-icon="doc"></i><span>Class Report</span></button>
 
+      <div class="nav-group">Setup</div>
+      <button data-tab="trainingsettings" data-title="Training settings"><i data-icon="level"></i><span>Settings</span></button>
+
       <div class="nav-group">Uploads</div>
-      <button data-tab="trainingstatus" data-title="Training Status uploads"><i data-icon="people"></i><span>Training Status</span><b class="nav-count tx-stale" data-tx-count="trainingstatus"></b></button>
+      <button data-tab="trainingstatus" data-title="All employees upload"><i data-icon="people"></i><span>All Employees</span><b class="nav-count tx-stale" data-tx-count="trainingstatus"></b></button>
       <button data-tab="openseat" data-title="Open Seat Report uploads"><i data-icon="calendar"></i><span>Open Seat Report</span><b class="nav-count tx-stale" data-tx-count="openseat"></b></button>
       <button data-tab="agcocatalog" data-title="AGCO Catalog upload"><i data-icon="doc"></i><span>AGCO Catalog</span><b class="nav-count tx-stale" data-tx-count="agcocatalog"></b></button>
-      <button data-tab="changeover" data-title="Changeover"><i data-icon="level"></i><span>Changeover</span></button>
     </nav>
 
     <!-- The Safety dashboard: Safety Managers only. Its tabs share the admin
@@ -718,7 +720,40 @@
     <!-- Course catalog -->
     <section id="tab-givecredit" class="hidden"><div id="giveCredit"></div></section>
     <section id="tab-classschedule" class="hidden"><div id="classSchedule"></div></section>
-    <section id="tab-changeover" class="hidden"><div id="changeover"></div></section>
+    <section id="tab-trainingsettings" class="hidden">
+      <div class="card" id="tsGoalCard">
+        <h2>Dealer metric</h2>
+        <p class="note">AGCO sets both numbers. Change them here when they do, and the app and this page use the new
+          figures straight away: the hours decide who has met the requirement, for everyone.</p>
+        <div class="row">
+          <input type="number" id="tsGoalInput" min="1" max="100" step="1" value="65"
+                 style="width:88px;margin:0" aria-label="Goal percent">
+          <span>% of technicians with</span>
+          <input type="number" id="tsHoursInput" min="1" max="200" step="0.5" value="24"
+                 style="width:88px;margin:0" aria-label="Required AGCO training hours">
+          <span>or more AGCO training hours</span>
+          <button data-act="ts-goal">Save</button>
+          <span class="msg"></span>
+        </div>
+      </div>
+      <div class="card" id="craneCourseCard">
+        <h2>Crane &amp; rigging qualification</h2>
+        <p class="note">Passing <b>Lifting and Rigging</b> qualifies someone for crane and rigging work: graded on the Class
+          Schedule, or given on Give Credit. It goes on their record as <b>Lifting and Rigging ILT</b>, the name UKG used, so
+          everyone already qualified stays qualified.</p>
+        <div class="crane-expiry" id="craneExpiryRow">
+          <label for="craneMonthsInput"><b>Expires after</b></label>
+          <div class="row">
+            <input type="number" id="craneMonthsInput" min="1" max="240" step="1" placeholder="Never"
+                   style="width:110px;margin:0" aria-describedby="craneMonthsNote"> <span>months</span>
+            <button data-act="crane-months">Save</button>
+            <span class="msg"></span>
+          </div>
+          <p class="note" id="craneMonthsNote">How long a qualification lasts, counted from the day the course was completed.
+            Leave it empty for no expiration, as it is now. Taking the course again starts it over. For example, 24 is two years.</p>
+        </div>
+      </div>
+    </section>
     <section id="tab-epa609" class="hidden"><div id="epa609"></div></section>
     <section id="tab-coursecredits" class="hidden"><div id="courseCredits"></div></section>
 
@@ -817,31 +852,16 @@
       <div class="card">
         <h2>Open seat report</h2>
         <div class="drop" id="osrDrop">
-          Drop the report files here, or
+          Drop the catalog here, or
           <label for="osrFile" style="display:inline;color:var(--red);
                  cursor:pointer;text-decoration:underline">choose files</label>
           <input id="osrFile" type="file" class="hidden" multiple
                  accept=".csv,.xlsx,.xls,text/csv">
         </div>
-        <p class="note" style="margin-top:12px">Three files, all at once or one at a
-          time — each is recognised by its columns, so the names don't matter:</p>
-        <ul class="note" style="margin-top:0">
-          <li><b>Open Seat Report</b> CSV from UKG — the classes and their seats.</li>
-          <li><b>In-Class Event Report</b> CSV from UKG — who's enrolled. Published
-            together with the Open Seat Report, because each roster is matched to
-            its class.</li>
-          <li><b>AGCO open seat report</b> — the Technical Training Catalog workbook,
-            or a copy with just its Open Seat Report sheet. Can be updated on its own.</li>
-        </ul>
-        <p class="note">Nothing changes in the app until you press <b>Publish</b>.
-          Publishing replaces the previous copy. Classes that have finished drop off
-          the report on their own.</p>
-        <p class="note">No export to hand? Start from a blank sheet with the right columns —
-          the importer reads it exactly as it reads UKG's.</p>
-        <div class="row">
-          <button class="pdf" data-template="openSeat">Blank open seat report</button>
-          <button class="pdf" data-template="inClass">Blank in-class event report</button>
-        </div>
+        <p class="note" style="margin-top:12px">AGCO's <b>Technical Training Catalog</b> workbook, or a copy with just its
+          Open Seat Report sheet: AGCO Academy's sessions and their seats, on the Open Seat Report's AGCO tab. Our own classes
+          are put on the Class Schedule and show on the report by themselves.</p>
+        <p class="note">Nothing changes in the app until you press <b>Publish</b>. Publishing replaces the previous copy.</p>
         <div id="osrResult"></div>
       </div>
       <div class="card">
@@ -944,80 +964,24 @@
     <!-- Training status -->
     <section id="tab-trainingstatus" class="hidden">
       <div class="card">
-        <h2>Training Status reports</h2>
-        <p class="note co-upload-note" id="tsHereNote" hidden></p>
+        <h2>All employees</h2>
         <div class="drop" id="tsDrop">
-          Drop the reports here, or
+          Drop the All employees export here, or
           <label for="tsFile" style="display:inline;color:var(--red);
-                 cursor:pointer;text-decoration:underline">choose files</label>
-          <input id="tsFile" type="file" class="hidden" multiple
+                 cursor:pointer;text-decoration:underline">choose the file</label>
+          <input id="tsFile" type="file" class="hidden"
                  accept=".csv,.xlsx,.xls,text/csv">
         </div>
-        <p class="note" style="margin-top:12px">Three UKG exports, all at once or one at a
-          time — each is recognised by its columns, so the file names don't matter:</p>
-        <ul class="note" style="margin-top:0">
-          <li><b>All employees</b> — everyone's job and store. Technicians are the jobs with
-            "Technician" in the title.</li>
-          <li><b>Credits All Time</b> — every credit each person has earned: AGCO training hours
-            toward the 24-hour credit for this year. (EPA 609 is kept on the EPA 609 tab.)
-            (The older Credit Rules Report still works, matched by name.)</li>
-          <li><b>OLT and ILT</b> — course completions, for the history by location.</li>
-        </ul>
-        <p class="note">People are matched across the three by their <b>Employee Number</b>, then
-          by email, and their records are kept under that number. Uploading also gives each app
-          account its employee number, by work email, so People shows it.</p>
-        <p class="note">Nothing changes until you press <b>Publish</b>. Each report replaces the
-          last copy of that report; the others stay as they are. Admins and owners see the
-          result under Training Center → <b>Training Status</b>, in the app and on this page.</p>
-        <p class="note">No export to hand? Start from a blank sheet with the right columns —
-          the importer reads it exactly as it reads UKG's.</p>
+        <p class="note" style="margin-top:12px">The All employees export from UKG: who works here, their job, location,
+          work email and employee number. Technicians are the jobs with "Technician" in the title. It's the only
+          upload: everyone's training record is kept here, from the history taken from UKG and the credits given and
+          classes completed since.</p>
+        <p class="note">People are matched by their <b>Employee Number</b>, then by email. Uploading also gives each app
+          account its employee number, by work email, so People shows it. Nothing changes until you press <b>Publish</b>.</p>
         <div class="row">
           <button class="pdf" data-template="tsEmployees">Blank all employees</button>
-          <button class="pdf" data-template="tsCredits">Blank credits</button>
-          <button class="pdf" data-template="tsHistory">Blank OLT and ILT</button>
         </div>
         <div id="tsResult"></div>
-      </div>
-      <div class="card" id="tsGoalCard">
-        <h2>Dealer metric</h2>
-        <p class="note">AGCO sets both numbers. Change them here when they do and the app and this
-          page use the new figures straight away — no re-upload. The hours decide who has met the
-          requirement, for everyone: the credits report carries its own figure per person, but it
-          lags behind AGCO, so this is what counts.</p>
-        <div class="row">
-          <input type="number" id="tsGoalInput" min="1" max="100" step="1" value="65"
-                 style="width:88px;margin:0" aria-label="Goal percent">
-          <span>% of technicians with</span>
-          <input type="number" id="tsHoursInput" min="1" max="200" step="0.5" value="24"
-                 style="width:88px;margin:0" aria-label="Required AGCO training hours">
-          <span>or more AGCO training hours</span>
-          <button data-act="ts-goal">Save</button>
-          <span class="msg"></span>
-        </div>
-      </div>
-      <div class="card" id="craneCourseCard">
-        <h2>Crane &amp; rigging qualification</h2>
-        <p class="note">The course that qualifies someone for crane and rigging work, spelled as it
-          appears on the OLT and ILT report. Change it here when the course is renamed and the app
-          and this page both follow — nobody has to be re-qualified. Capitals and extra spaces
-          don't matter.</p>
-        <div class="row">
-          <input type="text" id="craneCourseInput" maxlength="120"
-                 style="min-width:280px;margin:0" aria-label="Qualifying course name">
-          <button data-act="crane-course">Save</button>
-          <span class="msg"></span>
-        </div>
-        <div class="crane-expiry" id="craneExpiryRow">
-          <label for="craneMonthsInput"><b>Expires after</b></label>
-          <div class="row">
-            <input type="number" id="craneMonthsInput" min="1" max="240" step="1" placeholder="Never"
-                   style="width:110px;margin:0" aria-describedby="craneMonthsNote"> <span>months</span>
-            <button data-act="crane-months">Save</button>
-            <span class="msg"></span>
-          </div>
-          <p class="note" id="craneMonthsNote">How long a qualification lasts, counted from the day the course was completed.
-            Leave it empty for no expiration, as it is now. Taking the course again starts it over. For example, 24 is two years.</p>
-        </div>
       </div>
       <div class="card">
         <h2>Published now</h2>
@@ -1196,9 +1160,9 @@
      js/core.js has the rest. publish.sh adds ?v= to each, so a changed file is
      fetched fresh and an unchanged one comes from the browser's cache. -->
 <script src="js/core.js?v=c3d3a4de41"></script>
-<script src="js/shell.js?v=25c38d1b9e"></script>
+<script src="js/shell.js?v=216d0432a2"></script>
 <script src="js/location-dashboard.js?v=757cc12985"></script>
-<script src="js/training-status.js?v=164e7e8855"></script>
+<script src="js/training-status.js?v=711239b568"></script>
 <script src="js/forklift.js?v=0ece5100f3"></script>
 <script src="js/crane.js?v=3b00d4d9fa"></script>
 <script src="js/lift-plans.js?v=1a1a12b034"></script>
@@ -1213,12 +1177,12 @@
 <script src="js/trivia.js?v=2a5fc43bf6"></script>
 <script src="js/fleet.js?v=240b3006b6"></script>
 <script src="js/safety-reports.js?v=b11212d5e2"></script>
-<script src="js/training-dashboard.js?v=a7d3958664"></script>
+<script src="js/training-dashboard.js?v=7d7c1fcb70"></script>
 <script src="js/safety-dashboard.js?v=306bd5d5a6"></script>
 <script src="js/safety-desk.js?v=b731cdcf03"></script>
 <script src="js/mock-schedule.js?v=280d4e9af0"></script>
 <script src="js/groups-and-locations.js?v=fd100a4aed"></script>
-<script src="js/open-seat-report.js?v=ee33500594"></script>
+<script src="js/open-seat-report.js?v=d7c26f0a08"></script>
 <script src="js/inspections.js?v=29e3b87d32"></script>
 <script src="js/hr.js?v=80237cb7f7"></script>
 <script src="js/personal-inventory.js?v=7b4a6a4372"></script>
@@ -1227,7 +1191,6 @@
 <script src="js/class-schedule.js?v=26cdbe90cf"></script>
 <script src="js/class-registration.js?v=81ec1c81ac"></script>
 <script src="js/class-grades.js?v=880fab3382"></script>
-<script src="js/changeover.js?v=8abd46e65b"></script>
 <script src="js/epa-609.js?v=ab6f5ec58f"></script>
 <script src="js/safety-data-sheets.js?v=2d8ed6ca78"></script>
 <script src="js/shared-logins.js?v=2c3a2968bf"></script>
@@ -1235,9 +1198,9 @@
 <script src="js/training-articles.js?v=8f82477941"></script>
 <script src="js/news.js?v=43f837963e"></script>
 <script src="js/agco-map.js?v=65102e84f3"></script>
-<script src="js/my-classes.js?v=f21f4450c7"></script>
+<script src="js/my-classes.js?v=34015d6929"></script>
 <script src="js/online-courses.js?v=79fbda48f5"></script>
-<script src="js/training-reports.js?v=cfc298f8a3"></script>
+<script src="js/training-reports.js?v=ab123328f8"></script>
 <script src="js/imports.js?v=ace48c451a"></script>
 <script src="js/boot.js?v=a6a254fead"></script>
 </body>

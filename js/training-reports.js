@@ -77,8 +77,9 @@ function renderRpAgco() {
     <div class="rp-head">
       <div><h2>AGCO Training Hours · ${esc(r.period)}</h2>
         <p class="note">The dealer metric: technicians with ${fmtHours(r.need)}+ AGCO hours in ${esc(r.period)}, against a goal of
-          ${r.goalPct}%. From the credits report${tsSources && tsSources.credits && tsSources.credits.exported
-            ? ` exported ${esc(String(tsSources.credits.exported).replace(" MDT", ""))}` : ""}.</p></div>
+          ${r.goalPct}%. ${tsBuiltHere() ? "From the training records kept here: the history taken from UKG and the credits given and classes completed since."
+            : `From the credits report${tsSources && tsSources.credits && tsSources.credits.exported
+              ? ` exported ${esc(String(tsSources.credits.exported).replace(" MDT", ""))}` : ""}.`}</p></div>
       <div class="rp-tools">
         <select id="rpAgcoStore" aria-label="Location"><option value="all">Whole company</option>${r.stores.map(s =>
           `<option${s === rpAgcoStore ? " selected" : ""}>${esc(s)}</option>`).join("")}</select>

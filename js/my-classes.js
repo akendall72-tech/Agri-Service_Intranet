@@ -85,9 +85,9 @@ function myClassesView() {
   }
   const list = myClasses(), waiting = myWaitlist();
   const exported = internal.inClassExported || internal.openSeatExported;
-  const foot = `<p class="note mc-foot">From the Open Seat Report${exported ? ` exported ${esc(exported.replace(" MDT", ""))}` : ""},
+  const foot = `<p class="note mc-foot">${exported ? `From the Open Seat Report exported ${esc(exported.replace(" MDT", ""))},
     matched on ${esc(me.email)}. A class you registered for in UKG after that shows up with the next upload; one you register
-    for here shows straight away.${list.length
+    for here shows straight away.` : `Matched on ${esc(me.email)}. A class you register for shows here straight away.`}${list.length
       ? " The calendar button downloads a file: open it to add the class to Outlook or your calendar." : ""}</p>`;
   const waitlist = waiting.length ? `<h2 class="cab-heading mc-later"><span>On the waitlist</span>
       <span class="trail">${waiting.length === 1 ? "1 class" : `${waiting.length} classes`}</span></h2>

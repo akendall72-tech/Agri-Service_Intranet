@@ -42,14 +42,9 @@ function txUploads() {
   // The catalog changes a few times a year; the rest weekly or monthly.
   rows.forEach(r => { r.days = r.date ? Math.floor((Date.now() - r.date) / SX_DAY) : null;
     r.stale = r.missing || (r.days !== null && r.days > (r.slow ? 180 : 30)); });
-  // Once records are built here (0125), the UKG reports they came from, and
-  // UKG's Open Seat Report, aren't uploaded any more: nothing to flag.
-  if (tsBuiltHere()) {
-    rows.filter(r => r.label === "OLT and ILT" || /^Credit/.test(r.label) || r.label === "Open Seat Report").forEach(r => {
-      r.stale = false; r.missing = false;
-      r.text = r.label === "Open Seat Report" ? "Classes are scheduled here" : "Not needed: records are built here";
-    });
-  }
+  // All internal (0127): records are kept here and our classes are scheduled
+  // here, so the UKG reports they came from aren't uploaded any more.
+  if (tsBuiltHere()) return rows.filter(r => !(r.label === "OLT and ILT" || /^Credit/.test(r.label) || r.label === "Open Seat Report"));
   return rows;
 }
 

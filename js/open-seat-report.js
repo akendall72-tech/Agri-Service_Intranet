@@ -89,14 +89,6 @@ function osrExportDate(rows) {
   return row ? osrText(row[0]).replace(/^export date:\s*/i, "") : "";
 }
 
-// "Store - 13 - Pasco" -> number 13, name Pasco. This is the person's home
-// store, which is what Enrollment by Store groups on — not the class's city.
-function osrStore(raw) {
-  const m = osrText(raw).match(/^(?:store\s*-\s*)?(\d+)\s*-\s*(.+)$/i);
-  return m ? { number: m[1], name: m[2].trim() }
-           : { number: "", name: osrText(raw) || "Unknown" };
-}
-
 function osrParse(rows, fileName) {
   // AGCO catalog sheet
   if (osrHeaderIndex(rows, ["class id", "title", "status"]) !== -1) {
@@ -177,71 +169,8 @@ function osrParse(rows, fileName) {
   return null;
 }
 
-function osrBuildInternal(openSeat, inClass) {
-  const warnings = [];
-  const key = (...parts) => parts.map(p => osrText(p).toLowerCase()).join("|");
-  const exact = new Map(), byDay = new Map();
-
-  const classes = openSeat.classes.map(c => {
-    const built = {
-      eventId: null, title: c.title, city: c.city, status: c.status,
-      startDate: c.startDate, endDate: c.endDate || c.startDate,
-      // Null on a report published before times were kept.
-      startTime: c.startTime || null,
-      registered: c.registered, available: c.available,
-      instructors: "", roster: [], sortKey: `${c.startDate || "9999"} ${c.startRaw}`
-    };
-    exact.set(key(c.title, c.city, c.startRaw), built);
-    byDay.set(key(c.title, c.city, c.startDate), built);
-    return built;
-  });
-
-  const unmatched = new Set();
-  for (const e of inClass.enrollments) {
-    const cls = exact.get(key(e.title, e.city, e.startRaw)) || byDay.get(key(e.title, e.city, e.startDate));
-    if (!cls) { unmatched.add(`${e.title} (${e.city}, ${e.startDate || "no date"})`); continue; }
-    const store = osrStore(e.store);
-    cls.eventId = cls.eventId || e.eventId || null;
-    if (!cls.instructors && e.instructors) cls.instructors = e.instructors;
-    cls.roster.push({
-      name: `${e.first} ${e.last}`.trim(), first: e.first, last: e.last, email: e.email,
-      store: store.number ? `${store.number} - ${store.name}` : store.name,
-      storeNumber: store.number, storeName: store.name
-    });
-  }
-
-  for (const cls of classes) {
-    cls.roster.sort((a, b) => a.last.localeCompare(b.last) || a.first.localeCompare(b.first));
-    if (cls.roster.length !== cls.registered) {
-      warnings.push(`${cls.title} (${cls.city}) says ${cls.registered} registered, but the ` +
-        `In-Class Event Report lists ${cls.roster.length}.`);
-    }
-  }
-  if (unmatched.size) {
-    warnings.unshift(`People are enrolled in ${unmatched.size === 1 ? "a class" : "classes"} the Open ` +
-      `Seat Report doesn't have: ${[...unmatched].join("; ")}. They're left out — check both ` +
-      `files come from the same export.`);
-  }
-  if (openSeat.exported && inClass.exported && openSeat.exported !== inClass.exported) {
-    warnings.unshift(`The two files were exported on different days (${openSeat.exported} and ` +
-      `${inClass.exported}), so the rosters may not match the seat counts.`);
-  }
-
-  classes.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
-  classes.forEach(c => delete c.sortKey);
-
-  return {
-    warnings,
-    data: {
-      version: 1,
-      openSeatExported: openSeat.exported,
-      inClassExported: inClass.exported,
-      classes
-    },
-    note: `Open Seat Report exported ${openSeat.exported || "?"} · ` +
-          `In-Class Event Report exported ${inClass.exported || "?"}`
-  };
-}
+// UKG's Open Seat Report and In-Class Event Report aren't uploaded any more (0127):
+// our classes come from the Class Schedule.
 
 async function osrAddFiles(files) {
   const result = $("osrResult");
@@ -251,6 +180,11 @@ async function osrAddFiles(files) {
   for (const file of files) {
     try {
       const parsed = osrParse(await osrRowsFromFile(file), file.name);
+      if (parsed && parsed.kind !== "agco") {
+        problems.push(`<b>${esc(file.name)}</b> is UKG's ${parsed.kind === "openSeat" ? "Open Seat Report" : "In-Class Event Report"}, `
+          + "which isn't uploaded any more: our classes are put on the Class Schedule and show on the report by themselves.");
+        continue;
+      }
       if (parsed) osrPending[parsed.kind] = parsed;
       else problems.push(`<b>${esc(file.name)}</b> isn't one of the three reports — ` +
         `no Open Seat Report, In-Class Event Report or catalog columns in it.`);
@@ -264,26 +198,17 @@ async function osrAddFiles(files) {
 function renderOsrImport(problems = []) {
   const box = $("osrResult");
   if (!box) return;
-  const { openSeat, inClass, agco } = osrPending;
+  const { agco } = osrPending;
   const tick = (ok) => ok ? `<span class="ok">✓</span>` : `<span class="note">—</span>`;
 
   const lines = [
-    [openSeat, "Open Seat Report", openSeat &&
-      `${openSeat.classes.length} classes · exported ${esc(openSeat.exported || "?")}`],
-    [inClass, "In-Class Event Report", inClass &&
-      `${inClass.enrollments.length} enrollments · exported ${esc(inClass.exported || "?")}`],
     [agco, "AGCO Open Seat Report", agco &&
       `${agco.sessions.length} sessions${agco.catalogDate ? " · as of " + esc(agco.catalogDate) : ""}`]
   ];
 
-  const nothing = !openSeat && !inClass && !agco;
-  let warnings = [];
-  if (openSeat && inClass) warnings = osrBuildInternal(openSeat, inClass).warnings;
-  if (!!openSeat !== !!inClass) {
-    warnings.push(`Add the ${openSeat ? "In-Class Event Report" : "Open Seat Report"} too — ` +
-      `the classes and rosters are published together.`);
-  }
-  const canPublish = (openSeat && inClass) || agco;
+  const nothing = !agco;
+  const warnings = [];
+  const canPublish = !!agco;
 
   box.innerHTML = (problems.length ? `<div class="error" style="margin:12px 0">${problems.join("<br>")}</div>` : "") +
     (nothing ? "" : `
@@ -318,9 +243,9 @@ function renderOsrLive() {
 
   box.innerHTML = `
     <table><tbody>
-      <tr><td><b>Classes &amp; rosters</b><div class="note">${internal
-        ? `${internal.data.classes.length} classes, ${enrolled} enrolled · ${esc(internal.source_note || "")} · published ${when(internal)}`
-        : "Nothing published yet"}</div></td></tr>
+      <tr><td><b>Our classes</b><div class="note">${internal && internal.data.classes.length
+        ? `${internal.data.classes.length} upcoming, ${enrolled} registered, from the Class Schedule`
+        : "None coming up. Put them on the Class Schedule."}</div></td></tr>
       <tr><td><b>AGCO sessions</b><div class="note">${agco
         ? `${agco.data.sessions.length} sessions · ${esc(agco.source_note || "")} · published ${when(agco)}`
         : "Nothing published yet"}</div></td></tr>
@@ -339,12 +264,8 @@ $("admin").addEventListener("click", async (event) => {
   }
 
   const row = button.closest(".row");
-  const { openSeat, inClass, agco } = osrPending;
+  const { agco } = osrPending;
   const writes = [];
-  if (openSeat && inClass) {
-    const built = osrBuildInternal(openSeat, inClass);
-    writes.push({ id: "internal", data: built.data, source_note: built.note });
-  }
   if (agco) {
     writes.push({ id: "agco", source_note: agco.catalogDate ? `Catalog as of ${agco.catalogDate}` : "",
                   data: { version: 1, catalogDate: agco.catalogDate, sessions: agco.sessions } });
@@ -509,7 +430,7 @@ function openSeatView() {
   }).join("");
   const agcoOpen = sessions.filter(s => !s.full).length;
 
-  return hero("Open Seat Report", internal
+  return hero("Open Seat Report", internal && internal.openSeatExported
       ? `Open Seat Report exported ${internal.openSeatExported} · In-Class Event Report exported ${internal.inClassExported}`
       : "Upcoming classes, who's enrolled, and open seats.") + `
   <div class="osr">
