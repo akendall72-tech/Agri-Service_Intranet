@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Which version this is. publish.sh stamps the date and commit here, and
      into version.json beside the page; "dev" is a copy that wasn't published. -->
-<meta name="app-version" content="2026-11-10.bae3860">
+<meta name="app-version" content="2026-11-12.b39c342">
 <!-- Where this page may load things from and send things to. GitHub Pages
      can't send security headers, so it's here. Scripts come only from this
      site and the two script CDNs (each pinned with an integrity hash), and
@@ -34,7 +34,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
-<link rel="stylesheet" href="css/app.css?v=86aa6940b1">
+<link rel="stylesheet" href="css/app.css?v=1088817542">
 </head>
 <body>
 
@@ -181,6 +181,7 @@
 
       <div class="nav-group">Dashboard</div>
       <button data-tab="locationoverview" data-title="Location Dashboard"><i data-icon="building"></i><span>Overview</span></button>
+      <button data-tab="locationcerts" data-title="Location Dashboard"><i data-icon="safety"></i><span>Certifications</span></button>
       <div id="locationPicks"></div>
     </nav>
     <p class="app-version" id="appVersion"></p>
@@ -234,6 +235,11 @@
     <!-- The Location dashboard's front page: drawn by renderLocationOverview -->
     <section id="tab-locationoverview" class="hidden">
       <div id="lxOverview"></div>
+    </section>
+
+    <!-- Who at the location holds what: drawn by renderLocationCerts -->
+    <section id="tab-locationcerts" class="hidden">
+      <div id="lxCerts"></div>
     </section>
 
     <!-- The Safety dashboard's front page: drawn by renderSafetyOverview -->
@@ -1159,9 +1165,10 @@
      only names from an earlier file; boot.js starts the page and stays last.
      js/core.js has the rest. publish.sh adds ?v= to each, so a changed file is
      fetched fresh and an unchanged one comes from the browser's cache. -->
-<script src="js/core.js?v=c3d3a4de41"></script>
-<script src="js/shell.js?v=216d0432a2"></script>
-<script src="js/location-dashboard.js?v=757cc12985"></script>
+<script src="js/core.js?v=b316a2542d"></script>
+<script src="js/shell.js?v=6f109d0939"></script>
+<script src="js/location-dashboard.js?v=c2ab3eacb0"></script>
+<script src="js/location-certifications.js?v=b62a0a2a8d"></script>
 <script src="js/training-status.js?v=711239b568"></script>
 <script src="js/forklift.js?v=0ece5100f3"></script>
 <script src="js/crane.js?v=3b00d4d9fa"></script>
@@ -1191,7 +1198,7 @@
 <script src="js/class-schedule.js?v=26cdbe90cf"></script>
 <script src="js/class-registration.js?v=81ec1c81ac"></script>
 <script src="js/class-grades.js?v=880fab3382"></script>
-<script src="js/epa-609.js?v=ab6f5ec58f"></script>
+<script src="js/epa-609.js?v=fbc18307ca"></script>
 <script src="js/safety-data-sheets.js?v=2d8ed6ca78"></script>
 <script src="js/shared-logins.js?v=2c3a2968bf"></script>
 <script src="js/skills.js?v=8efb8a0583"></script>

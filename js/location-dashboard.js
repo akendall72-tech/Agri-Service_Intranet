@@ -3,7 +3,8 @@
 // One location at a glance for its admins and owners: the AGCO dealer metric,
 // To do, the Safety Brief and Safety Reports, EPA 609, forklift cards and crane
 // qualifications (each with the required operators), upcoming classes and the
-// vehicles kept there.
+// vehicles kept there. Who holds which certification is its own tab, in
+// location-certifications.js.
 
 // ---- the Location dashboard ------------------------------------------------------
 //
@@ -42,7 +43,7 @@ function showLocation() {
   $("admin").classList.remove("hidden");
   setMode("location");
   document.body.dataset.page = "location";
-  safely(renderLocationOverview);
+  safely(renderLocationOverview, renderLocationCerts);
   document.querySelector('#locationNav [data-tab="locationoverview"]').click();
   window.scrollTo(0, 0);
 }
@@ -75,7 +76,7 @@ document.addEventListener("click", (event) => {
   if (!pick) return;
   lxLocation = pick.dataset.lxLocation;
   setMode("location");
-  renderLocationOverview();
+  safely(renderLocationOverview, renderLocationCerts);
   $("adminTitle").textContent = `${lxName()} Dashboard`;
   window.scrollTo(0, 0);
 });
@@ -161,6 +162,10 @@ function lxFigures(loc) {
   };
   const techsNoCrane = roster.filter(r => r.is_technician && craneStatus(r).kind === "none");
 
+  // DOT Medical Card, Welding, CPR and First Aid, the four people add for
+  // themselves (0130): who's here, and what's run out or about to.
+  const lc = lcFigures(loc);
+
   // Upcoming classes with someone from here on the roster.
   const internal = trainingReports.internal && trainingReports.internal.data;
   const todayKey = osrToday();
@@ -225,6 +230,10 @@ function lxFigures(loc) {
       items: cr.expired.map(x => `${x.name} · expired ${short(x.st.expires)}`) },
     cr.expiring.length && { n: cr.expiring.length, tone: "amber", text: `crane ${cr.expiring.length === 1 ? "qualification runs" : "qualifications run"} out in the next 60 days`,
       items: cr.expiring.map(x => `${x.name} · ${short(x.st.expires)}`) },
+    lc.expired.length && { n: lc.expired.length, tone: "red", text: `DOT medical, welding, CPR or first aid ${lc.expired.length === 1 ? "card has" : "cards have"} expired`,
+      items: lc.expired.map(x => `${x.who} · ${x.kind} · ${x.cell.text.replace(/^Expired/, "expired")}`), tab: ["locationcerts", "Certifications"] },
+    lc.expiring.length && { n: lc.expiring.length, tone: "amber", text: `DOT medical, welding, CPR or first aid ${lc.expiring.length === 1 ? "card runs" : "cards run"} out in the next ${LC_SOON_DAYS} days`,
+      items: lc.expiring.map(x => `${x.who} · ${x.kind} · ${x.cell.sub}`), tab: ["locationcerts", "Certifications"] },
     close.length && { n: close.length, tone: "teal", text: `${close.length === 1 ? "technician is" : "technicians are"} within 8 hours of ${need}`,
       items: close.map(t => `${t.name} · needs ${shortBy(t)}`) },
     thisMonth && needsBrief.length && { n: needsBrief.length, tone: "ember", text: `${needsBrief.length === 1 ? "person hasn't" : "people haven't"} passed this month's Safety Brief`,
@@ -238,7 +247,7 @@ function lxFigures(loc) {
     fk, testsDue, required, reqNot, craneRequired, craneReqNot, sKey, thisMonth, sBrief, sRows, briefPassed,
     reportSent, needsBrief, needsReport, sMissing, soon, cr, techsNoCrane, internal, classes, plansWaiting,
     inspTodo, fleet, fleetOverdue, fleetSoon, gearOverdue, tiresOut, tiresWorn, fleetChecked, fleetFlagged, fleetYear, spent,
-    fleetTone, todo
+    fleetTone, lc, todo
   };
 }
 
@@ -303,6 +312,7 @@ function renderLocationOverview() {
             <summary style="--tone:var(--lit-${t.tone})"><b>${sxNum(t.n)}</b><span>${esc(t.text)}</span></summary>
             <ul>${t.items.map(i => `<li>${esc(i)}</li>`).join("")}</ul>
             ${t.go ? `<button type="button" class="sx-link" data-view="${t.go[0]}">Open the ${esc(t.go[1])} &rsaquo;</button>` : ""}
+            ${t.tab ? `<button type="button" class="sx-link" data-lx-tab="${t.tab[0]}">Open ${esc(t.tab[1])} &rsaquo;</button>` : ""}
           </details>`).join("")}</div>`
           : `<p class="sx-empty sx-clear">${icon("checkCircle", 18)} Nothing waiting at ${esc(name)}: no lift plans to approve, every technician has EPA 609, every required forklift operator is certified and every required crane operator qualified, no forklift card or crane qualification has run out, and no vehicle is overdue for service or needs tires.</p>`}
       </section>
@@ -627,6 +637,24 @@ function lxReportPdf(loc) {
       { bold: 0, color: (row, i) => i === 2 ? tones.get(row) : null, empty: `Nobody at ${f.name} has taken the course.` });
   }
   if (f.techsNoCrane.length) note(`Technicians who haven't taken it: ${f.techsNoCrane.map(r => `${r.first_name} ${r.last_name}`.trim()).join(", ")}.`);
+
+  // DOT Medical Card, Welding, CPR and First Aid: everyone here who holds one.
+  {
+    const holders = f.lc.rows.filter(x => LC_KINDS.some(k => x.cells[k.id].tone !== "none"));
+    section("DOT medical, welding, CPR & first aid", holders.length
+      ? `Optional; people add their own in the app. ${lxPlural(holders.length, "person", "people")} here ${holders.length === 1 ? "holds" : "hold"} at least one: ${
+        f.lc.expired.length} expired, ${f.lc.expiring.length} running out in the next ${LC_SOON_DAYS} days.`
+      : `Optional; people add their own in the app. Nobody at ${f.name} has added one yet.`);
+    if (holders.length) {
+      const toneColor = { ok: green, warn: amber, bad: red, none: grey };
+      const [rows, tones] = toned(holders.map(x => [[x.name, ...LC_KINDS.map(k => {
+        const c = x.cells[k.id];
+        return c.tone === "none" ? "-" : [c.text, c.sub, c.detail].filter(Boolean).join("\n");
+      })], LC_KINDS.map(k => toneColor[x.cells[k.id].tone])]));
+      table([["Name", 140], ...LC_KINDS.map(k => [k.short, (CW - 140) / 4])], rows,
+        { bold: 0, color: (row, i) => i ? tones.get(row)[i - 1] : null });
+    }
+  }
 
   // Upcoming training.
   section("Upcoming training", f.classes.length ? `${lxPlural(f.classes.length, "class", "classes")} with someone from ${f.name} enrolled, from the latest Open Seat Report.`

@@ -11,8 +11,10 @@ let epaView = { who: "techs", show: "all", q: "" };
 // The person being ticked off or changed, by their record's key.
 let epaEditing = null;
 
+// Owners see everyone's; a location's admins their people's, for the
+// Location Dashboard's Certifications.
 async function loadEpaCerts() {
-  if (!isOwner()) return;
+  if (!isAdmin()) return;
   const { data, error } = await allRows(() => db.from("epa_certifications").select("*").order("added_at").order("id"));
   epaError = error ? error.message : null;
   epaNotSetUp = !!error && /does not exist|schema cache/i.test(error.message);

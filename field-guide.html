@@ -580,9 +580,14 @@
       <p><strong>Location Dashboard</strong> is the web page's Location Dashboard in the app: the location's AGCO
         dealer metric on a ring against the goal, six tiles, a <strong>To do</strong> list (tap one to see who), the
         Safety Brief and Safety Reports for this month or last, who's short of their AGCO hours, EPA 609, forklift
-        cards and crane qualifications, each with the Safety Manager's required operators, upcoming classes, and the
-        location's <strong>Fleet</strong> (from build 32; see below). An admin covering another location, and an owner,
-        pick the location at the top. Pull down to refresh.</p>
+        cards and crane qualifications, each with the Safety Manager's required operators, <strong>Certifications</strong>,
+        upcoming classes, and the location's <strong>Fleet</strong> (from build 32; see below). An admin covering another
+        location, and an owner, pick the location at the top. Pull down to refresh.</p>
+      <p>The <strong>Certifications</strong> card (from build 43) counts who at the location holds a DOT medical card, a welding
+        certification, CPR or first aid, and how many are expiring or expired. Tap it for <em>who has what</em>: each
+        person with every certification they hold and when it runs out, forklift, crane and EPA 609 included. The chips
+        along the top show one certification at a time, soonest to run out first; <em>Only what's expiring or
+        expired</em> narrows it to the ones to chase. <em>View card</em> opens the picture someone added.</p>
       <p>A red number on a Center means something is waiting on you: reminders still
         to tick, a lift plan to review or one that came back, an approval you haven't
         looked at, or new support replies. The same total shows on the app's icon on
@@ -1570,13 +1575,19 @@
         <strong>crane &amp; rigging</strong> qualification and <strong>EPA 609</strong>, each saying
         whether you have it and when it expires. Tap forklift or crane for the full card; EPA 609
         has <em>View certificate</em> when the Training Manager has added a picture of yours.</p>
-      <p>Below them, <strong>Your own</strong>: any other certification you hold, such as a CDL,
-        first aid or a welding ticket. <strong>Add a certification</strong> takes what it is, who
+      <p>Then <strong>Optional</strong>, four asked about by name (from build 43): <strong>DOT Medical Card</strong>,
+        <strong>Welding Certification</strong>, <strong>CPR</strong> and <strong>First Aid</strong>.
+        None is required. If you hold one, tap it and add when it expires, a detail if you like (a
+        welding process, say, or Adult, Child &amp; Infant for CPR), who issued it, its number and a
+        picture of the card; tap it again to change it. Your location admin and the owners can see these
+        four, with their pictures, on the Location Dashboard's <em>Certifications</em>.</p>
+      <p>Below them, <strong>Others you hold</strong>: any other certification, such as a CDL.
+        <strong>Add a certification</strong> takes what it is, who
         issued it and its number (both optional), when it expires (or that it doesn't), when it was
         issued if you like, a note, and a picture of the card: take a photo, choose one, or choose a
         PDF. Tap one to change it, replace the picture or delete it. Each is marked
         <em>Current</em>, <em>Expiring</em> (30 days or fewer) or <em>Expired</em>, and the HR tab's
-        card counts the ones that need attention. Only you can see the ones you add.</p>
+        card counts the ones that need attention. Only you can see these others.</p>
       <p>You get a notification 30 days and a week before one expires, and on the day; the same
         for your crane and rigging qualification if the Training Manager sets it to expire. Your
         forklift card has its own reminders. Settings → <em>My Certifications</em> turns them off.</p>
@@ -1991,7 +2002,7 @@
             <tr><td>Support requests</td><td>New requests and replies for your groups</td><td>Pushed, and after you open the app</td></tr>
             <tr><td>Crane Center</td><td>A plan awaiting you, yours sent back or approved; for admins, a crane at their location failing its daily inspection</td><td>Pushed, and after you open the app</td></tr>
             <tr><td>Forklift Center</td><td>Two months and a week before your card expires; a week and a day before your driving test is due; driving tests waiting or decided</td><td>On time; pushed</td></tr>
-            <tr><td>My Certifications</td><td>30 days and a week before a certification you've added expires, and on the day; the same for your crane and rigging qualification if it expires</td><td>On time</td></tr>
+            <tr><td>My Certifications</td><td>30 days and a week before a certification you've added expires (a DOT medical card, welding, CPR, first aid or any other), and on the day; the same for your crane and rigging qualification if it expires</td><td>On time</td></tr>
             <tr><td>Safety Reports</td><td>A report sent for you to approve. Safety Managers only</td><td>Pushed</td></tr>
             <tr><td>Training Center</td><td>A week and the day before your classes; Skills levels finished</td><td>Pushed</td></tr>
             <tr><td>Community @mentions</td><td>Being tagged in a post, a shout-out or a comment</td><td>Pushed</td></tr>
@@ -2068,7 +2079,8 @@
           operators who aren't certified and required crane operators who aren't qualified (first, in red, from the
           Safety Manager's lists), lift plans to
           approve, inspections with the after-class part to finish, technicians without EPA 609, forklift cards
-          and crane qualifications expired or running out in the next 60 days, driving tests due, technicians
+          and crane qualifications expired or running out in the next 60 days, DOT medical, welding, CPR and first aid
+          cards expired or running out in the next 30 days, driving tests due, technicians
           within 8 hours of the 24, and vehicles overdue for service, needing new tires, or with equipment overdue.</li>
         <li><strong>AGCO dealer metric</strong> — the location's share with 24+ hours on a gauge, then who's short
           (closest first, with <b>Plan</b> ticks, the same plan as Training Status) and who has it.</li>
@@ -2077,6 +2089,13 @@
           required operators and how many hold it.</li>
         <li><strong>Upcoming training</strong> — classes on the latest Open Seat Report with someone from the
           location enrolled, and who.</li>
+        <li><strong>Certifications</strong> — its own page in the sidebar, under Overview: who at the location holds
+          what, and when it runs out. A tile for each certification (forklift, crane &amp; rigging, EPA 609, DOT Medical
+          Card, Welding Certification, CPR and First Aid) with how many hold it and how many are expiring or expired, then
+          a table of everyone with a column for each. <b>Expiring or expired</b> lists just the ones to chase, and
+          <b>Show</b> picks one certification to see only the people who hold it. <b>Card</b> opens the picture someone
+          added. The last four are optional: each person adds their own in the app under HR, My Certifications; anything
+          else they add there stays private and isn't shown. <b>Download spreadsheet</b> saves the table as a CSV.</li>
         <li><strong>Safety Brief &amp; Reports</strong> — for any month: how many with an app account at the location
           passed that month's Safety Brief and sent at least one Safety Report, each person's status, <b>Missing
           something</b> to list just the gaps, and <b>Email all</b> to write to them in BCC. This month's gaps are on
@@ -2091,7 +2110,8 @@
       </ul>
       <p><strong>Export PDF</strong>, above the dashboard, downloads it as a letter-size report for a meeting or the
         file: the headline figures (AGCO dealer metric, Safety Brief, Safety Reports, forklift cards, crane
-        qualifications and the fleet), then To do, and a section for each part with every person or vehicle in it,
+        qualifications and the fleet), then To do, and a section for each part with every person or vehicle in it
+        (DOT medical, welding, CPR and first aid included, for everyone who holds one),
         colour-coded. The Safety Brief and Reports section is for the month the dashboard is showing; pick another
         month there first to report on it. As on the page, a Safety Report is only a count. Web page only.</p>
 

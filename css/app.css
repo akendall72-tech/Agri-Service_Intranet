@@ -1573,6 +1573,32 @@ body.location-mode #admin .page-head h1 { color: #fff; font: 700 30px/1.1 var(--
   padding: 7px 10px; border-radius: 9px; background: rgba(255,255,255,.035); }
 .lx-safety-row .tx-note:last-child { text-align: right; }
 @media (max-width: 520px) { .lx-safety-row { grid-template-columns: minmax(0, 1fr) auto; } .lx-safety-row .tx-who-name { grid-column: 1 / -1; } }
+/* The Location Dashboard's Certifications: a person per row, a certification
+   per column. The name stays put while the columns scroll on a phone. */
+.lc-three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.lc-four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 560px) { .lc-four { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.lc-show { display: flex; align-items: center; gap: 8px; color: var(--cab-sub); font-size: 13px; }
+.lc-show select { width: auto; }
+.lc-scroll { overflow-x: auto; margin-top: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,.08); max-height: 640px; overflow-y: auto; }
+.lc-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
+.lc-table thead th { position: sticky; top: 0; z-index: 2; padding: 9px 12px; text-align: left; white-space: nowrap;
+  background: #20272C; color: var(--cab-sub); font: 600 10.5px var(--font-mono); letter-spacing: .1em; text-transform: uppercase;
+  border-bottom: 1px solid rgba(255,255,255,.1); }
+.lc-table td, .lc-table tbody th { padding: 9px 12px; vertical-align: top; border-bottom: 1px solid rgba(255,255,255,.06); white-space: nowrap; }
+.lc-table tbody tr:last-child td, .lc-table tbody tr:last-child th { border-bottom: 0; }
+.lc-table tbody tr:hover td, .lc-table tbody tr:hover th { background-color: rgba(255,255,255,.035); }
+.lc-table thead th:first-child { left: 0; z-index: 3; }
+.lc-who { position: sticky; left: 0; z-index: 1; text-align: left; font-weight: 400; background: #272F35; min-width: 150px; white-space: normal; }
+.lc-who b { display: block; color: #fff; font-weight: 600; }
+.lc-who small, .lc-table td small { display: block; margin-top: 2px; color: var(--cab-detail); font-size: 12px; }
+.lc-cell { font: 600 12px var(--font-mono); letter-spacing: .02em; }
+.lc-ok { color: var(--lit-green); } .lc-warn { color: var(--lit-amber); } .lc-bad { color: var(--lit-red); } .lc-wait { color: var(--cab-sub); }
+.lc-none { color: rgba(255,255,255,.22); }
+.lc-pic { display: flex; width: max-content; align-items: center; gap: 4px; margin: 5px 0 0; padding: 2px 8px; height: auto; border-radius: 99px;
+  font: 600 11px var(--font-mono); color: var(--cab-sub); background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); box-shadow: none; }
+.lc-pic:hover { color: #fff; background: rgba(255,255,255,.12); }
+.lc-pic:focus-visible { outline: 2px solid var(--lit-slate); outline-offset: 2px; }
 .sx-full { grid-column: 1 / -1; }
 .tx-hero { background: radial-gradient(90% 140% at 0% 100%, color-mix(in srgb, var(--lit-teal) 16%, transparent), transparent 60%),
     linear-gradient(135deg, #2A333A, #1B2227); }
