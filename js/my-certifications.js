@@ -210,7 +210,8 @@ async function mycSave(button) {
     if (!link && existing && existing.photo_path) await db.storage.from("personal-certificates").remove([existing.photo_path]);
   }
   mycEditing = null;
-  await loadMyCerts();
+  // The Location Dashboard's Certifications reads the four too.
+  await Promise.all([loadMyCerts(), loadTrackedCerts()]);
   showView("mycerts");
 }
 
@@ -224,7 +225,8 @@ async function mycRemove(button) {
   const { error } = await db.from("personal_certifications").delete().eq("id", c.id);
   if (error) { button.disabled = false; return speak(form, error.message, true); }
   mycEditing = null;
-  await loadMyCerts();
+  // The Location Dashboard's Certifications reads the four too.
+  await Promise.all([loadMyCerts(), loadTrackedCerts()]);
   showView("mycerts");
 }
 

@@ -265,7 +265,7 @@ function renderLocationOverview() {
   const { name, short, roster, accounts, m, goal, need, notMet, met, close, no609, metGoal, cards, fkDays, fk,
     testsDue, required, reqNot, craneRequired, craneReqNot, sKey, sBrief, sRows, briefPassed, reportSent, sMissing,
     soon, cr, techsNoCrane, internal, classes, fleet, fleetOverdue, fleetSoon, tiresOut, tiresWorn,
-    fleetChecked, fleetYear, spent, fleetTone, todo } = lxFigures(loc);
+    fleetChecked, fleetYear, spent, fleetTone, lc, todo } = lxFigures(loc);
   if (document.body.classList.contains("location-mode")) $("adminTitle").textContent = `${name} Dashboard`;
   const plural = lxPlural;
   const line = (who, sub, note, tone) => `<div class="tx-who-row tx-line"><span class="tx-who-name"><b>${esc(who)}</b>${
@@ -410,6 +410,27 @@ function renderLocationOverview() {
           noReports ? "Nobody here is on the latest Training Status reports yet." : `Nobody at ${esc(name)} has taken the course.`)}
         ${techsNoCrane.length ? `<p class="sx-sub">Technicians who haven't taken it: ${esc(techsNoCrane.map(r => `${r.first_name} ${r.last_name}`.trim()).join(", "))}.</p>` : ""}
       </section>
+
+      ${(() => {
+        // DOT medical, welding, CPR and first aid at a glance; who has what is
+        // its own page (location-certifications.js).
+        const holding = lc.rows.filter(x => CERT_KINDS.some(k => x.cells[k.id].tone !== "none")).length;
+        return `<section class="sx-panel" style="${lit(lc.expired.length ? "red" : lc.expiring.length ? "amber" : "slate")}">
+          <header><h3>Certifications</h3>
+            <button type="button" class="sx-link" data-lx-tab="locationcerts">Who has what &rsaquo;</button></header>
+          <div class="sx-trio"><div><b>${sxNum(holding)}</b><span>Hold one</span></div>
+            <div class="amber"><b>${sxNum(lc.expiring.length)}</b><span>Expiring</span></div>
+            <div class="red"><b>${sxNum(lc.expired.length)}</b><span>Expired</span></div></div>
+          ${list(CERT_KINDS.map(k => {
+            const have = lc.count(k.id), bad = lc.count(k.id, "bad"), warn = lc.count(k.id, "warn");
+            return line(k.name, "", have ? [`${have} hold${have === 1 ? "s" : ""} it`, warn ? `${warn} expiring` : "", bad ? `${bad} expired` : ""]
+              .filter(Boolean).join(" · ") : "nobody yet", bad ? "bad" : warn ? "warn" : have ? "ok" : "quiet");
+          }), "")}
+          <p class="sx-sub">Optional: people add their own in the app or on the web page, under HR, My Certifications.
+            <b>Who has what</b> lists everyone here with every certification, forklift, crane and EPA 609 included.</p>
+          <button type="button" data-lx-tab="locationcerts">Open Certifications</button>
+        </section>`;
+      })()}
       <section class="sx-panel sx-full lx-fleet" style="${lit(fleetTone)}">
         <header><h3>Fleet</h3><span>${fleet.length ? `${plural(fleet.length, "vehicle")} · ${fleetChecked} checked this week` : ""}</span>
           <button type="button" class="sx-link" data-view="fleet">Fleet Center &rsaquo;</button></header>
