@@ -1448,6 +1448,21 @@ button.sx-attn-row:hover { background: rgba(255,255,255,.09); }
 .sx-trio .amber b { color: var(--lit-amber); } .sx-trio .red b { color: var(--lit-red); }
 .sx-trio span { color: var(--cab-detail); font: 600 10px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
 
+/* The Location Dashboard's Certifications panel: the totals, then each of
+   the four, in one row across, stacking when narrow. */
+.lx-certs { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 4fr); gap: 8px; }
+.lx-cert-kinds { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; text-align: center; }
+.lx-cert-kinds div { display: grid; gap: 4px; align-content: start; padding: 10px 6px; border-radius: 10px; background: rgba(0,0,0,.22); }
+.lx-cert-kinds b { font: 700 28px/1 var(--font-cab); color: var(--cab-detail); font-variant-numeric: tabular-nums; }
+.lx-cert-ok b { color: var(--lit-green); } .lx-cert-warn b { color: var(--lit-amber); } .lx-cert-bad b { color: var(--lit-red); }
+.lx-cert-kinds span { color: #fff; font: 600 10px var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
+.lx-cert-kinds small { color: var(--cab-detail); font-size: 11.5px; }
+.lx-certs-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin-top: 12px; }
+.lx-certs-foot .sx-sub { flex: 1 1 320px; margin: 0; }
+.lx-certs-foot button { margin: 0; }
+@media (max-width: 900px) { .lx-certs { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 520px) { .lx-cert-kinds { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
 /* The Location Dashboard's report button, above the hero. */
 .lx-pdfbar { display: flex; justify-content: flex-end; align-items: center; gap: 12px; }
 .lx-pdfbar .msg { margin: 0; color: var(--muted); font-size: 13px; }
