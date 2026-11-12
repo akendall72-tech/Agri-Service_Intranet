@@ -97,25 +97,6 @@ function epaEditorHtml(p, c) {
     </div></td></tr>`;
 }
 
-// A photo at a size that's still sharp to read a certificate number on; a PDF as it is.
-async function epaPicture(file) {
-  if (file.type === "application/pdf") return { blob: file, ext: "pdf", type: "application/pdf" };
-  try {
-    const bitmap = await createImageBitmap(file);
-    const scale = Math.min(1, 2400 / Math.max(bitmap.width, bitmap.height));
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.round(bitmap.width * scale);
-    canvas.height = Math.round(bitmap.height * scale);
-    canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-    const blob = await new Promise((resolve, reject) =>
-      canvas.toBlob(b => b ? resolve(b) : reject(new Error("unreadable")), "image/jpeg", 0.85));
-    return { blob, ext: "jpg", type: "image/jpeg" };
-  } catch {
-    // A picture the browser can't draw (an iPhone's HEIC, say) goes up as it is.
-    return { blob: file, ext: (file.name.split(".").pop() || "img").toLowerCase(), type: file.type || "image/heic" };
-  }
-}
-
 async function epaSave(button) {
   const p = tsPeople.find(x => x.person_key === button.dataset.epaSave);
   const form = $("epaForm");
@@ -138,7 +119,7 @@ async function epaSave(button) {
     cert = data[0];
   }
   if (file) {
-    const picture = await epaPicture(file);
+    const picture = await certificatePicture(file);
     const path = `${cert.id}/${crypto.randomUUID()}.${picture.ext}`;
     const { error: upload } = await db.storage.from("epa-certificates").upload(path, picture.blob, { contentType: picture.type });
     if (upload) {

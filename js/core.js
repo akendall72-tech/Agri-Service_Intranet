@@ -399,6 +399,36 @@ function refreshShown() {
   window.scrollTo(0, y);
 }
 
+// A picture of a certificate on its way up, for EPA 609 and My Certifications:
+// a photo at a size that's still sharp to read a certificate number on; a PDF
+// as it is.
+async function certificatePicture(file) {
+  if (file.type === "application/pdf") return { blob: file, ext: "pdf", type: "application/pdf" };
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, 2400 / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise((resolve, reject) =>
+      canvas.toBlob(b => b ? resolve(b) : reject(new Error("unreadable")), "image/jpeg", 0.85));
+    return { blob, ext: "jpg", type: "image/jpeg" };
+  } catch {
+    // A picture the browser can't draw (an iPhone's HEIC, say) goes up as it is.
+    return { blob: file, ext: (file.name.split(".").pop() || "img").toLowerCase(), type: file.type || "image/heic" };
+  }
+}
+
+// The four certifications My Certifications asks about by name (0130), all
+// optional, which a person's location admin and owners can see: on My
+// Certifications and the Location Dashboard's Certifications.
+const CERT_KINDS = [
+  { id: "dot_medical", name: "DOT Medical Card", short: "DOT medical", icon: "fleet", years: 2, prompt: "e.g. 2-year card" },
+  { id: "welding", name: "Welding Certification", short: "Welding", icon: "flame", years: 1, prompt: "Process or code, e.g. AWS D1.1" },
+  { id: "cpr", name: "CPR", short: "CPR", icon: "fitness", years: 2, prompt: "e.g. Adult, Child & Infant" },
+  { id: "first_aid", name: "First Aid", short: "First aid", icon: "plus", years: 2, prompt: "e.g. Basic First Aid" }];
+
 // ---------------------------------------------------------------- loading
 
 // Everything the page shows, in two batches. The first is what the home page
@@ -471,7 +501,7 @@ async function loadAll({ restInBackground = false } = {}) {
 
   const rest = Promise.all([loadEvents(), loadInspections(), loadCourses(), loadSds(),
     loadArticles(), loadSkills(), loadNews(), loadTrainingStatus(), loadCrane(), loadCompanyDocs(), loadTools(),
-    loadAgco(), loadMockSchedules(), loadSafetyDesk(), loadSafetyReportData(), loadCommunity(), loadFitness(), loadTrivia(), loadFleet(), loadCraneInspections(), loadTrainingCredits(), loadScheduledClasses().then(loadClassRegistrations), loadEpaCerts(), loadTrackedCerts(), loadOnlineCourses(), loadForkliftCourse(), loadFkWaiting(), loadInventory()]);
+    loadAgco(), loadMockSchedules(), loadSafetyDesk(), loadSafetyReportData(), loadCommunity(), loadFitness(), loadTrivia(), loadFleet(), loadCraneInspections(), loadTrainingCredits(), loadScheduledClasses().then(loadClassRegistrations), loadEpaCerts(), loadTrackedCerts(), loadMyCerts(), loadOnlineCourses(), loadForkliftCourse(), loadFkWaiting(), loadInventory()]);
   // Wrapped, because an async function handing back a promise would wait for it.
   if (restInBackground) return { rest };
   await rest;

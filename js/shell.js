@@ -187,7 +187,7 @@ function showView(name) {
   const host = $("view");
   host.classList.remove("hidden");
   setMode("app", ["openseat", "myclasses", "catalog", "olt", "article", "skills", "trainingstatus", "coursereport", "agcomap"].includes(name) ? "training"
-    : name === "newspost" ? "news" : ["payroll", "inventory"].includes(name) ? "hr" : ["certreport", "evaltest", "approvals"].includes(name) ? "forklift" : name === "inspform" ? "inspection"
+    : name === "newspost" ? "news" : ["payroll", "inventory", "mycerts"].includes(name) ? "hr" : ["certreport", "evaltest", "approvals"].includes(name) ? "forklift" : name === "inspform" ? "inspection"
     : CRANE_PAGES.includes(name) ? "rigging" : FLEET_PAGES.includes(name) ? "fleet" : SUPPORT_PAGES.includes(name) ? "support" : SOCIAL_PAGES.includes(name) ? "social" : SAFETY_PAGES.includes(name) ? "safety" : name);
   if (name !== "safetybrief" && briefTimer) { clearInterval(briefTimer); briefTimer = null; }
   document.body.dataset.page = "view";
@@ -203,7 +203,7 @@ function showView(name) {
   }
   host.innerHTML = `<nav class="crumbs"><button data-home>Home</button><span>/</span>
     ${name === "newspost" ? `<button data-view="news">News</button><span>/</span>` : ""}
-    ${["payroll", "inventory"].includes(name) ? `<button data-view="hr">HR</button><span>/</span>` : ""}
+    ${["payroll", "inventory", "mycerts"].includes(name) ? `<button data-view="hr">HR</button><span>/</span>` : ""}
     ${["certreport", "evaltest", "approvals"].includes(name) ? `<button data-view="forklift">Forklift Center</button><span>/</span>` : ""}
     ${name === "inspform" ? `<button data-view="inspection">Inspection Center</button><span>/</span>` : ""}
     ${CRANE_PAGES.includes(name) ? `<button data-view="rigging">Crane Center</button><span>/</span>` : ""}
@@ -389,6 +389,7 @@ const VIEWS = {
   hr: () => hrView(),
   payroll: () => payrollView(),
   inventory: () => inventoryView(),
+  mycerts: () => myCertsView(),
   directory: () => directoryView(),
   news: () => newsView(),
   newspost: () => newsPostView(),
@@ -426,7 +427,7 @@ const pageTitle = (id) => (FEATURES.find(f => f.id === id) || COMPANY_PAGES.find
        myclasses: { title: "My Classes" },
        agcomap: { title: "AGCO Development Map" },
        newspost: { title: (newsPosts.find(p => p.id === openNewsId) || {}).title || "News" },
-       hr: { title: "HR" }, payroll: { title: "Payroll Calendar" },
+       hr: { title: "HR" }, payroll: { title: "Payroll Calendar" }, mycerts: { title: "My Certifications" },
        inventory: { title: invPerson && invPerson !== (me && me.id) ? invName(invPerson) : "Personal Inventory" },
        certreport: { title: "Certification Report" },
        evaltest: { title: "Forklift Driving Test" },

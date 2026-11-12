@@ -28,7 +28,8 @@ function hrView() {
   const handbook = companyDocs.find(d => d.id === "handbook");
   const updated = handbook && handbook.updated_at
     ? `Updated ${new Date(handbook.updated_at).toLocaleDateString()}` : "";
-  return hero("HR", "Your pay calendar and the employee handbook.") + linkGrid(
+  const attention = mycNeedingAttention();
+  return hero("HR", "Your pay calendar, your certifications and the employee handbook.") + linkGrid(
       `<button type="button" class="link-card" data-view="payroll"
         style="width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer">
         <span class="well red">${icon("calendar")}</span>
@@ -44,6 +45,11 @@ function hrView() {
           companyDocsError && /does not exist|schema cache/i.test(companyDocsError)
             ? "Not switched on yet."
             : "Not uploaded yet. An owner adds it on the admin page."}</p></div>`)
+    + `<button type="button" class="link-card" data-view="mycerts"
+        style="width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer;${lit("slate")}">
+        <span class="well">${icon("checkCircle")}</span>
+        <span><b>My Certifications</b><span>Your forklift card, crane and rigging, EPA 609, and any others you hold, with when each runs out.</span>
+          <span class="go">${attention ? `${attention} need${attention === 1 ? "s" : ""} attention &rarr;` : "Open your certifications &rarr;"}</span></span></button>`
     + `<button type="button" class="link-card" data-inv-open=""
         style="width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer;${lit("teal")}">
         <span class="well">${icon("box")}</span>

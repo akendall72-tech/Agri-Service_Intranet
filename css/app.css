@@ -2333,6 +2333,17 @@ div.inv-row::before { content: ""; position: absolute; left: 10px; top: 12px; bo
 .inv-row .inv-main span { color: var(--cab-sub); font-size: 13px; }
 .inv-row .inv-total { color: var(--accent); font: 600 15px var(--font-mono); white-space: nowrap; }
 .inv-form { margin-bottom: 16px; }
+/* My Certifications: the inventory's cards, with a glyph and a status tag. */
+.myc { --accent: var(--lit-slate); }
+.myc-row .myc-glyph { display: flex; color: var(--accent); }
+.myc-row .cab-tag { flex: 0 0 auto; }
+.myc-row .myc-view { margin: 0; padding: 6px 12px; height: auto; font-size: 13px; }
+.myc-add { display: inline-flex; align-items: center; gap: 8px; justify-self: start; }
+.myc-note { padding-top: 0; font-size: 13.5px; max-width: 70ch; }
+.myc-form .check { margin-top: 6px; }
+.myc-link { display: inline; margin: 0 0 0 6px; padding: 0; height: auto; border: 0; background: none; box-shadow: none;
+  color: var(--red); font: inherit; font-weight: 600; text-decoration: underline; cursor: pointer; }
+@media (max-width: 520px) { .myc-row { flex-wrap: wrap; } .myc-row .myc-view { margin-left: 32px; } }
 .inv-form .fields { grid-template-columns: 2fr 1fr; }
 .inv-form .money { display: flex; align-items: center; gap: 6px; }
 .inv-form .money span { color: var(--muted); }

@@ -640,18 +640,18 @@ function lxReportPdf(loc) {
 
   // DOT Medical Card, Welding, CPR and First Aid: everyone here who holds one.
   {
-    const holders = f.lc.rows.filter(x => LC_KINDS.some(k => x.cells[k.id].tone !== "none"));
+    const holders = f.lc.rows.filter(x => CERT_KINDS.some(k => x.cells[k.id].tone !== "none"));
     section("DOT medical, welding, CPR & first aid", holders.length
       ? `Optional; people add their own in the app. ${lxPlural(holders.length, "person", "people")} here ${holders.length === 1 ? "holds" : "hold"} at least one: ${
         f.lc.expired.length} expired, ${f.lc.expiring.length} running out in the next ${LC_SOON_DAYS} days.`
       : `Optional; people add their own in the app. Nobody at ${f.name} has added one yet.`);
     if (holders.length) {
       const toneColor = { ok: green, warn: amber, bad: red, none: grey };
-      const [rows, tones] = toned(holders.map(x => [[x.name, ...LC_KINDS.map(k => {
+      const [rows, tones] = toned(holders.map(x => [[x.name, ...CERT_KINDS.map(k => {
         const c = x.cells[k.id];
         return c.tone === "none" ? "-" : [c.text, c.sub, c.detail].filter(Boolean).join("\n");
-      })], LC_KINDS.map(k => toneColor[x.cells[k.id].tone])]));
-      table([["Name", 140], ...LC_KINDS.map(k => [k.short, (CW - 140) / 4])], rows,
+      })], CERT_KINDS.map(k => toneColor[x.cells[k.id].tone])]));
+      table([["Name", 140], ...CERT_KINDS.map(k => [k.short, (CW - 140) / 4])], rows,
         { bold: 0, color: (row, i) => i ? tones.get(row)[i - 1] : null });
     }
   }

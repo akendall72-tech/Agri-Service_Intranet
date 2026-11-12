@@ -7,17 +7,12 @@
 // admins and owners see them, with their pictures. Anything else a person adds
 // stays theirs, and isn't loaded here at all.
 
-const LC_KINDS = [
-  { id: "dot_medical", name: "DOT Medical Card", short: "DOT medical" },
-  { id: "welding", name: "Welding Certification", short: "Welding" },
-  { id: "cpr", name: "CPR", short: "CPR" },
-  { id: "first_aid", name: "First Aid", short: "First aid" }];
 // The columns, the company's three first.
 const LC_COLUMNS = [
   { id: "forklift", name: "Forklift", short: "Forklift" },
   { id: "crane", name: "Crane & rigging", short: "Crane & rigging" },
   { id: "epa", name: "EPA 609", short: "EPA 609" },
-  ...LC_KINDS];
+  ...CERT_KINDS];
 // The four warn this many days ahead, as the app's reminders do.
 const LC_SOON_DAYS = 30;
 
@@ -102,7 +97,7 @@ function lcFigures(loc) {
 
     const mine = lcCerts.filter(c => (x.account && c.user_id === x.account.id)
       || (c.employee_number && x.number && num(c.employee_number) === x.number) || (c.email && x.email && mail(c.email) === x.email));
-    LC_KINDS.forEach(k => {
+    CERT_KINDS.forEach(k => {
       const c = mine.find(m => m.kind === k.id);
       if (!c) { cells[k.id] = LC_NONE; return; }
       const detail = c.name && c.name !== k.name ? c.name : "";
@@ -115,7 +110,7 @@ function lcFigures(loc) {
   rows.sort((a, b) => a.name.localeCompare(b.name));
 
   // The four, run out or running out: what the Overview's To do lists.
-  const flagged = (tone) => rows.flatMap(x => LC_KINDS.filter(k => x.cells[k.id].tone === tone)
+  const flagged = (tone) => rows.flatMap(x => CERT_KINDS.filter(k => x.cells[k.id].tone === tone)
     .map(k => ({ who: x.name, kind: k.name, cell: x.cells[k.id] })))
     .sort((a, b) => (a.cell.days ?? 0) - (b.cell.days ?? 0) || a.who.localeCompare(b.who));
   const count = (id, tone) => rows.filter(x => tone ? x.cells[id].tone === tone : x.cells[id].tone !== "none").length;
@@ -176,7 +171,7 @@ function renderLocationCerts() {
 
     ${lcError && !lcNotSetUp ? `<p class="error">The certifications people added couldn't be loaded: ${esc(lcError)}</p>` : ""}
     <div class="sx-tiles lc-tiles lc-three">${LC_COLUMNS.slice(0, 3).map(tile).join("")}</div>
-    <div class="sx-tiles lc-tiles lc-four">${LC_KINDS.map(tile).join("")}</div>
+    <div class="sx-tiles lc-tiles lc-four">${CERT_KINDS.map(tile).join("")}</div>
 
     <section class="sx-panel sx-full" style="${lit(expiredN ? "red" : soonN ? "amber" : "green")}">
       <header><h3>Who has what</h3><span>${lcShow === "all" ? lxPlural(shown.length, "person", "people")
@@ -204,10 +199,10 @@ function renderLocationCerts() {
 
 function lcSpreadsheet(loc) {
   const { name, rows } = lcFigures(loc);
-  const head = ["Name", "Job", "Work email", ...LC_COLUMNS.flatMap(c => LC_KINDS.includes(c) ? [c.name, `${c.name} details`] : [c.name])];
+  const head = ["Name", "Job", "Work email", ...LC_COLUMNS.flatMap(c => CERT_KINDS.includes(c) ? [c.name, `${c.name} details`] : [c.name])];
   const body = rows.map(x => [x.name, x.job, x.email, ...LC_COLUMNS.flatMap(c => {
     const cell = x.cells[c.id];
-    return LC_KINDS.includes(c) ? [cell.csv, [cell.detail, cell.cert && cell.cert.issued_by, cell.cert && cell.cert.number && `#${cell.cert.number}`]
+    return CERT_KINDS.includes(c) ? [cell.csv, [cell.detail, cell.cert && cell.cert.issued_by, cell.cert && cell.cert.number && `#${cell.cert.number}`]
       .filter(Boolean).join(" · ")] : [cell.csv];
   })]);
   downloadCSV(`${name} Certifications ${fvToday()}.csv`, [head, ...body]);
