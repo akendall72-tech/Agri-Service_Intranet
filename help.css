@@ -161,6 +161,11 @@ td.no { color: var(--text-secondary); }
 
 .guide footer { color: var(--text-secondary); font-size: .92rem; padding: 4px 4px 0; }
 
+/* Who makes it, at the foot of both pages. */
+.site-foot { margin-top: 28px; padding-top: 16px; border-top: 1px solid var(--hairline); text-align: center;
+  color: var(--text-secondary); font-size: .88rem; }
+.guide footer.site-foot { padding: 16px 4px 0; }
+
 /* Printing or saving as a PDF: light, cards kept whole where they fit. */
 @media print {
   :root { --background: #FFFFFF; --surface: #FFFFFF; --text: #1A1817; --text-secondary: #57504C; --hairline: #D9D3CF; --red: #B4041E; color-scheme: light; }
