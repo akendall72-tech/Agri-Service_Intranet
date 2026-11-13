@@ -473,8 +473,9 @@ function renderAppNav(active) {
     + `<div class="nav-group">Company</div>`
     + COMPANY_PAGES.map(p => navButton(p.id, p.title, p.icon,
         p.id === "news" ? newsUnseenCount() : 0, "data-view")).join("")
-    // The field guide (field-guide.html, published beside the page), in a tab of its own.
-    + `<a class="nav-item" href="field-guide.html" target="_blank" rel="noopener">${icon("doc", 18)}<span>Field guide</span></a>`
+    // Help and Support (support.html, published beside the page, with the
+    // Field Guide behind it), in a tab of its own.
+    + `<a class="nav-item" href="support.html" target="_blank" rel="noopener">${icon("info", 18)}<span>Help and Support</span></a>`
     + (isOwner() ? `<div class="nav-group">Manage</div>
         <button class="nav-item" data-open-admin>${icon("settings", 18)}<span>Admin</span></button>` : "")
     + (isTrainingManager() ? `<button class="nav-item" data-open-training>${icon("training", 18)}<span>Training</span></button>` : "")
