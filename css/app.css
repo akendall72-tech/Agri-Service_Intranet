@@ -2348,6 +2348,20 @@ div.inv-row::before { content: ""; position: absolute; left: 10px; top: 12px; bo
 .inv-row .inv-main span { color: var(--cab-sub); font-size: 13px; }
 .inv-row .inv-total { color: var(--accent); font: 600 15px var(--font-mono); white-space: nowrap; }
 .inv-form { margin-bottom: 16px; }
+/* Operator's Manuals: the inventory's cards and search bar; the admin tab's form and table. */
+.om { --accent: var(--lit-teal); }
+.om-row .om-glyph { display: flex; color: var(--accent); }
+.om-row .cab-tag { flex: 0 0 auto; }
+.om-foot { padding-top: 0; font-size: 13.5px; }
+.inv-bar select#omPlace { width: auto; margin: 0; }
+.om-places { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 4px 14px; margin-top: 6px; }
+.om-form { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.om-form h3 { margin: 0 0 8px; }
+.om-storage b { color: var(--ink); }
+.om-storage.om-full { color: var(--red-dark); }
+.om-table td { vertical-align: top; }
+.om-actions { white-space: nowrap; text-align: right; }
+.om-actions button { margin: 0 0 0 4px; padding: 6px 10px; }
 /* My Certifications: the inventory's cards, with a glyph and a status tag. */
 .myc { --accent: var(--lit-slate); }
 .myc-row .myc-glyph { display: flex; color: var(--accent); }

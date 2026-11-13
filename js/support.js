@@ -62,6 +62,16 @@ function supportView() {
             <span class="go">Open the list &rarr;</span></span>
         </button>
       </section>`}
+      ${omNotSetUp ? "" : (n => `<section>
+        <div class="group-title">Operator's manuals</div>
+        <button type="button" class="link-card" data-view="manuals" style="${lit("teal")}">
+          <span class="well">${icon("book")}</span>
+          <span><b>Operator's Manuals</b>
+            <span>The operator's manuals for the machines at your location.</span>
+            <span class="sc-foot">${icon("doc", 14)}${n ? `${n} ${n === 1 ? "manual" : "manuals"}` : "None added yet"}</span>
+            <span class="go">Open the manuals &rarr;</span></span>
+        </button>
+      </section>`)(omFor(omCurrentPlace()).length)}
     </div>
     <div id="whoToCall">${whoToCallHtml()}</div>`;
 }

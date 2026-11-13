@@ -172,7 +172,7 @@ const planCount = () => isAdmin()
   : plans.filter(p => p.status === "changes_requested").length;
 
 // The Support Center's own pages, under it in the crumbs and the sidebar.
-const SUPPORT_PAGES = ["requests", "request", "newrequest", "tools", "tool", "toolform"];
+const SUPPORT_PAGES = ["requests", "request", "newrequest", "tools", "tool", "toolform", "manuals"];
 // Social's: Events, the Company community, the Fitness Challenge and Trivia.
 const SOCIAL_PAGES = ["events", "event", "community", "communitypost", "fitness", "trivia", "triviagame", "triviaplay"];
 // The Fleet Center's: a vehicle, and the form for one.
@@ -252,7 +252,8 @@ function showAdmin() {
     renderCoursesAdmin, renderSdsAdmin, renderSdsPending, renderArticlesAdmin, renderSkillsAdmin,
     renderNewsAdmin, renderTsImport, renderTsLive, renderHandbook, renderAgcoImport, renderAgcoLive,
     renderAgcoTechs, renderAgcoRules, renderAgcoAdded, renderAgcoBales, renderMockSchedule, renderSafetyAdmin,
-    renderSafetyReportAdmin, renderSafetyReportsAdmin, renderFitnessAdmin, renderTriviaAdmin, renderFleetCheckAdmin);
+    renderSafetyReportAdmin, renderSafetyReportsAdmin, renderFitnessAdmin, renderTriviaAdmin, renderFleetCheckAdmin,
+    renderManualsAdmin);
   (document.querySelector(`#adminNav [data-tab="${adminTab}"]`) || document.querySelector("#adminNav [data-tab]")).click();
   window.scrollTo(0, 0);
 }
@@ -356,6 +357,7 @@ const VIEWS = {
   tools: () => toolsView(),
   tool: () => toolView(),
   toolform: () => toolFormView(),
+  manuals: () => manualsView(),
 
   inspection: () => inspectionView(),
 
@@ -452,7 +454,7 @@ const pageTitle = (id) => (FEATURES.find(f => f.id === id) || COMPANY_PAGES.find
        safetybrief: { title: (safetyBriefs.find(b => b.id === openBriefId) || {}).title || "Safety Brief" },
        request: { title: "Request" },
        newrequest: { title: "New Request" },
-       tools: { title: "Special Tools" },
+       tools: { title: "Special Tools" }, manuals: { title: "Operator's Manuals" },
        tool: { title: (tools.find(t => t.id === openToolId) || {}).name || "Special Tool" },
        toolform: { title: toolDraft && toolDraft.mode === "edit" ? "Edit" : "Add a Tool" },
        // What the app's title bar says: the kicker, "AGCO Training Pathway · 2026".
@@ -597,7 +599,7 @@ document.querySelectorAll(".tabs button[data-tab]").forEach(btn => {
     document.querySelectorAll(".tabs button[data-tab]").forEach(b =>
       b.classList.toggle("active", b === btn));
     ["certs", "plans", "people", "support", "payroll", "tools",
-      "directory", "logins", "reminders", "fleetcheck", "events", "fitness", "trivia", "org", "openseat", "inspections", "courses", "articles", "skillsadmin", "sds", "news", "trainingstatus", "handbook", "agco", "mock", "safetydesk", "safetyreportform", "safetyreports", "safetyoverview", "fkwaiting", "trainingoverview", "agcocatalog", "rpagco", "rpclass", "oltadmin", "locationoverview", "locationcerts", "fkrequired", "crrequired", "craneinspection", "givecredit", "coursecredits", "classschedule", "trainingsettings", "epa609"].forEach(name =>
+      "directory", "logins", "reminders", "fleetcheck", "events", "fitness", "trivia", "org", "openseat", "inspections", "courses", "articles", "skillsadmin", "sds", "news", "trainingstatus", "handbook", "agco", "mock", "safetydesk", "safetyreportform", "safetyreports", "safetyoverview", "fkwaiting", "trainingoverview", "agcocatalog", "rpagco", "rpclass", "oltadmin", "locationoverview", "locationcerts", "manuals", "fkrequired", "crrequired", "craneinspection", "givecredit", "coursecredits", "classschedule", "trainingsettings", "epa609"].forEach(name =>
       $("tab-" + name).classList.toggle("hidden", name !== btn.dataset.tab));
     $("adminTitle").textContent = btn.dataset.title || btn.querySelector("span").textContent.trim();
     if (btn.closest("#safetyNav")) safetyTab = btn.dataset.tab;

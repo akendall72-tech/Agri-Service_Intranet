@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Which version this is. publish.sh stamps the date and commit here, and
      into version.json beside the page; "dev" is a copy that wasn't published. -->
-<meta name="app-version" content="2026-11-13.91a29ca">
+<meta name="app-version" content="2026-11-13.4978733">
 <!-- Where this page may load things from and send things to. GitHub Pages
      can't send security headers, so it's here. Scripts come only from this
      site and the two script CDNs (each pinned with an integrity hash), and
@@ -34,7 +34,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
-<link rel="stylesheet" href="css/app.css?v=b1a4d98b60">
+<link rel="stylesheet" href="css/app.css?v=d21bd3524f">
 </head>
 <body>
 
@@ -94,6 +94,7 @@
       <button data-tab="fitness" data-title="Fitness Challenge"><i data-icon="fitness"></i><span>Fitness Challenge</span></button>
       <button data-tab="trivia" data-title="AGCO Trivia"><i data-icon="trivia"></i><span>Trivia</span></button>
       <button data-tab="handbook"><i data-icon="briefcase"></i><span>Employee Handbook</span></button>
+      <button data-tab="manuals" data-title="Operator's Manuals"><i data-icon="book"></i><span>Operator's Manuals</span></button>
       <button data-tab="reminders"><i data-icon="reminders"></i><span>Reminders</span></button>
       <button data-tab="fleetcheck" data-title="Weekly Fleet Check"><i data-icon="fleet"></i><span>Fleet Check</span></button>
       <button data-tab="support"><i data-icon="support"></i><span>Support Center</span></button>
@@ -877,6 +878,11 @@
     </section>
 
     <!-- Employee handbook -->
+    <!-- Operator's Manuals: drawn by renderManualsAdmin -->
+    <section id="tab-manuals" class="hidden">
+      <div id="manualsAdmin"></div>
+    </section>
+
     <section id="tab-handbook" class="hidden">
       <div class="card">
         <h2>Employee handbook</h2>
@@ -1165,17 +1171,18 @@
      only names from an earlier file; boot.js starts the page and stays last.
      js/core.js has the rest. publish.sh adds ?v= to each, so a changed file is
      fetched fresh and an unchanged one comes from the browser's cache. -->
-<script src="js/core.js?v=4c2f814c6e"></script>
-<script src="js/shell.js?v=326938f091"></script>
+<script src="js/core.js?v=5cdccd1259"></script>
+<script src="js/shell.js?v=dce60af0bb"></script>
 <script src="js/location-dashboard.js?v=6de51d5d20"></script>
 <script src="js/location-certifications.js?v=f84322617d"></script>
 <script src="js/my-certifications.js?v=c7baa6cb5e"></script>
+<script src="js/operator-manuals.js?v=de83dc2ae1"></script>
 <script src="js/training-status.js?v=711239b568"></script>
 <script src="js/forklift.js?v=0ece5100f3"></script>
 <script src="js/crane.js?v=3b00d4d9fa"></script>
 <script src="js/lift-plans.js?v=1a1a12b034"></script>
 <script src="js/crane-inspections.js?v=e5177a4340"></script>
-<script src="js/support.js?v=922d22d184"></script>
+<script src="js/support.js?v=6261d9719f"></script>
 <script src="js/special-tools.js?v=fbaac4f097"></script>
 <script src="js/reminders.js?v=360d96f67d"></script>
 <script src="js/people.js?v=43db7cf566"></script>
