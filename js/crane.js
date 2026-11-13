@@ -189,6 +189,8 @@ document.addEventListener("click", async (event) => {
   }
   craneOverrides.set(row.person_key, data[0]);
   redrawCrane();
+  // The Safety dashboard's list has the same buttons.
+  safely(renderCraneQuals);
 });
 
 function riggingView() {

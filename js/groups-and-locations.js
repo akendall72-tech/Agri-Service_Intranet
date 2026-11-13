@@ -58,9 +58,17 @@ function renderOrg() {
       </div>`;
   }).join("") || `<p class="note">No groups yet.</p>`;
 
-  shopBox.innerHTML = allLocations.map(l => {
+  // UKG's stores that no location answers to (0132): their people are on no
+  // location's lists until one does.
+  const unmatched = [...new Set(tsPeople.filter(t => !storeLocation(t.store)).map(t => t.store || "(blank)"))].sort();
+  shopBox.innerHTML = (unmatched.length ? `<p class="cq-unmatched">${icon("warning", 15)}<span>UKG's All employees lists ${unmatched.map(st =>
+      `<b>${esc(st)}</b> (${tsPeople.filter(t => !storeLocation(t.store) && (t.store || "(blank)") === st).length})`).join(", ")}, and no
+      location here answers to ${unmatched.length === 1 ? "it" : "them"}, so those people are on no location's lists. Add the name under
+      <b>UKG names</b> on the location it means.</span></p>` : "") + allLocations.map(l => {
     const on = l.is_active !== false;
     const count = people.filter(p => p.location_id === l.id).length;
+    const onRoster = tsPeople.filter(t => storeLocation(t.store) === l.id).length;
+    const kept = Array.isArray(l.ukg_names);
     const zone = l.timezone || SHOP_ZONES[l.id] || "America/Boise";
     return `
       <div class="role" style="padding:14px 16px${on ? "" : ";opacity:.6"}" data-shop="${esc(l.id)}">
@@ -74,11 +82,15 @@ function renderOrg() {
           <div><label>Order</label>
             <input type="text" data-o="sort_order" value="${esc(l.sort_order)}"></div>
           <div><label>Showing</label>${showingSelect(on)}</div>
+          ${kept ? `<div class="wide"><label>UKG names</label>
+            <input type="text" data-o="ukg_names" value="${esc(l.ukg_names.join(", "))}"
+              placeholder="Other names UKG's reports use for it, separated by commas">
+            <p class="note" style="margin:4px 0 0">UKG's reports find a location by its name, its id, or any of these. Renaming it adds the old name here by itself.</p></div>` : ""}
         </div>
         <div class="row">
           <button data-act="save-shop">Save</button>
           <button class="ghost" data-act="delete-shop">Delete</button>
-          <span class="note">${count} ${count === 1 ? "person" : "people"} · id ${esc(l.id)}</span>
+          <span class="note">${count} ${count === 1 ? "person" : "people"} · ${onRoster} on All employees · id ${esc(l.id)}</span>
           <span class="msg"></span>
         </div>
       </div>`;
@@ -178,6 +190,10 @@ $("admin").addEventListener("click", async (event) => {
     is_active: get("is_active") === "yes"
   };
   if (!isGroup) update.timezone = get("timezone");
+  // Before 0132 there's no such column, and no box.
+  if (!isGroup && box.querySelector('[data-o="ukg_names"]')) {
+    update.ukg_names = get("ukg_names").split(",").map(n => n.trim()).filter(Boolean);
+  }
 
   speak(box, "Saving…", false);
   const { data, error } = await db.from(table).update(update).eq("id", id).select();

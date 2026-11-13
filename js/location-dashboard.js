@@ -84,8 +84,9 @@ document.addEventListener("click", (event) => {
 // Everything the dashboard shows for one location, worked out once: the page
 // draws it, and the PDF report prints it.
 function lxFigures(loc) {
-  const name = lxName(loc), placeKey = name.trim().toLowerCase();
-  const here = (store) => String(store || "").trim().toLowerCase() === placeKey;
+  const name = lxName(loc);
+  // UKG names the location; storeLocation finds which (0132), old names included.
+  const here = (store) => storeLocation(store) === loc;
   const byName = (a, b) => a.name.localeCompare(b.name);
   const today = new Date(new Date().toDateString()), DAY = 86400000;
   const short = (d) => d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });

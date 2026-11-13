@@ -2348,6 +2348,36 @@ div.inv-row::before { content: ""; position: absolute; left: 10px; top: 12px; bo
 .inv-row .inv-main span { color: var(--cab-sub); font-size: 13px; }
 .inv-row .inv-total { color: var(--accent); font: 600 15px var(--font-mono); white-space: nowrap; }
 .inv-form { margin-bottom: 16px; }
+/* Crane Qualifications on the Safety dashboard: a tally, a bar of filters, and a sortable table. */
+.cq-tally { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 0 0 14px; }
+@media (max-width: 640px) { .cq-tally { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.cq-tally div { padding: 10px 12px; border-radius: 10px; background: var(--green-soft); }
+.cq-tally div.warn { background: var(--caution-soft); } .cq-tally div.bad { background: var(--red-soft); } .cq-tally div.quiet { background: #F0EEEC; }
+.cq-tally b { display: block; font-size: 26px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.cq-tally span { color: var(--muted); font-size: 13px; }
+.cq-unmatched { display: flex; gap: 8px; align-items: flex-start; margin: 0 0 14px; padding: 10px 12px; border-radius: 10px;
+  background: var(--caution-soft); color: #6B4307; font-size: 14px; }
+.cq-unmatched svg { flex: 0 0 auto; margin-top: 2px; }
+.cq-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; margin: 0 0 12px; }
+.cq-bar input.search { flex: 1 1 240px; max-width: none; margin: 0; }
+.cq-bar select { width: auto; margin: 0; }
+.cq-bar .check, .cq-bar button { margin: 0; }
+.cq-bar .msg { margin: 0; }
+.cq-scroll { overflow-x: auto; max-height: 70vh; overflow-y: auto; border: 1px solid var(--line); border-radius: 10px; }
+table.cq-table { margin: 0; min-width: 760px; }
+.cq-table td:first-child b, .cq-table td:nth-child(4), .cq-table td:nth-child(5) { white-space: nowrap; }
+.cq-table thead th { position: sticky; top: 0; z-index: 1; background: var(--paper); padding: 0; }
+.cq-sort { display: block; width: 100%; height: auto; margin: 0; padding: 9px 10px; border: 0; border-radius: 0; background: none; box-shadow: none;
+  font: inherit; color: inherit; text-transform: inherit; letter-spacing: inherit; text-align: left; cursor: pointer; white-space: nowrap; }
+.cq-sort:hover, .cq-sort.on { color: var(--ink); }
+.cq-sort:focus-visible { outline: 2px solid var(--red); outline-offset: -2px; }
+.cq-table td { vertical-align: top; padding: 9px 10px; }
+.cq-table td small { display: block; margin-top: 3px; color: var(--muted); font-size: 12px; }
+.cq-table tbody tr:hover td { background: var(--paper); }
+.cq-table small.cq-nomatch { color: #92590A; }
+.cq-act { text-align: right; white-space: nowrap; }
+.cq-act button { margin: 0; padding: 5px 10px; }
+
 /* Operator's Manuals: the inventory's cards and search bar; the admin tab's form and table. */
 .om { --accent: var(--lit-teal); }
 .om-row .om-glyph { display: flex; color: var(--accent); }

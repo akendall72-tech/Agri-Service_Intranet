@@ -48,10 +48,10 @@ const LC_NONE = { tone: "none", text: "", csv: "" };
 // the UKG roster at this location and the app accounts here, joined by
 // employee number, then work email.
 function lcFigures(loc) {
-  const name = lxName(loc), placeKey = name.trim().toLowerCase();
+  const name = lxName(loc);
   const num = (v) => v ? tsEmployeeNumber(v) : "";
   const mail = (v) => String(v || "").trim().toLowerCase();
-  const rows = tsPeople.filter(r => String(r.store || "").trim().toLowerCase() === placeKey).map(r => ({
+  const rows = tsPeople.filter(r => storeLocation(r.store) === loc).map(r => ({
     name: `${r.first_name || ""} ${r.last_name || ""}`.trim() || r.email || "Someone",
     job: (r.job || "").replace(/^\d+\s*-\s*/, ""), number: num(r.employee_number), email: mail(r.email), roster: r, account: null }));
   const byNumber = new Map(rows.filter(x => x.number).map(x => [x.number, x]));

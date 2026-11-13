@@ -231,6 +231,21 @@ const myLocations = () => {
   return [...new Set([home, ...covers].filter(Boolean))];
 };
 const adminAt = (loc) => !!loc && isAdmin() && myLocations().includes(loc);
+
+// The location a UKG store means (0132), as the database's store_location()
+// decides it: by its name, then its id (made from the name it was first given,
+// so Field Support's people still find it now it's called Admin), then any of
+// its UKG names. Compared as store keys: lower case, anything but a-z and 0-9 a
+// single dash, none at the ends. The app's WorkLocation.storeKey is the same.
+const storeKey = (name) => String(name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+function storeLocation(store) {
+  const k = storeKey(store);
+  if (!k) return null;
+  const places = [...allLocations].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0) || a.id.localeCompare(b.id));
+  const hit = places.find(l => storeKey(l.name) === k) || places.find(l => l.id === k)
+    || places.find(l => (l.ukg_names || []).some(n => storeKey(n) === k));
+  return hit ? hit.id : null;
+}
 const myLocationNames = () => myLocations().map(id => locations[id] || id);
 
 // ---------------------------------------------------------------- auth
