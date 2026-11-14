@@ -1,0 +1,210 @@
+// Platform (migration 0138, multi-org step 4)
+//
+// The page above every company, for platform owners: the companies, with
+// their people and when they were last in; a new company; the accounts
+// waiting to be placed in one; and the log of what was done here. A platform
+// owner belongs to no company, so this is all they see; the database decides
+// who that is (platform_owners), and every question here is a platform_*()
+// function that refuses anyone else.
+
+let pfCompanies = [], pfWaiting = [], pfLog = [], pfPeople = {}, pfError = null;
+let pfOpen = null, pfBusy = false, pfMessage = "", pfProblem = "";
+
+async function loadPlatform() {
+  if (!platformOwner) return;
+  const [companies, waiting, log] = await Promise.all([
+    db.rpc("platform_companies"), db.rpc("platform_people", { target: null }), db.rpc("platform_recent_log", { how_many: 40 })]);
+  pfError = (companies.error || waiting.error || log.error || {}).message || null;
+  pfCompanies = companies.data || [];
+  pfWaiting = waiting.data || [];
+  pfLog = log.data || [];
+  if (pfOpen) await pfLoadPeople(pfOpen);
+}
+
+async function pfLoadPeople(id) {
+  const { data, error } = await db.rpc("platform_people", { target: id });
+  pfPeople[id] = error ? [] : data || [];
+}
+
+const pfWhen = (at) => at ? new Date(at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "never";
+const pfSize = (bytes) => bytes >= 1073741824 ? `${(bytes / 1073741824).toFixed(1)} GB`
+  : bytes >= 1048576 ? `${Math.round(bytes / 1048576)} MB` : bytes >= 1024 ? `${Math.round(bytes / 1024)} KB` : `${bytes || 0} bytes`;
+const pfSlug = (name) => String(name || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+  .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
+
+function platformView() {
+  setTimeout(() => { if (!pfCompanies.length && !pfError) loadPlatform().then(renderPlatformBody); });
+  return hero("Platform", "Every company on Agri-Barn, the accounts waiting for one, and what's been done here.")
+    + `<div id="platformBody">${platformBody()}</div>`;
+}
+
+function renderPlatformBody() {
+  const box = $("platformBody");
+  if (box) box.innerHTML = platformBody();
+}
+
+function platformBody() {
+  if (pfError) {
+    return `<div class="card"><p class="error">${esc(/platform_|does not exist|schema cache/i.test(pfError)
+      ? "Run migration 0138_platform.sql in the SQL editor, then reload this page." : pfError)}</p></div>`;
+  }
+  const people = pfCompanies.reduce((n, c) => n + Number(c.active || 0), 0);
+  return `
+    <div class="pf-stats">
+      <div><b>${pfCompanies.length}</b><span>${pfCompanies.length === 1 ? "company" : "companies"}</span></div>
+      <div><b>${people}</b><span>active people</span></div>
+      <div class="${pfWaiting.length ? "pf-hot" : ""}"><b>${pfWaiting.length}</b><span>${pfWaiting.length === 1 ? "account waiting" : "accounts waiting"}</span></div>
+    </div>
+    ${pfMessage ? `<p class="pf-ok">${esc(pfMessage)}</p>` : ""}
+    ${pfProblem ? `<p class="error">${esc(pfProblem)}</p>` : ""}
+    <div class="card">
+      <h2>Companies</h2>
+      <div class="pf-companies">${pfCompanies.map(pfCompanyCard).join("") || `<p class="note">None yet.</p>`}</div>
+    </div>
+    ${pfWaitingCard()}
+    ${pfNewCompanyCard()}
+    ${pfLogCard()}`;
+}
+
+function pfCompanyCard(c) {
+  const open = pfOpen === c.id;
+  return `<div class="pf-company ${open ? "open" : ""}">
+      <button type="button" class="pf-company-head" data-pf-open="${esc(c.id)}" aria-expanded="${open}">
+        <span class="pf-company-name"><b>${esc(c.name)}</b><small>${esc(c.id)}${(c.email_domains || []).length ? ` · ${esc(c.email_domains.join(", "))}` : ""}</small></span>
+        <span class="pf-company-facts">
+          <span><b>${Number(c.active || 0)}</b> active</span>
+          <span><b>${Number(c.owners || 0)}</b> ${Number(c.owners) === 1 ? "owner" : "owners"}</span>
+          <span>last in ${esc(pfWhen(c.last_sign_in))}</span>
+          <span>${esc(pfSize(Number(c.file_bytes || 0)))} of files</span>
+        </span>
+      </button>
+      ${open ? pfCompanyDetail(c) : ""}
+    </div>`;
+}
+
+function pfCompanyDetail(c) {
+  const people = pfPeople[c.id];
+  return `<div class="pf-detail">
+      <div class="pf-fields">
+        <div><label for="pfName-${esc(c.id)}">Name</label>
+          <input type="text" id="pfName-${esc(c.id)}" maxlength="40" value="${esc(c.name)}"></div>
+        <div><label for="pfLegal-${esc(c.id)}">Legal name</label>
+          <input type="text" id="pfLegal-${esc(c.id)}" maxlength="80" value="${esc(c.legal_name)}"></div>
+        <div class="pf-wide"><label for="pfDomains-${esc(c.id)}">Email domains</label>
+          <input type="text" id="pfDomains-${esc(c.id)}" value="${esc((c.email_domains || []).join(", "))}" placeholder="dealer.com, dealer.onmicrosoft.com">
+          <p class="note">A new account with one of these lands in this company by itself. Separate them with commas.</p></div>
+      </div>
+      <div class="pf-actions"><button type="button" data-pf-save="${esc(c.id)}" ${pfBusy ? "disabled" : ""}>Save changes</button>
+        <span class="note">Made ${esc(pfWhen(c.created_at))}</span></div>
+      <h3>People</h3>
+      ${!people ? `<p class="note">Loading…</p>` : !people.length ? `<p class="note">Nobody yet. Place its first owner from Accounts waiting.</p>` : `
+      <div class="table-wrap"><table class="pf-table">
+        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Location</th><th>Last in</th></tr></thead>
+        <tbody>${people.map(p => `<tr class="${p.deactivated_at ? "pf-gone" : ""}">
+          <td>${esc(p.full_name || "No name yet")}${p.deactivated_at ? ` <span class="badge b-none">Deactivated</span>` : ""}</td>
+          <td>${esc(p.email || "")}</td><td>${esc(p.role)}</td><td>${esc(p.location || "—")}</td>
+          <td>${esc(pfWhen(p.last_sign_in))}</td></tr>`).join("")}</tbody>
+      </table></div>`}
+    </div>`;
+}
+
+function pfWaitingCard() {
+  return `<div class="card">
+      <h2>Accounts waiting</h2>
+      <p class="note">Accounts that belong to no company yet: made under Supabase → Authentication → Users with an email no company
+        lists. Place each in its company, as an employee, an admin or its owner. Someone already in a company can't be moved.</p>
+      ${!pfWaiting.length ? `<p class="note">None waiting.</p>` : `
+      <div class="pf-waiting">${pfWaiting.map(p => `<div class="pf-wait">
+          <span class="pf-wait-who"><b>${esc(p.full_name || p.email || "An account")}</b><small>${esc(p.email || "")} · made ${esc(pfWhen(p.created_at))}</small></span>
+          <select id="pfTo-${esc(p.id)}" aria-label="Company for ${esc(p.email || "")}">
+            ${pfCompanies.map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join("")}</select>
+          <select id="pfRole-${esc(p.id)}" aria-label="Role for ${esc(p.email || "")}">
+            <option value="employee">Employee</option><option value="admin">Admin</option><option value="owner">Owner</option></select>
+          <button type="button" data-pf-place="${esc(p.id)}" ${pfBusy ? "disabled" : ""}>Place</button>
+        </div>`).join("")}</div>`}
+    </div>`;
+}
+
+function pfNewCompanyCard() {
+  return `<div class="card">
+      <h2>New company</h2>
+      <p class="note">It starts empty. Then: make its first owner's account in Supabase (Authentication → Users), with an email at one of
+        its domains so it lands here, or place it from Accounts waiting as its owner. They set up its locations and people from the admin page.</p>
+      <div class="pf-fields">
+        <div><label for="pfNewName">Name</label><input type="text" id="pfNewName" maxlength="40" placeholder="Ridgeline Ag"></div>
+        <div><label for="pfNewLegal">Legal name</label><input type="text" id="pfNewLegal" maxlength="80" placeholder="Ridgeline Ag Supply, Inc."></div>
+        <div><label for="pfNewId">Short name</label><input type="text" id="pfNewId" maxlength="40" placeholder="ridgeline-ag">
+          <p class="note">Lower case and dashes. It can't change later.</p></div>
+        <div><label for="pfNewDomains">Email domains</label><input type="text" id="pfNewDomains" placeholder="ridgelineag.com"></div>
+      </div>
+      <div class="pf-actions"><button type="button" id="pfCreate" ${pfBusy ? "disabled" : ""}>Make the company</button></div>
+    </div>`;
+}
+
+function pfLogCard() {
+  const name = (id) => (pfCompanies.find(c => c.id === id) || {}).name || id || "";
+  const what = (l) => l.action === "account placed"
+    ? `${l.detail.name || l.detail.email || "An account"} placed as ${l.detail.role}`
+    : l.action === "company created" ? "Company made" : l.action === "company changed" ? "Company changed" : l.action;
+  return `<div class="card">
+      <h2>What's been done here</h2>
+      ${!pfLog.length ? `<p class="note">Nothing yet.</p>` : `
+      <ul class="pf-log">${pfLog.map(l => `<li><span>${esc(what(l))}${l.company_id ? ` · <b>${esc(name(l.company_id))}</b>` : ""}</span>
+        <small>${esc(new Date(l.at).toLocaleString())}${l.by_name ? ` · ${esc(l.by_name)}` : ""}</small></li>`).join("")}</ul>`}
+      <p class="note">A company's owners can read what was done to their company.</p>
+    </div>`;
+}
+
+const pfDomains = (text) => String(text || "").split(/[\s,;]+/).map(d => d.trim().replace(/^@/, "").toLowerCase()).filter(Boolean);
+
+async function pfRun(work, done) {
+  pfBusy = true; pfMessage = ""; pfProblem = ""; renderPlatformBody();
+  const { error } = await work();
+  pfBusy = false;
+  if (error) pfProblem = error.message;
+  else pfMessage = done;
+  await loadPlatform();
+  renderPlatformBody();
+}
+
+document.addEventListener("click", (e) => {
+  const open = e.target.closest("[data-pf-open]");
+  if (open) {
+    const id = open.dataset.pfOpen;
+    pfOpen = pfOpen === id ? null : id;
+    renderPlatformBody();
+    if (pfOpen && !pfPeople[pfOpen]) pfLoadPeople(pfOpen).then(renderPlatformBody);
+    return;
+  }
+  const save = e.target.closest("[data-pf-save]");
+  if (save) {
+    const id = save.dataset.pfSave;
+    pfRun(() => db.rpc("platform_save_company", { target: id, new_name: $("pfName-" + id).value.trim(),
+      new_legal_name: $("pfLegal-" + id).value.trim(), domains: pfDomains($("pfDomains-" + id).value), creating: false }), "Saved.");
+    return;
+  }
+  const place = e.target.closest("[data-pf-place]");
+  if (place) {
+    const id = place.dataset.pfPlace, to = $("pfTo-" + id).value, role = $("pfRole-" + id).value;
+    const who = (pfWaiting.find(p => p.id === id) || {}).email || "this account";
+    const where = (pfCompanies.find(c => c.id === to) || {}).name || to;
+    if (!confirm(`Place ${who} in ${where} as ${role === "owner" ? "its owner" : `an ${role === "admin" ? "admin" : "employee"}`}? It can't be moved to another company after.`)) return;
+    pfOpen = to; delete pfPeople[to];
+    pfRun(() => db.rpc("platform_place_person", { person: id, target: to, new_role: role }), `${who} is in ${where} now.`);
+    return;
+  }
+  if (e.target.closest("#pfCreate")) {
+    const name = $("pfNewName").value.trim(), legal = $("pfNewLegal").value.trim();
+    const id = $("pfNewId").value.trim() || pfSlug(name);
+    if (!name || !legal) { pfProblem = "A new company needs a name and a legal name."; return renderPlatformBody(); }
+    pfOpen = id;
+    pfRun(() => db.rpc("platform_save_company", { target: id, new_name: name, new_legal_name: legal,
+      domains: pfDomains($("pfNewDomains").value), creating: true }), `${name} is made.`);
+  }
+});
+
+// The short name follows the name until it's typed into itself.
+document.addEventListener("input", (e) => {
+  if (e.target.id === "pfNewName" && $("pfNewId") && !$("pfNewId").dataset.typed) $("pfNewId").value = pfSlug(e.target.value);
+  if (e.target.id === "pfNewId") e.target.dataset.typed = "1";
+});

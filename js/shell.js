@@ -358,6 +358,9 @@ const VIEWS = {
   tool: () => toolView(),
   toolform: () => toolFormView(),
   manuals: () => manualsView(),
+  platform: () => platformView(),
+  nocompany: () => hero("Not part of a company yet",
+    "This account doesn't belong to a company on Agri-Barn yet, so there's nothing to show. Ask whoever made it for you to have it added, then sign in again."),
 
   inspection: () => inspectionView(),
 
@@ -424,6 +427,8 @@ const COMPANY_PAGES = [
 const pageTitle = (id) => (FEATURES.find(f => f.id === id) || COMPANY_PAGES.find(p => p.id === id)
   || { openseat: { title: "Open Seat Report" }, catalog: { title: "Course Catalog" }, olt: { title: "Online Courses" },
        skills: { title: "Skills" },
+       platform: { title: "Platform" },
+       nocompany: { title: "Agri-Barn" },
        trainingstatus: { title: "Training Status" },
        coursereport: { title: "Training Status" },
        myclasses: { title: "My Classes" },
@@ -468,6 +473,13 @@ function navButton(id, title, iconName, count, attr) {
 }
 
 function renderAppNav(active) {
+  // In no company: the Platform page for a platform owner, and Help.
+  if (noCompany()) {
+    $("appNav").innerHTML = (platformOwner ? navButton("platform", "Platform", "building", 0, "data-view") : "")
+      + `<a class="nav-item" href="support.html" target="_blank" rel="noopener">${icon("info", 18)}<span>Help and Support</span></a>`;
+    document.querySelectorAll("#appNav [data-nav]").forEach(b => b.classList.toggle("active", b.dataset.nav === active));
+    return;
+  }
   $("appNav").innerHTML =
     `<button class="nav-item" data-home data-nav="home">${icon("home", 18)}<span>Home</span></button>`
     + `<div class="nav-group">Centers</div>`
@@ -478,12 +490,13 @@ function renderAppNav(active) {
     // Help and Support (support.html, published beside the page, with the
     // Field Guide behind it), in a tab of its own.
     + `<a class="nav-item" href="support.html" target="_blank" rel="noopener">${icon("info", 18)}<span>Help and Support</span></a>`
-    + (isOwner() ? `<div class="nav-group">Manage</div>
-        <button class="nav-item" data-open-admin>${icon("settings", 18)}<span>Admin</span></button>` : "")
+    + (isOwner() || platformOwner ? `<div class="nav-group">Manage</div>` : "")
+    + (isOwner() ? `<button class="nav-item" data-open-admin>${icon("settings", 18)}<span>Admin</span></button>` : "")
+    + (platformOwner ? navButton("platform", "Platform", "building", 0, "data-view") : "")
     + (isTrainingManager() ? `<button class="nav-item" data-open-training>${icon("training", 18)}<span>Training</span></button>` : "")
     + (isSafetyManager() ? `<button class="nav-item" data-open-safety>${icon("safety", 18)}<span>Safety</span>${
         (n => n ? `<span class="nav-count">${n}</span>` : "")(srReports.filter(srPending).length)}</button>` : "")
-    + (isLocationAdmin() ? `${isOwner() ? "" : `<div class="nav-group">Manage</div>`}
+    + (isLocationAdmin() ? `${isOwner() || platformOwner ? "" : `<div class="nav-group">Manage</div>`}
         <button class="nav-item" data-open-location>${icon("building", 18)}<span>Location Dashboard</span></button>` : "");
   document.querySelectorAll("#appNav [data-nav]").forEach(b =>
     b.classList.toggle("active", b.dataset.nav === active));
@@ -500,7 +513,10 @@ function setMode(mode, active) {
   $("safetyNav").classList.toggle("hidden", !safety);
   $("trainingNav").classList.toggle("hidden", !training);
   $("locationNav").classList.toggle("hidden", !place);
-  $("brandSub").textContent = admin ? "Admin" : safety ? "Safety" : training ? "Training" : place ? lxName() : "Team Portal";
+  $("brandSub").textContent = admin ? "Admin" : safety ? "Safety" : training ? "Training" : place ? lxName()
+    : noCompany() ? (platformOwner ? "Platform" : "") : "Team Portal";
+  // In no company, the page is Agri-Barn's rather than a company's.
+  if (noCompany()) document.querySelectorAll(".brand-name").forEach(el => { el.textContent = "AGRI-BARN"; });
   $("adminEyebrow").textContent = safety ? "Safety" : training ? "Training" : place ? "Location" : "Admin";
   $("adminBtn").textContent = admin ? "Exit admin" : "Admin";
   $("safetyBtn").textContent = safety ? "Exit safety" : "Safety";

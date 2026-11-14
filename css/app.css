@@ -3682,3 +3682,45 @@ p.mc-foot { max-width: 760px; margin: 16px 0 0; color: var(--cab-heading); }
 .co-preview-mono { background: #CC0033; color: rgba(255, 255, 255, .85); border-color: #CC0033; }
 .co-preview-mono img { filter: brightness(0) invert(1); }
 @media (max-width: 640px) { .co-fields, .co-logos { grid-template-columns: minmax(0, 1fr); } }
+
+/* Platform (0138): the page above every company. */
+/* In no company there's no company home page to go back to. */
+body.no-company .crumbs { display: none; }
+.pf-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+.pf-stats > div { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; }
+.pf-stats b { display: block; font-size: 26px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.pf-stats span { color: var(--muted); font-size: 13px; }
+.pf-stats .pf-hot b { color: var(--red); }
+.pf-ok { margin: 0 0 14px; padding: 9px 12px; border-radius: 8px; background: #E6F4EA; color: #17692E; font-size: 14px; }
+.pf-companies { display: grid; gap: 10px; margin-top: 10px; }
+.pf-company { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.pf-company.open { border-color: var(--red); }
+.pf-company-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 16px; width: 100%;
+  padding: 12px 14px; background: none; border: 0; border-radius: 0; color: inherit; text-align: left; cursor: pointer; }
+.pf-company-head:hover { background: var(--bg); }
+.pf-company-name b { display: block; font-size: 16px; }
+.pf-company-name small, .pf-wait-who small { color: var(--muted); font-size: 12.5px; }
+.pf-company-facts { display: flex; flex-wrap: wrap; gap: 4px 14px; color: var(--muted); font-size: 13px; }
+.pf-company-facts b { color: var(--ink, inherit); font-variant-numeric: tabular-nums; }
+.pf-detail { padding: 4px 14px 14px; border-top: 1px solid var(--line); }
+.pf-detail h3 { margin: 18px 0 8px; font-size: 15px; }
+.pf-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
+.pf-fields .pf-wide { grid-column: 1 / -1; }
+.pf-fields .note { margin: 4px 0 0; }
+.pf-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 12px; }
+.pf-table { width: 100%; }
+.pf-table tr.pf-gone td { color: var(--muted); }
+.pf-waiting { display: grid; gap: 8px; margin-top: 10px; }
+.pf-wait { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 8px; align-items: center;
+  padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; }
+.pf-wait-who { min-width: 0; overflow-wrap: anywhere; }
+.pf-wait-who b { display: block; }
+.pf-log { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; }
+.pf-log li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 12px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+.pf-log li:last-child { border-bottom: 0; }
+.pf-log small { color: var(--muted); }
+@media (max-width: 640px) {
+  .pf-fields { grid-template-columns: minmax(0, 1fr); }
+  .pf-wait { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .pf-wait .pf-wait-who, .pf-wait button { grid-column: 1 / -1; }
+}

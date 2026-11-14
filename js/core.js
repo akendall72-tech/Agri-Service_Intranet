@@ -381,6 +381,18 @@ async function start() {
     return;
   }
 
+  // In no company (0138): a platform owner gets the Platform page, anyone
+  // else a word on why there's nothing here yet. Nothing else is theirs.
+  if (noCompany()) {
+    $("who").innerHTML = `<span class="who-avatar">${esc(initials((profile && profile.full_name) || user.email))}</span>`
+      + `<span class="who-text"><b>${esc((profile && profile.full_name) || user.email)}</b><small>${platformOwner ? "Platform" : "No company yet"}</small></span>`;
+    ["adminBtn", "safetyBtn", "trainingBtn", "locationBtn"].forEach(id => $(id).classList.add("hidden"));
+    document.body.classList.add("no-company");
+    document.title = platformOwner ? "Agri-Barn Platform" : "Agri-Barn";
+    showView(platformOwner ? "platform" : "nocompany");
+    return;
+  }
+
   const name = (profile && profile.full_name) || user.email;
   $("who").innerHTML =
     `<span class="who-avatar">${esc(initials(name))}</span>` +
@@ -455,6 +467,10 @@ const CERT_KINDS = [
 const BUILT_IN_COMPANY = { id: "agri-service", name: "Agri-Service", legal_name: "Agri-Service, LLC",
   logo_path: null, logo_mono_path: null };
 let company = BUILT_IN_COMPANY, companyMissing = false;
+// A platform owner (0138): above every company, and in none of them.
+let platformOwner = false;
+// Signed in to an account with no company: a platform owner, or one waiting.
+const noCompany = () => !!profile && profile.company_id === null;
 const companyName = () => company.name;
 const companyLegal = () => company.legal_name;
 const companyCaps = () => company.name.toUpperCase();
@@ -484,12 +500,12 @@ function showCompany() {
 // and lets the rest come in behind it (start); every other caller, after a
 // change on an admin page, waits for both as it always did.
 async function loadAll({ restInBackground = false } = {}) {
-  const [locs, c, p, pe, sr, wt, pt, ht, tc, tk, gr, pr, ph, dir, sl, allWt, trr, ds, pds, frm, frr, cov, req, creq, dc, co] =
+  const [locs, c, p, pe, sr, wt, pt, ht, tc, tk, gr, pr, ph, dir, sl, allWt, trr, ds, pds, frm, frr, cov, req, creq, dc, co, po] =
     await Promise.all([
     db.from("locations").select("*").order("sort_order"),
     allRows(() => db.from("forklift_certifications").select("*").order("id")),
     readPlans(),
-    db.from("profiles").select("id,full_name,email,role,location_id,groups,deactivated_at,created_at,employee_number"),
+    db.from("profiles").select("id,full_name,email,role,location_id,groups,deactivated_at,created_at,employee_number,company_id"),
     db.from("support_roles").select("*, support_people(*)").order("sort_order"),
     db.from("weekly_tasks").select("*").eq("is_active", true).order("sort_order"),
     db.from("personal_tasks").select("*").is("archived_at", null),
@@ -512,10 +528,13 @@ async function loadAll({ restInBackground = false } = {}) {
     db.from("forklift_required").select("*").order("name"),
     db.from("crane_required").select("*").order("name"),
     db.rpc("designation_contacts"),
-    db.rpc("my_company")
+    db.rpc("my_company"),
+    db.rpc("is_platform_owner")
   ]);
 
   setCompany(co);
+  // Before 0138 there's no such question, and nobody is one.
+  platformOwner = !po.error && po.data === true;
   allLocations = locs.data || [];
   locations = Object.fromEntries(allLocations.map(l => [l.id, l.name]));
   certs = c.data || []; plans = p.data || []; people = pe.data || [];
