@@ -186,7 +186,7 @@ async function mockSave(overwrite = false) {
   mockSaving = true; mockSaveError = null;
   renderMockStatus();
   const table = db.from("mock_schedules");
-  const { data, error } = overwrite ? await table.upsert(body, { onConflict: "year" }).select("updated_at")
+  const { data, error } = overwrite ? await table.upsert(body, { onConflict: "company_id,year" }).select("updated_at")
     : row.updated_at ? await table.update(body).eq("year", row.year).eq("updated_at", row.updated_at).select("updated_at")
     : await table.insert(body).select("updated_at");
   mockSaving = false;

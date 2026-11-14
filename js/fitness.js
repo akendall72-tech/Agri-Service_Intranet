@@ -400,7 +400,7 @@ $("admin").addEventListener("click", async (event) => {
   if (cap !== null && !(cap >= 1 && cap <= 100000)) return speak(card, "The most points a day must be a whole number from 1, or left empty.", true);
   b.disabled = true;
   const { error } = await db.from("fitness_challenges")
-    .upsert({ month: d.month, title: d.title.trim(), prize: d.prize.trim(), daily_cap: cap, rules }, { onConflict: "month" });
+    .upsert({ month: d.month, title: d.title.trim(), prize: d.prize.trim(), daily_cap: cap, rules }, { onConflict: "company_id,month" });
   b.disabled = false;
   if (error) return speak(card, error.message, true);
   await loadFitness(fxMonth || fxThisMonth());

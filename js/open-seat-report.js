@@ -273,7 +273,7 @@ $("admin").addEventListener("click", async (event) => {
   if (!writes.length) return;
 
   speak(row, "Publishing…", false);
-  const { data, error } = await db.from("training_reports").upsert(writes).select("id");
+  const { data, error } = await db.from("training_reports").upsert(writes, { onConflict: "company_id,id" }).select("id");
   if (error) {
     return speak(row, /row-level/i.test(error.message) ? "Only an owner can publish the report."
       : /does not exist|schema cache/i.test(error.message)

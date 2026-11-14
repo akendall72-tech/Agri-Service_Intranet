@@ -557,7 +557,7 @@ $("admin").addEventListener("change", (event) => {
 });
 
 async function srSaveForm(fields, where, message) {
-  const { data, error } = await db.from("safety_report_form").upsert({ id: "current", fields }, { onConflict: "id" }).select();
+  const { data, error } = await db.from("safety_report_form").upsert({ id: "current", fields }, { onConflict: "company_id,id" }).select();
   if (error || !(data || []).length) {
     speak(where, error && !/row-level/i.test(error.message) ? error.message : "Not saved — only the Safety Manager can change this form.", true);
     return false;

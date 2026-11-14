@@ -284,7 +284,7 @@ document.addEventListener("click", async (event) => {
 
   button.disabled = true;
   const { data, error } = await db.from("forklift_certification_removals")
-    .upsert({ person_key: key, revoked: removing, reason }, { onConflict: "person_key" })
+    .upsert({ person_key: key, revoked: removing, reason }, { onConflict: "company_id,person_key" })
     .select();
   button.disabled = false;
   if (error || !data || !data.length) {

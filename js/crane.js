@@ -180,7 +180,7 @@ document.addEventListener("click", async (event) => {
   }
   button.disabled = true;
   const { data, error } = await db.from("crane_qualification_overrides")
-    .upsert({ person_key: row.person_key, revoked: removing, reason }, { onConflict: "person_key" })
+    .upsert({ person_key: row.person_key, revoked: removing, reason }, { onConflict: "company_id,person_key" })
     .select("person_key, revoked, reason, changed_by_name, changed_at");
   button.disabled = false;
   if (error || !data || !data.length) {
@@ -276,7 +276,7 @@ async function uploadCrosby(file) {
   if (uploadError) return done(`It didn't upload: ${uploadError.message}`);
   const { data, error } = await db.from("company_documents").upsert({ id: CROSBY.id,
     title: (previous && previous.title) || CROSBY.title, summary: (previous && previous.summary) || CROSBY.summary,
-    file_path: path, file_size: file.size }, { onConflict: "id" }).select();
+    file_path: path, file_size: file.size }, { onConflict: "company_id,id" }).select();
   if (error || !data || !data.length) {
     await db.storage.from("company-docs").remove([path]);
     return done(error && !/row-level/i.test(error.message) ? `It wasn't saved: ${error.message}` : "Only an owner can put the guide here.");

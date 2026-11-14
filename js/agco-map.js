@@ -593,7 +593,7 @@ document.addEventListener("change", async (event) => {
   if (box.checked) {
     // Who and when are stamped by the database; this copy is for the page until it reloads.
     const mark = { person_key: tech.person_key, course_key: key, level: level.level, title: course.title };
-    ({ error } = await db.from("agco_course_marks").upsert(mark, { onConflict: "person_key,course_key" }));
+    ({ error } = await db.from("agco_course_marks").upsert(mark, { onConflict: "company_id,person_key,course_key" }));
     if (!error) agcoMarks = [...agcoMarks.filter(m => !(m.person_key === tech.person_key && m.course_key === key)),
       { ...mark, marked_on: todayISO(), marked_by_name: (profile && profile.full_name) || "" }];
   } else {
@@ -610,7 +610,7 @@ document.addEventListener("change", async (event) => {
   // Their map, saved as soon as the tick is — if the catalog is published.
   if (agcoCatalog && (agcoCatalog.levels || []).length && !agcoPending) {
     const row = agcoPersonRow(tech, levels);
-    const saved = await db.from("agco_development_people").upsert(row, { onConflict: "person_key" });
+    const saved = await db.from("agco_development_people").upsert(row, { onConflict: "company_id,person_key" });
     if (saved.error) { box.disabled = false; return say(`Ticked, but the map wasn't updated: ${saved.error.message}`, true); }
     agcoPeople = [...agcoPeople.filter(p => p.person_key !== row.person_key), row];
   }
@@ -645,7 +645,7 @@ $("admin").addEventListener("click", async (event) => {
   button.disabled = true;
   speak(card, "Saving…", false);
   const { data, error } = await db.from("agco_catalog")
-    .upsert({ id: "current", rules: { ...agcoRules(), 5: rule } }, { onConflict: "id" }).select("rules");
+    .upsert({ id: "current", rules: { ...agcoRules(), 5: rule } }, { onConflict: "company_id,id" }).select("rules");
   if (error) { button.disabled = false; return speak(card, error.message, true); }
   if (!data || !data.length) { button.disabled = false; return speak(card, "Not saved — only an owner can change this.", true); }
   if (agcoCatalog) agcoCatalog.rules = data[0].rules; else agcoCatalog = { levels: [], rules: data[0].rules };
@@ -684,7 +684,7 @@ $("admin").addEventListener("click", async (event) => {
   button.disabled = true;
   speak(card, "Saving…", false);
   const { data, error } = await db.from("agco_catalog")
-    .upsert({ id: "current", rules: { ...agcoRules(), bales } }, { onConflict: "id" }).select("rules");
+    .upsert({ id: "current", rules: { ...agcoRules(), bales } }, { onConflict: "company_id,id" }).select("rules");
   if (error) { button.disabled = false; return speak(card, error.message, true); }
   if (!data || !data.length) { button.disabled = false; return speak(card, "Not saved — only an owner can change this.", true); }
   if (agcoCatalog) agcoCatalog.rules = data[0].rules; else agcoCatalog = { levels: [], rules: data[0].rules };
@@ -716,7 +716,7 @@ function renderAgcoAdded() {
 // Saves the added courses, then re-works every map, since a level's courses changed.
 async function agcoSaveAdded(list, where) {
   const { data, error } = await db.from("agco_catalog")
-    .upsert({ id: "current", added_courses: list }, { onConflict: "id" }).select("added_courses");
+    .upsert({ id: "current", added_courses: list }, { onConflict: "company_id,id" }).select("added_courses");
   if (error) {
     return speak(where, /added_courses/i.test(error.message)
       ? "Run migration 0076_agco_added_courses.sql in the SQL editor first." : error.message, true);

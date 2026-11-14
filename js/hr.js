@@ -387,7 +387,7 @@ async function uploadHandbook(file) {
     file_path: path,
     file_size: file.size
   };
-  const { data, error } = await db.from("company_documents").upsert(row, { onConflict: "id" }).select();
+  const { data, error } = await db.from("company_documents").upsert(row, { onConflict: "company_id,id" }).select();
   if (error || !data || !data.length) {
     await db.storage.from("company-docs").remove([path]);
     return say(error ? error.message : "Not saved — only an owner can upload the handbook.", true);

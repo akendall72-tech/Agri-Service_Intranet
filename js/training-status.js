@@ -785,7 +785,7 @@ $("admin").addEventListener("click", async (event) => {
 
   button.disabled = true;
   const { data, error } = await db.from("training_status")
-    .upsert({ id: "current", goal_percent: value, required_hours: hours }, { onConflict: "id" })
+    .upsert({ id: "current", goal_percent: value, required_hours: hours }, { onConflict: "company_id,id" })
     .select("goal_percent, required_hours");
   button.disabled = false;
   if (error) return speak(card, error.message, true);
@@ -816,7 +816,7 @@ $("admin").addEventListener("click", async (event) => {
   }
   button.disabled = true;
   const { data, error } = await db.from("training_status")
-    .upsert({ id: "current", crane_valid_months: months }, { onConflict: "id" }).select("crane_valid_months");
+    .upsert({ id: "current", crane_valid_months: months }, { onConflict: "company_id,id" }).select("crane_valid_months");
   button.disabled = false;
   if (error) return speak(card, /crane_valid_months/.test(error.message)
     ? "Run migration 0087_crane_expiry_setting.sql in the SQL editor first." : error.message, true);
