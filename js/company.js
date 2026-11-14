@@ -8,6 +8,15 @@
 // The most a logo can be: the company-logos bucket's limit.
 const LOGO_MAX_BYTES = 1024 * 1024;
 let coBusy = false, coMessage = "", coError = "";
+// What the platform did to this company (0138, 0139): companies made, accounts
+// placed, visits, and every change made during one.
+let coLog = null;
+
+async function loadCompanyLog() {
+  const { data, error } = await db.from("platform_log").select("at,by_name,action,detail")
+    .eq("company_id", company.id).order("at", { ascending: false }).limit(60);
+  coLog = error ? [] : data || [];
+}
 
 const COMPANY_LOGOS = [
   { field: "logo_path", file: "logo", title: "Logo, in colour",
@@ -47,7 +56,16 @@ function renderCompanyAdmin() {
       <h2>Logos</h2>
       <p class="note">For the app. Until one is added it shows its built-in logo, which is Agri-Service's.</p>
       <div class="co-logos">${COMPANY_LOGOS.map(coLogoSlot).join("")}</div>
+    </div>
+    <div class="card">
+      <h2>What Agri-Barn's platform did here</h2>
+      <p class="note">Anything done to this company from the Platform page: accounts placed in it, and each visit by the platform
+        owner, with why they came and every change they made while here.</p>
+      ${coLog === null ? `<p class="note">Loading…</p>` : !coLog.length ? `<p class="note">Nothing yet.</p>` : `
+      <ul class="pf-log">${coLog.map(l => `<li><span>${esc(pfWhat(l))}</span>
+        <small>${esc(new Date(l.at).toLocaleString())}${l.by_name ? ` · ${esc(l.by_name)}` : ""}</small></li>`).join("")}</ul>`}
     </div>`;
+  if (coLog === null) loadCompanyLog().then(renderCompanyAdmin);
 }
 
 function coLogoSlot(slot) {

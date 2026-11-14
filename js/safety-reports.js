@@ -20,8 +20,8 @@ let srSort = "sent", srAscending = false, srFilters = {}, srQuery = "", srStatus
 const SR_TYPES = [["text", "Short answer"], ["long_text", "Long answer"], ["date", "Date"], ["choice", "Pick one"],
   ["yes_no", "Yes or no"], ["people", "People (from All Employees)"], ["location", "Location (starts at theirs)"], ["photos", "Photos"]];
 
-const isSafetyManager = () => isOwner() && personDesignations.some(pd =>
-  pd.person_id === me.id && pd.designation_id === "safety_manager");
+const isSafetyManager = () => isOwner() && (!!visit || personDesignations.some(pd =>
+  pd.person_id === me.id && pd.designation_id === "safety_manager"));
 
 // The table gives your own reports, or every one for the Safety Manager; the
 // log gives the approved ones everyone reads, without who sent them (0085).

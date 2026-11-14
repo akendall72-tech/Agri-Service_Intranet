@@ -16,8 +16,8 @@ const forkliftCourse = () => {
 
 // ---- approving driving tests (the Training Manager, migration 0068) --------
 
-const isTrainingManager = () => isOwner() && personDesignations.some(pd =>
-  pd.person_id === me.id && pd.designation_id === "training_manager");
+const isTrainingManager = () => isOwner() && (!!visit || personDesignations.some(pd =>
+  pd.person_id === me.id && pd.designation_id === "training_manager"));
 
 const approvedCerts = () => certs.filter(c => (c.approval || "approved") === "approved");
 const pendingTests = () => certs.filter(c => c.approval === "pending")

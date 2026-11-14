@@ -96,6 +96,13 @@ function pfCompanyDetail(c) {
       </div>
       <div class="pf-actions"><button type="button" data-pf-save="${esc(c.id)}" ${pfBusy ? "disabled" : ""}>Save changes</button>
         <span class="note">Made ${esc(pfWhen(c.created_at))}</span></div>
+      <div class="pf-visit">
+        <div><label for="pfWhy-${esc(c.id)}">Open it as its owner, to help</label>
+          <input type="text" id="pfWhy-${esc(c.id)}" maxlength="300" placeholder="Why, for its owners: helping set up its locations">
+          <p class="note">For two hours at most. You see and can change what its owners can, and everything you change is logged
+            for them, with why you came.</p></div>
+        <button type="button" class="btn-secondary" data-pf-visit="${esc(c.id)}" ${pfBusy ? "disabled" : ""}>Open as its owner</button>
+      </div>
       <h3>People</h3>
       ${!people ? `<p class="note">Loading…</p>` : !people.length ? `<p class="note">Nobody yet. Place its first owner from Accounts waiting.</p>` : `
       <div class="table-wrap"><table class="pf-table">
@@ -143,9 +150,7 @@ function pfNewCompanyCard() {
 
 function pfLogCard() {
   const name = (id) => (pfCompanies.find(c => c.id === id) || {}).name || id || "";
-  const what = (l) => l.action === "account placed"
-    ? `${l.detail.name || l.detail.email || "An account"} placed as ${l.detail.role}`
-    : l.action === "company created" ? "Company made" : l.action === "company changed" ? "Company changed" : l.action;
+  const what = pfWhat;
   return `<div class="card">
       <h2>What's been done here</h2>
       ${!pfLog.length ? `<p class="note">Nothing yet.</p>` : `
@@ -153,6 +158,36 @@ function pfLogCard() {
         <small>${esc(new Date(l.at).toLocaleString())}${l.by_name ? ` · ${esc(l.by_name)}` : ""}</small></li>`).join("")}</ul>`}
       <p class="note">A company's owners can read what was done to their company.</p>
     </div>`;
+}
+
+// One line of the log, in words: shared with Admin -> Company (company.js).
+function pfWhat(l) {
+  const d = l.detail || {};
+  const table = String(d.table || "").replace(/_/g, " ");
+  return l.action === "account placed" ? `${d.name || d.email || "An account"} placed as ${d.role}`
+    : l.action === "company created" ? "Company made"
+    : l.action === "company changed" ? "Company changed"
+    : l.action === "visit started" ? `Visit started${d.reason ? `: ${d.reason}` : ""}`
+    : l.action === "visit ended" ? "Visit ended"
+    : ["added", "changed", "removed"].includes(l.action)
+      ? `${l.action[0].toUpperCase()}${l.action.slice(1)} in ${table}${d.name ? `: ${d.name}` : ""}`
+    : l.action;
+}
+
+// The bar across the page while a platform owner is visiting a company, and
+// back to the Platform when the visit runs out.
+function showVisit() {
+  const bar = $("visitBar");
+  if (!bar) return;
+  bar.classList.toggle("hidden", !visit);
+  document.body.classList.toggle("visiting", !!visit);
+  clearTimeout(showVisit.timer);
+  if (!visit) return;
+  const until = new Date(visit.ends_at);
+  bar.innerHTML = `<span>Visiting <b>${esc(visit.company_name)}</b> as its owner until
+      ${esc(until.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }))}. Everything you change here is logged for its owners.</span>
+    <button type="button" data-pf-leave>Back to the Platform</button>`;
+  showVisit.timer = setTimeout(() => location.reload(), Math.max(0, until - Date.now()) + 1000);
 }
 
 const pfDomains = (text) => String(text || "").split(/[\s,;]+/).map(d => d.trim().replace(/^@/, "").toLowerCase()).filter(Boolean);
@@ -191,6 +226,20 @@ document.addEventListener("click", (e) => {
     if (!confirm(`Place ${who} in ${where} as ${role === "owner" ? "its owner" : `an ${role === "admin" ? "admin" : "employee"}`}? It can't be moved to another company after.`)) return;
     pfOpen = to; delete pfPeople[to];
     pfRun(() => db.rpc("platform_place_person", { person: id, target: to, new_role: role }), `${who} is in ${where} now.`);
+    return;
+  }
+  const go = e.target.closest("[data-pf-visit]");
+  if (go) {
+    const id = go.dataset.pfVisit;
+    pfBusy = true; pfProblem = ""; renderPlatformBody();
+    db.rpc("platform_start_visit", { target: id, why: ($("pfWhy-" + id).value || "").trim() }).then(({ error }) => {
+      if (error) { pfBusy = false; pfProblem = error.message; renderPlatformBody(); return; }
+      location.reload();
+    });
+    return;
+  }
+  if (e.target.closest("[data-pf-leave]")) {
+    db.rpc("platform_end_visit").then(() => location.reload());
     return;
   }
   if (e.target.closest("#pfCreate")) {

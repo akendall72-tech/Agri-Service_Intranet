@@ -209,7 +209,7 @@ let allLocations = [];
 
 // Admins approve lift plans for their own location, so plenty of the page keys off
 // this. The Admin button does not — see isOwner.
-const isAdmin = () => profile && (profile.role === "admin" || profile.role === "owner");
+const isAdmin = () => !!visit || !!profile && (profile.role === "admin" || profile.role === "owner");
 
 // The admin tables are the whole company's records: every certification, every
 // location's plans, the support roles everyone sees. That's an owner's view, not a
@@ -217,7 +217,8 @@ const isAdmin = () => profile && (profile.role === "admin" || profile.role === "
 //
 // This hides a door rather than locking one. What anybody can actually read or
 // change is decided by the database policies, which don't consult this.
-const isOwner = () => profile && profile.role === "owner";
+// A platform owner visiting a company (0139) is its owner while there.
+const isOwner = () => !!visit || !!profile && profile.role === "owner";
 
 // Locations admins cover besides their own (migration 0099): every row for an
 // owner, your own for anyone else.
@@ -393,11 +394,13 @@ async function start() {
     return;
   }
 
+  showVisit();
+
   const name = (profile && profile.full_name) || user.email;
   $("who").innerHTML =
     `<span class="who-avatar">${esc(initials(name))}</span>` +
     `<span class="who-text"><b>${esc(name)}</b><small>${esc(
-      locations[profile && profile.location_id] || "No location set")}</small></span>`;
+      visit ? "Visiting from the Platform" : locations[profile && profile.location_id] || "No location set")}</small></span>`;
   $("adminBtn").classList.toggle("hidden", !isOwner());
   $("safetyBtn").classList.toggle("hidden", !isSafetyManager());
   $("trainingBtn").classList.toggle("hidden", !isTrainingManager());
@@ -469,8 +472,11 @@ const BUILT_IN_COMPANY = { id: "agri-service", name: "Agri-Service", legal_name:
 let company = BUILT_IN_COMPANY, companyMissing = false;
 // A platform owner (0138): above every company, and in none of them.
 let platformOwner = false;
+// A platform owner's visit to a company, as its owner (0139), or null.
+let visit = null;
 // Signed in to an account with no company: a platform owner, or one waiting.
-const noCompany = () => !!profile && profile.company_id === null;
+// A platform owner visiting a company is in it, for now.
+const noCompany = () => !!profile && profile.company_id === null && !visit;
 const companyName = () => company.name;
 const companyLegal = () => company.legal_name;
 const companyCaps = () => company.name.toUpperCase();
@@ -500,7 +506,7 @@ function showCompany() {
 // and lets the rest come in behind it (start); every other caller, after a
 // change on an admin page, waits for both as it always did.
 async function loadAll({ restInBackground = false } = {}) {
-  const [locs, c, p, pe, sr, wt, pt, ht, tc, tk, gr, pr, ph, dir, sl, allWt, trr, ds, pds, frm, frr, cov, req, creq, dc, co, po] =
+  const [locs, c, p, pe, sr, wt, pt, ht, tc, tk, gr, pr, ph, dir, sl, allWt, trr, ds, pds, frm, frr, cov, req, creq, dc, co, po, vi] =
     await Promise.all([
     db.from("locations").select("*").order("sort_order"),
     allRows(() => db.from("forklift_certifications").select("*").order("id")),
@@ -529,12 +535,14 @@ async function loadAll({ restInBackground = false } = {}) {
     db.from("crane_required").select("*").order("name"),
     db.rpc("designation_contacts"),
     db.rpc("my_company"),
-    db.rpc("is_platform_owner")
+    db.rpc("is_platform_owner"),
+    db.rpc("my_visit")
   ]);
 
   setCompany(co);
   // Before 0138 there's no such question, and nobody is one.
   platformOwner = !po.error && po.data === true;
+  visit = !vi.error && Array.isArray(vi.data) && vi.data[0] || null;
   allLocations = locs.data || [];
   locations = Object.fromEntries(allLocations.map(l => [l.id, l.name]));
   certs = c.data || []; plans = p.data || []; people = pe.data || [];
