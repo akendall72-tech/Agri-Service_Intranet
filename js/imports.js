@@ -227,7 +227,7 @@ document.addEventListener("click", (event) => {
   if (!blank && rows.length < 2) {
     return alert("There's nothing imported yet to download.");
   }
-  downloadCSV(`Agri-Service ${TEMPLATE_NAMES[kind]}${blank ? " template" : ""}.csv`, rows);
+  downloadCSV(`${companyName()} ${TEMPLATE_NAMES[kind]}${blank ? " template" : ""}.csv`, rows);
 });
 
 const drop = $("drop");

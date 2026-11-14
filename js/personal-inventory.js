@@ -220,13 +220,13 @@ function inventoryPdf(id) {
   const newPage = (withHead) => {
     doc.addPage(); doc.setFillColor(...red); doc.rect(0, 0, W, 6, "F");
     doc.setFont("helvetica", "bold"); doc.setFontSize(8); doc.setTextColor(...grey);
-    doc.text(latin(`AGRI-SERVICE  -  PERSONAL INVENTORY  -  ${name.toUpperCase()}`), M, 24);
+    doc.text(latin(`${companyCaps()}  -  PERSONAL INVENTORY  -  ${name.toUpperCase()}`), M, 24);
     y = 40; if (withHead) head();
   };
   const ensure = (h, withHead) => { if (y + h > BOTTOM) newPage(withHead); };
 
   doc.setFillColor(...red); doc.rect(0, 0, W, 84, "F");
-  doc.setTextColor(255); doc.setFont("helvetica", "bold"); doc.setFontSize(22); doc.text("AGRI-SERVICE", M, 38);
+  doc.setTextColor(255); doc.setFont("helvetica", "bold"); doc.setFontSize(22); doc.text(companyCaps(), M, 38);
   doc.setFontSize(10); doc.text("PERSONAL INVENTORY", M, 56);
   doc.setFontSize(18); doc.text(latin(name), W - M, 40, { align: "right" });
   doc.setFont("helvetica", "normal"); doc.setFontSize(9);
@@ -284,7 +284,7 @@ function inventoryPdf(id) {
   for (let p = 1; p <= pages; p++) {
     doc.setPage(p); doc.setDrawColor(220); doc.line(M, H - M + 2, M + CW, H - M + 2);
     doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); doc.setTextColor(...grey);
-    doc.text(latin(`Agri-Service, LLC  -  Personal Inventory  -  ${name}`), M, H - M + 14);
+    doc.text(latin(`${companyLegal()}  -  Personal Inventory  -  ${name}`), M, H - M + 14);
     doc.setFont("helvetica", "bold"); doc.text(`Page ${p} of ${pages}`, W - M, H - M + 14, { align: "right" });
   }
   doc.save(latin(`Personal Inventory - ${name}.pdf`));

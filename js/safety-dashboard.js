@@ -410,7 +410,7 @@ async function sxMonthlyPdf(key) {
   const smallHead = () => {
     doc.setFillColor(...red); doc.rect(0, 0, W, 6, "F");
     doc.setFont("helvetica", "bold"); doc.setFontSize(8); doc.setTextColor(...grey);
-    doc.text(`AGRI-SERVICE  -  MONTHLY SAFETY REPORT  -  ${month.toUpperCase()}`, M, 24);
+    doc.text(latin(`${companyCaps()}  -  MONTHLY SAFETY REPORT  -  ${month.toUpperCase()}`), M, 24);
     y = 42;
   };
   const ensure = (h, then) => { if (y + h > BOTTOM) { doc.addPage(); smallHead(); if (then) then(); } };
@@ -466,7 +466,7 @@ async function sxMonthlyPdf(key) {
 
   // The band.
   doc.setFillColor(...red); doc.rect(0, 0, W, 84, "F");
-  doc.setTextColor(255); doc.setFont("helvetica", "bold"); doc.setFontSize(22); doc.text("AGRI-SERVICE", M, 38);
+  doc.setTextColor(255); doc.setFont("helvetica", "bold"); doc.setFontSize(22); doc.text(latin(companyCaps()), M, 38);
   doc.setFontSize(10); doc.text("MONTHLY SAFETY REPORT", M, 56);
   doc.setFontSize(20); doc.text(month, W - M, 40, { align: "right" });
   doc.setFont("helvetica", "normal"); doc.setFontSize(9);
@@ -640,7 +640,7 @@ async function sxMonthlyPdf(key) {
   for (let p = 1; p <= pages; p++) {
     doc.setPage(p); doc.setDrawColor(220); doc.line(M, H - M + 2, M + CW, H - M + 2);
     doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); doc.setTextColor(...grey);
-    doc.text(latin(`Agri-Service, LLC  -  Monthly Safety Report  -  ${month}  -  Confidential: for safety and leadership use`), M, H - M + 14);
+    doc.text(latin(`${companyLegal()}  -  Monthly Safety Report  -  ${month}  -  Confidential: for safety and leadership use`), M, H - M + 14);
     doc.setFont("helvetica", "bold"); doc.text(`Page ${p} of ${pages}`, W - M, H - M + 14, { align: "right" });
   }
   doc.save(`Monthly Safety Report ${key}.pdf`);

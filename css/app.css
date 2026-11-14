@@ -3667,3 +3667,18 @@ p.mc-foot { max-width: 760px; margin: 16px 0 0; color: var(--cab-heading); }
   .cr-layout.picked .cr-picker, .cr-layout:not(.picked) .cr-report { display: none; }
   .cr-change { display: inline-flex; }
 }
+
+/* Company (0133): the admin page's Company tab. */
+.co-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
+.co-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 12px; }
+.co-ok { margin: 12px 0 0; padding: 8px 12px; border-radius: 8px; background: #E6F4EA; color: #17692E; font-size: 13.5px; }
+.co-logos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 12px; }
+.co-logo { min-width: 0; }
+.co-logo .note { margin: 4px 0 8px; }
+.co-preview { display: flex; align-items: center; justify-content: center; height: 96px; padding: 14px; border: 1px solid var(--line, #E7E5E4);
+  border-radius: 10px; background: #fff; color: #78716C; font-size: 13px; }
+.co-preview img { max-height: 100%; max-width: 100%; object-fit: contain; }
+/* The red header, as the app draws it: the mark in white. */
+.co-preview-mono { background: #CC0033; color: rgba(255, 255, 255, .85); border-color: #CC0033; }
+.co-preview-mono img { filter: brightness(0) invert(1); }
+@media (max-width: 640px) { .co-fields, .co-logos { grid-template-columns: minmax(0, 1fr); } }

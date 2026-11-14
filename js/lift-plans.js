@@ -1153,7 +1153,7 @@ async function downloadPlanPDF(plan) {
     y += ch + 10;
   }
 
-  text(`Generated from the Agri-Service web page - ${new Date().toLocaleDateString()}`,
+  text(`Generated from the ${companyName()} web page - ${new Date().toLocaleDateString()}`,
        MARGIN, PAGE_H - MARGIN, { size: 9, grey: 128 });
 
   // Named so a folder of these sorts by date and stays unambiguous when two

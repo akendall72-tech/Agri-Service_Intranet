@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Which version this is. publish.sh stamps the date and commit here, and
      into version.json beside the page; "dev" is a copy that wasn't published. -->
-<meta name="app-version" content="2026-11-13.2679881">
+<meta name="app-version" content="2026-11-14.977866f">
 <!-- Where this page may load things from and send things to. GitHub Pages
      can't send security headers, so it's here. Scripts come only from this
      site and the two script CDNs (each pinned with an integrity hash), and
@@ -34,7 +34,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
-<link rel="stylesheet" href="css/app.css?v=1f084ae261">
+<link rel="stylesheet" href="css/app.css?v=8482e0730c">
 </head>
 <body>
 
@@ -107,6 +107,7 @@
 
       <div class="nav-group">Setup</div>
       <button data-tab="org"><i data-icon="building"></i><span>Groups &amp; Locations</span></button>
+      <button data-tab="company"><i data-icon="briefcase"></i><span>Company</span></button>
     </nav>
 
     <!-- The Training dashboard: Training Managers only. Like Safety, its tabs
@@ -880,6 +881,11 @@
     </section>
 
     <!-- Employee handbook -->
+    <!-- Company (0133): drawn by renderCompanyAdmin -->
+    <section id="tab-company" class="hidden">
+      <div id="companyAdmin"></div>
+    </section>
+
     <!-- Operator's Manuals: drawn by renderManualsAdmin -->
     <section id="tab-manuals" class="hidden">
       <div id="manualsAdmin"></div>
@@ -1173,38 +1179,38 @@
      only names from an earlier file; boot.js starts the page and stays last.
      js/core.js has the rest. publish.sh adds ?v= to each, so a changed file is
      fetched fresh and an unchanged one comes from the browser's cache. -->
-<script src="js/core.js?v=bda0417889"></script>
-<script src="js/shell.js?v=63f73b04ea"></script>
-<script src="js/location-dashboard.js?v=7995d47b90"></script>
+<script src="js/core.js?v=e1c105f168"></script>
+<script src="js/shell.js?v=a105dd0be4"></script>
+<script src="js/location-dashboard.js?v=b249c9b953"></script>
 <script src="js/location-certifications.js?v=188701e85c"></script>
 <script src="js/my-certifications.js?v=c7baa6cb5e"></script>
 <script src="js/operator-manuals.js?v=de83dc2ae1"></script>
 <script src="js/crane-qualifications.js?v=4336042851"></script>
 <script src="js/training-status.js?v=711239b568"></script>
-<script src="js/forklift.js?v=0ece5100f3"></script>
-<script src="js/crane.js?v=dea253a066"></script>
-<script src="js/lift-plans.js?v=1a1a12b034"></script>
+<script src="js/forklift.js?v=1b0dc7e710"></script>
+<script src="js/crane.js?v=a1ca4fc7a6"></script>
+<script src="js/lift-plans.js?v=923f07f016"></script>
 <script src="js/crane-inspections.js?v=e5177a4340"></script>
-<script src="js/support.js?v=6261d9719f"></script>
+<script src="js/support.js?v=5f6d1a2525"></script>
 <script src="js/special-tools.js?v=fbaac4f097"></script>
 <script src="js/reminders.js?v=360d96f67d"></script>
 <script src="js/people.js?v=43db7cf566"></script>
-<script src="js/events.js?v=6ceccf0d2a"></script>
-<script src="js/community.js?v=a10d66d4a9"></script>
+<script src="js/events.js?v=28c038b72f"></script>
+<script src="js/community.js?v=1ecd0aaa6e"></script>
 <script src="js/fitness.js?v=820ac07555"></script>
 <script src="js/trivia.js?v=2a5fc43bf6"></script>
 <script src="js/fleet.js?v=240b3006b6"></script>
-<script src="js/safety-reports.js?v=b11212d5e2"></script>
+<script src="js/safety-reports.js?v=47577a89de"></script>
 <script src="js/training-dashboard.js?v=7d7c1fcb70"></script>
-<script src="js/safety-dashboard.js?v=306bd5d5a6"></script>
+<script src="js/safety-dashboard.js?v=4961233011"></script>
 <script src="js/safety-desk.js?v=b731cdcf03"></script>
-<script src="js/mock-schedule.js?v=280d4e9af0"></script>
+<script src="js/mock-schedule.js?v=584317da8c"></script>
 <script src="js/groups-and-locations.js?v=5e64f2085b"></script>
 <script src="js/open-seat-report.js?v=d7c26f0a08"></script>
-<script src="js/inspections.js?v=29e3b87d32"></script>
+<script src="js/inspections.js?v=2e9c8853b2"></script>
 <script src="js/hr.js?v=1759de7951"></script>
-<script src="js/personal-inventory.js?v=7b4a6a4372"></script>
-<script src="js/course-catalog.js?v=2f8f411546"></script>
+<script src="js/personal-inventory.js?v=e24b5aa871"></script>
+<script src="js/course-catalog.js?v=0cac591ad1"></script>
 <script src="js/training-credits.js?v=863cb1067a"></script>
 <script src="js/class-schedule.js?v=26cdbe90cf"></script>
 <script src="js/class-registration.js?v=81ec1c81ac"></script>
@@ -1213,13 +1219,14 @@
 <script src="js/safety-data-sheets.js?v=2d8ed6ca78"></script>
 <script src="js/shared-logins.js?v=2c3a2968bf"></script>
 <script src="js/skills.js?v=8efb8a0583"></script>
-<script src="js/training-articles.js?v=8f82477941"></script>
-<script src="js/news.js?v=43f837963e"></script>
+<script src="js/training-articles.js?v=a632240493"></script>
+<script src="js/news.js?v=7666f3dcf1"></script>
 <script src="js/agco-map.js?v=65102e84f3"></script>
-<script src="js/my-classes.js?v=34015d6929"></script>
+<script src="js/my-classes.js?v=632c8ac9a0"></script>
 <script src="js/online-courses.js?v=79fbda48f5"></script>
-<script src="js/training-reports.js?v=ab123328f8"></script>
-<script src="js/imports.js?v=ace48c451a"></script>
+<script src="js/training-reports.js?v=a0d90a8436"></script>
+<script src="js/imports.js?v=6261a6a472"></script>
+<script src="js/company.js?v=31e1f11ffd"></script>
 <script src="js/boot.js?v=a6a254fead"></script>
 </body>
 </html>

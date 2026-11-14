@@ -90,7 +90,7 @@ function craneCard() {
           <div><dt>Location</dt><dd>${esc(mine.store || "-")}</dd></div>
           <div><dt>Expires</dt><dd>${status.expires ? esc(craneDay(status.expires)) : "No expiration"}</dd></div>
         </dl>
-        <p class="note" style="margin-top:16px">Issued by the Agri-Service Training Department</p>
+        <p class="note" style="margin-top:16px">Issued by the ${esc(companyName())} Training Department</p>
       </div>
     </div>`;
   }

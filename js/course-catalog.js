@@ -99,7 +99,7 @@ function catalogView() {
   if (catalogState.audience && !audiences.includes(catalogState.audience)) catalogState.audience = null;
   setTimeout(renderCatalogList);
 
-  return hero("Course Catalog", "A reference of Agri-Service technician, parts, and safety training courses.") + `
+  return hero("Course Catalog", `A reference of ${companyName()} technician, parts, and safety training courses.`) + `
   <div class="cat">
     <div class="cat-controls">
       <div class="cat-search-row">

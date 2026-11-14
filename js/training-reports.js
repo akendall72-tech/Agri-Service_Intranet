@@ -143,7 +143,7 @@ function rpAgcoPdf() {
 
 function rpAgcoXlsx() {
   const r = rpAgcoModel(), a = r.all, where = rpAgcoStore === "all" ? "Whole company" : rpAgcoStore;
-  const head = [[`AGCO Training Hours ${r.period}`], [`Agri-Service, LLC · ${where} · ${rpStamp()}`],
+  const head = [[`AGCO Training Hours ${r.period}`], [`${companyLegal()} · ${where} · ${rpStamp()}`],
     [`Technicians with ${fmtHours(r.need)}+ AGCO hours in ${r.period}; goal ${r.goalPct}%.`], []];
   const sheets = [];
   if (rpAgcoStore === "all") {
@@ -413,7 +413,7 @@ function rpClassXlsx() {
   const r = rpClassModel(), k = r.picked.length;
   if (!k) return;
   const Noun = r.noun[0].toUpperCase() + r.noun.slice(1);
-  const head = [[`Class Report · ${r.per.label}`], [`Agri-Service, LLC · ${r.per.range} · ${rpClass.store === "all" ? "Whole company" : rpClass.store} · ${rpStamp()}`],
+  const head = [[`Class Report · ${r.per.label}`], [`${companyLegal()} · ${r.per.range} · ${rpClass.store === "all" ? "Whole company" : rpClass.store} · ${rpStamp()}`],
     [`${r.pool.length} ${r.noun}. A class counts when it was completed inside these dates.`], []];
   rpXlsx(`Class Report ${r.per.label}${rpClass.store === "all" ? "" : ` ${rpClass.store}`}.xlsx`, [
     { name: "By class", widths: [44, 12, 10, 10, 16], rows: head.concat([["Class", "Completed", Noun, "Percent", "Outside the year"],
@@ -450,13 +450,13 @@ function rpPdf({ title, period, orientation = "portrait" }) {
   const smallHead = () => {
     doc.setFillColor(...red); doc.rect(0, 0, W, 6, "F");
     doc.setFont("helvetica", "bold"); doc.setFontSize(8); doc.setTextColor(...grey);
-    doc.text(latin(`AGRI-SERVICE  -  ${title.toUpperCase()}  -  ${period.toUpperCase()}`), M, 24);
+    doc.text(latin(`${companyCaps()}  -  ${title.toUpperCase()}  -  ${period.toUpperCase()}`), M, 24);
     y = 42;
   };
   const ensure = (h, then) => { if (y + h > BOTTOM) { doc.addPage(); smallHead(); if (then) then(); } };
 
   doc.setFillColor(...red); doc.rect(0, 0, W, 78, "F");
-  doc.setTextColor(255); doc.setFont("helvetica", "bold"); doc.setFontSize(21); doc.text("AGRI-SERVICE", M, 36);
+  doc.setTextColor(255); doc.setFont("helvetica", "bold"); doc.setFontSize(21); doc.text(latin(companyCaps()), M, 36);
   doc.setFontSize(10); doc.text(latin(title.toUpperCase()), M, 54);
   doc.setFontSize(17); doc.text(latin(period), W - M, 38, { align: "right" });
   doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.text(latin(rpStamp()), W - M, 55, { align: "right" });
@@ -533,7 +533,7 @@ function rpPdf({ title, period, orientation = "portrait" }) {
       for (let p = 1; p <= pages; p++) {
         doc.setPage(p); doc.setDrawColor(220); doc.line(M, H - M + 2, M + CW, H - M + 2);
         doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); doc.setTextColor(...grey);
-        doc.text(latin(`Agri-Service, LLC  -  ${title}  -  ${period}  -  From the UKG Training Status uploads`), M, H - M + 14);
+        doc.text(latin(`${companyLegal()}  -  ${title}  -  ${period}  -  From the UKG Training Status uploads`), M, H - M + 14);
         doc.setFont("helvetica", "bold"); doc.text(`Page ${p} of ${pages}`, W - M, H - M + 14, { align: "right" });
       }
       doc.save(name);
@@ -785,7 +785,7 @@ function downloadCourseReportPDF() {
   const pages = doc.getNumberOfPages();
   for (let i = 1; i <= pages; i++) {
     doc.setPage(i);
-    write(`Agri-Service, LLC · printed ${printed} · page ${i} of ${pages}`, MARGIN, PAGE_H - MARGIN + 8,
+    write(`${companyLegal()} · printed ${printed} · page ${i} of ${pages}`, MARGIN, PAGE_H - MARGIN + 8,
       { size: 9, color: [140, 140, 140] });
   }
   doc.save(`Course Report - ${course.replace(/[\\/:*?"<>|]/g, "-")}.pdf`);

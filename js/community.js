@@ -272,7 +272,7 @@ function socialView() {
     const root = $("view").querySelector('[data-cm-page="social"]');
     if (root && !$("view").classList.contains("hidden")) root.outerHTML = cmSocialHtml();
   });
-  return hero("Social", "Share wins, give shout-outs, and see what's coming up across Agri-Service.") + cmSocialHtml();
+  return hero("Social", `Share wins, give shout-outs, and see what's coming up across ${companyName()}.`) + cmSocialHtml();
 }
 
 function cmSocialHtml() {
@@ -340,7 +340,7 @@ function cmSpotlightHtml() {
   const top = ranked.length && (ranked.length === 1 || ranked[0].n > ranked[1].n) ? ranked[0] : null;
   const monthName = start.toLocaleDateString("en-US", { month: "long" });
   const stat = (value, label) => `<div><span class="cm-stat"><b>${value}</b><small>${esc(label)}</small></span></div>`;
-  return `<p class="cm-eyebrow">${icon("people", 15)}Agri-Service community · ${esc(monthName)}</p>
+  return `<p class="cm-eyebrow">${icon("people", 15)}${esc(companyName())} community · ${esc(monthName)}</p>
     <div class="cm-stats">
       ${stat(shouts.length, `shout-out${shouts.length === 1 ? "" : "s"} this month`)}
       ${stat(month.length, `post${month.length === 1 ? "" : "s"} this month`)}

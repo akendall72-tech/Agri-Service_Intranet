@@ -444,6 +444,37 @@ const CERT_KINDS = [
   { id: "cpr", name: "CPR", short: "CPR", icon: "fitness", years: 2, prompt: "e.g. Adult, Child & Infant" },
   { id: "first_aid", name: "First Aid", short: "First aid", icon: "plus", years: 2, prompt: "e.g. Basic First Aid" }];
 
+// ---------------------------------------------------------------- the company
+//
+// Whose page this is (migration 0133, multi-org step 2): the name, the legal
+// name for the foot of PDFs, and the app's logos. Until it loads, before 0133
+// is run, or after its undo, the built-in Agri-Service stands, so nothing ever
+// shows blank. my_company() answers with your own company; the page never
+// reads the table itself, so step 3 (many companies) reaches it unchanged.
+// Owners change it on the admin page's Company tab (company.js).
+const BUILT_IN_COMPANY = { id: "agri-service", name: "Agri-Service", legal_name: "Agri-Service, LLC",
+  logo_path: null, logo_mono_path: null };
+let company = BUILT_IN_COMPANY, companyMissing = false;
+const companyName = () => company.name;
+const companyLegal = () => company.legal_name;
+const companyCaps = () => company.name.toUpperCase();
+
+function setCompany(result) {
+  companyMissing = !!result.error && /my_company|does not exist|schema cache/i.test(result.error.message);
+  const row = !result.error && Array.isArray(result.data) ? result.data[0] : null;
+  company = row ? { ...BUILT_IN_COMPANY, ...row } : BUILT_IN_COMPANY;
+  showCompany();
+}
+
+// The parts of the page drawn once rather than with each page: the brand at
+// the top, the browser tab's title, the news editor's hint.
+function showCompany() {
+  document.querySelectorAll(".brand-name").forEach(el => { el.textContent = companyCaps(); });
+  document.title = companyName();
+  const source = $("newsFieldSource");
+  if (source) source.placeholder = `Fendt, PTx, ${companyName()}…`;
+}
+
 // ---------------------------------------------------------------- loading
 
 // Everything the page shows, in two batches. The first is what the home page
@@ -453,7 +484,7 @@ const CERT_KINDS = [
 // and lets the rest come in behind it (start); every other caller, after a
 // change on an admin page, waits for both as it always did.
 async function loadAll({ restInBackground = false } = {}) {
-  const [locs, c, p, pe, sr, wt, pt, ht, tc, tk, gr, pr, ph, dir, sl, allWt, trr, ds, pds, frm, frr, cov, req, creq, dc] =
+  const [locs, c, p, pe, sr, wt, pt, ht, tc, tk, gr, pr, ph, dir, sl, allWt, trr, ds, pds, frm, frr, cov, req, creq, dc, co] =
     await Promise.all([
     db.from("locations").select("*").order("sort_order"),
     allRows(() => db.from("forklift_certifications").select("*").order("id")),
@@ -480,9 +511,11 @@ async function loadAll({ restInBackground = false } = {}) {
     db.from("covered_locations").select("person_id,location_id"),
     db.from("forklift_required").select("*").order("name"),
     db.from("crane_required").select("*").order("name"),
-    db.rpc("designation_contacts")
+    db.rpc("designation_contacts"),
+    db.rpc("my_company")
   ]);
 
+  setCompany(co);
   allLocations = locs.data || [];
   locations = Object.fromEntries(allLocations.map(l => [l.id, l.name]));
   certs = c.data || []; plans = p.data || []; people = pe.data || [];

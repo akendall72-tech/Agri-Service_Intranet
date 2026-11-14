@@ -999,7 +999,7 @@ async function downloadInspectionPDF(record, button) {
     if (beforePhotos.length) { ensure(photoRowHeight + 40); section(twoPart ? "Photos - Before Class" : "Photos"); grid(beforePhotos); }
     if (afterPhotos.length) { ensure(photoRowHeight + 40); section("Photos - After Class"); grid(afterPhotos); }
 
-    write(`Generated from the Agri-Service web page · ${new Date().toLocaleDateString("en-US",
+    write(`Generated from the ${companyName()} web page · ${new Date().toLocaleDateString("en-US",
       { month: "short", day: "numeric", year: "numeric" })}`, MARGIN, PAGE_H - MARGIN, { size: 8, color: [130, 130, 130] });
 
     const date = (record.submitted_at || "").slice(0, 10);
@@ -1102,7 +1102,7 @@ function downloadInspectionSummaryPDF(record) {
     });
   }
 
-  write(`Generated from the Agri-Service web page · ${new Date().toLocaleDateString("en-US",
+  write(`Generated from the ${companyName()} web page · ${new Date().toLocaleDateString("en-US",
     { month: "short", day: "numeric", year: "numeric" })}`, MARGIN, PAGE_H - MARGIN, { size: 8, color: [130, 130, 130] });
 
   const date = (record.submitted_at || "").slice(0, 10);

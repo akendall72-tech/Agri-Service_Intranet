@@ -97,7 +97,7 @@ function articleDocument(article, { editable = false } = {}) {
   <span class="kicker${green ? " green" : ""}">${esc(article.kicker)}</span>
   <h1>${esc(article.title)}</h1>
   <div class="byline"><span class="avatar"${green ? ' style="background:var(--green-dark)"' : ""}>AS</span>
-    <span>Agri-Service Training Department</span></div>
+    <span>${esc(companyName())} Training Department</span></div>
 </article>`;
   const body = cleanArticleHtml(article.body || "");
   return `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">

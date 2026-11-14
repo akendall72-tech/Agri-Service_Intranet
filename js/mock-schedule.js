@@ -605,14 +605,14 @@ function mockPdf() {
   const smallHead = () => {
     doc.setFillColor(...red); doc.rect(0, 0, W, 6, "F");
     doc.setFont("helvetica", "bold"); doc.setFontSize(8); doc.setTextColor(...grey);
-    doc.text(`AGRI-SERVICE  -  MOCK SCHEDULE ${year}`, M, 24);
+    doc.text(`${companyCaps()}  -  MOCK SCHEDULE ${year}`, M, 24);
     y = 40;
   };
   const newPage = (then) => { doc.addPage(); smallHead(); if (then) then(); };
 
   // The band and the score.
   doc.setFillColor(...red); doc.rect(0, 0, W, 58, "F");
-  doc.setTextColor(255); doc.setFont("helvetica", "bold"); doc.setFontSize(18); doc.text("AGRI-SERVICE", M, 30);
+  doc.setTextColor(255); doc.setFont("helvetica", "bold"); doc.setFontSize(18); doc.text(companyCaps(), M, 30);
   doc.setFontSize(9); doc.text(`MOCK SCHEDULE ${year}`, M, 45);
   doc.setFont("helvetica", "normal"); doc.setFontSize(9);
   doc.text(`Printed ${new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`, W - M, 28, { align: "right" });
@@ -766,7 +766,7 @@ function mockPdf() {
   for (let p = 1; p <= pages; p++) {
     doc.setPage(p); doc.setDrawColor(220); doc.line(M, H - M + 2, M + CW, H - M + 2);
     doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(...grey);
-    doc.text(`Agri-Service, LLC  -  Mock Schedule ${year}  -  planning only`, M, H - M + 14);
+    doc.text(`${companyLegal()}  -  Mock Schedule ${year}  -  planning only`, M, H - M + 14);
     doc.setFont("helvetica", "bold"); doc.text(`Page ${p} of ${pages}`, W - M, H - M + 14, { align: "right" });
   }
   doc.save(`Mock Schedule ${year}.pdf`);

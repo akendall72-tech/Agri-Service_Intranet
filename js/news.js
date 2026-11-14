@@ -105,7 +105,7 @@ function newsHost(url) {
 const newsLink = (p) => p.kind === "link" && /^https?:\/\/\S+/i.test(p.url || "") ? p.url : null;
 
 const newsSource = (p) => (p.source_name || "").trim()
-  || (p.kind === "post" ? "Agri-Service" : newsHost(p.url) || "News");
+  || (p.kind === "post" ? companyName() : newsHost(p.url) || "News");
 
 // The uploaded picture, the article's own, or a plain tile with an icon. A
 // picture that fails to load (a site that moved it) falls back to the tile.
@@ -476,7 +476,7 @@ async function saveNews() {
     kind: d.kind, title: d.title, summary: d.summary,
     body: d.kind === "post" ? d.body : "",
     url: d.kind === "link" ? d.url : null,
-    source_name: d.source_name || (d.kind === "post" ? "Agri-Service" : newsHost(d.url)),
+    source_name: d.source_name || (d.kind === "post" ? companyName() : newsHost(d.url)),
     published_on: d.published_on, is_published: d.is_published,
     image_url: uploaded ? null : d.image_url,
     image_path: uploaded || d.image_path
@@ -521,7 +521,7 @@ $("admin").addEventListener("click", async (event) => {
   if (act === "news-write") {
     if (!leaving()) return;
     speak($("newsAdd"), "", false);
-    return openNewsEditor({ kind: "post", source_name: "Agri-Service" });
+    return openNewsEditor({ kind: "post", source_name: companyName() });
   }
 
   if (act === "news-edit") {

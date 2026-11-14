@@ -712,7 +712,7 @@ function downloadICS(e) {
   const zone = e.timezone || "America/Boise";
   const stamp = (iso) => new Date(iso).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
   const lines = [
-    "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Agri-Service//Event Center//EN",
+    "BEGIN:VCALENDAR", "VERSION:2.0", `PRODID:-//${companyName()}//Event Center//EN`,
     "METHOD:PUBLISH", "BEGIN:VEVENT",
     `UID:${e.id}@agri-service-app`,
     `DTSTAMP:${stamp(new Date().toISOString())}`
@@ -739,7 +739,7 @@ function downloadICS(e) {
   if (where) lines.push(`LOCATION:${icsText(where)}`);
   const notes = [join && `Join the meeting: ${join}`, e.details,
                  e.contact && `Contact: ${e.contact}`, e.link_url,
-                 "From the Agri-Service app"].filter(Boolean).join("\n\n");
+                 `From the ${companyName()} app`].filter(Boolean).join("\n\n");
   lines.push(`DESCRIPTION:${icsText(notes)}`);
   // The join link wins the URL slot: tapping the entry should open the
   // meeting, not a page about it.

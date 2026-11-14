@@ -40,7 +40,7 @@ const TRAINING_LINKS = [
   // SCORM courses taken here or in the app (0091). See onlineCoursesView.
   { title: "Online Courses", sub: "Take a course here or in the app", view: "olt", tint: "teal", icon: "monitor" },
   // Edited on the Training dashboard's Course Catalog tab.
-  { title: "Course Catalog", sub: "Agri-Service courses", view: "catalog", tint: "ember", icon: "doc" },
+  { title: "Course Catalog", get sub() { return `${companyName()} courses`; }, view: "catalog", tint: "ember", icon: "doc" },
   // Competencies and sign-offs; see skillsView.
   { title: "Skills", sub: "Competencies and sign-offs", view: "skills", tint: "amber", icon: "wrench" },
   // Built from the uploads on the admin page's Open Seat Report tab.
@@ -193,7 +193,7 @@ function showView(name) {
   document.body.dataset.page = "view";
   if (name !== "evaltest") { evalAgreed = null; evalNotice = ""; }
   if (name !== "tool") toolCheckingOut = false;
-  let title = "Agri-Service", page;
+  let title = companyName(), page;
   try { title = pageTitle(name); } catch (error) { reportFault(`The title of ${name}`, error); }
   try { page = VIEWS[name](); } catch (error) {
     reportFault(`The ${title} page`, error);
@@ -253,7 +253,7 @@ function showAdmin() {
     renderNewsAdmin, renderTsImport, renderTsLive, renderHandbook, renderAgcoImport, renderAgcoLive,
     renderAgcoTechs, renderAgcoRules, renderAgcoAdded, renderAgcoBales, renderMockSchedule, renderSafetyAdmin,
     renderSafetyReportAdmin, renderSafetyReportsAdmin, renderFitnessAdmin, renderTriviaAdmin, renderFleetCheckAdmin,
-    renderManualsAdmin);
+    renderManualsAdmin, renderCompanyAdmin);
   (document.querySelector(`#adminNav [data-tab="${adminTab}"]`) || document.querySelector("#adminNav [data-tab]")).click();
   window.scrollTo(0, 0);
 }
@@ -599,7 +599,7 @@ document.querySelectorAll(".tabs button[data-tab]").forEach(btn => {
     document.querySelectorAll(".tabs button[data-tab]").forEach(b =>
       b.classList.toggle("active", b === btn));
     ["certs", "plans", "people", "support", "payroll", "tools",
-      "directory", "logins", "reminders", "fleetcheck", "events", "fitness", "trivia", "org", "openseat", "inspections", "courses", "articles", "skillsadmin", "sds", "news", "trainingstatus", "handbook", "agco", "mock", "safetydesk", "safetyreportform", "safetyreports", "safetyoverview", "fkwaiting", "trainingoverview", "agcocatalog", "rpagco", "rpclass", "oltadmin", "locationoverview", "locationcerts", "manuals", "cranequals", "fkrequired", "crrequired", "craneinspection", "givecredit", "coursecredits", "classschedule", "trainingsettings", "epa609"].forEach(name =>
+      "directory", "logins", "reminders", "fleetcheck", "events", "fitness", "trivia", "org", "openseat", "inspections", "courses", "articles", "skillsadmin", "sds", "news", "trainingstatus", "handbook", "agco", "mock", "safetydesk", "safetyreportform", "safetyreports", "safetyoverview", "fkwaiting", "trainingoverview", "agcocatalog", "rpagco", "rpclass", "oltadmin", "locationoverview", "locationcerts", "manuals", "cranequals", "fkrequired", "crrequired", "craneinspection", "givecredit", "coursecredits", "classschedule", "trainingsettings", "epa609", "company"].forEach(name =>
       $("tab-" + name).classList.toggle("hidden", name !== btn.dataset.tab));
     $("adminTitle").textContent = btn.dataset.title || btn.querySelector("span").textContent.trim();
     if (btn.closest("#safetyNav")) safetyTab = btn.dataset.tab;

@@ -24,7 +24,7 @@ function supportView() {
     + ((profile && profile.full_name) ? "From: " + profile.full_name + "\n" : "")
     + ((profile && locations[profile.location_id])
        ? "Location: " + locations[profile.location_id] + "\n" : "")
-    + "Sent from the Agri-Service web page";
+    + `Sent from the ${companyName()} web page`;
 
   return hero("Support Center", "Something not working? Get it in front of the right people here.")
     + `<div class="sc-groups">

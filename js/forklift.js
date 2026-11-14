@@ -448,7 +448,7 @@ function certificationCard() {
       ${removal ? `<p style="color:var(--red-dark);margin:14px 0 0">${esc(removalLine(removal))}
         You can't operate a forklift until it's restored or you pass a new driving test.</p>` : ""}
       <p class="note" style="margin-top:16px">
-        Issued by the Agri-Service Training Department</p>
+        Issued by the ${esc(companyName())} Training Department</p>
     </div>
   </div>`;
 }
@@ -678,10 +678,13 @@ const evalState = { classes: new Set(), checks: new Set() };
 // (migration 0071).
 const EVALUATOR_TERMS = {
   version: "2026-09-30",
-  intro: "This evaluation becomes part of Agri-Service, LLC's operator certification record under the "
+  // Read when shown, so they carry the company's name as it is now (0133).
+  get intro() {
+    return `This evaluation becomes part of ${companyLegal()}'s operator certification record under the `
     + "Occupational Safety and Health Administration standard for powered industrial trucks. Before "
-    + "recording it, you must read and accept the following responsibilities.",
-  clauses: [
+    + "recording it, you must read and accept the following responsibilities.";
+  },
+  get clauses() { return [
     ["Qualified evaluator",
      "Operator evaluations must be conducted by a person who has the knowledge, training, and experience "
      + "to train powered industrial truck operators and to evaluate their competence. By proceeding, you "
@@ -718,13 +721,15 @@ const EVALUATOR_TERMS = {
      "29 CFR 1910.178(l)(6), (l)(4)(ii) and (l)(4)(iii)"],
     ["Integrity of the record",
      "Recording an evaluation that is false or incomplete endangers the operator and co-workers, and "
-     + "exposes the company to liability. It is a violation of Agri-Service safety policy and may result "
+     + `exposes the company to liability. It is a violation of ${companyName()} safety policy and may result `
      + "in disciplinary action.",
-     "Agri-Service safety policy"]
-  ],
-  acknowledgment: "I have read and understand these responsibilities. I am qualified to conduct this "
+     `${companyName()} safety policy`]
+  ]; },
+  get acknowledgment() {
+    return "I have read and understand these responsibilities. I am qualified to conduct this "
     + "evaluation, and I will record only results I personally observe, in accordance with OSHA "
-    + "29 CFR 1910.178(l) and Agri-Service safety policy."
+    + `29 CFR 1910.178(l) and ${companyName()} safety policy.`;
+  }
 };
 
 // The version accepted for the test being recorded, or null. Each visit to the
@@ -881,7 +886,7 @@ function downloadEvaluationPDF(cert) {
   doc.rect(MARGIN, y, WIDTH, 26, "F");
   text("FORKLIFT DRIVING TEST", MARGIN + 8, y + 5, { size: 15, style: "bold", grey: 255 });
   y += 30;
-  text("Powered industrial truck operator evaluation - Agri-Service, LLC", MARGIN, y,
+  text(`Powered industrial truck operator evaluation - ${companyLegal()}`, MARGIN, y,
        { size: 9, grey: 90 });
   y += 24;
 
@@ -956,7 +961,7 @@ function downloadEvaluationPDF(cert) {
             + "1910.178(l)(4)(iii) allows between evaluations. Keep this with the "
             + "operator's training record.", MARGIN, y, { size: 9, grey: 90, width: WIDTH });
 
-  text(`Agri-Service, LLC - printed ${usDate(todayISO())}`,
+  text(`${companyLegal()} - printed ${usDate(todayISO())}`,
        MARGIN, 792 - MARGIN + 6, { size: 9, grey: 128 });
 
   doc.save(`Forklift Driving Test - ${cert.operator_name}.pdf`);

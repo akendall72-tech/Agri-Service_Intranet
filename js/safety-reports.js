@@ -418,12 +418,12 @@ async function srDownloadPdf(r, box = document.querySelector(".srd-acts")) {
   const newPage = () => {
     doc.addPage(); doc.setFillColor(...red); doc.rect(0, 0, W, 6, "F");
     doc.setFont("helvetica", "bold"); doc.setFontSize(8); doc.setTextColor(115);
-    doc.text(`AGRI-SERVICE  ·  SAFETY REPORT ${reference}`, M, 26); y = 46;
+    doc.text(`${companyCaps()}  ·  SAFETY REPORT ${reference}`, M, 26); y = 46;
   };
   const ensure = (h) => { if (y + h > H - M - 16) newPage(); };
 
   doc.setFillColor(...red); doc.rect(0, 0, W, 70, "F");
-  doc.setTextColor(255); doc.setFont("helvetica", "bold"); doc.setFontSize(19); doc.text("AGRI-SERVICE", M, 40);
+  doc.setTextColor(255); doc.setFont("helvetica", "bold"); doc.setFontSize(19); doc.text(companyCaps(), M, 40);
   doc.setFontSize(9); doc.text("SAFETY REPORT", M, 56);
   doc.setFont("courier", "bold"); doc.setFontSize(10); doc.text(`Report ${reference}`, W - M, 34, { align: "right" });
   doc.setFont("helvetica", "normal"); doc.text(sent, W - M, 50, { align: "right" });
@@ -491,7 +491,7 @@ async function srDownloadPdf(r, box = document.querySelector(".srd-acts")) {
   for (let p = 1; p <= pages; p++) {
     doc.setPage(p); doc.setDrawColor(220); doc.line(M, H - M + 2, M + CW, H - M + 2);
     doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(115);
-    doc.text("Agri-Service, LLC  ·  Confidential: for safety and leadership use", M, H - M + 14);
+    doc.text(`${companyLegal()}  ·  Confidential: for safety and leadership use`, M, H - M + 14);
     doc.setFont("helvetica", "bold"); doc.text(`Page ${p} of ${pages}`, W - M, H - M + 14, { align: "right" });
   }
   const day = String(r.created_at).slice(0, 10);

@@ -78,7 +78,7 @@ function mcCard(c, next, waiting) {
 }
 
 function myClassesView() {
-  const intro = hero("My Classes", "The Agri-Service classes you're registered for, from the Open Seat Report.");
+  const intro = hero("My Classes", `The ${companyName()} classes you're registered for, from the Open Seat Report.`);
   const internal = trainingReports.internal && trainingReports.internal.data;
   if (!internal) {
     return intro + `<div class="card"><p class="note" style="margin:0">The training department hasn't published the Open Seat Report yet.</p></div>`;
@@ -96,7 +96,7 @@ function myClassesView() {
   if (!list.length) {
     return intro + `<div class="mc-list"><article class="mc-card">
         <div class="mc-body"><h3 class="mc-title">No classes yet</h3>
-          <p class="mc-empty">You're not on the roster for any upcoming Agri-Service class. The Open Seat Report shows
+          <p class="mc-empty">You're not on the roster for any upcoming ${esc(companyName())} class. The Open Seat Report shows
             the classes with seats left, and you can register, or ask to be registered, from there.</p>
           <button type="button" class="mc-action" data-view="openseat">See the open seats ›</button></div>
       </article></div>` + foot;
@@ -118,9 +118,9 @@ function downloadClassICS(c) {
   after.setDate(after.getDate() + 1);
   const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
   const notes = [c.startTime && `Starts ${c.startTime} on the first day.`,
-                 c.instructors && `Instructor: ${c.instructors}`, "From the Agri-Service app"].filter(Boolean).join("\n\n");
+                 c.instructors && `Instructor: ${c.instructors}`, `From the ${companyName()} app`].filter(Boolean).join("\n\n");
   const lines = [
-    "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Agri-Service//My Classes//EN", "METHOD:PUBLISH", "BEGIN:VEVENT",
+    "BEGIN:VCALENDAR", "VERSION:2.0", `PRODID:-//${companyName()}//My Classes//EN`, "METHOD:PUBLISH", "BEGIN:VEVENT",
     `UID:${(c.eventId || slugify(`${c.title} ${c.city}`, "-"))}-${c.startDate}@agri-service-app`,
     `DTSTAMP:${stamp}`,
     `DTSTART;VALUE=DATE:${c.startDate.replace(/-/g, "")}`,
