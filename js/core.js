@@ -251,10 +251,20 @@ const myLocationNames = () => myLocations().map(id => locations[id] || id);
 
 // ---------------------------------------------------------------- auth
 
+// What someone types to sign in, as their account's address (0141): a work
+// email is itself; a sign-in name, their number and company (004217@agri-service),
+// is the address their join slip gave them. The app's AuthViewModel.signInAddress
+// and the database's sign_in_address() say the same.
+function signInAddress(typed) {
+  const t = String(typed || "").trim().toLowerCase();
+  const domain = t.includes("@") ? t.slice(t.lastIndexOf("@") + 1) : "";
+  return domain && !domain.includes(".") ? `${t}.signin.agri-barn.com` : t;
+}
+
 $("signIn").onclick = async () => {
   $("authError").textContent = "";
   const { data, error } = await db.auth.signInWithPassword({
-    email: $("email").value.trim(),
+    email: signInAddress($("email").value),
     password: $("password").value
   });
   if (error) {

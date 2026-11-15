@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Which version this is. publish.sh stamps the date and commit here, and
      into version.json beside the page; "dev" is a copy that wasn't published. -->
-<meta name="app-version" content="2026-11-14.3ec5643">
+<meta name="app-version" content="2026-11-14.d535cb5">
 <!-- Where this page may load things from and send things to. GitHub Pages
      can't send security headers, so it's here. Scripts come only from this
      site and the two script CDNs (each pinned with an integrity hash), and
@@ -34,7 +34,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
-<link rel="stylesheet" href="css/app.css?v=941b2090ba">
+<link rel="stylesheet" href="css/app.css?v=a84815116e">
 </head>
 <body>
 
@@ -49,8 +49,8 @@
     <p class="note">Use the same account you use in the app. What you can see and
       change here follows the same rules — signing in from a browser grants
       nothing extra.</p>
-    <label for="email">Work email</label>
-    <input id="email" type="email" autocomplete="username">
+    <label for="email">Work email or sign-in name</label>
+    <input id="email" type="text" inputmode="email" autocapitalize="none" spellcheck="false" autocomplete="username">
     <label for="password">Password</label>
     <input id="password" type="password" autocomplete="current-password">
     <button id="signIn">Sign in</button>
@@ -188,6 +188,7 @@
       <div class="nav-group">Dashboard</div>
       <button data-tab="locationoverview" data-title="Location Dashboard"><i data-icon="building"></i><span>Overview</span></button>
       <button data-tab="locationcerts" data-title="Location Dashboard"><i data-icon="safety"></i><span>Certifications</span></button>
+      <button data-tab="locationslips" data-title="Location Dashboard"><i data-icon="key"></i><span>Join slips</span></button>
       <div id="locationPicks"></div>
     </nav>
     <p class="app-version" id="appVersion"></p>
@@ -884,6 +885,11 @@
     </section>
 
     <!-- Employee handbook -->
+    <!-- The Location Dashboard's Join slips (0141): drawn by renderLocationSlips -->
+    <section id="tab-locationslips" class="hidden">
+      <div id="locationSlips"></div>
+    </section>
+
     <!-- People list (0140): drawn by renderPeopleList -->
     <section id="tab-peoplelist" class="hidden">
       <div id="peopleListAdmin"></div>
@@ -1187,9 +1193,9 @@
      only names from an earlier file; boot.js starts the page and stays last.
      js/core.js has the rest. publish.sh adds ?v= to each, so a changed file is
      fetched fresh and an unchanged one comes from the browser's cache. -->
-<script src="js/core.js?v=a81d967b11"></script>
-<script src="js/shell.js?v=db992df383"></script>
-<script src="js/location-dashboard.js?v=b249c9b953"></script>
+<script src="js/core.js?v=8c9aa9968f"></script>
+<script src="js/shell.js?v=79300523ad"></script>
+<script src="js/location-dashboard.js?v=893d310a68"></script>
 <script src="js/location-certifications.js?v=188701e85c"></script>
 <script src="js/my-certifications.js?v=c7baa6cb5e"></script>
 <script src="js/operator-manuals.js?v=de83dc2ae1"></script>
@@ -1235,7 +1241,7 @@
 <script src="js/training-reports.js?v=a0d90a8436"></script>
 <script src="js/imports.js?v=6261a6a472"></script>
 <script src="js/company.js?v=4dc2764d10"></script>
-<script src="js/people-list.js?v=ccce8e2f67"></script>
+<script src="js/people-list.js?v=00be2091fa"></script>
 <script src="js/platform.js?v=a56ec3583b"></script>
 <script src="js/boot.js?v=a6a254fead"></script>
 </body>
