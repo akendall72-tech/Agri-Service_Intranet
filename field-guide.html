@@ -6,7 +6,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self'; base-uri 'none'; form-action 'none'">
   <meta name="referrer" content="no-referrer">
   <meta name="robots" content="noindex, nofollow">
-  <title>Agri-Service Field Guide</title>
+  <title>Field Guide</title>
   <link rel="icon" type="image/png" sizes="32x32" href="images/barn-32.png">
   <link rel="icon" type="image/svg+xml" href="images/barn.svg">
   <link rel="apple-touch-icon" href="images/barn-180.png">
@@ -18,118 +18,426 @@
   <main class="page guide" id="top">
     <p class="back"><a href="support.html">&larr; Help and Support</a></p>
     <div class="hero">
-      <p class="eyebrow">Agri-Service</p>
-      <h1>Agri-Service Field Guide</h1>
-      <p>What the Agri-Service app does, how each screen works, on the phone and on the web page at
-  agri-barn.com, and what the training department can change without anyone reinstalling anything.
-  Written for technicians, service writers and anyone who ends up administering it.</p>
+      <p class="eyebrow">Agri-Barn</p>
+      <h1>Field Guide</h1>
+      <p>What the app does, how each screen works, on the phone and on the web page at
+  agri-barn.com, who can do what, and how people get in. Written for everyone who uses it, from a
+  technician's first sign-in to the owners who run it for their company.</p>
       <p class="updated">Updated November 15, 2026</p>
     </div>
     <nav class="card toc" aria-label="On this page">
       <h2>On this page</h2>
-      <ol><li><a href="#access">Getting in</a></li><li><a href="#web">The web page</a></li><li><a href="#tabs">The five tabs</a></li><li><a href="#home">Home</a></li><li><a href="#centers">The Centers</a></li><li><a href="#techlevels">Skills</a></li><li><a href="#trainingstatus">Training Status</a></li><li><a href="#hr">HR</a></li><li><a href="#social">Social</a></li><li><a href="#events">Events</a></li><li><a href="#apparel">Apparel</a></li><li><a href="#news">News</a></li><li><a href="#settings">Settings</a></li><li><a href="#notifications">Notifications</a></li><li><a href="#admin">The admin page</a></li><li><a href="#sso">Microsoft sign-in</a></li><li><a href="#limits">Known limits</a></li></ol>
+      <ol><li><a href="#roles">Who can do what</a></li><li><a href="#access">Getting in</a></li><li><a href="#people">Bringing people in</a></li><li><a href="#web">The web page</a></li><li><a href="#tabs">The tabs</a></li><li><a href="#home">Home</a></li><li><a href="#centers">The Centers</a></li><li><a href="#techlevels">Skills</a></li><li><a href="#trainingstatus">Training Status</a></li><li><a href="#hr">HR</a></li><li><a href="#social">Social</a></li><li><a href="#events">Events</a></li><li><a href="#apparel">Apparel</a></li><li><a href="#news">News</a></li><li><a href="#settings">Settings</a></li><li><a href="#notifications">Notifications</a></li><li><a href="#admin">The admin page</a></li><li><a href="#limits">Known limits</a></li></ol>
     </nav>
+<section class="card" id="roles">
+  <h2>Who can do what</h2>
+  <p class="lede">Everyone has one of three roles, and an owner can also hold one or both of two
+    designations. What each can do is decided by the database, not by the screens: a button you
+    don't see is a convenience, and the database would turn the change down anyway.</p>
+
+  <div class="plate">
+    <h4>The three roles</h4>
+    <dl>
+      <dt>Employee</dt>
+      <dd>Everyone starts here. Uses every Center for themselves: their own lift plans, inspections,
+        Safety Reports, support requests, reminders, training record, certifications and the vehicles
+        they drive. Reads what's shared with everyone: the Safety Center, news, events, Social, the
+        directory and the special tools list.</dd>
+      <dt>Location admin</dt>
+      <dd>Everything an employee can do, and looks after the people at their location: approves their
+        lift plans, sees and corrects their inspections, signs off their Skills, sees their training
+        and certifications, checks special tools in and out, registers them for classes, gives them
+        join slips and password slips, and has the <strong>Location Dashboard</strong>. An admin can
+        also cover another location (see <a href="#people">Bringing people in</a>).</dd>
+      <dt>Owner</dt>
+      <dd>Everything, at every location, and the <strong>Admin</strong> side of the web page: accounts and
+        roles, the People list, the company's settings, and the content everyone sees. A company always
+        has at least one owner: the last one can't be made anything else.</dd>
+    </dl>
+  </div>
+
+  <div class="plate">
+    <h4>The two designations, for owners</h4>
+    <dl>
+      <dt>Training Manager</dt>
+      <dd>Has the <strong>Training dashboard</strong>: the Class Schedule and grading, Give Credit, the
+        courses' training hours and record names, EPA 609, Online Courses, Training Articles, the Skills
+        competency list, Training Settings and the All employees upload. For an AGCO dealer, also the
+        AGCO Development Map, the Mock Schedule and AGCO's uploads. Approves forklift driving tests
+        before they count, and registers people for any class.</dd>
+      <dt>Safety Manager</dt>
+      <dd>Has the <strong>Safety dashboard</strong>: approves and publishes Safety Reports and is the only one
+        who sees who sent them, writes the Safety Report form and each month's Safety Brief, keeps the
+        required forklift and crane operator lists, the daily crane inspection checklist, the forklift
+        certification import and the Safety Data Sheets. Gets every Safety Report the moment it's sent.</dd>
+    </dl>
+  </div>
+  <p>Only an owner can hold a designation; an owner made an admin or an employee loses theirs at once.
+    One owner can hold both, and two owners can share one. Owners give them on Admin → <strong>People</strong>,
+    with the ticks on an owner's row, their own included. Everyone signed in can see who holds which.</p>
+
+  <h3>At a glance</h3>
+  <p>"Their locations" means an admin's own location and any they cover. Each Center's section has
+    the detail.</p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Action</th><th>Employee</th><th>Location admin</th><th>Owner</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Use the Centers for yourself</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
+        <tr><td>Approve or send back a lift plan</td><td class="no">No</td><td class="yes">Their locations'</td><td class="yes">Any</td></tr>
+        <tr><td>See inspections</td><td class="yes">The ones they started</td><td class="yes">Their locations'</td><td class="yes">All</td></tr>
+        <tr><td>Correct or delete an inspection</td><td class="no">No</td><td class="yes">Their locations'</td><td class="yes">All</td></tr>
+        <tr><td>Send a Safety Report</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
+        <tr><td>See who sent a Safety Report</td><td class="no">No</td><td class="no">No, only a count</td><td class="yes">Safety Manager</td></tr>
+        <tr><td>See training records</td><td class="yes">Their own</td><td class="yes">Their locations'</td><td class="yes">Everyone</td></tr>
+        <tr><td>Register for a class</td><td class="yes">Themselves, on an open class</td><td class="yes">Their locations' people</td><td class="yes">Anyone (Training Manager: any class)</td></tr>
+        <tr><td>Grade a class, give credit</td><td class="no">No</td><td class="no">No</td><td class="yes">Training Manager</td></tr>
+        <tr><td>Sign off Skills</td><td class="no">No</td><td class="yes">Their locations' technicians</td><td class="yes">Anyone</td></tr>
+        <tr><td>Record a forklift driving test</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="yes">Yes</td></tr>
+        <tr><td>Approve a driving test</td><td class="no">No</td><td class="no">No</td><td class="yes">Training Manager</td></tr>
+        <tr><td>See forklift cards and crane qualifications</td><td class="yes">Their own</td><td class="yes">Their locations'</td><td class="yes">Everyone</td></tr>
+        <tr><td>Remove a certification</td><td class="no">No</td><td class="no">No</td><td class="yes">Yes</td></tr>
+        <tr><td>Check special tools out and in</td><td class="no">No</td><td class="yes">Their location's tools</td><td class="yes">Any tool</td></tr>
+        <tr><td>Vehicles</td><td class="yes">The ones they drive</td><td class="yes">Their locations'</td><td class="yes">All</td></tr>
+        <tr><td>Post and comment on Social</td><td class="yes">Yes</td><td class="yes">Yes</td><td class="yes">Yes, and edit or delete anyone's</td></tr>
+        <tr><td>Add events, keep a private sign-up list</td><td class="no">No</td><td class="no">No</td><td class="yes">Yes</td></tr>
+        <tr><td>Give a join slip</td><td class="no">No</td><td class="yes">Their locations' people</td><td class="yes">Anyone</td></tr>
+        <tr><td>Give a password slip</td><td class="no">No</td><td class="yes">Their locations' employees</td><td class="yes">Anyone</td></tr>
+        <tr><td>See the People list</td><td class="no">Their own row</td><td class="yes">Their locations' people</td><td class="yes">Everyone, and keep it up to date</td></tr>
+        <tr><td>Change roles and designations, switch accounts off</td><td class="no">No</td><td class="no">No</td><td class="yes">Yes, never their own</td></tr>
+        <tr><td>The company's settings, Microsoft 365 and features</td><td class="no">No</td><td class="no">No</td><td class="yes">Yes</td></tr>
+        <tr><td>Everything under Admin</td><td class="no">No</td><td class="no">No</td><td class="yes">Yes</td></tr>
+        <tr><td>Location Dashboard</td><td class="no">No</td><td class="yes">Their locations</td><td class="yes">Any location</td></tr>
+        <tr><td>Training dashboard</td><td class="no">No</td><td class="no">No</td><td class="yes">Training Manager</td></tr>
+        <tr><td>Safety dashboard</td><td class="no">No</td><td class="no">No</td><td class="yes">Safety Manager</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Nobody signs off their own Skills, approves their own lift plan, changes their own role or switches
+    off their own account, whatever their role. Nobody can change the name or location they set at their
+    first sign-in, or their employee number: an owner does.</p>
+
+  <h3>What your company has switched on</h3>
+  <p>A few parts are some companies' and not others', and an owner switches them on or off on Admin →
+    <strong>Company</strong>, under <em>Training Center and features</em>:</p>
+  <ul class="plain">
+    <li><strong>AGCO dealer</strong> — everything that's AGCO's: the AGCO Development Map and catalog, AGCO's
+      training-hours requirement (the dealer metric on Training Status, the Training dashboard and the
+      Location Dashboard, the Mock Schedule and the AGCO Training Hours report), AGCO Academy's sessions
+      on the Open Seat Report, and AGCO credit on courses.</li>
+    <li><strong>Apparel tab</strong> — the app's tab that opens the company's apparel store, signed in.</li>
+  </ul>
+  <p>A company without one doesn't see it at all, and nothing is deleted when one is switched off.
+    Where this guide describes one, it says so. The company also sets its own name, logos, Training Center
+    mission and IT mailbox there.</p>
+
+  <h3>Agri-Barn's platform</h3>
+  <p>Agri-Barn is run by Prime Theory Labs. Its platform owner sits above every company and belongs to none:
+    they set companies up, and place an account that's waiting for one. To help, they can open your company
+    as its owner for up to two hours. Every change made during a visit is logged, with why they came, and your
+    owners read the log on Admin → Company. Nobody at one
+    company ever sees another company's people or records.</p>
+  <a class="to-top" href="#top">Back to the top</a>
+</section>
+
 <section class="card" id="access">
   <h2>Getting in</h2>
-  <p class="lede">There is no sign-up button, and that is deliberate. You make
-    your own account with a join slip, which your location admin gives you.</p>
+  <p class="lede">There's no sign-up button: your company decides who's in. You get in with a join slip
+    from your location admin, or with your work Microsoft account if your company uses Microsoft 365.
+    Either way, you have to be on your company's People list first.</p>
 
   <h3>Getting the app</h3>
   <ol class="steps">
-    <li>Install <strong>TestFlight</strong> from the App Store. It's Apple's own app
-      for installing apps that aren't in the store.</li>
-    <li>Open the invite from the training department — an email or a link — and
-      tap <em>Install</em>. Agri-Service appears on your home screen like any
-      other app.</li>
+    <li>Install <strong>TestFlight</strong> from the App Store. It's Apple's own app for installing apps
+      that aren't in the store yet.</li>
+    <li>Open the invite your company sends you, an email or a link, and tap <em>Install</em>. The app
+      appears on your home screen like any other.</li>
     <li>Updates install themselves after that.</li>
   </ol>
+  <p>You don't need the app to start: everything is also on the web page at <strong>agri-barn.com</strong>,
+    in any browser, with the same account.</p>
 
-  <h3>Your join slip</h3>
-  <p>Your location admin (or the training department) gives you a slip with a code
-    like <strong>K7QM-4XRP</strong>. You need to be on the company's People list first,
-    which everyone on the All employees upload is.</p>
+  <h3>Signing in</h3>
+  <p>The app and the web page sign in the same way, with one of these:</p>
+  <ul class="plain">
+    <li><strong>Your work email and a password</strong> — the password you picked with your join slip.</li>
+    <li><strong>Your sign-in name and a password</strong> — for someone with no work email: your employee
+      number and your company, like <strong>004217@agri-service</strong>. Your join slip shows yours.</li>
+    <li><strong>Continue with Microsoft</strong> — if your company signs in with Microsoft 365. Type your
+      work email and the button appears under <em>Sign in</em>.</li>
+  </ul>
+
+  <h3>Your first time, with a join slip</h3>
+  <p>Your location admin (or an owner) gives you a slip with a code like <strong>K7QM-4XRP</strong>.</p>
   <ol class="steps">
-    <li>On the app's sign-in screen, or on agri-barn.com, tap <strong>Have a join
-      slip?</strong> and type the code. Capitals, spaces and the dash don't matter.</li>
-    <li>Check it's your name and location, then pick your own password, at least 8
-      characters. Nobody else ever knows it.</li>
-    <li>Tap <strong>That's Me, Sign In</strong>. You're signed in, with your name,
-      employee number and location already filled in.</li>
+    <li>On the app's sign-in screen, or on agri-barn.com, tap <strong>Have a join slip?</strong> and type the
+      code. Capitals, spaces and the dash don't matter.</li>
+    <li>Check it's your name, job and location, and see what you'll sign in as.</li>
+    <li>Pick your own password, at least 8 characters, and type it twice. Nobody else ever knows it.</li>
+    <li>Tap <strong>That's Me, Sign In</strong>. You're in, with your name, employee number and location already
+      filled in.</li>
   </ol>
-  <p>A slip works once and lasts 14 days. You sign in with your work email; if you
-    have none, with your <strong>sign-in name</strong>, your employee number and the
-    company, like <strong>004217@agri-service</strong>, which the slip shows. Lost the
-    slip? Ask for a new one: it cancels the old.</p>
-  <p>There's no "forgot password" link, because the app deliberately sends no email at
-    all. If you forget your password, your location admin gives you a
-    <strong>password slip</strong>, which works the same way and lets you pick a new one.
-    (A password slip for an admin or an owner comes from an owner.) Accounts made by hand
-    in Supabase still work as before.</p>
-  <p><strong>Giving slips:</strong> owners on Admin → People list; a location's admins on
-    their <strong>Location Dashboard → Join slips</strong>, for their own location's people.
-    One person at a time, or everyone with no account at once; the codes show only then,
-    so print them (<strong>Print slips</strong> lays them out to cut apart) or copy them
-    before leaving the page.</p>
+  <p>A slip works once and lasts 14 days. Lost it? Ask for a new one: it cancels the old. If the code
+    isn't for you, hand it back.</p>
 
-  <h3>Signing in with Microsoft</h3>
-  <p>A company that uses Microsoft 365 can have its people sign in with their work
-    Microsoft account instead. Type your work email on the sign-in screen and, if your
-    company does, a <strong>Continue with Microsoft</strong> button appears under
-    <em>Sign in</em>. It opens Microsoft's own sign-in; afterwards you're back in the app
-    or on the web page, signed in. The first time makes your account, with no slip, as long
-    as you're on the company's People list; if you're not, Microsoft's page comes back
-    saying so. If you already have an account, Microsoft signs you in to it, and your
-    password still works too.</p>
-  <p>The app forgets your Microsoft sign-in when it's done, so on a shared phone the next
+  <h3>Your first time, with Microsoft</h3>
+  <ol class="steps">
+    <li>Type your work email on the sign-in screen. If your company signs in with Microsoft, <strong>Continue
+      with Microsoft</strong> appears under <em>Sign in</em>.</li>
+    <li>Tap it. Microsoft's own sign-in opens, with your company's rules: your Microsoft password, and a code
+      from the Authenticator app if your company asks for one.</li>
+    <li>You're back in the app or on the web page, signed in. The first time makes your account, filled in from
+      the People list.</li>
+  </ol>
+  <p>If you already have an account from a join slip, Microsoft signs you in to that one, and your password
+    keeps working too. The app forgets your Microsoft sign-in once you're in, so on a shared phone the next
     person isn't signed in as you.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>If it says</th><th>What to do</th></tr></thead>
+      <tbody>
+        <tr><td>You're not on your company's People list yet</td><td>Ask your location admin to add you, then try again</td></tr>
+        <tr><td>Your company doesn't sign in with Microsoft</td><td>Ask your location admin for a join slip</td></tr>
+        <tr><td>Microsoft didn't confirm your email address</td><td>Your Microsoft account needs an email address at one of your company's domains: ask your IT</td></tr>
+        <tr><td>No Continue with Microsoft button</td><td>Your company doesn't sign in that way, or the email isn't at its domain: use your password, or a join slip</td></tr>
+      </tbody>
+    </table>
+  </div>
 
-  <p>On the web page, a sign-in can run out while the page is open, for
-    instance after the computer has been asleep. The sign-in box then comes
-    back over the page with your email filled in. Sign in again and carry on:
-    the page is kept as it was, including an upload that hasn't been
-    published yet.</p>
-  <p>Owners and admins are signed out of the web page after 30 minutes without using it, in
-    every tab it's open in, so nobody at a shared computer can carry on as them. The page
-    starts again clean and says why. Watching an online course counts as using it, and it
-    never happens while a course is uploading. Everyone else stays signed in.</p>
+  <h3>Forgot your password</h3>
+  <p>There's no "forgot password" link, because the app sends no email at all. Your location admin gives you
+    a <strong>password slip</strong>: the same as a join slip, and you pick a new password with it. An admin's
+    or an owner's comes from an owner. If you sign in with Microsoft, your password is Microsoft's: your IT
+    resets it.</p>
 
-  <h3>Your first sign-in</h3>
-  <p>The app asks for three things before it lets you through, because all
-    three decide what reaches you afterwards.</p>
-
+  <h3>Your first sign-in to the app</h3>
+  <p>The app asks for three things before it lets you through, because all three decide what reaches you.
+    Whatever the People list already says is filled in for you.</p>
   <div class="plate">
     <h4>Set once at first sign-in</h4>
     <dl>
       <dt>Your name</dt>
-      <dd>How you appear on lift plans, support requests and your forklift card. <strong>Locked once set</strong> — only the training department can change it.</dd>
+      <dd>How you appear on lift plans, support requests and your forklift card. <strong>Locked once set</strong>:
+        only an owner can change it.</dd>
       <dt>Your location</dt>
-      <dd>Picked from the list, which includes Field Support for remote people. <strong>Locked once set</strong> — only the training department can move you.</dd>
+      <dd>Picked from your company's locations. <strong>Locked once set</strong>: only an owner can move you.</dd>
       <dt>Your groups</dt>
-      <dd>Service, Parts, Sales, Service Writers, Admin. Pick every one you work in. Changeable any time in Settings.</dd>
+      <dd>The groups your company works in, such as Service or Parts. Pick every one you're in. Changeable any
+        time in Settings.</dd>
     </dl>
   </div>
-
-  <p>That first screen is only in the app. If you'll only ever use the web page, the
-    training department fills in your name and location for you instead.</p>
-
+  <p>That screen is only in the app. If you only ever use the web page, an owner fills in your name and
+    location instead.</p>
   <div class="note">
     <b>Why the location and the name are locked</b>
-    <p>Your location decides which administrator reviews your lift plans. If people
-      could change it quietly, a plan could be routed to whoever was most
-      likely to wave it through.</p>
-    <p>Your name goes on your lift plans, inspections and reports. If people could
-      change it, someone could put a colleague's name on their own work. In
-      Settings the name shows with a lock, like the location. (Training Status
-      doesn't use names: it finds you by your employee number.)</p>
+    <p>Your location decides which admin reviews your lift plans. If people could change it quietly, a plan
+      could be routed to whoever was most likely to wave it through.</p>
+    <p>Your name goes on your lift plans, inspections and reports. If people could change it, someone could put
+      a colleague's name on their own work. (Training records don't use names: they find you by your employee
+      number, then your work email.)</p>
   </div>
+
+  <h3>Staying signed in</h3>
+  <p>The app keeps you signed in. On the web page a sign-in can run out while the page is open, for instance
+    after the computer has been asleep: the sign-in box comes back over the page with your email filled in,
+    and once you sign in again the page is as you left it, an upload not yet published included.</p>
+  <p>Owners and admins are signed out of the web page after 30 minutes without using it, in every tab it's
+    open in, so nobody at a shared computer can carry on as them. Watching an online course counts as using
+    it, and it never happens while a course is uploading. Everyone else stays signed in.</p>
+  <p>An account that's switched off is signed out of both, at once.</p>
+  <a class="to-top" href="#top">Back to the top</a>
+</section>
+
+<section class="card" id="people">
+  <h2>Bringing people in</h2>
+  <p class="lede">For owners, and for location admins with their own people. One idea runs through all of
+    it: <strong>the People list decides who's in; signing in only proves you're someone on it.</strong></p>
+
+  <div class="plate">
+    <h4>How it fits together</h4>
+    <dl>
+      <dt>The People list</dt>
+      <dd>Everyone who works for the company: name, employee number, work email, job and location. Admin →
+        Setup → <strong>People list</strong>.</dd>
+      <dt>Ways onto the list</dt>
+      <dd>The All employees upload from your HR system, your Microsoft 365 directory, or by hand.</dd>
+      <dt>Ways in</dt>
+      <dd>A join slip, or Sign in with Microsoft. People with no work email get a sign-in name.</dd>
+      <dt>The gate</dt>
+      <dd>Every new account is checked by the database before it's made. Only a join slip, or a Microsoft
+        sign-in by someone on the People list, gets through. Nobody can sign themselves up, and no one
+        outside the company can get in by having a Microsoft account.</dd>
+    </dl>
+  </div>
+  <p>The app sends no email at all, so there are no invitations or reset links to go astray or land in spam.
+    People are matched to their records by employee number, then work email, never by name.</p>
+
+  <h3>The People list</h3>
+  <p>Owners see everyone; a location's admins see their own people on their <strong>Location Dashboard →
+    Join slips</strong>. Each person shows where they came from (<em>Upload</em>, <em>Microsoft</em> or <em>By
+    hand</em>) and whether they have an account yet. The chips along the top show who's <em>Here</em>, who has
+    <em>No account yet</em>, who was <em>Added by hand</em>, and who has <em>Left</em>.</p>
+  <p>Nobody is ever deleted from it. Someone who drops off is marked as left and comes back if they return.
+    <strong>Undo it</strong>, beside the last change, puts the list back as it was before.</p>
+
+  <h3>Keeping the list up to date</h3>
+  <p>Pick one way to keep it current; anyone the others don't have can be added by hand.</p>
+  <ul class="plain">
+    <li><strong>The All employees upload</strong> — your HR system's export of everyone (at Agri-Service, UKG's
+      All employees report), uploaded by the Training Manager on the Training dashboard under Uploads. Before
+      it's published it says who would join, move location and leave.</li>
+    <li><strong>Microsoft 365</strong> — the list fills itself from your Microsoft directory, every night. See
+      <em>The People list from Microsoft 365</em> below.</li>
+    <li><strong>By hand</strong> — owners, on the People list: <strong>Add someone by hand</strong>, for a new
+      hire, a contractor or anyone the feed doesn't have yet. They need an employee number or a work email.
+      A feed never takes off someone added by hand, and takes them over if it lists them.</li>
+  </ul>
+  <div class="note">
+    <b>The guard</b>
+    <p>An upload or a night's sync that would take off more than a tenth of the list (at least 3 people), or
+      everyone at a location, stops and asks first. The usual cause is the wrong file, such as one location's
+      export instead of everyone's. If it really is everyone, tick that it is.</p>
+  </div>
+
+  <h3>Join slips</h3>
+  <ol class="steps">
+    <li>Owners: Admin → People list. A location's admins: <strong>Location Dashboard → Join slips</strong>, for
+      their own locations' people.</li>
+    <li>Press <strong>Join slip</strong> beside someone with no account, or <strong>Join slips for all</strong> under
+      <em>No account yet</em>.</li>
+    <li>The codes show <strong>only then</strong>: <strong>Print slips</strong> lays them out to cut apart, or copy
+      them, before leaving the page. Only a fingerprint of each code is kept, so nobody can look one up later.</li>
+    <li>Hand each person their slip. They follow <a href="#access">Getting in</a>.</li>
+  </ol>
+  <p>A slip lasts 14 days and works once; giving a new one cancels the old. A switched-off account can't be
+    given one. After 10 wrong codes in an hour from one place, the join page stops answering it for a while.</p>
+  <p><strong>Sign-in names.</strong> Someone with no work email signs in with their employee number and the
+    company's short name, like <strong>004217@agri-service</strong>. Their join slip shows it, and that's all
+    they need to remember besides their password.</p>
+
+  <h3>Password slips</h3>
+  <p>For a forgotten password. Beside someone who already has an account, the button says <strong>Password
+    slip</strong>. It works like a join slip, and the person picks a new password with it. A location admin
+    gives them to the employees at their locations; a password slip for an admin or an owner comes from an
+    owner.</p>
+
+  <h3 id="microsoft">Sign in with Microsoft</h3>
+  <p>For a company on Microsoft 365. Its people sign in with their work Microsoft account instead of a password
+    of ours: one less password, your Microsoft rules (such as a code from the Authenticator app) apply, and
+    someone switched off in Microsoft can no longer sign in with it. Join slips keep working alongside, for
+    anyone without a Microsoft account.</p>
+  <p><strong>Setting it up</strong> takes an owner and one person in your IT who is a <em>Global Administrator</em>
+    (or Privileged Role Administrator) of your Microsoft 365. Nothing has to be typed into Microsoft by hand.</p>
+  <ol class="steps">
+    <li>An owner opens Admin → <strong>Company</strong> → <em>Microsoft 365</em> and presses <strong>Make a link
+      for IT</strong>, then <strong>Copy</strong>. The link works once, for a week.</li>
+    <li>Send it to IT. If you're the administrator yourself, open it yourself.</li>
+    <li>IT opens it, signs in to Microsoft, reads what Agri-Barn is asking for (below) and presses
+      <strong>Accept</strong>. Microsoft may say the app is from an unverified publisher; that's expected.</li>
+    <li>Their browser comes back to agri-barn.com saying Microsoft 365 is connected, with the email domains
+      Microsoft gave it. Microsoft sign-in is now on.</li>
+    <li>Make sure everyone is on the People list with the same work email Microsoft has for them.</li>
+    <li>Tell people to type their work email and press <strong>Continue with Microsoft</strong>.</li>
+  </ol>
+  <div class="plate">
+    <h4>What IT is approving</h4>
+    <dl>
+      <dt>Sign people in</dt>
+      <dd>Microsoft tells Agri-Barn who someone is: their name and email address.</dd>
+      <dt>Read the directory</dt>
+      <dd>Names, work emails, job titles, departments, offices, employee IDs, and whether each account is switched
+        on. Only used if you keep the People list from Microsoft.</dd>
+      <dt>Read group membership</dt>
+      <dd>Only to tell who's in a group, if you choose to take the People list from one group.</dd>
+      <dt>Read the organization</dt>
+      <dd>Your verified email domains, so nobody has to type them and nobody can claim one that isn't yours.</dd>
+    </dl>
+  </div>
+  <p>Agri-Barn never sees anyone's Microsoft password and never changes anything in Microsoft. Your email domains
+    come only from Microsoft: not even an owner can type or change them.</p>
+  <p><strong>Each person needs</strong> to be on the People list with the same work email, and to have an email
+    address in Microsoft at one of your verified domains. Someone with a mailbox has one. An account with no
+    licence may not: in the Microsoft Entra admin center, open the user, <em>Edit properties</em>, and fill in
+    <em>Email</em> under <em>Contact information</em>.</p>
+  <p><strong>Switching it off.</strong> Untick <em>Sign in with Microsoft</em> on Admin → Company to stop it for
+    now; anyone whose account was made with Microsoft then needs a password slip to sign in.
+    <strong>Disconnect</strong> forgets your Microsoft 365 altogether; the accounts stay.</p>
+
+  <h3>The People list from Microsoft 365</h3>
+  <p>Once Microsoft 365 is connected, the People list has a <strong>From Microsoft 365</strong> card, so the list
+    keeps itself up to date from your directory instead of an upload.</p>
+  <ul class="plain">
+    <li><strong>Who's on the list</strong> — everyone in the directory, or the members of one Microsoft group
+      (handy for leaving out shared mailboxes and outside accounts).</li>
+    <li><strong>Location comes from</strong> — the Microsoft field that says where someone works: Office,
+      Department, City or Company name. Its value is matched to a location by the location's name or any of its
+      <em>other names</em> on Groups &amp; Locations.</li>
+    <li><strong>Employee number comes from</strong> — Microsoft's Employee ID, or not from Microsoft.</li>
+    <li><strong>Check what it would do</strong> reads Microsoft and shows who would join, come back, move and leave,
+      any location from Microsoft that doesn't match one here, and who was left out: guests, accounts switched off
+      in Microsoft, and anyone with no email address there.</li>
+    <li><strong>Update the list now</strong> makes the change, and <strong>Undo it</strong> takes it back.</li>
+    <li><strong>Keep the list up to date every night</strong> does it by itself at about 2 AM Mountain, with the
+      choices saved under <strong>Save these choices</strong>. A night the guard stops says so on this card, for an
+      owner to check and update by hand.</li>
+  </ul>
+
+  <h3>When someone joins</h3>
+  <ol class="steps">
+    <li>They're on the People list: from the next upload, the next night's Microsoft sync, or added by hand
+      today.</li>
+    <li>They get in: a join slip from their location admin, or Continue with Microsoft.</li>
+    <li>Their name, employee number and location come from the list. In the app they pick their groups.</li>
+    <li>If they're to be a location admin or an owner, an owner changes their role on Admin → People.</li>
+  </ol>
+
+  <h3>When someone leaves</h3>
+  <p>The upload, or Microsoft, marks them as left on the People list. Their account is switched off by either
+    of these:</p>
+  <ul class="plain">
+    <li><strong>By hand</strong> — an owner presses <strong>Deactivate</strong> beside them on Admin → People.</li>
+    <li><strong>By itself</strong> — with <em>Switch off the account of someone who leaves the list</em> ticked on
+      the People list, an account is switched off when its person leaves the list, and back on if they return.
+      Never an owner's. It's off unless an owner turns it on.</li>
+  </ul>
+  <p>A switched-off account can't sign in, is signed out of the app and the web page, gets no more
+    notifications, and loses any admin or owner access at once. Everything they did stays, with their name on
+    it. <strong>Reactivate</strong> lets them back in as they were. Don't delete an account in Supabase: it's
+    refused for anyone with records, so nothing can be lost that way.</p>
+
+  <h3>Roles, names and numbers</h3>
+  <p>On Admin → <strong>People</strong>, an owner changes someone's role (never their own, and never the last
+    owner's), gives designations, and fills in the name and location of someone who only uses the web page.
+    <strong>Employee #</strong> is what finds someone's training records; it fills itself in from the People list
+    by work email, so type it only for someone who signs in with a different email from the one on the list. No
+    two accounts can share one.</p>
+
+  <h3>Covering a location</h3>
+  <p>When a location loses its admin, an admin from another location can cover it. On <strong>People</strong>,
+    under their location, pick it from <strong>Also covers</strong>. They keep their own location and become the
+    covered location's admin too: its lift plans and inspections, Skills sign-offs, training, certifications,
+    special tools, Safety Brief results, join slips, and the notifications that go with them. Their own lift
+    plans still go to their own location's admin. In the app their location shows as, say, <em>Pasco +1</em>.
+    When the gap is filled, take it away with the &times; beside it.</p>
+
+  <h3>Other ways in</h3>
+  <p>These aren't offered yet. Ask Prime Theory Labs when a company needs one:</p>
+  <ul class="plain">
+    <li><strong>Sign in with Google</strong> — for a company on Google Workspace, set up the same way as Microsoft.</li>
+    <li><strong>SAML single sign-on</strong> — for Okta, OneLogin, ADFS and the like. It needs a paid plan, and it
+      can't take over accounts people already have, so it suits a company starting fresh.</li>
+    <li><strong>Automatic provisioning (SCIM)</strong> — the People list kept up to date by your identity system,
+      for a company whose HR or IT system speaks it.</li>
+  </ul>
   <a class="to-top" href="#top">Back to the top</a>
 </section>
 
 <section class="card" id="web">
   <h2>The web page</h2>
   <p class="lede">Everything in the app, and the tools for running it, at
-    <strong>agri-barn.com</strong>, in any browser on a computer, a tablet or a phone. Sign in with
-    the same email and password as the app.</p>
+    <strong>agri-barn.com</strong>, in any browser on a computer, a tablet or a phone. Sign in the same way as in the app.</p>
 
   <h3>Finding your way</h3>
   <ul class="plain">
@@ -155,13 +463,13 @@
 
   <h3>Only on the web page</h3>
   <ul class="plain">
-    <li><strong>The admin page</strong> — accounts, locations, reminders, the forms, Trivia and the
-      rest: see <a href="#admin">The admin page</a>.</li>
+    <li><strong>Admin</strong>, for owners — accounts, the People list, the company's settings, locations,
+      reminders, the forms, Trivia and the rest: see <a href="#admin">The admin page</a>.</li>
     <li><strong>The Training and Safety dashboards</strong>, for the Training Manager and the Safety
       Manager. (The Location Dashboard is in the app too.)</li>
-    <li><strong>Uploads</strong> — Training Status, the Open Seat Report and the AGCO Catalog.</li>
+    <li><strong>Uploads</strong> — All employees, and for an AGCO dealer, AGCO's catalog and Open Seat Report.</li>
     <li><strong>Printouts and spreadsheets</strong> — the Location Dashboard's PDF report, the monthly
-      Safety Report PDF, the AGCO Catalog as a CSV file, and the import templates.</li>
+      Safety Report PDF, the AGCO Catalog as a CSV file (AGCO dealers), and the import templates.</li>
   </ul>
 
   <h3>Only in the app</h3>
@@ -171,8 +479,8 @@
     <li><strong>Working with no signal</strong> — the app keeps inspections, lift plans and the forms on
       the phone. The web page needs a connection.</li>
     <li><strong>The first sign-in screen</strong>, where you set your name, location and groups. For
-      someone who only uses the web page, the training department fills those in.</li>
-    <li><strong>Apparel</strong>.</li>
+      someone who only uses the web page, an owner fills those in.</li>
+    <li><strong>Apparel</strong>, for a company that has switched it on.</li>
   </ul>
 
   <h3>Staying up to date</h3>
@@ -184,8 +492,9 @@
 </section>
 
 <section class="card" id="tabs">
-  <h2>The five tabs</h2>
-  <p>Along the bottom of the screen. Home is where signing in lands you.</p>
+  <h2>The tabs</h2>
+  <p>Along the bottom of the screen: five, or four for a company without the Apparel tab. Home is where
+    signing in lands you.</p>
 
   <div class="screens">
     <div class="screen">
@@ -201,17 +510,17 @@
     <div class="screen">
       <span class="sub">Tab three</span>
       <b>Social</b>
-      <span>The Company community — posts, shout-outs, articles and @mentions — Events, the company calendar, the month's Fitness Challenge, and AGCO Trivia.</span>
+      <span>The Company community — posts, shout-outs, articles and @mentions — Events, the company calendar, the month's Fitness Challenge, and Trivia.</span>
     </div>
     <div class="screen">
       <span class="sub">Tab four</span>
       <b>Apparel</b>
-      <span>The company store, opened past its password gate for you.</span>
+      <span>The company store, opened past its password gate for you. Only for a company that has switched it on; without it there are four tabs.</span>
     </div>
     <div class="screen">
       <span class="sub">Tab five</span>
       <b>News</b>
-      <span>Stories picked by the training department, with your pins at the top.</span>
+      <span>Stories your owners pick and post, with your pins at the top.</span>
     </div>
   </div>
 
@@ -228,23 +537,23 @@
 <section class="card" id="home">
   <h2>Home</h2>
 
-  <p>The Centers are dark tiles over a photograph of a Fendt 1050 in stubble, grouped by
+  <p>The Centers are dark tiles over a photograph of a tractor in stubble, grouped by
     what you're doing. Each has its own colour, in the stripe down its edge and in its
     icon, so you can find it before you've read its name:</p>
   <ul class="plain">
     <li><strong>Your day</strong> — Reminders, as a wide row.</li>
     <li><strong>On the job</strong> — Crane, Inspection, Forklift and Safety, and a wide
-      <strong>Fleet Center</strong> row under them (from build 31).</li>
+      <strong>Fleet Center</strong> row under them.</li>
     <li><strong>Learning &amp; help</strong> — Training and Support, and for a location's admins and owners
-      a wide <strong>Location Dashboard</strong> row under them (from build 26).</li>
+      a wide <strong>Location Dashboard</strong> row under them.</li>
   </ul>
-  <p><strong>Location Dashboard</strong> is the web page's Location Dashboard in the app: the location's AGCO
-    dealer metric on a ring against the goal, six tiles, a <strong>To do</strong> list (tap one to see who), the
-    Safety Brief and Safety Reports for this month or last, who's short of their AGCO hours, EPA 609, forklift
-    cards and crane qualifications, each with the Safety Manager's required operators, <strong>Certifications</strong>,
-    upcoming classes, and the location's <strong>Fleet</strong> (from build 32; see below). An admin covering another
-    location, and an owner, pick the location at the top. Pull down to refresh.</p>
-  <p>The <strong>Certifications</strong> card (from build 43) counts who at the location holds a DOT medical card, a welding
+  <p><strong>Location Dashboard</strong> is the web page's Location Dashboard in the app: tiles for the location,
+    a <strong>To do</strong> list (tap one to see who), the Safety Brief and Safety Reports for this month or last,
+    EPA 609, forklift cards and crane qualifications, each with the Safety Manager's required operators,
+    <strong>Certifications</strong>, upcoming classes, and the location's <strong>Fleet</strong>. For an AGCO dealer it
+    leads with the location's AGCO dealer metric on a ring against the goal, and who's short of their AGCO hours. An
+    admin covering another location, and an owner, pick the location at the top. Pull down to refresh.</p>
+  <p>The <strong>Certifications</strong> card counts who at the location holds a DOT medical card, a welding
     certification, CPR or first aid, and how many are expiring or expired. Tap it for <em>who has what</em>: each
     person with every certification they hold and when it runs out, forklift, crane and EPA 609 included. The chips
     along the top show one certification at a time, soonest to run out first; <em>Only what's expiring or
@@ -268,16 +577,11 @@
   <p><strong>On the web page</strong>, home looks the same: the red greeting, then your
     next payday, reminders, upcoming events and anything waiting, and the same Center tiles
     in the same groups, with Social beside Reminders under <em>Your day</em>. On a
-    computer the photograph is a wider one, a Fendt 700 drilling. Beside the tiles is
+    computer the photograph is a wider one. Beside the tiles is
     <strong>Latest news</strong>: the three newest stories, and <em>All news</em> for the
     rest. Looking at them there doesn't clear the red number on News; opening News
     does.</p>
 
-  <div class="note">
-    <b>New look</b>
-    <p>The photograph and the dark tiles are in build 12 onwards. If you still see white
-      tiles, open TestFlight and update.</p>
-  </div>
   <a class="to-top" href="#top">Back to the top</a>
 </section>
 
@@ -297,12 +601,12 @@
     owners, is who has taken a class), and the <strong>AGCO Development Map</strong> — the wide
     button across the bottom of the links. Also the articles under <em>Read up</em>: the
     technician training requirements for the current AGCO pathway, and the institutional
-    syllabus. The training department edits those from the admin page, and they're saved
+    syllabus. The Training Manager edits those on the Training dashboard, and they're saved
     on the phone once opened. Everything in the Training Center is built into the app;
-    the training assigned to you in UKG ProLearning is in UKG itself.</p>
+    training assigned to you in another system (at Agri-Service, UKG ProLearning) stays in that system.</p>
 
   <h3>My Classes</h3>
-  <p>The Agri-Service classes you're registered for, in the app and on the web page. The
+  <p>The classes you're registered for, in the app and on the web page. The
     Open Seat Report's rosters carry everyone's work email, and yours is matched to the
     one you sign in with. The next class is at the top, with how long until it starts;
     each shows its dates, start time, town and instructor. <strong>Add to my
@@ -311,7 +615,7 @@
   <p>It's current: register for a class and it's on My Classes straight away, with
     <strong>Cancel my seat</strong>.
     A full one you're waiting for is under <em>On the waitlist</em>, with your place and
-    <strong>Leave the waitlist</strong> (in the app from build 42). Once a class is completed,
+    <strong>Leave the waitlist</strong>. Once a class is completed,
     <em>Your results</em> lists it with passed or not passed and your score, if there was one. AGCO Academy classes aren't
     listed, as their report has no rosters. Nothing coming up? It points you to the Open Seat
     Report to find one.</p>
@@ -321,16 +625,16 @@
     have their own sections below.</p>
 
   <h3>Course Catalog</h3>
-  <p>Agri-Service's own training courses, grouped by category. Search by course,
+  <p>Your company's own training courses, grouped by category. Search by course,
     equipment or topic, and use <strong>Who it's for</strong> to show only the
     courses for Service Technicians, Parts Associates, or anyone else a course
     has been set up for. Tap a course for its level, credits, length,
     description, key topics and prerequisites. The catalog is saved on the
     phone, so it opens with no signal. At the bottom, <strong>Questions?</strong> names the
-    Training Manager, with their email to tap (in the app from build 32).</p>
+    Training Manager, with their email to tap.</p>
 
   <h3>Online Courses</h3>
-  <p>Courses you take right there, on the web page and in the app from build 22. Each
+  <p>Courses you take right there, on the web page and in the app. Each
     card says where you stand: <em>Not started</em>, <em>In progress</em> with when you last
     opened it, <em>Passed</em> with the date and your score, or <em>Not passed yet</em>. Tap it to
     start, resume or take it again.</p>
@@ -344,17 +648,17 @@
     forklift certification course is the first one; it's marked <em>Forklift certification</em>.</p>
 
   <h3>Open Seat Report</h3>
-  <p>Our own classes, put on the Class Schedule by the Training Manager, and AGCO Academy's
-    sessions from AGCO's catalog. Four tiles along the
+  <p>Your company's own classes, put on the Class Schedule by the Training Manager, and for an AGCO
+    dealer, AGCO Academy's sessions from AGCO's catalog. Four tiles along the
     top count the upcoming classes, the people registered, the open seats and the
     stores represented. Three tabs:</p>
   <ul class="plain">
-    <li><strong>All Classes</strong>: every upcoming Agri-Service class with its
+    <li><strong>All Classes</strong>: every upcoming class of your company's with its
       dates, the time it starts on the clock where it's held (e.g. 8:30 AM PST), and its
       seats. Tap one to see who's enrolled. <em>Email Class</em> opens a draft to
       everyone registered, in BCC. <em>Request Registration</em> asks who needs a seat, then
       opens a draft to the Training Manager (whoever holds the designation on People) with
-      the class filled in (in the app from build 32). With nobody set, the draft opens with no address.</li>
+      the class filled in. With nobody set, the draft opens with no address.</li>
     <li><strong>By Store</strong>: who from each home store is enrolled, and in
       what.</li>
     <li><strong>AGCO</strong>: AGCO Academy's national sessions, including Raven,
@@ -371,7 +675,7 @@
     <li><strong>Admin only</strong>: your location admin registers you (admins can register
       themselves and their people).</li>
     <li><strong>Training Manager only</strong>: <em>Request Registration</em> asks the Training
-      Manager, as for a UKG class.</li>
+      Manager.</li>
   </ul>
   <p>A full class offers <em>Join the waitlist</em> instead. When a seat opens, the first person
     waiting moves up and gets a notification. Once you're on, the card says <em>You're
@@ -385,14 +689,12 @@
     class (<em>Manage Roster</em> for the Training Manager) opens its roster: who's registered and who's
     waiting, with a minus to cancel someone, and <strong>+</strong> to search your people by name, location
     or job and tick everyone to register. On the web page, open the class on the Open Seat Report for the
-    same. Anyone past the last seat goes on the waitlist. Everyone with the app is told. All of this is in
-    the app from build 42.</p>
-  <p>The Training Manager can also put a class on the schedule on the Training dashboard, and it
-    shows here with UKG's, straight away and without an upload. Those classes have no roster
-    until registration in the app opens.</p>
+    same. Anyone past the last seat goes on the waitlist. Everyone with the app is told.</p>
+  <p>The Training Manager puts classes on the schedule on the Training dashboard, and they show here
+    straight away.</p>
 
   <h3>AGCO Development Map</h3>
-  <p>Where a technician is on AGCO's six levels of technical training, drawn as a road: a
+  <p><em>For an AGCO dealer.</em> Where a technician is on AGCO's six levels of technical training, drawn as a road: a
     sign for each level and a small red tractor where you are, on its way to the next one.
     The road you've covered is lit green. A sign is <strong>green</strong> when the level is
     complete, <strong>amber</strong> when it's started, <strong>grey</strong> when it
@@ -401,9 +703,8 @@
     the courses still needed.</p>
   <p>The button shows your six signs in miniature. Only technicians get a map, and you see
     only your own. Location admins see a list of their technicians first, with how many have
-    reached each level, and owners see everyone; pick a name to open their map. In the app
-    from build 16.</p>
-  <p>The courses come from AGCO's Technical Training Catalog, which the training department
+    reached each level, and owners see everyone; pick a name to open their map.</p>
+  <p>The courses come from AGCO's Technical Training Catalog, which the Training Manager
     uploads, plus any it adds that the catalog doesn't list — the Level 3 online test-out, or a
     new class. The <strong>Training Manager</strong> ticks off each technician's completed
     courses on the admin page, and the map follows the ticks.</p>
@@ -414,7 +715,7 @@
         <tr><td>1 and 2</td><td>Every course on that level — nine for Level 1, ten for Level 2</td></tr>
         <tr><td>3</td><td>Application of Technical Theory at AGCO, or its online test-out</td></tr>
         <tr><td>4 and 6</td><td>Any one course at that level</td></tr>
-        <tr><td>5</td><td>Either of the two Level 5 courses, today. The training department can change it to both on the Training dashboard (AGCO Development) if AGCO does</td></tr>
+        <tr><td>5</td><td>Either of the two Level 5 courses, today. The Training Manager can change it to both on the Training dashboard (AGCO Development) if AGCO does</td></tr>
       </tbody>
     </table>
   </div>
@@ -448,7 +749,7 @@
     within 30 days of passing it. Your card stays valid meanwhile, and the countdown shows beside it. The card
     says <em>Expiring soon</em> two months before it runs out, and the app sends a notification then and a week
     before, saying what's left to do.</p>
-  <p>On the web page, and in the app from build 22, with the reminders. The driving test list already
+  <p>On the web page and in the app, with the reminders. The driving test list already
     follows the rule on every build, because the database decides it.</p>
   <p><strong>My Certification</strong> is your card: your name and photo, the truck
     classes you're authorised on, your location, the date it runs out, and when you passed
@@ -456,7 +757,7 @@
     result is there too. If you aren't certified, it says <em>Not certified yet</em> and shows the three
     steps, with the course a tap away.</p>
   <p>The card finds you by your work email first, then by your name. If it
-    says you're not on the list, the training department has you under a
+    says you're not on the list, your company has you under a
     different address.</p>
   <p><strong>Certification Report</strong>, for location admins and owners, lists each person
     with their newest card: everyone at a location admin's own location, everyone everywhere for an
@@ -478,7 +779,6 @@
       recorded afterwards counts straight away.</li>
     <li>The driving test PDF still shows the test's own result.</li>
   </ul>
-  <p>On the web page now, and in the app from build 14.</p>
 
   <h3>Forklift driving test</h3>
   <p>Anyone can carry out the evaluation, though it's usually the location admin.</p>
@@ -518,8 +818,7 @@
       it and how many minutes after starting, both timed by the database, and the course's own
       clock. A pass under 10 minutes is flagged in amber, since a course reports its own pass:
       check they really did it before approving. <em>No online course pass on record</em> means
-      the database has no pass of the forklift course for that email. On the web page once
-      migration 0105 is run, and in the app from build 29.</li>
+      the database has no pass of the forklift course for that email.</li>
     <li><strong>Approve</strong> makes the card valid. <strong>Not approved</strong> needs a
       reason. Either way, whoever recorded the test is told by notification.</li>
     <li>Someone who already holds a valid card keeps it while a new test waits. Their card
@@ -530,7 +829,7 @@
     <li>Rows from the spreadsheet, and tests recorded before approval was added, count as
       approved.</li>
   </ul>
-  <p>On the web page now, and in the app from build 14. The web page has the same
+  <p>On the web page and in the app. The web page has the same
     <strong>Driving Tests to Approve</strong> page in its Forklift Center.</p>
 
   <h3>Crane Center</h3>
@@ -542,7 +841,7 @@
   <p>Every crane gets a short function test before its first use each weekday, as OSHA asks (the daily
     "frequent inspection": 1910.179 for bridge cranes, 1910.180 for truck cranes). Nothing is due on Saturday or
     Sunday, but a crane used at the weekend should be inspected first, and can be. It's first in the Crane
-    Center, as <strong>Daily Crane Inspections</strong> in the app (from build 40) and at the top of the page on
+    Center, as <strong>Daily Crane Inspections</strong> in the app and at the top of the page on
     the web.</p>
   <ul class="plain">
     <li><strong>The list</strong> — the cranes at your location, each with today's state: <em>Out of
@@ -576,8 +875,8 @@
   <p>The top of the Crane Center says whether you're qualified for crane and rigging work.
     You are once you've passed <strong>Lifting and Rigging</strong>: graded in a class on the
     Training Manager's Class Schedule, or given as credit on Give Credit. It goes on your training
-    record as <strong>Lifting and Rigging ILT</strong>, the name UKG used, so everyone who took it
-    before is still qualified from their history. The OLT course on its own doesn't count. It
+    record as <strong>Lifting and Rigging ILT</strong>, the name it has always had on records, so
+    everyone who took it before is still qualified from their history. The OLT course on its own doesn't count. It
     doesn't expire today, but it can: the Training Manager can set how many months it lasts from
     the day the course was completed (for example 24) on the Training dashboard's
     <em>Settings</em>, and taking the course again starts it over.</p>
@@ -587,7 +886,7 @@
       while it doesn't).</li>
     <li><strong>Expired</strong> — an amber alert saying when it ran out. Take the course again to be
       qualified.</li>
-    <li><strong>Not qualified yet</strong> — an amber alert. Ask the training department when
+    <li><strong>Not qualified yet</strong> — an amber alert. Ask the Training Manager when
       the next Lifting and Rigging ILT class is.</li>
     <li><strong>Removed</strong> — an orange alert saying who removed it, when and why. Speak to
       your location admin.</li>
@@ -653,9 +952,9 @@
       recording, <em>Listen instead of reading</em> plays it at the top: play and pause, a slider, and fifteen seconds back
       or forward. In the app it keeps playing with the screen locked, with the controls on the lock screen, and opening
       the PDF doesn't stop it; it stops when you leave the brief. The first play needs signal, and after that it plays
-      without (web page once migration 0106 is run; app from build 29).</li>
+      without.</li>
     <li><strong>Wait for the questions.</strong> They open a few minutes after you first open the brief
-      (three, unless the training department sets it otherwise), with a countdown until then. The
+      (three, unless the Safety Manager sets it otherwise), with a countdown until then. The
       server keeps the time, so it carries on if you leave and come back, and changing the phone's clock
       doesn't help.</li>
     <li><strong>Answer them and hand them in.</strong> Four of five right passes, unless the brief says
@@ -663,7 +962,7 @@
   </ol>
   <p>Once you've passed, the brief shows <em>Passed</em> in green, and opening it shows your answers beside
     the right ones. Every earlier brief is under <em>Your record</em>, passed or not, to read again at any
-    time; one you missed can still be taken. Taking a brief needs signal. In the app from build 18.</p>
+    time; one you missed can still be taken. Taking a brief needs signal.</p>
   <p><strong>The Safety Brief reminder.</strong> The monthly <em>Safety Brief</em> reminder (it used to be
     Safety Training, for a GotSafety course) can't be ticked by hand: it ticks itself, green, when you pass that
     month's brief. Tapping it opens this month's brief, or the Safety Desk if it isn't up yet.</p>
@@ -763,7 +1062,7 @@
   <p>On the web page it works the same way: <strong>Open</strong>, <strong>Closed</strong>,
     <strong>All</strong> and <strong>Mine</strong> above the list, each request on a page of
     its own, and <em>New request</em> for a new one. Your groups are under the list, and a
-    tap there saves straight away. In the app it's in build 11 onwards.</p>
+    tap there saves straight away.</p>
 
   <div class="note">
     <b>Groups are routing, not security</b>
@@ -773,7 +1072,7 @@
 
   <h3>Special tools</h3>
   <p>Every special tool in the company: its part number, name, description, home location and
-    quantity, plus any fields the training department has added, such as its condition or
+    quantity, plus any fields an owner has added, such as its condition or
     where it's stored. Everyone sees every location's tools. Search by name, part number or
     anything recorded against a tool, or switch to <strong>Checked out</strong> to see only
     the ones away from home.</p>
@@ -783,11 +1082,11 @@
   <p>In the app the list is sorted by <strong>location</strong> to start with: a heading for each
     location and every tool that's there right now. A tool lent to another location is under the one
     that has it, marked <em>Borrowed from</em> its home; one split between two places is under both.
-    <strong>Sort</strong> switches to name or part number in one list (from build 27).</p>
+    <strong>Sort</strong> switches to name or part number in one list.</p>
 
   <div class="note">
     <b>Where it is</b>
-    <p>In the app from build 11. On the web page, open <strong>Special Tools</strong> in the
+    <p>In the app, in the Support Center. On the web page, open <strong>Special Tools</strong> in the
       Support Center for the list, and click a tool for its own page. Everything below works
       on either.</p>
   </div>
@@ -838,7 +1137,7 @@
   <p>In the app, tap one to read it in the same reader as the Employee Handbook, with a search
     inside it and a share button to print or save it. Once opened it's kept on the phone, marked
     <em>Saved on this phone</em>, so it opens again with no signal; a replaced or removed manual's
-    copy is cleared away. On the web page each opens in a new tab. In the app from build 43.</p>
+    copy is cleared away. On the web page each opens in a new tab.</p>
   <p>Owners add them on the web page: Admin → <strong>Operator's Manuals</strong>. Give it a name,
     the make and model if you like, a note, the locations it's for (or <em>Every location</em>), and
     the PDF. <em>Change</em> edits any of that or replaces the PDF; <em>Remove</em> deletes it and
@@ -863,7 +1162,7 @@
     "waiting to send" card as lift plans. The forms, and your inspections still waiting
     for their after-class part, are saved on the phone every time the app is opened with
     signal, so they're there in a shop or field with none, even if you haven't opened the
-    Inspection Center lately. From build 18.</p>
+    Inspection Center lately.</p>
   <p><strong>On the web page</strong> it's the same: each form in the Inspection Center has
     a start button, and your own started ones wait under <em>After class to do</em>.
     Photos are added from the computer (or the camera, in a phone's browser). Either
@@ -898,20 +1197,19 @@
     parts, and the photos. The web page has both buttons too.</p>
   <p>The summary finds its questions by name, because the form can be changed on the admin
     page: hours is the number question with <em>hour</em> in its name, and condition is any
-    question with <em>condition</em> in its name. Renaming one? Keep that word in it. The
-    summary is in the app from build 13.</p>
+    question with <em>condition</em> in its name. Renaming one? Keep that word in it.</p>
 
   <h3 id="fleet">Fleet Center</h3>
   <p>Pickups, service trucks and forklifts: mileage (a forklift's hours), tires, a weekly checklist, service,
     and the equipment on board. Every vehicle has its <strong>fleet number</strong>, the one painted on it, and
-    goes by it: <em>Fleet #214</em>. From build 31, and on the web page as <strong>Fleet Center</strong> in the
-    sidebar. Forklifts and the checklist are in the app from build 39.</p>
+    goes by it: <em>Fleet #214</em>. On the web page it's <strong>Fleet Center</strong> in the
+    sidebar.</p>
   <p><strong>Add a vehicle</strong> asks for everything the Center needs from day one:</p>
   <ul class="plain">
     <li><strong>The vehicle</strong> — Pickup, Service Truck or Forklift, the fleet number (required; no two vehicles still
       in service can share one), an optional <strong>nickname</strong> (like Big Red, up to 30 characters), year, make,
       model, and the VIN and plate if you have them. The nickname shows under the fleet number on every card, and
-      beside it wherever a vehicle is named ("Fleet #214 · Big Red"), to tell a row of F-250s apart. From build 33.</li>
+      beside it wherever a vehicle is named ("Fleet #214 · Big Red"), to tell a row of F-250s apart.</li>
     <li><strong>Meter</strong> — a forklift only: <em>Hour meter</em>, or <em>No meter</em> for one without.
       A pickup or service truck always has its mileage.</li>
     <li><strong>Mileage and service</strong> — the odometer, and how often it's due: every 5,000 miles or 6
@@ -982,7 +1280,7 @@
     the web page alike.</p>
 
   <h3>Reminders</h3>
-  <p>Shared reminders come from the training department, who add and change
+  <p>Shared reminders come from your owners, who add and change
     them from the admin page; you add your own as daily, weekly or monthly. Weekly items clear on Monday, monthly on the
     first. A shared reminder you don't need can be hidden, and unhidden again
     from the section at the bottom.</p>
@@ -991,7 +1289,7 @@
 
 <section class="card" id="techlevels">
   <h2>Skills</h2>
-  <p class="lede">Agri-Service's skills program, with two lists: one for service technicians
+  <p class="lede">Your company's skills program, with two lists: one for service technicians
     and one for Parts. Each has four levels of competencies, each one signed off by your
     location admin after they've watched you do it. Finish every competency in your level
     and you move up.</p>
@@ -1125,15 +1423,15 @@
 
 <section class="card" id="trainingstatus">
   <h2>Training Status</h2>
-  <p class="lede">How the company stands on AGCO's technician training requirement, and
-    each employee's training record, from the latest UKG reports.</p>
+  <p class="lede">Each employee's training record, and for an AGCO dealer, how the company stands on
+    AGCO's technician training requirement.</p>
 
   <p>It's in the <strong>Training Center → Training Status</strong>, in the app and on the
     web page. What it shows depends on who's looking, and the database enforces that — it
     isn't only the screen hiding things.</p>
 
   <div class="plate">
-    <h4>The dealer metric</h4>
+    <h4>The dealer metric, for an AGCO dealer</h4>
     <dl>
       <dt>Requirement</dt>
       <dd>65% of technicians have 24 or more AGCO training hours in the calendar year.</dd>
@@ -1143,23 +1441,23 @@
       <dd>EPA 609: whether each technician is certified, as the Training Manager keeps it on the Training
         dashboard's EPA 609 tab, with a picture of their certificate.</dd>
       <dt>When AGCO changes it</dt>
-      <dd>Owners change both numbers on the admin page, and the app and the web page use them straight away.</dd>
+      <dd>The Training Manager changes both numbers in the Training dashboard's Settings, and the app and the web page use them straight away.</dd>
     </dl>
   </div>
 
   <p class="role-head">For everyone</p>
   <h3>My Training</h3>
   <p>Open Training Status and you see your own record: your job and location and, if you're
-    a technician, your AGCO training hours for the year with a bar toward the required
-    hours, where each
-    block of hours came from, and whether you have EPA 609. Underneath is every class
+    a technician, whether you have EPA 609 and, at an AGCO dealer, your AGCO training hours for the
+    year with a bar toward the required hours and where each block of hours came from. Underneath is every class
     you've completed, by year.</p>
   <p>Your record is found by your employee number, then by your work email — never by
-    your name. If it says there's no record for you, UKG has you under a different number
-    or address — tell the training department.</p>
+    your name. If it says there's no record for you, the People list has you under a different number
+    or address: ask your location admin.</p>
 
   <p class="role-head">For location admins and owners</p>
-  <h3>Five tabs</h3>
+  <h3>The tabs</h3>
+  <p>An AGCO dealer has five; any other company has History and Classes, since the rest are about AGCO's hours.</p>
   <ul class="plain">
     <li><strong>Summary</strong> — the percentage of technicians at 24+ hours against the
       goal line, how many more need to get there, EPA 609, and each location's numbers.</li>
@@ -1177,20 +1475,20 @@
       taken it. Then choose <strong>Not taken</strong>, <strong>Taken</strong> or <strong>Everyone</strong>,
       and switch on <em>Technicians only</em> if that's the question. <strong>Export this list as a
       PDF</strong> (on a computer, <strong>Download this list as a PDF</strong>) makes a report of exactly
-      what's on screen, with the completion dates. Someone who took the class after the last OLT and
-      ILT upload isn't on it yet.</li>
+      what's on screen, with the completion dates. </li>
   </ul>
   <p>In the app the tabs are a row of buttons across the top, in the same slate-card look as the
-    Training Center; on a phone the row slides sideways to reach Planning and Classes (from build 27).</p>
-  <p>A location admin sees the people at their own location, so the percentage is their
-    location's. Owners see every location and the company-wide figure.</p>
+    Training Center; on a phone the row slides sideways to reach Planning and Classes.</p>
+  <p>A location admin sees the people at their own locations, so the percentage is theirs.
+    Owners see every location and the company-wide figure.</p>
 
-  <p class="role-head">For owners</p>
+  <p class="role-head">For the Training Manager</p>
   <h3>Keeping it up to date</h3>
-  <p>Training records are kept here: the history taken from UKG (every course completed, and
-    the AGCO hours it held), and every credit given and class completed since. The only upload is
-    <strong>All employees</strong> from UKG, on the Training dashboard's <em>All Employees</em>
-    tab: who works here, their job, location, work email and employee number. Check the summary
+  <p>Training records are kept here: every course completed (at Agri-Service, the history taken from
+    UKG to start with), and every credit given and class completed since. The only upload is
+    <strong>All employees</strong>, your HR system's export of everyone, on the Training dashboard's
+    <em>All Employees</em> tab: who works here, their job, location, work email and employee number. It
+    also brings the People list up to date (see <a href="#people">Bringing people in</a>). Check the summary
     it shows (the number of technicians and the percentage), then press <strong>Publish</strong>.</p>
   <p>People are matched by their <strong>Employee Number</strong>, then by email, and their
     records are kept under that number, so a changed email or a shared name can't mix anyone up.
@@ -1198,13 +1496,13 @@
     Publishing also gives each app account its employee number, by work email. The summary lists
     anyone on All employees without a number; their records are kept by email.</p>
   <p>If it lists a store with no matching location in the app, that location's admin won't
-    see their people until UKG's name for it is added as one of the location's
-    <strong>UKG names</strong> under Groups &amp; Locations. The Training dashboard's <strong>Settings</strong> holds the dealer metric's goal and
-    hours (the app and the web page use new figures straight away) and how long a crane and
-    rigging qualification lasts. The AGCO year is the calendar year: on January 1st everyone's
+    see their people until the export's name for it is added as one of the location's
+    <strong>other names</strong> under Groups &amp; Locations. The Training dashboard's <strong>Settings</strong> holds how long a crane and rigging
+    qualification lasts and, for an AGCO dealer, the dealer metric's goal and hours (the app and the
+    web page use new figures straight away). The AGCO year is the calendar year: on January 1st everyone's
     hours start again from the new year's credits by themselves.</p>
   <h3>Credit given by hand</h3>
-  <p>For a course someone completed that UKG doesn't have — a class run on paper, one taken
+  <p>For a course someone completed that isn't on their record — a class run on paper, one taken
     somewhere else — the Training Manager uses <strong>Give Credit</strong> on the Training
     dashboard. It goes on their record straight away, marked <em>Given by hand</em> (a pass in a
     completed class on the Class Schedule is marked <em>From a class</em>),
@@ -1221,9 +1519,9 @@
       </thead>
       <tbody>
         <tr><td>See training status</td><td class="yes">Their own</td><td class="yes">Their location</td><td class="yes">Everyone</td></tr>
-        <tr><td>Plan</td><td class="no">No</td><td class="yes">Their location</td><td class="yes">Everyone</td></tr>
-        <tr><td>Upload the reports</td><td class="no">No</td><td class="no">No</td><td class="yes">Yes</td></tr>
-        <tr><td>Change the goal or hours</td><td class="no">No</td><td class="no">No</td><td class="yes">Yes</td></tr>
+        <tr><td>Plan (AGCO dealers)</td><td class="no">No</td><td class="yes">Their location</td><td class="yes">Everyone</td></tr>
+        <tr><td>Upload All employees</td><td class="no">No</td><td class="no">No</td><td class="yes">Training Manager</td></tr>
+        <tr><td>Change the goal or hours (AGCO dealers)</td><td class="no">No</td><td class="no">No</td><td class="yes">Training Manager</td></tr>
         <tr><td>Give or remove credit by hand</td><td class="no">No</td><td class="no">No</td><td class="yes">Training Manager</td></tr>
       </tbody>
     </table>
@@ -1254,12 +1552,11 @@
     the number is shown to read off.</p>
 
   <h3>My Certifications</h3>
-  <p>Every certification you hold, together (in the app from build 42; it took the place of
-    the UKG Pro button). At the top, the company's: your <strong>forklift</strong> card, your
+  <p>Every certification you hold, together. At the top, the company's: your <strong>forklift</strong> card, your
     <strong>crane &amp; rigging</strong> qualification and <strong>EPA 609</strong>, each saying
     whether you have it and when it expires. Tap forklift or crane for the full card; EPA 609
     has <em>View certificate</em> when the Training Manager has added a picture of yours.</p>
-  <p>Then <strong>Optional</strong>, four asked about by name (from build 43): <strong>DOT Medical Card</strong>,
+  <p>Then <strong>Optional</strong>, four asked about by name: <strong>DOT Medical Card</strong>,
     <strong>Welding Certification</strong>, <strong>CPR</strong> and <strong>First Aid</strong>.
     None is required. If you hold one, tap it and add when it expires, a detail if you like (a
     welding process, say, or Adult, Child &amp; Infant for CPR), who issued it, its number and a
@@ -1283,7 +1580,7 @@
     HR page's card says how many need attention. Reminders come from the app.</p>
 
   <h3>Employee Handbook</h3>
-  <p>The handbook the training department uploads, with a search box to find a word
+  <p>The handbook an owner uploads, with a search box to find a word
     and jump between the places it appears. Once opened it's kept on the phone for
     reading with no signal, and the card says <em>saved on this phone</em>. A new upload
     replaces it everywhere the next time it's opened with signal.</p>
@@ -1308,7 +1605,7 @@
     <p>Your own list is yours: you're the only one who can change it. Your location's admin can
       read the lists of the people at the locations they look after, and owners can read everyone's;
       they open <b>Personal Inventory</b> to their own list first, then everyone else's by location,
-      and can print any of them. Nobody else sees yours. In the app from build 27.</p>
+      and can print any of them. Nobody else sees yours.</p>
   </div>
   <a class="to-top" href="#top">Back to the top</a>
 </section>
@@ -1349,9 +1646,7 @@
     clear it.</p>
   <p>On the feed an article shows its cover, an Article tag, the title and description, and <strong>Read the
     article</strong> with the minutes it takes. That opens the whole article, with its reactions, and the
-    comments below. Edit or delete it like a post: it stays an article, and it can't be a shout-out.
-    From build 34; the web page has it too. Older builds show an article as a plain post with only its
-    description.</p>
+    comments below. Edit or delete it like a post: it stays an article, and it can't be a shout-out.</p>
 
   <h3>Who's told</h3>
   <ul class="plain">
@@ -1379,7 +1674,6 @@
     the home page, with the same count. The feed works the same way: write at the top, pick
     from the @ list as you type (the arrow keys and Enter work too), use Edit and Delete on
     the post itself, and click <em>Comment</em> to open a post with its comments.</p>
-  <p>In the app from build 20, and on the web page now.</p>
 
   <h3 id="fitness">Fitness Challenge</h3>
   <p>A competition every month, scored from Apple Health, with a fresh leaderboard on the 1st. It's under
@@ -1411,7 +1705,6 @@
     walked or run, flights of stairs; exercise minutes, every 10 exercise minutes, a workout of so many minutes,
     weekend warrior (Saturday and Sunday), every stand hour, every 100 active calories; and streaks: all rings,
     the Exercise ring or 10,000 steps so many days in a row, and a perfect week.</p>
-  <p>Needs migration 0089, and the app from build 21.</p>
 
   <h3 id="trivia">AGCO Trivia</h3>
   <p>A quiz game about AGCO and its machines, at the bottom of the Social tab: <em>History</em>,
@@ -1449,7 +1742,7 @@
       three wrong ones, and the <em>why</em>. <em>The answer is True</em> or <em>False</em> makes it a
       true-or-false question. Add a picture for "Which model is this?". Untick <em>Active</em> to stop asking
       one but keep it. Each question shows how often it's been asked and how many got it right. Lots at once
-      load in bulk with SQL; the format is at the top of migration 0107.</li>
+      can be loaded in bulk: ask Prime Theory Labs.</li>
     <li><strong>Categories.</strong> Rename them, recolour them, reorder them, add more. One with questions
       can't be removed until they're moved or deleted.</li>
   </ul>
@@ -1459,7 +1752,6 @@
     many wrong; so many scored rounds a day; a <em>50/50</em> that takes away two wrong answers; and
     <em>only your best round counts</em> (without it, every scored round adds up). A new game starts with the
     speed bonus, hot streak, last question double, perfect round, one round a day and one 50/50.</p>
-  <p>Needs migration 0107, and the app from build 30.</p>
   <a class="to-top" href="#top">Back to the top</a>
 </section>
 
@@ -1495,7 +1787,6 @@
   <p>Everyone who can see the event sees who's going. On the calendar and the list, an
     event you're on says <em>Going</em>, and an open one you're not on says <em>Open
     sign-up</em>. The database holds these rules, not the screens.</p>
-  <p>In the app from build 17. On the web page now.</p>
 
   <p class="role-head">For owners</p>
   <h3>Adding an event</h3>
@@ -1542,24 +1833,25 @@
 
 <section class="card" id="apparel">
   <h2>Apparel</h2>
-  <p>The company store, run for us by Riverside Embroidery. Shirts, polos and
-    outerwear carrying the Agri-Service and Fendt marks, in the sizes and
-    colours they hold.</p>
+  <p><em>For a company that has switched the Apparel tab on (Admin → Company), with its store set up under
+    Shared Logins.</em></p>
+  <p>Your company's own store: shirts, polos and outerwear carrying your company's marks, in the
+    sizes and colours it holds. At Agri-Service, it's run by Riverside Embroidery.</p>
   <p>The store sits behind one password shared by the whole company. The app
     enters it and presses Validate for you, so the tab opens on the products
     rather than on a login box. The first load takes a couple of seconds
     while that happens; after that the store remembers this phone and goes
     straight in.</p>
   <p>If it ever lands on the password box instead, either the password has
-    changed or the store has changed shape underneath us. Tell the training
-    department, who can update it from the admin page in a minute.</p>
+    changed or the store has changed shape underneath us. Tell an owner, who can update it
+    under Shared Logins in a minute.</p>
   <a class="to-top" href="#top">Back to the top</a>
 </section>
 
 <section class="card" id="news">
   <h2>News</h2>
-  <p class="lede">Stories picked by the training department: articles from Fendt, PTx,
-    AGCO or anywhere else worth reading, and posts about Agri-Service itself.</p>
+  <p class="lede">Stories your owners pick: articles from equipment makers, magazines or anywhere else
+    worth reading, and posts about your company itself.</p>
 
   <p>It's the fifth tab in the app, and <strong>News</strong> in the sidebar of the web
     page. Newest stories come first. Each one says who it's from and when.</p>
@@ -1567,8 +1859,8 @@
     <li><strong>A story from another site</strong> (a green tag like <em>FENDT</em>, with the
       site's address beside the date) opens the original article. In the app it opens
       without leaving the app; on the web page it opens in a new tab.</li>
-    <li><strong>An Agri-Service post</strong> (a red <em>AGRI-SERVICE</em> tag) is written
-      by the training department and opens right there. It isn't anywhere else on the
+    <li><strong>A company post</strong> (a red tag with your company's name) is written
+      by an owner and opens right there. It isn't anywhere else on the
       internet. Web addresses in it are links.</li>
   </ul>
 
@@ -1630,11 +1922,11 @@
         <tr><th>Setting</th><th>What it does</th></tr>
       </thead>
       <tbody>
-        <tr><td>Your name</td><td>How you appear everywhere in the app. Shown with a lock; ask the training department to change it.</td></tr>
-        <tr><td>Your location</td><td>Shown, but locked. Ask the training department to move you.</td></tr>
+        <tr><td>Your name</td><td>How you appear everywhere in the app. Shown with a lock; ask an owner to change it.</td></tr>
+        <tr><td>Your location</td><td>Shown, but locked. Ask an owner to move you.</td></tr>
         <tr><td>Your groups</td><td>Tap a chip to join or leave. Saves immediately.</td></tr>
         <tr><td>Notifications</td><td>Eight switches, one per area (nine for a Safety Manager), and a <em>Test</em> button for push. See below.</td></tr>
-        <tr><td>Help and Support</td><td>Opens agri-barn.com/support.html: who to ask, signing in, and this guide. It's on the web, so it needs signal. (Before build 43 it was called <em>How this app works</em>.)</td></tr>
+        <tr><td>Help and Support</td><td>Opens agri-barn.com/support.html: who to ask, signing in, and this guide. It's on the web, so it needs signal.</td></tr>
         <tr><td>Change password</td><td>Works with no email, on the account already signed in.</td></tr>
       </tbody>
     </table>
@@ -1675,8 +1967,8 @@
   </div>
   <p>To check push works on a phone, go to Settings → Notifications and tap
     <strong>Test</strong> on the Push notifications row. One should arrive within a
-    few seconds. If it doesn't, check iPhone Settings → Notifications →
-    Agri-Service is switched on.</p>
+    few seconds. If it doesn't, check the app is switched on in iPhone Settings →
+    Notifications, then contact support.</p>
 
   <p>Class reminders come from the Open Seat Report: a week before (or as soon as
     the class reaches the report, if that's later) and the day before, each once.
@@ -1710,21 +2002,20 @@
     iPad.</p>
 
   <h3>The number on the app icon</h3>
-  <p>The red number on Agri-Service's icon is everything waiting on you: to-dos
+  <p>The red number on the app's icon is everything waiting on you: to-dos
     still to tick, lift plans to review, plans that came back, approvals you
     haven't looked at, and unread support replies. It updates when a notification
     arrives and settles to the exact figure when you open the app. New driving tests
     aren't part of it; they only show on the Forklift Center. If it never
-    shows, iPhone Settings → Notifications → Agri-Service → <em>Badges</em> is
+    shows, iPhone Settings → Notifications → the app → <em>Badges</em> is
     switched off.</p>
   <a class="to-top" href="#top">Back to the top</a>
 </section>
 
 <section class="card" id="admin">
   <h2>The admin page</h2>
-  <p class="lede">A single HTML file you open in any browser, on a desktop or a
-    phone. It signs in with the same account as the app and shows the same
-    data.</p>
+  <p class="lede">The owners' side of the web page, and the Training, Safety and Location
+    dashboards. Who opens which is in <a href="#roles">Who can do what</a>.</p>
 
   <p>Everything is reached from the sidebar on the left (behind the menu button
     on a phone). <strong>Home</strong> is a dashboard: next payday, reminders
@@ -1748,7 +2039,7 @@
       </thead>
       <tbody>
         <tr><td>Inspections</td><td>Change a form's questions (add, rename, reorder, hide, delete, set required, choose "ask again" or "carry over" after class), add new forms, and open submitted inspections to correct answers, remove photos or delete them. Old inspections keep the questions they were answered with</td></tr>
-        <tr><td>People</td><td>Every account with its sign-in email, role, location and groups. Change someone's role, type their name, or pick their location — for anyone who never got the app's first-sign-in screen. Deactivate someone who has left, and reactivate them. Never on your own role, and the last owner can't be demoted. Give owners a designation: Safety Manager or Training Manager. <b>Employee #</b> is what finds someone's training records: each Training Status upload fills it in by work email; type it only for someone who signs in with a different email from the one UKG has. No two accounts can share one, and nobody can change their own. <b>Also covers</b>, under an admin's location, makes them the admin of another location too — for when one loses its admin; × takes it away</td></tr>
+        <tr><td>People</td><td>Every account with its sign-in email, role, location and groups. Change someone's role, type their name, or pick their location — for anyone who never got the app's first-sign-in screen. Deactivate someone who has left, and reactivate them. Never on your own role, and the last owner can't be demoted. Give owners a designation: Safety Manager or Training Manager. <b>Employee #</b> is what finds someone's training records: it fills itself in from the People list by work email; type it only for someone who signs in with a different email from the list's. No two accounts can share one, and nobody can change their own. <b>Also covers</b>, under an admin's location, makes them the admin of another location too — for when one loses its admin; × takes it away. See <a href="#people">Bringing people in</a></td></tr>
         <tr><td>News</td><td>Paste an article link to fill in a story, or write a post with a photo. Edit, hide or delete stories. The list, like the News page, starts with the last 12 months and every hidden story; <b>Show older stories</b> brings back the rest, and a story someone pinned stays on their page however old</td></tr>
         <tr><td>Fitness Challenge</td><td>Each month's rules, from a catalog of 22, with their points and numbers; a title, a prize and an optional most points a day. A month left alone carries on with the last one's rules</td></tr>
         <tr><td>Trivia</td><td>The games (dates, categories, round length, clock, points and rules from a catalog of 10; draft until published), the questions (add, edit, hide, delete, a picture, true or false, how often each is answered right) and the categories</td></tr>
@@ -1758,13 +2049,13 @@
         <tr><td>Reminders</td><td>Add, change, switch off or delete the reminders everyone gets</td></tr>
         <tr><td>Fleet Check</td><td>The checklist on every vehicle's weekly check: add, reword, reorder, hide or delete items, each with optional help under it, and tick the kinds of vehicle it's for (pickups, service trucks, forklifts; none ticked for all). Each is answered OK or Needs attention. Rewording or deleting one never changes a check already done</td></tr>
         <tr><td>Support Center</td><td>Edit the cards, add and remove the people in them</td></tr>
-        <tr><td>Shared Logins</td><td>Change the apparel store password</td></tr>
+        <tr><td>Shared Logins</td><td>Set up the apparel store's address and password, or change them. Only matters with the Apparel tab switched on</td></tr>
         <tr><td>Payroll</td><td>Import the payroll calendar</td></tr>
         <tr><td>Who Does What</td><td>Import the directory</td></tr>
         <tr><td>Special Tools</td><td>Download the whole list as CSV, with where every tool is. Bulk upload a changed list: it shows what will be added, changed and removed before anything is saved, and a tool that's checked out can't be removed or moved. Below that, the fields on the tool form: add, rename, reorder, hide or delete them, as text, long text, number, date, a pick list or yes/no. A new field is on every phone's form with no app update</td></tr>
-        <tr><td>Groups &amp; Locations</td><td>Add, rename, reorder, switch off or delete groups and locations, and set each location's time zone. Switching one off takes it out of the pick lists but leaves everything already recorded against it. A location that people, lift plans or events belong to can't be deleted. <b>UKG names</b> are the other names UKG's reports use for a location: a person's UKG location finds its location here by the location's name, its id (made from the name it was first given) or any of these, so Field Support's people sit under Admin, the name it has now. Renaming a location adds its old name by itself. Each location says how many on All employees it covers, and a UKG location nothing answers to is named at the top, to be added</td></tr>
-        <tr><td>People list</td><td>Everyone who works here. The All employees upload keeps it up to date: before you publish, it says who would join, move location and leave, and if a file would take more than a tenth of the list off, or everyone at a location, it asks you to confirm the file is everyone (the usual slip is one location's export). Nobody is deleted: someone missing from an upload is marked as left, and comes back if a later upload has them. <strong>Undo it</strong> puts the list back as it was before the last change. Add someone the upload doesn't have yet (a new hire, a contractor) by hand, with an employee number or a work email; an upload never takes off someone added by hand, and takes them over if it lists them. The filters show who's here, who has no account yet, who was added by hand, and who's left. One setting, off unless you turn it on: <strong>switch off the account of someone who leaves the list</strong>, and back on if they return (never an owner's). Each person here has a <strong>Join slip</strong> button (no account yet) or a <strong>Password slip</strong> button (forgotten password), and <strong>No account yet</strong> offers slips for everyone at once. <strong>From Microsoft 365</strong>, for a company whose Microsoft 365 is connected (Admin → Company): the list can keep itself up to date from its directory instead of an upload. Choose who's on it (everyone in the directory, or one Microsoft group's members), which Microsoft field says where someone works (Office, Department, City or Company name) and whether Microsoft's Employee ID is their number; <strong>Check what it would do</strong> reads Microsoft and shows who would join, move and leave, any location from Microsoft that doesn't match one here (add it to that location's other names on Groups &amp; Locations), and who was left out: guests, accounts switched off, and anyone with no email in Microsoft. <strong>Update the list now</strong> makes the change. With <strong>Keep the list up to date every night</strong> ticked, it happens by itself at about 2 AM Mountain; a night that would take off more than a tenth of the list, or everyone at a location, stops instead and says so here for an owner to check</td></tr>
-        <tr><td>Company</td><td>The company's name, as everyone sees it across the app and the web page, and its legal name ("Agri-Service, LLC"), printed at the foot of PDFs and in the forklift evaluation's wording. Below them, the app's two logos: one in colour for its sign-in screens, and one drawn in white on its red headers and certificates. Each is a PNG of up to 1 MB, best with a clear background; until one is added the app shows its built-in Agri-Service logo, and <strong>Use the built-in one</strong> goes back to it. The app picks up a change the next time its home page opens. <strong>Microsoft 365</strong>, if the company uses it, lets its people sign in with their work Microsoft account: <strong>Make a link for IT</strong> and send it to a Global Administrator of the company's Microsoft 365, who clicks <em>Accept</em>; the page then says it's connected and which email domains Microsoft gave it. The link works once, for a week. A tick turns Microsoft sign-in off and on again; <strong>Disconnect</strong> forgets it, and accounts made with Microsoft stay. <strong>IT tickets</strong>: the address the Support Center's <em>Submit an IT Ticket</em> emails; empty hides the card. <strong>Training Center and features</strong>: the mission, the first card in the app's Training Center, in the company's own words (empty: no card); and the features some companies have and others don't, each with its own tick. So far that's <strong>AGCO dealer</strong>, everything that's AGCO's (the AGCO Development Map and catalog, AGCO's training-hours requirement on Training Status, the Training dashboard and the Location Dashboard, the Mock Schedule, the AGCO Training Hours report, AGCO Academy's sessions on the Open Seat Report and AGCO credit on courses; without it Training Status has its History and Classes), and the <strong>Apparel tab</strong>, which opens the company's apparel store signed in, once its address and password are set up under Shared Logins. A company with no logo of its own shows its name, set in type, where the logo goes; the app's sign-in screen shows the last company signed in on that phone</td></tr>
+        <tr><td>Groups &amp; Locations</td><td>Add, rename, reorder, switch off or delete groups and locations, and set each location's time zone. Switching one off takes it out of the pick lists but leaves everything already recorded against it. A location that people, lift plans or events belong to can't be deleted. <b>Other names</b> are the other names an upload or Microsoft 365 uses for a location: a person's location there finds its location here by the location's name, its id (made from the name it was first given) or any of these. Renaming a location adds its old name by itself. Each location says how many on All employees it covers, and a location name nothing answers to is named at the top, to be added</td></tr>
+        <tr><td>People list</td><td>Everyone who works here, how it's kept up to date (the All employees upload, Microsoft 365, or by hand), join slips and password slips, and whether leavers' accounts are switched off by themselves. Everything about it is in <a href="#people">Bringing people in</a></td></tr>
+        <tr><td>Company</td><td>The company's name, as everyone sees it across the app and the web page, and its legal name, printed at the foot of PDFs and in the forklift evaluation's wording. The app's two logos: one in colour for its sign-in screens, and one drawn in white on its red headers and certificates, each a PNG of up to 1 MB, best with a clear background; without one, the app shows the company's name in type. The app picks up a change the next time its home page opens, and its sign-in screen shows the last company signed in on that phone. <b>IT tickets</b>: the address the Support Center's <em>Submit an IT Ticket</em> emails; empty hides the card. <b>Training Center and features</b>: the mission, the first card in the app's Training Center, in the company's own words (empty: no card), and the features switched on: <b>AGCO dealer</b> and the <b>Apparel tab</b> (see <a href="#roles">Who can do what</a>). <b>Microsoft 365</b>: connecting it, and Microsoft sign-in on or off (see <a href="#people">Bringing people in</a>). <b>What Agri-Barn's platform did here</b>: everything the platform owner did in the company, each visit with why they came</td></tr>
       </tbody>
     </table>
   </div>
@@ -1781,8 +2072,8 @@
       approve, inspections with the after-class part to finish, technicians without EPA 609, forklift cards
       and crane qualifications expired or running out in the next 60 days, DOT medical, welding, CPR and first aid
       cards expired or running out in the next 30 days, driving tests due, technicians
-      within 8 hours of the 24, and vehicles overdue for service, needing new tires, or with equipment overdue.</li>
-    <li><strong>AGCO dealer metric</strong> — the location's share with 24+ hours on a gauge, then who's short
+      within 8 hours of the 24 (AGCO dealers), and vehicles overdue for service, needing new tires, or with equipment overdue.</li>
+    <li><strong>AGCO dealer metric</strong>, for an AGCO dealer — the location's share with 24+ hours on a gauge, then who's short
       (closest first, with <b>Plan</b> ticks, the same plan as Training Status) and who has it.</li>
     <li><strong>EPA 609</strong>, <strong>Forklift cards</strong> and <strong>Crane qualifications</strong> —
       everyone's status, the ones needing attention first. Forklift and crane each start with the location's
@@ -1808,11 +2099,11 @@
       week's check in, and what was spent on service and repairs this year. Then each vehicle, the most pressing
       first: its service gauge and what's left, its tires, anything its last weekly check flagged (on To do too,
       with the notes), any equipment coming due, and whether it's been checked this week. Click one to open its
-      page in the Fleet Center. The app has the same card, from build 32.</li>
+      page in the Fleet Center. The app has the same card.</li>
   </ul>
   <p><strong>Export PDF</strong>, above the dashboard, downloads it as a letter-size report for a meeting or the
-    file: the headline figures (AGCO dealer metric, Safety Brief, Safety Reports, forklift cards, crane
-    qualifications and the fleet), then To do, and a section for each part with every person or vehicle in it
+    file: the headline figures (the AGCO dealer metric for an AGCO dealer, Safety Brief, Safety Reports, forklift
+    cards, crane qualifications and the fleet), then To do, and a section for each part with every person or vehicle in it
     (DOT medical, welding, CPR and first aid included, for everyone who holds one),
     colour-coded. The Safety Brief and Reports section is for the month the dashboard is showing; pick another
     month there first to report on it. As on the page, a Safety Report is only a count. Web page only.</p>
@@ -1820,10 +2111,12 @@
   <h3>The Training dashboard</h3>
   <p>Owners who hold the <strong>Training Manager</strong> designation get a <strong>Training</strong> button
     between Admin and Safety in the top bar (in the menu on a phone). It opens their own side of the page, in
-    the Cab look, with its own sidebar: the dashboard, <em>Planning</em> (the Class Schedule and the Mock Schedule),
-    <em>Development</em> (AGCO Development and Skills), <em>Content</em> (Online Courses, Course Catalog, Course Credits and Training Articles), <em>Records</em> (Give Credit and EPA 609), <em>Reports</em>, <em>Setup</em> (Settings) and <em>Uploads</em>, everything that needs a file to
+    the Cab look, with its own sidebar: the dashboard, <em>Planning</em> (the Class Schedule, and for an AGCO dealer the Mock Schedule),
+    <em>Development</em> (Skills, and AGCO Development), <em>Content</em> (Online Courses, Course Catalog, Course Credits and Training Articles), <em>Records</em> (Give Credit and EPA 609), <em>Reports</em>, <em>Setup</em> (Settings) and <em>Uploads</em>, everything that needs a file to
     bring it up to date, in one place. A <b>!</b> beside an upload means it's out of date or missing.</p>
-  <p><strong>The Overview</strong> leads with the dealer metric: the share of technicians with 24+ AGCO hours,
+  <p><strong>The Overview</strong>, for a company that isn't an AGCO dealer, shows who's on Training Status, how many
+    technicians have EPA 609, Skills by level, and when each upload was made. For an AGCO dealer it leads with the
+    dealer metric: the share of technicians with 24+ AGCO hours,
     on a gauge with the 65% goal marked, and how many more it takes. Tiles for technicians, who has the hours,
     who still needs them, how many more for 65%, the projection with your plan, and EPA 609. <b>Click a tile</b>
     to see the people behind its number, right under the row: every technician by location, who has the hours,
@@ -1842,19 +2135,19 @@
       </thead>
       <tbody>
         <tr><td>Overview</td><td>The dashboard above</td></tr>
-        <tr><td>Class Schedule</td><td>Put a class on the schedule from the catalog: the first and last day, the hours each day (on the clock where it's held), where (one of the locations with an optional room, somewhere else with an address, or online with a Teams link to add when you have it), instructor, seats, a register-by date, training hours and AGCO credit (from the catalog, changeable for the class), who can register (open to everyone, admin only, or Training Manager only; kept for when registering in the app opens), and details. <b>Put it on the schedule</b> puts it on the company calendar and the Open Seat Report at once; <b>Save as draft</b> keeps it here only. <b>Change</b> it and the calendar and the report follow; each change once it's on the schedule goes in its <em>History</em>. <b>Cancel class</b> takes it off both, and <b>Put back on the schedule</b> brings it back. Drafts and cancelled classes can be deleted. Each class on the schedule shows how many are registered and waiting; <b>Roster</b> lists them, with <b>Cancel</b> for anyone and a search to register more (into the waitlist when it's full). More seats moves the waitlist up, and moving, cancelling or putting a class back on tells everyone on it. <b>Grade</b>, once a class has started, opens its gradebook: attended or no-show, passed or not passed, and an optional score (0–100) for each person; <b>Mark everyone attended</b> and <b>Pass everyone who attended</b> fill it in quickly. Someone on the waitlist who came is marked attended and moves onto the roster; <b>Add someone who came</b> adds a walk-in. <b>Complete class</b>, once everyone is graded and saved, gives everyone who passed the course on their training record, under its name on records (so Lifting and Rigging qualifies them for crane work), with the class's training hours and AGCO setting, and tells them their result. A grade changed after that moves the credit with it: not passed or no-show takes it off, passed puts it back. Only the Training Manager grades. AGCO Development isn't ticked from it. A one-day class is a timed event on the calendar; one over several days is an all-day event across them, with the hours in its details. Schedule a class here or in UKG, not both, or it shows twice</td></tr>
-        <tr><td>Mock Schedule</td><td>Plan a year's training on a calendar and see how many technicians it gets to the hours. See below</td></tr>
-        <tr><td>AGCO Development</td><td><b>Courses added here</b> adds a course AGCO's catalog doesn't list (the Level 3 online test-out is the first) to any level, and keeps it through new catalogs. <b>Technicians</b> shows how far everyone has got, then lists everyone Training Status calls a technician: the Training Manager opens one and ticks the courses they've completed; other owners can look but not tick. <b>By course</b> lists every course with how many have it ticked (search by name or code; sort by level, most or fewest ticked); open one to see who has it and who hasn't, by location, and tick it for everyone at a class at once <b>Level rules</b> sets how many Level 5 courses complete Level 5. <b>Haystack labels</b> are the words on the Level 6 bales; change any, or leave one blank for the automatic label. Maps update by themselves after a tick, an added or removed course, a rule change, a new catalog, or a new All employees upload</td></tr>
+        <tr><td>Class Schedule</td><td>Put a class on the schedule from the catalog: the first and last day, the hours each day (on the clock where it's held), where (one of the locations with an optional room, somewhere else with an address, or online with a Teams link to add when you have it), instructor, seats, a register-by date, training hours and AGCO credit (from the catalog, changeable for the class), who can register (open to everyone, admin only, or Training Manager only; kept for when registering in the app opens), and details. <b>Put it on the schedule</b> puts it on the company calendar and the Open Seat Report at once; <b>Save as draft</b> keeps it here only. <b>Change</b> it and the calendar and the report follow; each change once it's on the schedule goes in its <em>History</em>. <b>Cancel class</b> takes it off both, and <b>Put back on the schedule</b> brings it back. Drafts and cancelled classes can be deleted. Each class on the schedule shows how many are registered and waiting; <b>Roster</b> lists them, with <b>Cancel</b> for anyone and a search to register more (into the waitlist when it's full). More seats moves the waitlist up, and moving, cancelling or putting a class back on tells everyone on it. <b>Grade</b>, once a class has started, opens its gradebook: attended or no-show, passed or not passed, and an optional score (0–100) for each person; <b>Mark everyone attended</b> and <b>Pass everyone who attended</b> fill it in quickly. Someone on the waitlist who came is marked attended and moves onto the roster; <b>Add someone who came</b> adds a walk-in. <b>Complete class</b>, once everyone is graded and saved, gives everyone who passed the course on their training record, under its name on records (so Lifting and Rigging qualifies them for crane work), with the class's training hours and AGCO setting, and tells them their result. A grade changed after that moves the credit with it: not passed or no-show takes it off, passed puts it back. Only the Training Manager grades. AGCO Development isn't ticked from it. A one-day class is a timed event on the calendar; one over several days is an all-day event across them, with the hours in its details. Schedule a class here, not in another system as well, or it shows twice</td></tr>
+        <tr><td>Mock Schedule (AGCO dealers)</td><td>Plan a year's training on a calendar and see how many technicians it gets to the hours. See below</td></tr>
+        <tr><td>AGCO Development (AGCO dealers)</td><td><b>Courses added here</b> adds a course AGCO's catalog doesn't list (the Level 3 online test-out is the first) to any level, and keeps it through new catalogs. <b>Technicians</b> shows how far everyone has got, then lists everyone Training Status calls a technician: the Training Manager opens one and ticks the courses they've completed; other owners can look but not tick. <b>By course</b> lists every course with how many have it ticked (search by name or code; sort by level, most or fewest ticked); open one to see who has it and who hasn't, by location, and tick it for everyone at a class at once <b>Level rules</b> sets how many Level 5 courses complete Level 5. <b>Haystack labels</b> are the words on the Level 6 bales; change any, or leave one blank for the automatic label. Maps update by themselves after a tick, an added or removed course, a rule change, a new catalog, or a new All employees upload</td></tr>
         <tr><td>Skills</td><td>The competency list: add, edit, move between levels, reorder, retire and restore. Sign-offs aren't here — they're in the Training Center</td></tr>
         <tr><td>Course Catalog</td><td>Add, edit, copy, hide or delete courses: title, category, level, training hours, whether it counts as AGCO credit, the name it goes by on training records, length, who it's for, description, key topics and prerequisites. Order arranges both the courses and their categories. Only the Training Manager changes hours, AGCO credit and the record name; the Credits line on the catalog is written from them</td></tr>
         <tr><td>Course Credits</td><td>Every course's training hours and its AGCO credit tick on one page, by category, to go through when AGCO changes which courses count. <b>Save</b> saves every change at once; each course shows when it was last changed and by whom. Credit already given keeps the hours and AGCO setting it was given with</td></tr>
-        <tr><td>Give Credit</td><td>Give someone credit for a course UKG doesn't have. Pick the course (from the catalog, or type any name), the people (search by name, number or location), the date it was completed, the hours (filled in from the catalog) and whether it counts as AGCO credit, with an optional note. It shows the name it goes on records as, and whether it qualifies for crane work or opens the forklift driving test. It warns before giving the same course twice on the same day. <b>Given by hand</b> lists the last year's credits (Show older for the rest), searchable, with <b>Remove</b>. AGCO Development isn't ticked from it: that stays by hand</td></tr>
+        <tr><td>Give Credit</td><td>Give someone credit for a course that isn't on their record. Pick the course (from the catalog, or type any name), the people (search by name, number or location), the date it was completed, the hours (filled in from the catalog) and whether it counts as AGCO credit, with an optional note. It shows the name it goes on records as, and whether it qualifies for crane work or opens the forklift driving test. It warns before giving the same course twice on the same day. <b>Given by hand</b> lists the last year's credits (Show older for the rest), searchable, with <b>Remove</b>. AGCO Development isn't ticked from it: that stays by hand</td></tr>
         <tr><td>Training Articles</td><td>Edit the articles under Read up in the Training Center right on the page — headings, bold, lists, links — or in HTML for layout like the level cards. Add, hide, reorder or delete articles</td></tr>
-        <tr><td>Settings</td><td>The dealer metric: the share of technicians with the hours, and the hours, as AGCO sets them; the app and this page use new figures straight away. And how long a crane and rigging qualification lasts after passing Lifting and Rigging (empty: no expiration)</td></tr>
-        <tr><td>All Employees (upload)</td><td>The All employees export from UKG: who works here, their job, location, work email and employee number. The only Training Status upload: training records are kept here. Shows the technician count and percentage before you publish</td></tr>
-        <tr><td>Open Seat Report (upload)</td><td>AGCO's Technical Training Catalog (or just its Open Seat Report sheet), for the report's AGCO tab. Our own classes are put on the Class Schedule and show on the report by themselves</td></tr>
-        <tr><td>EPA 609</td><td>Who's EPA 609 certified. It's a certification tracked here, not a course. The Training Manager ticks people off (<b>Tick off</b>: the date certified and certificate number if you have them, a picture of the certificate as a photo or PDF, and a note), <b>Change</b>s one to add or replace the picture, or <b>Remove</b>s it. It's on their training record at once: Training Status, the dashboard's EPA 609 tile and the reports read it there, whether records come from the uploads or are built here. Shows technicians or everyone; filter by certified, not yet, or no picture yet; search by name, location or job. <b>View certificate</b> opens the picture. Pictures are private: the person, their location admin and owners can see them. Nothing was carried over from UKG, so everyone starts as not yet</td></tr>
-        <tr><td>AGCO Catalog (upload)</td><td>Upload AGCO's Technical Training Catalog; the card says which one is in use. Its Level 1–6 courses are what you tick on AGCO Development, and a new copy keeps the ticks. <b>Export to CSV</b> downloads the catalog in use, for a spreadsheet: each course's level, name and AGCO code, whether it came from the catalog or was added here, and how many technicians are ticked for it</td></tr>
+        <tr><td>Settings</td><td>For an AGCO dealer, the dealer metric: the share of technicians with the hours, and the hours, as AGCO sets them; the app and this page use new figures straight away. And how long a crane and rigging qualification lasts after passing Lifting and Rigging (empty: no expiration)</td></tr>
+        <tr><td>All Employees (upload)</td><td>Your HR system's export of everyone (UKG's All employees, at Agri-Service): who works here, their job, location, work email and employee number. The only Training Status upload: training records are kept here. Shows the technician count and percentage before you publish</td></tr>
+        <tr><td>Open Seat Report (upload, AGCO dealers)</td><td>AGCO's Technical Training Catalog (or just its Open Seat Report sheet), for the report's AGCO tab. Our own classes are put on the Class Schedule and show on the report by themselves</td></tr>
+        <tr><td>EPA 609</td><td>Who's EPA 609 certified. It's a certification tracked here, not a course. The Training Manager ticks people off (<b>Tick off</b>: the date certified and certificate number if you have them, a picture of the certificate as a photo or PDF, and a note), <b>Change</b>s one to add or replace the picture, or <b>Remove</b>s it. It's on their training record at once: Training Status, the dashboard's EPA 609 tile and the reports read it there, whether records come from the uploads or are built here. Shows technicians or everyone; filter by certified, not yet, or no picture yet; search by name, location or job. <b>View certificate</b> opens the picture. Pictures are private: the person, their location admin and owners can see them. Everyone starts as not yet, until they're ticked off</td></tr>
+        <tr><td>AGCO Catalog (upload, AGCO dealers)</td><td>Upload AGCO's Technical Training Catalog; the card says which one is in use. Its Level 1–6 courses are what you tick on AGCO Development, and a new copy keeps the ticks. <b>Export to CSV</b> downloads the catalog in use, for a spreadsheet: each course's level, name and AGCO code, whether it came from the catalog or was added here, and how many technicians are ticked for it</td></tr>
       </tbody>
     </table>
   </div>
@@ -1896,8 +2189,8 @@
         <tr><td>Driving Tests Due</td><td>Everyone who passed the online forklift course and hasn't had their driving test. <b>Waiting for a test</b> lists them soonest deadline first, with their location, email, the day they passed, their last day and the days left (red in the last three). <b>30 days ran out</b> lists those who missed it and need to take the course again. <b>Card expiring</b> lists people whose card runs out in the next 60 days and who haven't started renewing (no course passed since, no test waiting). Pick a location to narrow either list. <b>Email all</b> opens one email with everyone shown in BCC, as the Safety Desk does; <b>Copy the addresses</b> too. The menu shows how many are waiting</td></tr>
         <tr><td>Required Forklift Operators</td><td>The people who must hold a forklift certification — everyone who drives one. The other reports start from the cards, so someone who drives a forklift without ever being certified shows up only here. <b>Only the Safety Manager</b> adds people: search All employees and press <b>Require</b>, and add a note on what they drive. Each person shows their status from their newest card: certified (and until when), expiring, waiting for approval, expired, or not certified at all, with a driving test due date if they've passed the online course. <b>Not certified</b> lists the ones who can't drive yet; <b>Email all</b> writes to them in BCC. The menu shows how many aren't certified, the Overview flags them, and their location's admin sees them first on the Location Dashboard. <b>Remove</b> takes someone off the list; their records stay</td></tr>
         <tr><td>Lift Plans</td><td>Every plan, sortable by submitter. <b>Open</b> shows one in full, where it's approved or sent back; <b>PDF</b> downloads it</td></tr>
-        <tr><td>Required Crane Operators</td><td>The same list for the Crane &amp; Rigging Qualification: the people who must hold it — anyone who runs a crane or rigs a lift. The crane reports start from the course, so someone doing the work without ever taking it shows up only here. <b>Only the Safety Manager</b> adds people, the same way, with a note on which crane or what they lift. Each person shows their status from the course on their training history: qualified (and until when, if it expires), running out in the next 60 days, expired, removed, or not qualified because they haven't taken it. Requiring someone doesn't qualify them; only the course does. <b>Not qualified</b> lists the ones who can't do the work yet; <b>Email all</b> writes to them in BCC. The menu shows how many aren't qualified, the Overview flags them under Lift plans, and their location's admin sees them first on the Location Dashboard, on the web page and in the app (from build 27). <b>Remove</b> takes someone off the list; their qualification stays as it is</td></tr>
-        <tr><td>Crane Qualifications</td><td>Everyone on All employees and where they stand on the Crane &amp; Rigging Qualification: qualified, expiring in the next 60 days, expired, removed, or not taken, with the date they completed it, when it runs out, and whether they're on the required list. Counts across the top. Click any column to sort by it, again to reverse it; search by name, location or job; narrow it to one location or to technicians; and pick a status (<b>Has taken it</b> to start, or <b>Required, not qualified</b>, <b>Not taken</b>, <b>Everyone</b> and so on). Each person's location is the one their UKG location answers to, with UKG's own name beside it when it differs. <b>Remove</b> and <b>Restore</b> are the Crane Center's. <b>Download spreadsheet</b> saves what's showing as a CSV</td></tr>
+        <tr><td>Required Crane Operators</td><td>The same list for the Crane &amp; Rigging Qualification: the people who must hold it — anyone who runs a crane or rigs a lift. The crane reports start from the course, so someone doing the work without ever taking it shows up only here. <b>Only the Safety Manager</b> adds people, the same way, with a note on which crane or what they lift. Each person shows their status from the course on their training history: qualified (and until when, if it expires), running out in the next 60 days, expired, removed, or not qualified because they haven't taken it. Requiring someone doesn't qualify them; only the course does. <b>Not qualified</b> lists the ones who can't do the work yet; <b>Email all</b> writes to them in BCC. The menu shows how many aren't qualified, the Overview flags them under Lift plans, and their location's admin sees them first on the Location Dashboard, on the web page and in the app. <b>Remove</b> takes someone off the list; their qualification stays as it is</td></tr>
+        <tr><td>Crane Qualifications</td><td>Everyone on All employees and where they stand on the Crane &amp; Rigging Qualification: qualified, expiring in the next 60 days, expired, removed, or not taken, with the date they completed it, when it runs out, and whether they're on the required list. Counts across the top. Click any column to sort by it, again to reverse it; search by name, location or job; narrow it to one location or to technicians; and pick a status (<b>Has taken it</b> to start, or <b>Required, not qualified</b>, <b>Not taken</b>, <b>Everyone</b> and so on). Each person's location is the one their location on the People list answers to, with that name beside it when it differs. <b>Remove</b> and <b>Restore</b> are the Crane Center's. <b>Download spreadsheet</b> saves what's showing as a CSV</td></tr>
         <tr><td>Crane Inspection</td><td>The daily crane inspection: add, reword, reorder, hide or delete items, each with how to check it shown under it, and tick the kinds of crane it's for (bridge, service truck; none ticked for both). Each is answered OK or Problem, and a Problem tags the crane out of service. Keep it short: it's done every day. Rewording or deleting one never changes an inspection already signed off</td></tr>
         <tr><td>Safety Data Sheets</td><td>Drop in any number of SDS PDFs at once, check the product names, and upload. A name already in the library replaces that sheet, so new revisions go in the same way. Rename, open, replace or delete sheets in the library</td></tr>
       </tbody>
@@ -1929,7 +2222,7 @@
   <p>Under <strong>Reports</strong> on the Training dashboard, each on screen and as a <strong>PDF</strong> or an
     <strong>Excel</strong> workbook. Both read the same training records as everything else.</p>
   <ul class="plain">
-    <li><strong>AGCO Training Hours</strong> — the dealer metric for the credits report's calendar year: technicians,
+    <li><strong>AGCO Training Hours</strong>, for an AGCO dealer — the dealer metric for the credits report's calendar year: technicians,
       the share with 24+ AGCO hours against the goal, how many more it needs, and the average. Then each location, and every
       technician with their hours, met or how far short, and the credits that make them up. Pick <em>Whole company</em>
       or one location. The Excel file has a sheet by location, one of technicians, and one of every credit.</li>
@@ -1943,8 +2236,8 @@
   <p>The AGCO hours are always the credits report's own year, because that report carries only the current one.</p>
 
   <h3>Mock Schedule</h3>
-  <p>Under <strong>Planning</strong> on the Training dashboard. A year's classes, planned on a calendar to see
-    how close they get the company to AGCO's dealer metric. Owners only: the technicians in it
+  <p><em>For an AGCO dealer.</em> Under <strong>Planning</strong> on the Training dashboard. A year's classes,
+    planned on a calendar to see how close they get the company to AGCO's dealer metric. Owners only: the technicians in it
     see none of it, and nothing here reaches the app, the Event Center or anyone's training
     record.</p>
   <ul class="plain">
@@ -1992,8 +2285,8 @@
       <dd>CSV or Excel, found by heading: Part Number, Name, Description, Home Location, Quantity, then one column per field, headed with its name. The file is the whole list.</dd>
       <dt>Forklift certifications</dt>
       <dd>The CSV export, including the Truck Type Authorized column.</dd>
-      <dt>UKG reports</dt>
-      <dd>All employees, straight out of UKG, recognised by its columns, not its file name. (Training records and our own classes are kept here now, so nothing else comes from UKG.)</dd>
+      <dt>All employees</dt>
+      <dd>Your HR system's export of everyone, recognised by its columns, not its file name: name, employee number, work email, job and location. At Agri-Service it's UKG's All employees report.</dd>
       <dt>Employee Handbook</dt>
       <dd>One PDF.</dd>
     </dl>
@@ -2020,60 +2313,15 @@
     the table. And the payroll import flags any payday that doesn't line up
     with its own period, which is nearly always a wrong year in that cell.</p>
 
-  <h3>When someone joins</h3>
-  <p>Create their account in Supabase with their work email and a password, and give them
-    both. They pick their name, location and groups the first time they sign in to the app. If
-    they'll only use the web page, fill in their name and location on <strong>People</strong>;
-    their email is there to tell which account is which. Their employee number fills itself
-    in at the next Training Status upload if they sign in with the email UKG has; otherwise
-    type it on People.</p>
-
-  <h3>When a location loses its admin</h3>
-  <p>An admin from another location can cover it. On <strong>People</strong>, under their location,
-    pick it from <strong>Also covers</strong>. They keep their own location and become the covered
-    location's admin as well: its lift plans and inspections to review, Skills sign-offs, Training
-    Status and AGCO maps, forklift cards, crane qualifications, special tools, Safety Brief results
-    and Community, and the notifications that go with them, such as a lift plan waiting for approval.
-    Their own lift plans still go to their own location's admin. In the app their location shows
-    as, say, <em>Pasco +1</em>. When the gap is filled, take it away with the &times; beside it.</p>
-
-  <h3>Designations</h3>
-  <p>Two jobs that sit on top of the owner role: <strong>Safety Manager</strong> and
-    <strong>Training Manager</strong>. Features that belong to one of those jobs, like
-    seeing or changing something only the Safety Manager should, will be tied to the
-    designation, not to the owner role alone.</p>
-  <ul class="plain">
-    <li>Only an owner can hold one. An owner made an admin or an employee loses theirs
-      straight away.</li>
-    <li>Owners give and take them away in Admin → <strong>People</strong>, with the tick
-      boxes on an owner's row, their own included.</li>
-    <li>One owner can hold both, and two owners can hold the same one.</li>
-    <li>Everyone signed in can see who holds which.</li>
-  </ul>
-  <p>The <strong>Training Manager</strong> approves forklift driving tests before they count,
-    and is notified when one is recorded. Safety Manager isn't used for anything yet.</p>
-
-  <h3>When someone leaves</h3>
-  <p>Don't delete their account in Supabase. Supabase refuses while they have lift plans,
-    support requests or Skills history, so those can't be lost with it; only an account
-    that never did anything can be deleted. Instead, an owner goes to Admin →
-    <strong>People</strong> and presses <strong>Deactivate</strong> beside their name.</p>
-  <ul class="plain">
-    <li>They can't sign in to the app or the web page, and they're signed out of both.</li>
-    <li>Their phones stop getting notifications, and any admin or owner access ends at once.</li>
-    <li>Everything they did stays, with their name on it. They drop off the Skills lists,
-      and off Training Status once UKG's reports no longer list them.</li>
-  </ul>
-  <p>They move to the bottom of People, greyed out with the date. <strong>Reactivate</strong>
-    lets them back in with the same email and password. Owners only, and never on their own
-    account.</p>
+  <h3>People, roles and accounts</h3>
+  <p>Who can do what, the designations, joining, leaving, join slips, Microsoft 365 and covering a location are in
+    <a href="#roles">Who can do what</a> and <a href="#people">Bringing people in</a>.</p>
 
   <h3>Shared logins</h3>
   <p>The apparel store sits behind one password the whole company shares, and
-    the app types it for people. Change it on the Shared Logins tab and every
+    the app types it for people. Set it up, or change it, on the Shared Logins tab, and every
     phone picks it up the next time that screen is opened. No new app build,
-    nothing to reinstall. (GotSafety's login was here too, until the Safety
-    Desk replaced it.)</p>
+    nothing to reinstall. It's only used with the Apparel tab switched on.</p>
 
   <div class="note">
     <b>These are not secrets</b>
@@ -2084,72 +2332,12 @@
   <a class="to-top" href="#top">Back to the top</a>
 </section>
 
-<section class="card" id="sso">
-  <h2>Microsoft sign-in</h2>
-  <p class="lede">Not set up yet. This is the list, in order, for when the
-    company is ready to replace hand-made accounts with Entra ID.</p>
-
-  <p>What changes: people tap <em>Sign in with Microsoft</em> instead of
-    typing an email and a password. Access is decided in Entra rather than by
-    the training department creating accounts one at a time, and the
-    company's MFA and conditional access rules come along with it. Roles stay
-    in the app, so having a Microsoft account doesn't make anyone an
-    administrator here.</p>
-
-  <h3>The checklist</h3>
-  <ol class="steps">
-    <li><strong>IT registers an application</strong> in Microsoft Entra ID.</li>
-    <li><strong>IT adds a client secret</strong> and sends over the secret's
-      <em>Value</em>, not its Secret ID. The Value is only shown once.</li>
-    <li><strong>IT sets the Web redirect URI</strong> to the Supabase callback
-      below.</li>
-    <li><strong>IT turns on "User assignment required"</strong> and assigns the
-      groups who should have the app. This is what replaces invite-only, so be
-      deliberate about who goes on the list.</li>
-    <li><strong>Paste the client ID and the secret</strong> into Supabase,
-      under Authentication, Providers, Azure.</li>
-    <li><strong>Set the Azure Tenant URL</strong> to the Agri-Service tenant.
-      Without it, any Microsoft account in the world can attempt a sign-in.</li>
-    <li><strong>Add the hosted admin page's address</strong> to Supabase under
-      Authentication, URL Configuration, in the redirect allow list.</li>
-    <li><strong>Ask for the Microsoft button</strong> to be added to the app
-      and to the web page. About an afternoon's work.</li>
-    <li><strong>Test with one person</strong> whose account already exists, and
-      check they land on their existing profile rather than a second one,
-      before anyone else switches over.</li>
-  </ol>
-
-  <div class="plate">
-    <h4>Values IT will ask for</h4>
-    <dl>
-      <dt>Redirect URI</dt>
-      <dd><code>https://gzmtxsgaulzkghaqyibt.supabase.co/auth/v1/callback</code></dd>
-      <dt>Tenant URL</dt>
-      <dd><code>https://login.microsoftonline.com/&lt;tenant id&gt;</code></dd>
-      <dt>Scope</dt>
-      <dd>Must include <code>email</code>. Supabase refuses a sign-in that returns no verified email address.</dd>
-      <dt>Cost</dt>
-      <dd>None. This provider is on the Supabase free plan. SAML is the paid one, and isn't needed here.</dd>
-    </dl>
-  </div>
-
-  <div class="note">
-    <b>Leave email and password switched on</b>
-    <p>At least at first. It's the way in for anyone without a company
-      Microsoft account, and the fallback if the Entra registration goes
-      sideways. Change password in Settings becomes redundant for anyone who
-      signs in with Microsoft.</p>
-  </div>
-  <a class="to-top" href="#top">Back to the top</a>
-</section>
-
 <section class="card" id="limits">
   <h2>Known limits</h2>
 
   <h3>Getting it onto a phone</h3>
-  <p>Through TestFlight — see <a href="#access">Getting in</a>. Each build lasts 90
-    days, and the training department uploads a new one before that, which your
-    phone installs by itself. If the app ever says it's expired, open TestFlight
+  <p>Through TestFlight for now — see <a href="#access">Getting in</a>. Each build lasts 90
+    days, and a new one is uploaded before that, which your phone installs by itself. If the app ever says it's expired, open TestFlight
     and install the latest.</p>
   <p>An Apple Wallet version of the forklift card is possible now that there's a
     developer account, but it isn't planned yet.</p>
@@ -2167,7 +2355,7 @@
     a <b>Reload</b> button; anything you haven't saved goes when you reload, so finish it first. The version
     you're on is at the foot of the menu. If part of a page ever fails to show, it says <em>This page
     didn't load</em> in its place and the rest keeps working; reloading usually sorts it, and if it
-    doesn't, tell the training department which page it was.</p>
+    doesn't, tell support which page it was.</p>
 
   <h3>Online courses report their own pass</h3>
   <p>As with any SCORM course, the course itself says when someone has passed, from their own phone or
@@ -2177,11 +2365,9 @@
     the test.</p>
 
   <h3>With no signal</h3>
-  <p>From build 13, the app opens with no signal however long it's been since you last
-    used it: on a plane, or after a weekend in a dead zone. It only has to have been
-    signed in on that phone before; signing in for the first time needs a connection.
-    Build 12 and earlier ask you to sign in if it's been more than an hour, and can't
-    until there's signal.</p>
+  <p>The app opens with no signal however long it's been since you last used it: on a
+    plane, or after a weekend in a dead zone. It only has to have been signed in on that
+    phone before; signing in for the first time needs a connection.</p>
   <p>Most screens keep showing what they last loaded: your reminders, your
     certification card, the directory, the payroll calendar, the news, Training
     Status, the special tools list. Opening
@@ -2214,18 +2400,18 @@
 
   <div class="note">
     <b>Who to ask</b>
-    <p>Anything about accounts, locations, certifications or the content in the
-      app goes to the training department. A problem with the app or the web page
-      itself goes to Prime Theory Labs, who make it, at
-      <a href="mailto:support@primetheorylabs.com">support@primetheorylabs.com</a>.
-      Anything about the phone itself goes to IT.</p>
+    <p>Getting in, a join slip or a password slip: your location admin. Your name, location, role,
+      certifications or the content in the app: your company's owners, or its Training Manager or Safety
+      Manager for theirs. A problem with the app or the web page itself: Prime Theory Labs, who make it, at
+      <a href="mailto:support@primetheorylabs.com">support@primetheorylabs.com</a>. Your Microsoft password,
+      or the phone itself: your IT.</p>
   </div>
   <a class="to-top" href="#top">Back to the top</a>
 </section>
 
 <footer>
-  Agri-Service internal use. The app changes often: where this guide and the app disagree, the app
-  is right, and the training department will update this.
+  For the people of the companies on Agri-Barn. The app changes often: where this guide and the app
+  disagree, the app is right, and this guide will be brought up to date.
 </footer>
     <footer class="site-foot">Powered by Prime Theory Labs LLC &middot;
       <a href="mailto:support@primetheorylabs.com">support@primetheorylabs.com</a> &middot;
