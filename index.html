@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Which version this is. publish.sh stamps the date and commit here, and
      into version.json beside the page; "dev" is a copy that wasn't published. -->
-<meta name="app-version" content="2026-11-15.113c8d8">
+<meta name="app-version" content="2026-11-15.5eccd4c">
 <!-- Where this page may load things from and send things to. GitHub Pages
      can't send security headers, so it's here. Scripts come only from this
      site and the two script CDNs (each pinned with an integrity hash), and
@@ -608,9 +608,11 @@
     <section id="tab-logins" class="hidden">
       <div class="card">
         <h2>Shared logins</h2>
-        <p class="note">The two sites the app signs into on everyone's behalf.
-          Change a password here and every phone picks it up the next time that
-          screen is opened — no new app build, nothing to reinstall.</p>
+        <p class="note">The sites the app signs into on everyone's behalf, like
+          the Apparel tab's store. Change a password here and every phone picks it
+          up the next time that screen is opened — no new app build, nothing to
+          reinstall. A store set up here shows once the Apparel tab is switched on
+          (Admin → Company).</p>
         <p class="note">These are not secrets. The app has to read a password to
           type it, and everyone in the company knows both already. What this
           gets you is being able to rotate one in a minute.</p>
@@ -1201,7 +1203,7 @@
      only names from an earlier file; boot.js starts the page and stays last.
      js/core.js has the rest. publish.sh adds ?v= to each, so a changed file is
      fetched fresh and an unchanged one comes from the browser's cache. -->
-<script src="js/core.js?v=afbb8e502c"></script>
+<script src="js/core.js?v=719c957cbe"></script>
 <script src="js/shell.js?v=79300523ad"></script>
 <script src="js/location-dashboard.js?v=893d310a68"></script>
 <script src="js/location-certifications.js?v=188701e85c"></script>
@@ -1239,7 +1241,7 @@
 <script src="js/class-grades.js?v=880fab3382"></script>
 <script src="js/epa-609.js?v=98c509a336"></script>
 <script src="js/safety-data-sheets.js?v=2d8ed6ca78"></script>
-<script src="js/shared-logins.js?v=d16cb53bd3"></script>
+<script src="js/shared-logins.js?v=7d349137ec"></script>
 <script src="js/skills.js?v=8efb8a0583"></script>
 <script src="js/training-articles.js?v=a632240493"></script>
 <script src="js/news.js?v=7666f3dcf1"></script>
@@ -1248,7 +1250,7 @@
 <script src="js/online-courses.js?v=79fbda48f5"></script>
 <script src="js/training-reports.js?v=a0d90a8436"></script>
 <script src="js/imports.js?v=6261a6a472"></script>
-<script src="js/company.js?v=0eac0cbcc3"></script>
+<script src="js/company.js?v=cd4db9eb1f"></script>
 <script src="js/people-list.js?v=e8595fdd36"></script>
 <script src="js/join.js?v=9500ee286f"></script>
 <script src="js/platform.js?v=a56ec3583b"></script>

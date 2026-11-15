@@ -8,11 +8,9 @@ function renderLogins() {
   const box = $("loginList");
   if (!box) return;
 
-  if (!sharedLogins.length) {
-    box.innerHTML = `<p class="error">No shared logins found. Run migration
-      0026_shared_logins.sql in the SQL editor, then reload this page.</p>`;
-    return;
-  }
+  // The logins the app looks for by name that this company hasn't set up yet
+  // (0013's were made for Agri-Service alone).
+  const missing = SHARED_LOGINS_KNOWN.filter(k => !sharedLogins.some(l => l.id === k.id));
 
   box.innerHTML = sharedLogins.map(l => `
     <div class="role" style="padding:16px" data-login="${esc(l.id)}">
@@ -37,8 +35,42 @@ function renderLogins() {
         <button data-act="save-login">Save</button>
         <span class="msg"></span>
       </div>
+    </div>`).join("") + missing.map(k => `
+    <div class="role" style="padding:16px" data-new-login="${esc(k.id)}">
+      <div class="row" style="margin-bottom:8px"><b style="font-size:16px">${esc(k.name)}</b>
+        <span class="note">not set up yet</span></div>
+      <p class="note" style="margin:0 0 10px">${esc(k.what)}</p>
+      <div class="fields">
+        <div class="wide"><label>Site</label><input type="text" data-l="site_url" placeholder="https://"></div>
+        <div><label>Username</label><input type="text" data-l="username" placeholder="Leave empty if the site doesn't use one"></div>
+        <div><label>Password</label><input type="text" data-l="password"></div>
+        <div class="wide"><label>Note</label><textarea data-l="note" rows="2"></textarea></div>
+      </div>
+      <div class="row"><button data-act="add-login">Set it up</button><span class="msg"></span></div>
     </div>`).join("");
 }
+
+// The logins the app looks for by name (SharedLogin.swift).
+const SHARED_LOGINS_KNOWN = [
+  { id: "apparel", name: "Apparel store", what: "The app's Apparel tab opens this store and signs in with this password." },
+];
+
+$("admin").addEventListener("click", async (event) => {
+  const button = event.target.closest('button[data-act="add-login"]');
+  if (!button) return;
+  const box = button.closest("[data-new-login]");
+  const get = (f) => box.querySelector(`[data-l="${f}"]`).value.trim();
+  const known = SHARED_LOGINS_KNOWN.find(k => k.id === box.dataset.newLogin);
+  if (!/^https?:\/\//i.test(get("site_url"))) return speak(box, "The site has to start with https://", true);
+  if (!get("password")) return speak(box, "A password is needed.", true);
+  speak(box, "Saving…", false);
+  const { data, error } = await db.from("shared_logins").insert({ id: known.id, name: known.name, site_url: get("site_url"),
+    username: get("username") || null, password: get("password"), note: get("note") || null }).select();
+  if (error) return speak(box, error.message, true);
+  if (!data || !data.length) return speak(box, "Nothing was saved — only an owner can set these up.", true);
+  sharedLogins.push(data[0]);
+  renderLogins();
+});
 
 $("admin").addEventListener("click", async (event) => {
   const button = event.target.closest('button[data-act="save-login"]');

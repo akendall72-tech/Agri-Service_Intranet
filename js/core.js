@@ -544,8 +544,19 @@ function setCompany(result) {
   companyMissing = !!result.error && /my_company|does not exist|schema cache/i.test(result.error.message);
   const row = !result.error && Array.isArray(result.data) ? result.data[0] : null;
   company = row ? { ...BUILT_IN_COMPANY, ...row } : BUILT_IN_COMPANY;
+  // Kept for the sign-in screen next time: whose page this is (0147).
+  if (row) { try { localStorage.setItem(LAST_COMPANY, company.name); } catch { /* private window */ } }
   showCompany();
 }
+
+// Before anyone signs in, the brand is the last company signed in here, not
+// always Agri-Service's. Only the name: everything else waits for the company.
+const LAST_COMPANY = "agri.lastCompany";
+(function lastCompanyOnSignIn() {
+  let name = "";
+  try { name = localStorage.getItem(LAST_COMPANY) || ""; } catch { /* private window */ }
+  if (name) document.querySelectorAll(".brand-name").forEach(el => { el.textContent = name.toUpperCase(); });
+})();
 
 // The parts of the page drawn once rather than with each page: the brand at
 // the top, the browser tab's title, the news editor's hint.

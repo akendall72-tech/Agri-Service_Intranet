@@ -58,6 +58,7 @@ function renderCompanyAdmin() {
       <div class="co-logos">${COMPANY_LOGOS.map(coLogoSlot).join("")}</div>
     </div>
     ${coItCard()}
+    ${coSwitchesCard()}
     ${coMicrosoftCard()}
     <div class="card">
       <h2>What Agri-Barn's platform did here</h2>
@@ -86,6 +87,41 @@ function coLogoSlot(slot) {
         ${path ? `<button type="button" class="btn-secondary" data-co-remove="${esc(slot.field)}" ${coBusy ? "disabled" : ""}>Use the built-in one</button>` : ""}
       </div>
     </div>`;
+}
+
+// The company's own Training Center mission, and the features it has switched
+// on of those some companies have and others don't (0147).
+const CO_FEATURES = [
+  { id: "apparel", name: "Apparel tab", what: "The app's Apparel tab, which opens your company's apparel store signed in. Set up the store's address and password under Shared Logins." },
+];
+let coSwBusy = false, coSwMessage = "", coSwError = "";
+function coSwitchesCard() {
+  const on = new Set(company.features || []);
+  return `<div class="card">
+      <h2>Training Center and features</h2>
+      <p class="note">The mission is the first card in the app's Training Center, in your words. Leave it empty for no card.</p>
+      <div class="co-fields co-fields-one">
+        <div><label for="coMission">Mission</label>
+          <textarea id="coMission" rows="3" maxlength="600" placeholder="What your training is for, in a sentence or two">${esc(company.training_mission || "")}</textarea></div>
+      </div>
+      ${CO_FEATURES.map(f => `<label class="pl-setting"><input type="checkbox" data-co-feature="${esc(f.id)}" ${on.has(f.id) ? "checked" : ""}>
+        <span><b>${esc(f.name)}.</b> ${esc(f.what)}</span></label>`).join("")}
+      <div class="co-actions"><button type="button" id="coSwSave" ${coSwBusy ? "disabled" : ""}>Save</button></div>
+      ${coSwMessage ? `<p class="co-ok">${esc(coSwMessage)}</p>` : ""}
+      ${coSwError ? `<p class="error">${esc(coSwError)}</p>` : ""}
+    </div>`;
+}
+
+async function coSwitchesSave() {
+  const mission = $("coMission").value.trim();
+  const features = [...document.querySelectorAll("[data-co-feature]")].filter(b => b.checked).map(b => b.dataset.coFeature);
+  coSwMessage = ""; coSwError = ""; coSwBusy = true; renderCompanyAdmin();
+  const { error } = await db.from("companies").update({ training_mission: mission || null, features }).eq("id", company.id);
+  coSwBusy = false;
+  if (error) { coSwError = /training_mission|features/.test(error.message) ? "Run migration 0147 first." : error.message; return renderCompanyAdmin(); }
+  await coReload();
+  coSwMessage = "Saved. The app picks it up the next time its home page opens.";
+  renderCompanyAdmin();
 }
 
 // Where Submit an IT Ticket sends its email (0144), in the app and on this page.
@@ -241,6 +277,7 @@ document.addEventListener("click", async (e) => {
     return renderCompanyAdmin();
   }
   if (e.target.closest("#coItSave")) return coItSave();
+  if (e.target.closest("#coSwSave")) return coSwitchesSave();
   if (e.target.closest("#coSave")) coSave();
   const pick = e.target.closest("[data-co-pick]");
   if (pick) $("coFile-" + pick.dataset.coPick).click();
