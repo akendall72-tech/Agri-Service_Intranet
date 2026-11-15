@@ -51,7 +51,7 @@ const TRAINING_LINKS = [
   // AGCO hours, 609 and history: yours, your location's, or everyone's. Its
   // Classes tab, for location admins and owners, is who has and hasn't taken a
   // class (it was the Course Report). See trainingStatusView.
-  { title: "Training Status", sub: "AGCO hours, 609 and history", view: "trainingstatus", tint: "slate",
+  { title: "Training Status", sub: "Training hours, 609 and history", view: "trainingstatus", tint: "slate",
     icon: "training" },
   // The AGCO Development Map follows, as one wide button (agcoLinkCard), then
   // the articles from the Training dashboard's Training Articles tab.
@@ -215,7 +215,7 @@ function showView(name) {
     ${SOCIAL_PAGES.includes(name) ? `<button data-view="social">Social</button><span>/</span>` : ""}
     ${name === "event" ? `<button data-view="events">Event Center</button><span>/</span>` : ""}
     ${name === "communitypost" ? `<button data-view="community">Company</button><span>/</span>` : ""}
-    ${["triviagame", "triviaplay"].includes(name) ? `<button data-view="trivia">AGCO Trivia</button><span>/</span>` : ""}
+    ${["triviagame", "triviaplay"].includes(name) ? `<button data-view="trivia">Trivia</button><span>/</span>` : ""}
     ${name === "triviaplay" && tvPlay && tvGame(tvPlay.gameId)
       ? `<button data-tv-game="${esc(tvPlay.gameId)}">${esc(tvGame(tvPlay.gameId).title)}</button><span>/</span>` : ""}
     ${SAFETY_PAGES.includes(name) ? `<button data-view="safety">Safety Center</button><span>/</span>` : ""}
@@ -279,7 +279,9 @@ function showTraining(tab) {
   safely(renderMockSchedule, renderSkillsAdmin, renderCoursesAdmin, renderArticlesAdmin, renderTsImport, renderTsLive, renderOsrImport, renderOsrLive,
     renderAgcoImport, renderAgcoLive, renderAgcoTechs, renderAgcoRules, renderAgcoAdded, renderAgcoBales,
     renderTrainingOverview, renderReports, renderOltAdmin, renderGiveCredit, renderCourseCredits, renderClassSchedule, renderEpa609);
-  (document.querySelector(`#trainingNav [data-tab="${tab || trainingTab}"]`) || document.querySelector("#trainingNav [data-tab]")).click();
+  // A tab for a feature the company hasn't switched on isn't one to land on.
+  const open = [...document.querySelectorAll("#trainingNav [data-tab]")].filter(b => !b.dataset.feature || companyHas(b.dataset.feature));
+  (open.find(b => b.dataset.tab === (tab || trainingTab)) || open[0]).click();
   window.scrollTo(0, 0);
 }
 
@@ -317,9 +319,10 @@ document.addEventListener("click", (event) => {
 const VIEWS = {
   training: () =>
     hero("Training Center",
-         "Course catalog, schedules, certifications, and the AGCO requirements behind them.")
+         companyHas("agco") ? "Course catalog, schedules, certifications, and the AGCO requirements behind them."
+           : "Course catalog, schedules, certifications and your training record.")
     + linkGrid(TRAINING_LINKS.filter(l => !l.adminOnly || isAdmin()).map(linkCard).join("")
-      + (agcoShowsButton() ? agcoLinkCard() : "")) + articleCards(),
+      + (companyHas("agco") && agcoShowsButton() ? agcoLinkCard() : "")) + articleCards(),
 
   article: () => articleView(),
 
@@ -450,8 +453,8 @@ const pageTitle = (id) => (FEATURES.find(f => f.id === id) || COMPANY_PAGES.find
        requests: { title: "Support Requests" },
        event: { title: (companyEvents.find(e => e.id === openEventId) || {}).title || "Event" },
        events: { title: "Event Center" }, community: { title: "Company" }, fitness: { title: "Fitness Challenge" },
-       trivia: { title: "AGCO Trivia" }, triviagame: { title: (tvGame(tvGameId) || {}).title || "AGCO Trivia" },
-       triviaplay: { title: tvPlay ? (tvPlay.practice ? "Practice" : "Round") : "AGCO Trivia" },
+       trivia: { title: "Trivia" }, triviagame: { title: (tvGame(tvGameId) || {}).title || "Trivia" },
+       triviaplay: { title: tvPlay ? (tvPlay.practice ? "Practice" : "Round") : "Trivia" },
        communitypost: { title: (p => cmIsArticle(p) ? "Article" : p.shoutout ? "Shout-out" : "Post")(cmPosts.find(p => p.id === openCommunityPostId) || {}) },
        safetydesk: { title: "Safety Desk" }, safetyreport: { title: "Safety Brief Report" },
        safetyform: { title: "Safety Report" }, safetyreportlist: { title: "Safety Reports" },

@@ -42,10 +42,12 @@ function txUploads() {
   // The catalog changes a few times a year; the rest weekly or monthly.
   rows.forEach(r => { r.days = r.date ? Math.floor((Date.now() - r.date) / SX_DAY) : null;
     r.stale = r.missing || (r.days !== null && r.days > (r.slow ? 180 : 30)); });
+  // AGCO's sessions and catalog are an AGCO dealer's only (0149).
+  const theirs = companyHas("agco") ? rows : rows.filter(r => !/^AGCO/.test(r.label));
   // All internal (0127): records are kept here and our classes are scheduled
   // here, so the UKG reports they came from aren't uploaded any more.
-  if (tsBuiltHere()) return rows.filter(r => !(r.label === "OLT and ILT" || /^Credit/.test(r.label) || r.label === "Open Seat Report"));
-  return rows;
+  if (tsBuiltHere()) return theirs.filter(r => !(r.label === "OLT and ILT" || /^Credit/.test(r.label) || r.label === "Open Seat Report"));
+  return theirs;
 }
 
 function renderTrainingNavCounts(uploads) {
@@ -175,6 +177,7 @@ function renderTrainingOverview() {
     box.innerHTML = `<div class="card"><p class="error">${esc(trainingStatusError)}</p></div>`;
     return;
   }
+  if (!companyHas("agco")) return txPlainOverview(box, uploads);
   const m = tsModel();
   if (!m.techs.length) {
     box.innerHTML = `<div class="sx"><section class="sx-hero"><div class="sx-hero-text"><span class="sx-kicker">Training dashboard</span>
@@ -272,6 +275,33 @@ function renderTrainingOverview() {
           : `<p class="sx-empty">No development maps yet. Upload the AGCO Catalog, then tick courses on AGCO Development.</p>`}
       </section>
 
+      <section class="sx-panel" style="${lit("slate")}">
+        <header><h3>Skills</h3><button type="button" class="sx-link" data-tx-go="skillsadmin">Open &rsaquo;</button></header>
+        ${skillsError ? `<p class="sx-empty">${esc(skillsError)}</p>` : sxRankHtml(SKILL_LEVELS.map(n =>
+          [`Level ${n} · ${competencies.filter(c => c.is_active && c.level === n).length} skills`, levelsDone.filter(x => x.level === n).length]), "")}
+        <p class="sx-sub">Technicians who've finished each level. Sign-offs are in the Training Center; the list of skills is edited here.</p>
+      </section>
+    </div>
+  </div>`;
+}
+
+// A company that isn't an AGCO dealer (0149): no dealer metric, Mock Schedule
+// or development maps. Who's on Training Status, EPA 609, Skills and uploads.
+function txPlainOverview(box, uploads) {
+  const m = tsModel();
+  const stale = uploads.filter(u => u.stale);
+  box.innerHTML = `<div class="sx tx" style="${lit("teal")}">
+    <section class="sx-hero"><div class="sx-hero-text"><span class="sx-kicker">Training dashboard</span>
+      <h2>${m.people.length ? `${sxNum(m.people.length)} on Training Status` : "Nobody on Training Status yet"}</h2>
+      <p>${m.people.length ? `${m.techs.length} technician${m.techs.length === 1 ? "" : "s"}, ${m.epaCount} with EPA 609.`
+        : "Upload All employees under Uploads, and this fills in."}</p></div></section>
+    <div class="sx-grid">
+      <section class="sx-panel" style="${lit(stale.length ? "amber" : "green")}">
+        <header><h3>Uploads</h3><span>${stale.length ? `${stale.length} need${stale.length === 1 ? "s" : ""} a fresh one` : "All current"}</span></header>
+        <div class="tx-uploads">${uploads.map(u => `<button type="button" class="tx-upload${u.stale ? " stale" : ""}" data-tx-go="${u.tab}">
+          <span><b>${esc(u.label)}</b><small>${esc(u.text)}</small></span>
+          <em>${u.missing ? "Upload" : u.days === null ? "" : u.days === 0 ? "Today" : `${u.days}d`}</em></button>`).join("")}</div>
+      </section>
       <section class="sx-panel" style="${lit("slate")}">
         <header><h3>Skills</h3><button type="button" class="sx-link" data-tx-go="skillsadmin">Open &rsaquo;</button></header>
         ${skillsError ? `<p class="sx-empty">${esc(skillsError)}</p>` : sxRankHtml(SKILL_LEVELS.map(n =>

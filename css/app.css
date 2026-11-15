@@ -3793,3 +3793,8 @@ body.no-company .crumbs { display: none; }
 .pl-ms-last { margin: 10px 0 0; font-size: 13.5px; color: var(--muted); }
 .pl-ms-preview { margin-top: 14px; padding: 12px 14px; border-radius: 10px; background: var(--canvas); border: 1px solid var(--line); }
 .pl-ms-preview p { margin: 0 0 8px; }
+
+/* A feature this company hasn't switched on (0147, 0149): core.js puts the
+   ones it has on <body data-features>. */
+body:not([data-features~="agco"]) [data-feature="agco"],
+body:not([data-features~="apparel"]) [data-feature="apparel"] { display: none !important; }

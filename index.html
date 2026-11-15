@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Which version this is. publish.sh stamps the date and commit here, and
      into version.json beside the page; "dev" is a copy that wasn't published. -->
-<meta name="app-version" content="2026-11-15.5eccd4c">
+<meta name="app-version" content="2026-11-15.40a1507">
 <!-- Where this page may load things from and send things to. GitHub Pages
      can't send security headers, so it's here. Scripts come only from this
      site and the two script CDNs (each pinned with an integrity hash), and
@@ -34,7 +34,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
-<link rel="stylesheet" href="css/app.css?v=eed3c35160">
+<link rel="stylesheet" href="css/app.css?v=dc4bd91c7a">
 </head>
 <body>
 
@@ -101,7 +101,7 @@
       <button data-tab="news"><i data-icon="news"></i><span>News</span></button>
       <button data-tab="events"><i data-icon="events"></i><span>Events</span></button>
       <button data-tab="fitness" data-title="Fitness Challenge"><i data-icon="fitness"></i><span>Fitness Challenge</span></button>
-      <button data-tab="trivia" data-title="AGCO Trivia"><i data-icon="trivia"></i><span>Trivia</span></button>
+      <button data-tab="trivia" data-title="Trivia"><i data-icon="trivia"></i><span>Trivia</span></button>
       <button data-tab="handbook"><i data-icon="briefcase"></i><span>Employee Handbook</span></button>
       <button data-tab="manuals" data-title="Operator's Manuals"><i data-icon="book"></i><span>Operator's Manuals</span></button>
       <button data-tab="reminders"><i data-icon="reminders"></i><span>Reminders</span></button>
@@ -130,10 +130,10 @@
 
       <div class="nav-group">Planning</div>
       <button data-tab="classschedule" data-title="Class Schedule"><i data-icon="calendar"></i><span>Class Schedule</span></button>
-      <button data-tab="mock"><i data-icon="calendarCheck"></i><span>Mock Schedule</span></button>
+      <button data-feature="agco" data-tab="mock"><i data-icon="calendarCheck"></i><span>Mock Schedule</span></button>
 
       <div class="nav-group">Development</div>
-      <button data-tab="agco" data-title="AGCO Development"><i data-icon="level"></i><span>AGCO Development</span></button>
+      <button data-feature="agco" data-tab="agco" data-title="AGCO Development"><i data-icon="level"></i><span>AGCO Development</span></button>
       <button data-tab="skillsadmin"><i data-icon="level"></i><span>Skills</span></button>
 
       <div class="nav-group">Content</div>
@@ -147,7 +147,7 @@
       <button data-tab="epa609" data-title="EPA 609"><i data-icon="doc"></i><span>EPA 609</span></button>
 
       <div class="nav-group">Reports</div>
-      <button data-tab="rpagco" data-title="AGCO Training Hours"><i data-icon="level"></i><span>AGCO Training Hours</span></button>
+      <button data-feature="agco" data-tab="rpagco" data-title="AGCO Training Hours"><i data-icon="level"></i><span>AGCO Training Hours</span></button>
       <button data-tab="rpclass" data-title="Class Report"><i data-icon="doc"></i><span>Class Report</span></button>
 
       <div class="nav-group">Setup</div>
@@ -155,8 +155,8 @@
 
       <div class="nav-group">Uploads</div>
       <button data-tab="trainingstatus" data-title="All employees upload"><i data-icon="people"></i><span>All Employees</span><b class="nav-count tx-stale" data-tx-count="trainingstatus"></b></button>
-      <button data-tab="openseat" data-title="Open Seat Report uploads"><i data-icon="calendar"></i><span>Open Seat Report</span><b class="nav-count tx-stale" data-tx-count="openseat"></b></button>
-      <button data-tab="agcocatalog" data-title="AGCO Catalog upload"><i data-icon="doc"></i><span>AGCO Catalog</span><b class="nav-count tx-stale" data-tx-count="agcocatalog"></b></button>
+      <button data-feature="agco" data-tab="openseat" data-title="Open Seat Report uploads"><i data-icon="calendar"></i><span>Open Seat Report</span><b class="nav-count tx-stale" data-tx-count="openseat"></b></button>
+      <button data-feature="agco" data-tab="agcocatalog" data-title="AGCO Catalog upload"><i data-icon="doc"></i><span>AGCO Catalog</span><b class="nav-count tx-stale" data-tx-count="agcocatalog"></b></button>
     </nav>
 
     <!-- The Safety dashboard: Safety Managers only. Its tabs share the admin
@@ -745,7 +745,7 @@
     <section id="tab-givecredit" class="hidden"><div id="giveCredit"></div></section>
     <section id="tab-classschedule" class="hidden"><div id="classSchedule"></div></section>
     <section id="tab-trainingsettings" class="hidden">
-      <div class="card" id="tsGoalCard">
+      <div class="card" id="tsGoalCard" data-feature="agco">
         <h2>Dealer metric</h2>
         <p class="note">AGCO sets both numbers. Change them here when they do, and the app and this page use the new
           figures straight away: the hours decide who has met the requirement, for everyone.</p>
@@ -800,7 +800,7 @@
             <input type="text" data-c="level" placeholder="Level 4"></div>
           <div><label for="courseHours">Training hours</label>
             <input type="number" id="courseHours" data-c="training_hours" min="0" max="1000" step="0.5" inputmode="decimal" placeholder="24"></div>
-          <div><label>AGCO</label>
+          <div data-feature="agco"><label>AGCO</label>
             <label class="tc-check" for="courseAgco"><input type="checkbox" id="courseAgco" data-c="counts_for_agco"> Counts as AGCO credit</label></div>
           <div class="wide"><label for="courseRecordName">Name on training records (optional)</label>
             <input type="text" id="courseRecordName" data-c="record_name" maxlength="200" placeholder="The same as the title">
@@ -1203,14 +1203,14 @@
      only names from an earlier file; boot.js starts the page and stays last.
      js/core.js has the rest. publish.sh adds ?v= to each, so a changed file is
      fetched fresh and an unchanged one comes from the browser's cache. -->
-<script src="js/core.js?v=719c957cbe"></script>
-<script src="js/shell.js?v=79300523ad"></script>
-<script src="js/location-dashboard.js?v=893d310a68"></script>
+<script src="js/core.js?v=8f4aeb9437"></script>
+<script src="js/shell.js?v=067db46201"></script>
+<script src="js/location-dashboard.js?v=6dff455b18"></script>
 <script src="js/location-certifications.js?v=188701e85c"></script>
 <script src="js/my-certifications.js?v=c7baa6cb5e"></script>
 <script src="js/operator-manuals.js?v=de83dc2ae1"></script>
 <script src="js/crane-qualifications.js?v=4336042851"></script>
-<script src="js/training-status.js?v=7dacdecb57"></script>
+<script src="js/training-status.js?v=eade1f05f2"></script>
 <script src="js/forklift.js?v=1aa3683ed6"></script>
 <script src="js/crane.js?v=e6888b49ef"></script>
 <script src="js/lift-plans.js?v=923f07f016"></script>
@@ -1222,21 +1222,21 @@
 <script src="js/events.js?v=28c038b72f"></script>
 <script src="js/community.js?v=1ecd0aaa6e"></script>
 <script src="js/fitness.js?v=1fa39ea073"></script>
-<script src="js/trivia.js?v=2a5fc43bf6"></script>
+<script src="js/trivia.js?v=eb409c41ff"></script>
 <script src="js/fleet.js?v=240b3006b6"></script>
 <script src="js/safety-reports.js?v=6b5af13f7a"></script>
-<script src="js/training-dashboard.js?v=7d7c1fcb70"></script>
+<script src="js/training-dashboard.js?v=accc68c4f1"></script>
 <script src="js/safety-dashboard.js?v=4961233011"></script>
 <script src="js/safety-desk.js?v=b731cdcf03"></script>
 <script src="js/mock-schedule.js?v=e2754fe267"></script>
 <script src="js/groups-and-locations.js?v=c4e07136d1"></script>
-<script src="js/open-seat-report.js?v=e3c83dc3c9"></script>
+<script src="js/open-seat-report.js?v=167d239afe"></script>
 <script src="js/inspections.js?v=2e9c8853b2"></script>
 <script src="js/hr.js?v=b9c0254418"></script>
 <script src="js/personal-inventory.js?v=e24b5aa871"></script>
 <script src="js/course-catalog.js?v=0cac591ad1"></script>
-<script src="js/training-credits.js?v=863cb1067a"></script>
-<script src="js/class-schedule.js?v=26cdbe90cf"></script>
+<script src="js/training-credits.js?v=42d0991b38"></script>
+<script src="js/class-schedule.js?v=a9cc17e8d6"></script>
 <script src="js/class-registration.js?v=81ec1c81ac"></script>
 <script src="js/class-grades.js?v=880fab3382"></script>
 <script src="js/epa-609.js?v=98c509a336"></script>
@@ -1249,8 +1249,8 @@
 <script src="js/my-classes.js?v=632c8ac9a0"></script>
 <script src="js/online-courses.js?v=79fbda48f5"></script>
 <script src="js/training-reports.js?v=a0d90a8436"></script>
-<script src="js/imports.js?v=6261a6a472"></script>
-<script src="js/company.js?v=cd4db9eb1f"></script>
+<script src="js/imports.js?v=a87bd44fe7"></script>
+<script src="js/company.js?v=1080db7620"></script>
 <script src="js/people-list.js?v=e8595fdd36"></script>
 <script src="js/join.js?v=9500ee286f"></script>
 <script src="js/platform.js?v=a56ec3583b"></script>

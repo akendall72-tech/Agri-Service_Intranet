@@ -537,6 +537,14 @@ const noCompany = () => !!profile && profile.company_id === null && !visit;
 const companyName = () => company.name;
 const companyLegal = () => company.legal_name;
 const companyCaps = () => company.name.toUpperCase();
+// Whether the company has switched on a feature that's some companies' and not
+// others' (0147, 0149): "apparel", "agco". Before 0147 there's no list, and
+// Agri-Service keeps what it always had.
+const companyHas = (feature) => Array.isArray(company.features)
+  ? company.features.includes(feature) : company.id === "agri-service";
+// What a company can switch on, as company_features() says.
+const COMPANY_FEATURES = ["agco", "apparel"];
+
 // The company's IT mailbox for Submit an IT Ticket (0144), or "" for none.
 const itTicketEmail = () => String(company.it_ticket_email || "").trim();
 
@@ -562,6 +570,9 @@ const LAST_COMPANY = "agri.lastCompany";
 // the top, the browser tab's title, the news editor's hint.
 function showCompany() {
   document.querySelectorAll(".brand-name").forEach(el => { el.textContent = companyCaps(); });
+  // Anything marked data-feature is there only for a company with it on: the
+  // page says which it has, and the styles hide the rest, drawn now or later.
+  document.body.dataset.features = COMPANY_FEATURES.filter(companyHas).join(" ");
   document.title = companyName();
   const source = $("newsFieldSource");
   if (source) source.placeholder = `Fendt, PTx, ${companyName()}…`;

@@ -348,6 +348,8 @@ function openSeatView() {
 
   const registered = classes.reduce((n, c) => n + c.registered, 0);
   const open = classes.reduce((n, c) => n + c.available, 0);
+  // AGCO Academy's sessions are an AGCO dealer's only (0149).
+  if (osrState.tab === "agco" && !companyHas("agco")) osrState.tab = "classes";
   const tab = (id, label, count) => `<button type="button" class="osr-tab${osrState.tab === id ? " on" : ""}"
     data-osr-tab="${id}">${label} <span>${count}</span></button>`;
 
@@ -443,7 +445,7 @@ function openSeatView() {
     <div class="osr-tabs">
       ${tab("classes", "All Classes", classes.length)}
       ${tab("stores", "Enrollment by Store", storeList.length)}
-      ${tab("agco", "AGCO Open Seat Report", sessions.length)}
+      ${companyHas("agco") ? tab("agco", "AGCO Open Seat Report", sessions.length) : ""}
     </div>
 
     <section${osrState.tab === "classes" ? "" : " hidden"} data-osr-panel="classes">
@@ -460,7 +462,7 @@ function openSeatView() {
       ${storePanel}
     </section>
 
-    <section${osrState.tab === "agco" ? "" : " hidden"} data-osr-panel="agco">
+    <section${osrState.tab === "agco" && companyHas("agco") ? "" : " hidden"} data-osr-panel="agco">
       ${agcoDoc ? `
       <div class="osr-desc">Seat availability across AGCO Academy's national technical training catalog${
         agcoDoc.catalogDate ? ` as of ${esc(agcoDoc.catalogDate)}` : ""} — ${sessions.length} sessions,

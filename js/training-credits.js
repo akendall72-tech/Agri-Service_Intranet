@@ -99,7 +99,7 @@ function renderGiveCredit() {
         <div><label for="tcDate">Completed on</label><input id="tcDate" type="date" max="${tcToday()}" value="${tcToday()}"></div>
         <div><label for="tcHours">Training hours</label><input id="tcHours" type="number" min="0" max="1000" step="0.5" inputmode="decimal">
           <p class="note">From the catalog. Change it here for this credit only.</p></div>
-        <div><label>AGCO</label><label class="tc-check" for="tcAgco"><input id="tcAgco" type="checkbox"> Counts as AGCO credit</label></div>
+        <div data-feature="agco"><label>AGCO</label><label class="tc-check" for="tcAgco"><input id="tcAgco" type="checkbox"> Counts as AGCO credit</label></div>
         <div><label for="tcNote">Note (optional)</label><input id="tcNote" maxlength="500" placeholder="Paper roster on file"></div>
       </div>
       <div class="row"><button type="button" data-tc-act="give">Give credit</button><span class="msg"></span></div>
@@ -164,13 +164,13 @@ function tcListHtml() {
         ${removed ? `<label class="tc-check" for="tcRemoved"><input id="tcRemoved" type="checkbox"${tcShowRemoved ? " checked" : ""}> Show removed (${removed})</label>` : ""}
       </div>
       ${shown.length ? `<div style="overflow-x:auto"><table class="ts-table tc-table">
-        <thead><tr><th>Completed</th><th>Person</th><th>Course</th><th class="num">Hours</th><th>AGCO</th><th>Given</th><th></th></tr></thead>
+        <thead><tr><th>Completed</th><th>Person</th><th>Course</th><th class="num">Hours</th><th data-feature="agco">AGCO</th><th>Given</th><th></th></tr></thead>
         <tbody>${shown.map(c => `<tr class="${c.removed_at ? "tc-removed" : ""}">
           <td>${esc(newsDate(c.completed_on))}</td>
           <td>${esc(c.person_name || c.email || c.employee_number)}</td>
           <td>${esc(c.course)}${c.note ? `<small>${esc(c.note)}</small>` : ""}</td>
           <td class="num">${esc(tcHours(c.hours))}</td>
-          <td>${c.counts_for_agco ? `<span class="badge b-current">AGCO</span>` : ""}</td>
+          <td data-feature="agco">${c.counts_for_agco ? `<span class="badge b-current">AGCO</span>` : ""}</td>
           <td><small>${esc(c.given_by_name || "")} · ${esc(newsDate(String(c.given_at).slice(0, 10)))}</small>${c.removed_at
             ? `<small>Removed by ${esc(c.removed_by_name || "someone")}, ${esc(newsDate(String(c.removed_at).slice(0, 10)))}</small>` : ""}</td>
           <td>${c.removed_at || !isTrainingManager() ? "" : `<button type="button" class="pdf" data-tc-remove="${esc(c.id)}">Remove</button>`}</td>
@@ -287,10 +287,11 @@ function renderCourseCredits() {
   const changed = Object.keys(ccDirty).length;
   box.innerHTML = `<div class="card">
       <h2>Course credits</h2>
-      <p class="note">Each course's training hours, and whether they count toward AGCO's hours. When AGCO changes which courses count, change
-        them here. Credit already given keeps the hours and AGCO setting it was given with; a change applies to credit given from now on.</p>
+      <p class="note">${companyHas("agco") ? `Each course's training hours, and whether they count toward AGCO's hours. When AGCO changes which courses count, change
+        them here. Credit already given keeps the hours and AGCO setting it was given with; a change applies to credit given from now on.`
+        : "Each course's training hours. Credit already given keeps the hours it was given with; a change applies to credit given from now on."}</p>
       ${allCourses.length ? `<div style="overflow-x:auto"><table class="ts-table cc-table">
-        <thead><tr><th>Course</th><th class="num">Training hours</th><th>AGCO credit</th><th>Last changed</th></tr></thead>
+        <thead><tr><th>Course</th><th class="num">Training hours</th><th data-feature="agco">AGCO credit</th><th>Last changed</th></tr></thead>
         <tbody>${groupCourses(allCourses).map(([cat, courses]) => `<tr class="ts-group"><td colspan="4">${esc(cat)}</td></tr>
           ${courses.map(c => `<tr data-cc-course="${esc(c.id)}" class="${ccDirty[c.id] ? "cc-dirty" : ""}${c.is_active ? "" : " cc-off"}">
             <td><b>${esc(c.title)}</b>${c.is_active ? "" : ` <span class="badge b-none">Not showing</span>`}
@@ -298,7 +299,7 @@ function renderCourseCredits() {
               ${tcCounts(tcRecordName(c)).map(t => `<small>${esc(t)}</small>`).join("")}</td>
             <td class="num"><input type="number" min="0" max="1000" step="0.5" inputmode="decimal" data-cc="training_hours"
               aria-label="Training hours for ${esc(c.title)}" value="${esc(value(c, "training_hours") ?? "")}"></td>
-            <td><input type="checkbox" data-cc="counts_for_agco" aria-label="${esc(c.title)} counts as AGCO credit"${value(c, "counts_for_agco") ? " checked" : ""}></td>
+            <td data-feature="agco"><input type="checkbox" data-cc="counts_for_agco" aria-label="${esc(c.title)} counts as AGCO credit"${value(c, "counts_for_agco") ? " checked" : ""}></td>
             <td><small>${c.credits_changed_at ? `${esc(newsDate(String(c.credits_changed_at).slice(0, 10)))} · ${esc(c.credits_changed_by_name || "")}` : "Not changed yet"}</small></td>
           </tr>`).join("")}`).join("")}</tbody></table></div>` : `<p class="note">No courses in the catalog yet.</p>`}
       <div class="row cc-bar"><button type="button" data-cc-act="save"${changed ? "" : " disabled"}>${changed

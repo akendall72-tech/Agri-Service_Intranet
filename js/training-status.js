@@ -360,9 +360,11 @@ const tsPct = (n) => `${(Math.round(n * 1000) / 10).toFixed(1)}%`;
 
 function trainingStatusView() {
   const admin = isAdmin();
+  const agco = companyHas("agco");
   const intro = hero(admin ? "Training Status" : "My Training",
-    admin ? "Technician AGCO training hours against the dealer metric, EPA 609, and training history."
-          : "Your AGCO training hours, EPA 609 and the classes you've completed.");
+    admin ? (agco ? "Technician AGCO training hours against the dealer metric, EPA 609, and training history."
+                  : "Everyone's training history, and who has and hasn't taken each class.")
+          : (agco ? "Your AGCO training hours, EPA 609 and the classes you've completed." : "Your EPA 609 and the classes you've completed."));
   if (trainingStatusError) {
     return intro + `<div class="card"><p class="note">${/does not exist|schema cache/i.test(trainingStatusError)
       ? "Training Status isn't switched on yet." : esc(trainingStatusError)}</p></div>`;
@@ -377,7 +379,10 @@ function trainingStatusView() {
   }
   const scope = isOwner() ? "All locations" : myLocations().length > 1
     ? `Your locations: ${esc(myLocationNames().join(", "))}` : `Your location: ${esc(locations[profile.location_id] || "not set")}`;
-  const tabs = [["summary", "Summary"], ["techs", "Technicians"], ["history", "History"], ["plan", "Planning"], ["classes", "Classes"]];
+  // An AGCO dealer's Summary, Technicians and Planning are all AGCO's hours (0149).
+  const tabs = [["summary", "Summary"], ["techs", "Technicians"], ["history", "History"], ["plan", "Planning"], ["classes", "Classes"]]
+    .filter(([id]) => agco || id === "history" || id === "classes");
+  if (!tabs.some(([id]) => id === tsState.tab)) tsState.tab = tabs[0][0];
   return intro + `<div id="tsPage">
     <div class="row ts-tabs"><div class="chips" style="margin:0">${tabs.map(([id, label]) =>
       `<button class="chip${tsState.tab === id ? " on" : ""}" data-ts-tab="${id}">${label}</button>`).join("")}</div>
@@ -402,7 +407,9 @@ function tsSelfView(m) {
   return `<div class="ts-cards">
       <div class="card ts-kpi"><small>${esc(mine.job.replace(/^\d+\s*-\s*/, "") || "Employee")} · ${esc(mine.store)}</small>
         <strong style="font-size:26px">${esc(mine.name)}</strong>
-        ${mine.isTech ? `${mine.hours === null ? `<span class="note">Not on the credits report yet.</span>` : `
+        ${mine.isTech && !companyHas("agco") ? `<span>${mine.epa609 ? `<span class="badge b-current">EPA 609</span>`
+          : `<span class="badge b-expired">No EPA 609 yet</span>`}</span>` : ""}
+        ${mine.isTech && companyHas("agco") ? `${mine.hours === null ? `<span class="note">Not on the credits report yet.</span>` : `
           <span>AGCO training hours${tsPeriod() ? ` in ${esc(tsPeriod())}` : " this year"}</span>${tsHoursCell(mine)}${tsEntries(mine)}
           <span>${mine.met ? `<span class="badge b-current">${tsRequiredHours()} hours met</span>`
             : `<span class="badge b-expired">${Math.max(0, mine.required - mine.hours)} more hours to reach ${mine.required}</span>`}

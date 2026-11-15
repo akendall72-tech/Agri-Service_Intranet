@@ -140,8 +140,8 @@ function tvDoorHtml() {
     <button type="button" class="cab-card cm-door" data-view="trivia" style="${lit("violet")}">
       <span class="cm-door-glyph">${icon("trivia", 24)}</span>
       <span class="cm-door-main">
-        <b>AGCO Trivia</b>
-        <span>History, operation, identification and specs. Play a round, learn something new, and climb the leaderboard.</span>
+        <b>Trivia</b>
+        <span>Play a round, learn something new, and climb the leaderboard.</span>
         ${line ? `<span class="cm-latest">${esc(line)}</span>` : ""}
         <span class="cm-go">${g ? (m.joined ? "Play a round" : "Join the game") : "Practice"} &rarr;</span>
       </span>
@@ -164,7 +164,7 @@ function tvRedraw() {
 
 function triviaView() {
   setTimeout(async () => { await loadTrivia(); tvRedraw(); });
-  const head = hero("AGCO Trivia", "History, operation, identification and specs. Play a round, learn something new, and climb the leaderboard.");
+  const head = hero("Trivia", "Play a round, learn something new, and climb the leaderboard.");
   if (tvNotSetUp || tvError) return head + tvTroubleHtml();
   return head + `<div class="cm tv" id="tvPage">${tvHubHtml()}</div>`;
 }
@@ -254,7 +254,7 @@ function tvKnowHtml() {
 function triviaGameView() {
   const g = tvGame(tvGameId);
   if (!g) {
-    return hero("AGCO Trivia") + `<div class="cm"><div class="cm-card cm-empty"><b>That game isn't here</b>
+    return hero("Trivia") + `<div class="cm"><div class="cm-card cm-empty"><b>That game isn't here</b>
       <p>It may have been taken down.</p></div></div>`;
   }
   setTimeout(async () => { await Promise.all([loadTrivia(), loadTriviaGame(g.id)]); tvRedraw(); });
@@ -379,7 +379,7 @@ async function tvStart(gameId, practice, category, from) {
 }
 
 function tvPlayTitle() {
-  if (!tvPlay) return "AGCO Trivia";
+  if (!tvPlay) return "Trivia";
   const g = tvPlay.gameId && tvGame(tvPlay.gameId);
   if (g) return tvPlay.practice ? `Practice: ${g.title}` : g.title;
   return `Practice: ${tvPlay.category ? (tvCat(tvPlay.category) || {}).name || "Trivia" : "Every category"}`;
@@ -387,7 +387,7 @@ function tvPlayTitle() {
 
 function triviaPlayView() {
   if (!tvPlay) {
-    return hero("AGCO Trivia") + `<div class="cm tv"><div class="cm-card cm-empty"><b>No round going</b>
+    return hero("Trivia") + `<div class="cm tv"><div class="cm-card cm-empty"><b>No round going</b>
       <p>Start one from the Trivia page.</p><p><button type="button" class="tv-go" data-view="trivia">Go to Trivia</button></p></div></div>`;
   }
   setTimeout(() => {
@@ -726,9 +726,9 @@ function tvGameEditorHtml(d) {
         <input id="tvgTitle" type="text" maxlength="80" data-tvg="title" value="${esc(d.title)}" placeholder="Fall Trivia Showdown"></div>
       <div class="wide"><label for="tvgDesc">Description (optional)</label>
         <input id="tvgDesc" type="text" maxlength="500" data-tvg="description" value="${esc(d.description)}"
-          placeholder="A month of questions on Fendt, Massey Ferguson and the rest of the AGCO family"></div>
+          placeholder="A month of questions on the equipment we sell and service"></div>
       <div class="wide"><label for="tvgPrize">Prize (optional)</label>
-        <input id="tvgPrize" type="text" maxlength="500" data-tvg="prize" value="${esc(d.prize)}" placeholder="A Fendt jacket for the winner"></div>
+        <input id="tvgPrize" type="text" maxlength="500" data-tvg="prize" value="${esc(d.prize)}" placeholder="A jacket for the winner"></div>
       <div><label for="tvgStart">Starts</label><input id="tvgStart" type="date" data-tvg="starts_on" value="${esc(d.starts_on)}"></div>
       <div><label for="tvgEnd">Ends (its last day)</label><input id="tvgEnd" type="date" data-tvg="ends_on" value="${esc(d.ends_on)}"></div>
       <div><label for="tvgCount">Questions a round</label>
@@ -839,7 +839,7 @@ function tvQuestionEditorHtml(d) {
       <div><label for="tvqeDiff">Difficulty</label><select id="tvqeDiff" data-tvq="difficulty">${[1, 2, 3].map(n =>
         `<option value="${n}"${String(n) === d.difficulty ? " selected" : ""}>${TV_LEVELS[n]}</option>`).join("")}</select></div>
       <div class="wide"><label for="tvqeQ">Question</label>
-        <textarea id="tvqeQ" rows="2" maxlength="500" data-tvq="question" placeholder="Which Fendt series was the first with the Vario transmission?">${esc(d.question)}</textarea></div>
+        <textarea id="tvqeQ" rows="2" maxlength="500" data-tvq="question" placeholder="Which tractor series was the first with a CVT transmission?">${esc(d.question)}</textarea></div>
       <div class="wide"><label for="tvqeA">The right answer</label>
         <input id="tvqeA" type="text" maxlength="200" data-tvq="answer" value="${esc(d.answer)}"></div>
       ${d.wrong.map((w, i) => `<div><label for="tvqeW${i}">${i === 0 ? "A wrong answer" : "Another wrong answer (optional)"}</label>

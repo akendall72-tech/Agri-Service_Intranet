@@ -357,7 +357,7 @@ function renderLocationOverview() {
         : `<p class="sx-empty">Nobody at ${esc(name)} has an app account yet.</p>`}
       </section>
 
-      <section class="sx-panel sx-full" style="${lit(metGoal ? "green" : "amber")}">
+      ${companyHas("agco") ? `<section class="sx-panel sx-full" style="${lit(metGoal ? "green" : "amber")}">
         <header><h3>AGCO dealer metric</h3><span>${m.techs.length ? `${m.metCount} of ${m.techs.length} technicians · goal ${goal}% dealer-wide` : ""}</span>
           <button type="button" class="sx-link" data-view="training">Training Center &rsaquo;</button></header>
         ${m.techs.length ? `<div class="tx-who">
@@ -368,7 +368,7 @@ function renderLocationOverview() {
           <div><h4>Have ${need}+ hours · ${met.length}</h4>
             ${met.length ? `<div class="tx-who-list">${met.map(t => txWhoRow(t, false)).join("")}</div>` : `<p class="sx-empty">Nobody here yet.</p>`}</div>
         </div>` : `<p class="sx-empty">${noReports ? "Nobody here is on the latest Training Status reports yet." : "No technicians here."}</p>`}
-      </section>
+      </section>` : ""}
 
       <section class="sx-panel" style="${lit("violet")}">
         <header><h3>EPA 609</h3><span>${m.techs.length ? `${m.techs.length - no609.length} of ${m.techs.length} have it` : ""}</span></header>
@@ -563,8 +563,8 @@ function lxReportPdf(loc) {
   // The headline figures, two rows of three.
   const techs = f.m.techs.length, people = f.sRows.length, worn = f.tiresOut.length + f.tiresWorn.length;
   const boxes = [
-    ["AGCO DEALER METRIC", techs ? `${Math.round(f.m.pct * 100)}%` : "-",
-      techs ? `${f.m.metCount} of ${techs} technicians have ${f.need}+ hrs` : "No technicians here", !techs ? grey : f.metGoal ? green : amber],
+    ...(companyHas("agco") ? [["AGCO DEALER METRIC", techs ? `${Math.round(f.m.pct * 100)}%` : "-",
+      techs ? `${f.m.metCount} of ${techs} technicians have ${f.need}+ hrs` : "No technicians here", !techs ? grey : f.metGoal ? green : amber]] : []),
     ["SAFETY BRIEF", f.sBrief && people ? `${f.briefPassed} of ${people}` : "-",
       f.sBrief ? `passed the ${month} brief` : `None published for ${month}`, !f.sBrief || !people ? grey : f.briefPassed === people ? green : amber],
     ["SAFETY REPORTS", srCounts && people ? `${f.reportSent} of ${people}` : "-",
@@ -597,11 +597,11 @@ function lxReportPdf(loc) {
     table([["", 30, "r"], ["What", 190], ["Who", CW - 220]], rows, { color: (row, i) => i < 2 ? tones.get(row) : null });
   }
 
-  // The AGCO dealer metric.
-  section("AGCO dealer metric", techs
+  // The AGCO dealer metric, for an AGCO dealer (0149).
+  if (companyHas("agco")) section("AGCO dealer metric", techs
     ? `${f.m.metCount} of ${techs} technicians here have ${f.need} or more AGCO hours (${tsPct(f.m.pct)}). The dealer goal is ${f.goal}%, dealer-wide. Not there yet are listed first, closest first.`
     : f.roster.length ? "Nobody here has Technician in their job title." : "Nobody here is on the latest Training Status reports yet.");
-  if (techs) {
+  if (techs && companyHas("agco")) {
     const [rows, tones] = toned([...f.notMet, ...f.met].map(t => [[t.name, job(t.job), t.hours === null ? "-" : String(t.hours),
       t.met ? "Met" : `Needs ${f.shortBy(t)}${tsPlan.has(t.key) ? " - planned" : ""}`], t.met ? green : amber]));
     table([["Technician", 170], ["Job", 190], ["AGCO hours", 70, "r"], ["Status", CW - 430]], rows,

@@ -128,33 +128,33 @@ const TEMPLATES = {
   tools: () => toolTemplate(),
   certs: () => [
     CERT_COLUMNS,
-    ["Jordan Miller", "jordanmiller@agri-service.com", "3/4/2026", "Andrew Kendall",
-     "3/4/2029", "Class IV; Class V", "Yes", "Yes", "Yes", "Yes", "Yes", "Andrew Kendall"],
-    ["Sam Ruiz", "samruiz@agri-service.com", "3/4/2026", "Andrew Kendall",
-     "3/4/2029", "Class IV", "Yes", "Yes", "Yes", "Yes", "Yes", "Andrew Kendall"]
+    ["Jordan Miller", "jordan.miller@example.com", "3/4/2026", "Casey Trainer",
+     "3/4/2029", "Class IV; Class V", "Yes", "Yes", "Yes", "Yes", "Yes", "Casey Trainer"],
+    ["Sam Ruiz", "sam.ruiz@example.com", "3/4/2026", "Casey Trainer",
+     "3/4/2029", "Class IV", "Yes", "Yes", "Yes", "Yes", "Yes", "Casey Trainer"]
   ],
   directory: () => [
     DIRECTORY_COLUMNS,
-    ["Warranty claims", "Andrew Kendall", "2085551234", "Parts desk", "2085555678"],
-    ["IT help", "helpdesk@agri-service.com", "", "", ""]
+    ["Warranty claims", "Casey Trainer", "2085551234", "Parts desk", "2085555678"],
+    ["IT help", "helpdesk@example.com", "", "", ""]
   ],
   tsEmployees: () => [
     TS_EMPLOYEE_COLUMNS,
-    ["Jordan", "Miller", "jordanmiller@agri-service.com", "4070 - Technician Master",
+    ["Jordan", "Miller", "jordan.miller@example.com", "4070 - Technician Master",
      "Store - 12 - Pasco", "Service", "004217"],
-    ["Sam", "Ruiz", "samruiz@agri-service.com", "4060 - Technician", "Store - 14 - Nampa", "Service", "004388"]
+    ["Sam", "Ruiz", "sam.ruiz@example.com", "4060 - Technician", "Store - 14 - Nampa", "Service", "004388"]
   ],
   tsHistory: () => [
     TS_HISTORY_COLUMNS,
-    ["Jordan", "Miller", "004217", "jordanmiller@agri-service.com", "Lifting and Rigging ILT",
+    ["Jordan", "Miller", "004217", "jordan.miller@example.com", "Lifting and Rigging ILT",
      "3/4/2026", "100%"],
-    ["Sam", "Ruiz", "004388", "samruiz@agri-service.com", "Forklift Certification", "4/18/2026", "100%"]
+    ["Sam", "Ruiz", "004388", "sam.ruiz@example.com", "Forklift Certification", "4/18/2026", "100%"]
   ],
   tsCredits: () => [
     TS_CREDITS_COLUMNS,
-    ["Jordan", "Miller", "004217", "jordanmiller@agri-service.com", "AGCO Training Hours", "8",
+    ["Jordan", "Miller", "004217", "jordan.miller@example.com", "AGCO Training Hours", "8",
      "2/11/2026", "AGCO Training Hours - Number of Credits: 24", "2026", "Fendt 1000 Series"],
-    ["Sam", "Ruiz", "004388", "samruiz@agri-service.com", "EPA 609", "1",
+    ["Sam", "Ruiz", "004388", "sam.ruiz@example.com", "EPA 609", "1",
      "6/3/2026", "EPA 609 - Number of Credits: 1", "2026", "EPA 609 Certification"]
   ],
   openSeat: () => [
@@ -168,7 +168,7 @@ const TEMPLATES = {
     ["Export date: " + usDate(new Date().toISOString().slice(0, 10))],
     [],
     IN_CLASS_COLUMNS,
-    ["Jordan", "Miller", "004217", "jordanmiller@agri-service.com", "Store - 12 - Pasco",
+    ["Jordan", "Miller", "004217", "jordan.miller@example.com", "Store - 12 - Pasco",
      "Fendt 1000 Series Service", "E10042", "Jackson, MN", "10/14/2026", "Chris Bauer"]
   ],
   payroll: () => [

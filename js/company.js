@@ -92,6 +92,7 @@ function coLogoSlot(slot) {
 // The company's own Training Center mission, and the features it has switched
 // on of those some companies have and others don't (0147).
 const CO_FEATURES = [
+  { id: "agco", name: "AGCO dealer", what: "Everything that's AGCO's: the AGCO Development Map and catalog, AGCO's training-hours requirement (the dealer metric on Training Status, the Training dashboard and the Location Dashboard, the Mock Schedule, the AGCO Training Hours report), AGCO Academy's sessions on the Open Seat Report, and AGCO credit on courses." },
   { id: "apparel", name: "Apparel tab", what: "The app's Apparel tab, which opens your company's apparel store signed in. Set up the store's address and password under Shared Logins." },
 ];
 let coSwBusy = false, coSwMessage = "", coSwError = "";

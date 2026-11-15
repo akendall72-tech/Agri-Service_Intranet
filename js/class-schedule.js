@@ -146,7 +146,7 @@ function scFormHtml() {
         <div><label for="scRegisterBy">Register by (optional)</label><input id="scRegisterBy" type="date" value="${esc(v.register_by || "")}"></div>
         <div><label for="scHours">Training hours</label><input id="scHours" type="number" min="0" max="1000" step="0.5" inputmode="decimal"
           value="${esc(v.training_hours ?? "")}"><p class="note">From the catalog. Change it here for this class only.</p></div>
-        <div><span class="cs-label">AGCO</span><label class="tc-check" for="scAgco"><input id="scAgco" type="checkbox"${v.counts_for_agco ? " checked" : ""}> Counts as AGCO credit</label></div>
+        <div data-feature="agco"><span class="cs-label">AGCO</span><label class="tc-check" for="scAgco"><input id="scAgco" type="checkbox"${v.counts_for_agco ? " checked" : ""}> Counts as AGCO credit</label></div>
         <div class="wide"><span class="cs-label" id="scWhoLabel">Who can register</span>
           <div class="cs-who" role="radiogroup" aria-labelledby="scWhoLabel">
             ${SC_WHO.map(([w, label, says]) => `<label class="cs-who-option"><input type="radio" name="scWho" value="${w}"${w === v.registration ? " checked" : ""}>
