@@ -525,7 +525,7 @@ const CERT_KINDS = [
 // reads the table itself, so step 3 (many companies) reaches it unchanged.
 // Owners change it on the admin page's Company tab (company.js).
 const BUILT_IN_COMPANY = { id: "agri-service", name: "Agri-Service", legal_name: "Agri-Service, LLC",
-  logo_path: null, logo_mono_path: null };
+  logo_path: null, logo_mono_path: null, it_ticket_email: "IT@agri-service.com" };
 let company = BUILT_IN_COMPANY, companyMissing = false;
 // A platform owner (0138): above every company, and in none of them.
 let platformOwner = false;
@@ -537,6 +537,8 @@ const noCompany = () => !!profile && profile.company_id === null && !visit;
 const companyName = () => company.name;
 const companyLegal = () => company.legal_name;
 const companyCaps = () => company.name.toUpperCase();
+// The company's IT mailbox for Submit an IT Ticket (0144), or "" for none.
+const itTicketEmail = () => String(company.it_ticket_email || "").trim();
 
 function setCompany(result) {
   companyMissing = !!result.error && /my_company|does not exist|schema cache/i.test(result.error.message);

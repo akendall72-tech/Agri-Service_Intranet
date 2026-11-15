@@ -57,6 +57,7 @@ function renderCompanyAdmin() {
       <p class="note">For the app. Until one is added it shows its built-in logo, which is Agri-Service's.</p>
       <div class="co-logos">${COMPANY_LOGOS.map(coLogoSlot).join("")}</div>
     </div>
+    ${coItCard()}
     ${coMicrosoftCard()}
     <div class="card">
       <h2>What Agri-Barn's platform did here</h2>
@@ -87,6 +88,39 @@ function coLogoSlot(slot) {
     </div>`;
 }
 
+// Where Submit an IT Ticket sends its email (0144), in the app and on this page.
+let coItBusy = false, coItMessage = "", coItError = "";
+function coItCard() {
+  return `<div class="card">
+      <h2>IT tickets</h2>
+      <p class="note">The Support Center's <b>Submit an IT Ticket</b> opens an email to this address, filled in with who's asking and
+        their location. Leave it empty if ${esc(company.name)} has no IT mailbox, and the card isn't shown.</p>
+      <div class="co-fields co-fields-one">
+        <div><label for="coIt">IT mailbox</label>
+          <input type="email" id="coIt" maxlength="120" placeholder="it@yourcompany.com" value="${esc(company.it_ticket_email || "")}"></div>
+      </div>
+      <div class="co-actions"><button type="button" id="coItSave" ${coItBusy ? "disabled" : ""}>Save</button></div>
+      ${coItMessage ? `<p class="co-ok">${esc(coItMessage)}</p>` : ""}
+      ${coItError ? `<p class="error">${esc(coItError)}</p>` : ""}
+    </div>`;
+}
+
+async function coItSave() {
+  const address = $("coIt").value.trim();
+  coItMessage = ""; coItError = "";
+  if (address && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) {
+    coItError = "That doesn't look like an email address."; return renderCompanyAdmin();
+  }
+  coItBusy = true; renderCompanyAdmin();
+  const { error } = await db.from("companies").update({ it_ticket_email: address || null }).eq("id", company.id);
+  coItBusy = false;
+  if (error) { coItError = /it_ticket_email/.test(error.message) ? "Run migration 0144 first." : error.message; return renderCompanyAdmin(); }
+  await coReload();
+  coItMessage = address ? `IT tickets go to ${address}. The app picks it up the next time its home page opens.`
+    : "No IT mailbox: the Submit an IT Ticket card is hidden.";
+  renderCompanyAdmin();
+}
+
 // Microsoft 365 (0142): connecting it, and Microsoft sign-in on or off.
 // What it says after IT's approval comes back starts as its message.
 let coMsLink = "", coMsBusy = false, coMsMessage = "", coMsError = "";
@@ -102,6 +136,8 @@ function coMicrosoftCard() {
           ${esc((company.email_domains || []).join(", ") || "its domains")} and who are on the People list can sign in with their
           Microsoft account: the sign-in screens offer it once they type their email. Anyone already with an account here signs in
           with Microsoft into the account they have.</p>
+        <p class="note">The People list can keep itself up to date from Microsoft 365's directory, every night: see
+          <b>From Microsoft 365</b> on Admin &rarr; People list.</p>
         <label class="pl-setting"><input type="checkbox" id="coMsOn" ${on ? "checked" : ""}>
           <span><b>Sign in with Microsoft</b> for ${esc(company.name)}.</span></label>
         <div class="co-actions"><button type="button" class="btn-secondary" id="coMsDisconnect" ${coMsBusy ? "disabled" : ""}>Disconnect</button></div>
@@ -204,6 +240,7 @@ document.addEventListener("click", async (e) => {
     if (error) coMsError = error.message; else { await coReload(); coMsMessage = "Microsoft 365 is disconnected."; }
     return renderCompanyAdmin();
   }
+  if (e.target.closest("#coItSave")) return coItSave();
   if (e.target.closest("#coSave")) coSave();
   const pick = e.target.closest("[data-co-pick]");
   if (pick) $("coFile-" + pick.dataset.coPick).click();

@@ -39,17 +39,17 @@ function supportView() {
             <span class="go">Open requests &rarr;</span></span>
         </button>
       </section>
-      <section>
+      ${itTicketEmail() ? `<section>
         <div class="group-title">IT help</div>
-        <a class="link-card" href="mailto:IT@agri-service.com?body=${encodeURIComponent(body)}"
+        <a class="link-card" href="mailto:${encodeURIComponent(itTicketEmail()).replace(/%40/g, "@")}?body=${encodeURIComponent(body)}"
            style="${lit("steel")}">
           <span class="well">${icon("monitor")}</span>
           <span><b>Submit an IT Ticket</b>
             <span>Computer, phone, printer, or account trouble — email the IT team.</span>
-            <span class="sc-foot">${icon("mail", 14)}Opens a message to IT@agri-service.com</span>
+            <span class="sc-foot">${icon("mail", 14)}Opens a message to ${esc(itTicketEmail())}</span>
             <span class="go">Start a ticket &nearr;</span></span>
         </a>
-      </section>
+      </section>` : ""}
       ${toolsError ? "" : `<section>
         <div class="group-title">Special tools</div>
         <button type="button" class="link-card" data-view="tools" style="${lit("amber")}">

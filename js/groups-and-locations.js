@@ -82,10 +82,10 @@ function renderOrg() {
           <div><label>Order</label>
             <input type="text" data-o="sort_order" value="${esc(l.sort_order)}"></div>
           <div><label>Showing</label>${showingSelect(on)}</div>
-          ${kept ? `<div class="wide"><label>UKG names</label>
+          ${kept ? `<div class="wide"><label>Other names</label>
             <input type="text" data-o="ukg_names" value="${esc(l.ukg_names.join(", "))}"
-              placeholder="Other names UKG's reports use for it, separated by commas">
-            <p class="note" style="margin:4px 0 0">UKG's reports find a location by its name, its id, or any of these. Renaming it adds the old name here by itself.</p></div>` : ""}
+              placeholder="Other names uploads or Microsoft 365 use for it, separated by commas">
+            <p class="note" style="margin:4px 0 0">Uploads and Microsoft 365 find a location by its name, its id, or any of these. Renaming it adds the old name here by itself.</p></div>` : ""}
         </div>
         <div class="row">
           <button data-act="save-shop">Save</button>

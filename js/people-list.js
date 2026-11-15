@@ -1,9 +1,11 @@
 // People list (migration 0140, multi-org step 5)
 //
 // Who works for the company, kept up to date by its feeds: the All employees
-// upload today (training-status.js sends it here after publishing), and anyone
-// an owner adds by hand. Leavers are kept, marked as left. The admin page's
-// People list tab is drawn here; join slips (next) are given from it.
+// upload (training-status.js sends it here after publishing), the company's
+// Microsoft 365 directory (0145, below: checked and synced from here, and every
+// night by the microsoft-directory function), and anyone an owner adds by
+// hand. Leavers are kept, marked as left. The admin page's People list tab is
+// drawn here, and join slips are given from it.
 
 let plRows = [], plRuns = [], plError = null, plMissing = false;
 let plQuery = "", plFilter = "here", plAdding = false, plMessage = "", plProblem = "";
@@ -15,9 +17,12 @@ async function loadEmployees() {
   // Owners see everyone; a location's admins their locations' people (the
   // database decides), for the Location Dashboard's Join slips tab.
   if (!me || !(isOwner() || isLocationAdmin())) return;
-  const [rows, runs] = await Promise.all([
+  const [rows, runs, nights] = await Promise.all([
     allRows(() => db.from("employees").select("*").order("last_name").order("first_name").order("id")),
-    db.from("employee_runs").select("*").order("at", { ascending: false }).limit(5)]);
+    db.from("employee_runs").select("*").order("at", { ascending: false }).limit(5),
+    company.microsoft_tenant && isOwner()
+      ? db.from("microsoft_syncs").select("*").order("at", { ascending: false }).limit(1) : { data: [] }]);
+  plMsLast = (!nights.error && nights.data && nights.data[0]) || null;
   plError = rows.error ? rows.error.message : null;
   plMissing = !!rows.error && /does not exist|schema cache/i.test(rows.error.message);
   plRows = rows.error ? [] : rows.data || [];
@@ -34,10 +39,10 @@ function plAccount(e) {
 const plName = (e) => `${e.first_name || ""} ${e.last_name || ""}`.trim() || e.email || e.person_key;
 const plPlace = (e) => locations[e.location_id] || e.store || "";
 
-// What an upload would do to the list, for its preview: the same counting and
-// the same guard as sync_employees().
-function plPreview(list) {
-  const mine = plRows.filter(e => e.source === "upload");
+// What an upload (or Microsoft) would do to the list, for its preview: the
+// same counting and the same guard as sync_employees().
+function plPreview(list, feed = "upload") {
+  const mine = plRows.filter(e => e.source === feed);
   const byKey = new Map(plRows.map(e => [e.person_key, e]));
   const keys = new Set(list.map(p => p.person_key));
   const joined = list.filter(p => !byKey.has(p.person_key)).length;
@@ -71,9 +76,9 @@ function renderPeopleList() {
 
   box.innerHTML = plSlipSheet() + `<div class="card">
       <h2>People list</h2>
-      <p class="note">Everyone who works here, kept up to date by the All employees upload (Training → Uploads), and anyone added by
-        hand below. Someone missing from an upload is marked as left, never deleted; an upload never takes off someone added by hand.
-        Join slips are given from here.</p>
+      <p class="note">Everyone who works here, kept up to date by ${company.microsoft_tenant ? "Microsoft 365 (below) or " : ""}the
+        All employees upload (Training → Uploads), and anyone added by hand. Someone missing from ${company.microsoft_tenant ? "them" : "an upload"}
+        is marked as left, never deleted, and someone added by hand is never taken off. Join slips are given from here.</p>
       ${plError && !plMissing ? `<p class="error">${esc(plError)}</p>` : ""}
       ${plMessage ? `<p class="pf-ok">${esc(plMessage)}</p>` : ""}
       ${plProblem ? `<p class="error">${esc(plProblem)}</p>` : ""}
@@ -95,12 +100,13 @@ function renderPeopleList() {
         <tbody>${shown.map(e => { const a = plAccount(e); return `<tr class="${e.here ? "" : "pl-gone"}">
           <td>${esc(plName(e))}${e.here ? "" : `<small>Left ${esc(new Date(e.left_at).toLocaleDateString())}</small>`}</td>
           <td>${esc(e.employee_number || "")}</td><td>${esc(e.email || "")}</td><td>${esc(e.job || "")}</td><td>${esc(plPlace(e))}</td>
-          <td>${e.source === "by hand" ? "By hand" : e.source === "upload" ? "Upload" : esc(e.source)}</td>
+          <td>${e.source === "by hand" ? "By hand" : e.source === "upload" ? "Upload" : e.source === "microsoft" ? "Microsoft" : esc(e.source)}</td>
           <td>${!a ? `<span class="note">None yet</span>` : a.deactivated_at ? `<span class="badge b-none">Switched off</span>` : `<span class="badge b-current">Has one</span>`}</td>
           <td class="pl-do">${plSlipButton(e)}${e.source === "by hand" ? `<button type="button" class="pdf" data-pl-remove="${esc(e.id)}">Remove</button>` : ""}</td>
         </tr>`; }).join("")}</tbody>
       </table></div>`}
     </div>
+    ${company.microsoft_tenant && isOwner() ? plMicrosoftCard() : ""}
     <div class="card">
       <h2>Add someone by hand</h2>
       <p class="note">For someone the upload doesn't have yet: a new hire, a contractor. They need an employee number or a work
@@ -210,6 +216,117 @@ function renderLocationSlips() {
     </div>`;
 }
 
+// ------------------------------------------------------------ Microsoft 365
+// The directory's people, checked here before they change the list (0145).
+// The microsoft-directory function reads Microsoft with the company's choices
+// (or the ones being tried); the preview is the upload's; the list changes
+// through sync_employees(), as an upload's does. Each night the function does
+// the same on its own, and stops for an owner when the upload's guard would.
+let plMsLast = null, plMsGroups = null, plMsBusy = "", plMsRead = null, plMsMessage = "", plMsProblem = "";
+const PL_MS_PLACES = [["officeLocation", "Office"], ["department", "Department"], ["city", "City"],
+  ["companyName", "Company name"], ["none", "Not from Microsoft"]];
+
+// The choices as they stand on the page, saved or not.
+function plMsChoices() {
+  const who = $("plMsWho"), group = $("plMsGroup");
+  const groupId = who && who.value === "group" ? (group && group.value) || company.microsoft_group_id || "" : "";
+  return {
+    group_id: groupId || null,
+    group_name: groupId ? ((plMsGroups || []).find(g => g.id === groupId) || {}).name || company.microsoft_group_name || null : null,
+    location_field: ($("plMsPlace") && $("plMsPlace").value) || company.microsoft_location_field || "officeLocation",
+    number_field: ($("plMsNumber") && $("plMsNumber").value) || company.microsoft_number_field || "employeeId",
+  };
+}
+
+// The directory's people, keyed as the uploads key them: number, then email.
+const plMsPeople = () => (plMsRead ? plMsRead.people : []).map(p =>
+  ({ ...p, person_key: (p.employee_number && tsEmployeeNumber(p.employee_number)) || p.email }));
+
+function plMicrosoftCard() {
+  const groupMode = plMsGroupMode();
+  const groupId = groupMode ? plMsChoices().group_id : null;
+  const groups = plMsGroups || (company.microsoft_group_id ? [{ id: company.microsoft_group_id, name: company.microsoft_group_name || "The chosen group" }] : []);
+  const last = plMsLast;
+  return `<div class="card" id="plMicrosoft">
+      <h2>From Microsoft 365</h2>
+      <p class="note">${esc(company.name)}'s Microsoft 365 is connected, so the list can keep itself up to date from its directory: each
+        person's name, work email, job and location. Someone added in Microsoft is on the list by the next morning and can sign in with
+        Microsoft; someone switched off or removed there is marked as left. Check what it would do first.</p>
+      ${last ? `<p class="${last.ok ? "pl-ms-last" : "error"}"><b>${last.ok ? "Last night" : "The overnight sync stopped"}</b>
+        (${esc(new Date(last.at).toLocaleString())}): ${esc(last.note)}${last.ok ? "." : ". Check it below and update the list by hand if it's right."}</p>` : ""}
+      <label class="pl-setting"><input type="checkbox" id="plMsSync" ${company.microsoft_sync ? "checked" : ""}>
+        <span><b>Keep the list up to date from Microsoft 365, every night.</b> It takes off at most a tenth of the list in one night
+          (and never everyone at a location) without an owner checking it here.</span></label>
+      <div class="pl-fields">
+        <div><label for="plMsWho">Who's on the list</label><select id="plMsWho">
+          <option value="everyone" ${groupMode ? "" : "selected"}>Everyone in the directory</option>
+          <option value="group" ${groupMode ? "selected" : ""}>Members of one Microsoft group</option></select></div>
+        ${groupMode ? `<div><label for="plMsGroup">Group</label><select id="plMsGroup">
+          ${!groups.length ? `<option value="">${plMsBusy === "groups" ? "Loading the groups…" : "No groups"}</option>` : ""}
+          ${groups.map(g => `<option value="${esc(g.id)}" ${g.id === groupId ? "selected" : ""}>${esc(g.name)}</option>`).join("")}</select></div>` : ""}
+        <div><label for="plMsPlace">Location comes from</label><select id="plMsPlace">
+          ${PL_MS_PLACES.map(([v, label]) => `<option value="${v}" ${v === plMsChoices().location_field ? "selected" : ""}>${label}</option>`).join("")}</select></div>
+        <div><label for="plMsNumber">Employee number comes from</label><select id="plMsNumber">
+          <option value="employeeId" ${plMsChoices().number_field === "employeeId" ? "selected" : ""}>Employee ID</option>
+          <option value="none" ${plMsChoices().number_field === "none" ? "selected" : ""}>Not from Microsoft</option></select></div>
+      </div>
+      <div class="pl-actions">
+        <button type="button" class="btn-secondary" id="plMsSave" ${plMsBusy ? "disabled" : ""}>Save these choices</button>
+        <button type="button" id="plMsCheck" ${plMsBusy ? "disabled" : ""}>${plMsBusy === "read" ? "Reading Microsoft 365…" : "Check what it would do"}</button>
+      </div>
+      ${plMsMessage ? `<p class="pf-ok">${esc(plMsMessage)}</p>` : ""}
+      ${plMsProblem ? `<p class="error">${esc(plMsProblem)}</p>` : ""}
+      ${plMsRead ? plMsPreviewHtml() : ""}
+    </div>`;
+}
+
+const plCount = (n, one, many = one + "s") => `${n} ${n === 1 ? one : many}`;
+const plMsGroupMode = () => $("plMsWho") ? $("plMsWho").value === "group" : !!company.microsoft_group_id;
+
+function plMsPreviewHtml() {
+  const list = plMsPeople();
+  const pv = plPreview(list, "microsoft");
+  const out = plMsRead.left_out || {};
+  const unplaced = {};
+  list.forEach(p => { if (p.store && !storeLocation(p.store)) unplaced[p.store] = (unplaced[p.store] || 0) + 1; });
+  const noPlace = list.filter(p => !p.store).length;
+  const takeOff = pv.leaving.slice(0, 12).map(plName);
+  return `<div class="pl-ms-preview">
+      <p><b>Microsoft has ${list.length} ${list.length === 1 ? "person" : "people"} for the list.</b>
+        ${pv.joined} would join, ${pv.back} come back, ${pv.moved} move location and ${pv.leaving.length} leave.</p>
+      ${pv.leaving.length ? `<p class="note">Leaving: ${esc(takeOff.join(", "))}${pv.leaving.length > takeOff.length ? `, and ${pv.leaving.length - takeOff.length} more` : ""}.</p>` : ""}
+      ${Object.keys(unplaced).length ? `<p class="error">These locations from Microsoft don't match one here:
+        ${esc(Object.entries(unplaced).map(([k, n]) => `${k} (${n})`).join(", "))}. Add them to a location's other names on
+        Groups &amp; Locations, or choose another field.</p>` : ""}
+      ${noPlace && plMsChoices().location_field !== "none" ? `<p class="note">${plCount(noPlace, "person has", "people have")} nothing in that field in Microsoft, so no location.</p>` : ""}
+      ${out.no_email && out.no_email.length ? `<p class="note">Left out, with no email in Microsoft (fill in their Email there to add them):
+        ${esc(out.no_email.slice(0, 12).join(", "))}${out.no_email.length > 12 ? `, and ${out.no_email.length - 12} more` : ""}.</p>` : ""}
+      ${out.guests || out.switched_off ? `<p class="note">Also left out: ${plCount(out.guests || 0, "guest")} and ${
+        plCount(out.switched_off || 0, "account")} switched off in Microsoft.</p>` : ""}
+      ${pv.tooMany ? `<label class="pl-setting"><input type="checkbox" id="plMsEveryone">
+        <span><b>That's right: take them off.</b> This takes off ${pv.leaving.length} of ${pv.hereNow}${pv.emptied.length ? `, and everyone at ${esc(pv.emptied.join(", "))}` : ""}.</span></label>` : ""}
+      <div class="pl-actions"><button type="button" id="plMsApply" ${plMsBusy || !list.length ? "disabled" : ""}>Update the list now</button></div>
+    </div>`;
+}
+
+async function plMsCall(body) {
+  const { data, error } = await db.functions.invoke("microsoft-directory", { body });
+  if (error) {
+    let said = error.message;
+    try { said = (await error.context.json()).error || said; } catch { /* no body */ }
+    throw new Error(/Failed to send|not found|404/i.test(said) ? "The microsoft-directory function isn't deployed yet." : said);
+  }
+  return data;
+}
+
+async function plMsLoadGroups() {
+  if (plMsGroups || plMsBusy) return;
+  plMsBusy = "groups"; renderPeopleList();
+  try { plMsGroups = (await plMsCall({ action: "groups" })).groups || []; }
+  catch (err) { plMsProblem = err.message; plMsGroups = null; }
+  plMsBusy = ""; renderPeopleList();
+}
+
 async function plReload(message) {
   await loadEmployees();
   plMessage = message || ""; plAdding = false;
@@ -268,6 +385,39 @@ document.addEventListener("click", async (e) => {
     plSlips = [];
     return plRedrawSlips();
   }
+  if (e.target.closest("#plMsSave")) {
+    const c = plMsChoices();
+    plMsMessage = ""; plMsProblem = "";
+    if ($("plMsWho").value === "group" && !c.group_id) { plMsProblem = "Choose the group."; return renderPeopleList(); }
+    const { error } = await db.from("companies").update({ microsoft_group_id: c.group_id, microsoft_group_name: c.group_name,
+      microsoft_location_field: c.location_field, microsoft_number_field: c.number_field }).eq("id", company.id);
+    if (error) { plMsProblem = /column/.test(error.message) ? "Run migration 0145 first." : error.message; return renderPeopleList(); }
+    setCompany(await db.rpc("my_company"));
+    plMsMessage = "Saved. The next sync reads Microsoft 365 this way.";
+    return renderPeopleList();
+  }
+  if (e.target.closest("#plMsCheck")) {
+    const c = plMsChoices();
+    plMsMessage = ""; plMsProblem = ""; plMsRead = null;
+    if ($("plMsWho").value === "group" && !c.group_id) { plMsProblem = "Choose the group."; return renderPeopleList(); }
+    plMsBusy = "read"; renderPeopleList();
+    try { plMsRead = await plMsCall({ action: "read", group_id: c.group_id, location_field: c.location_field, number_field: c.number_field }); }
+    catch (err) { plMsProblem = err.message; }
+    plMsBusy = ""; renderPeopleList();
+    return;
+  }
+  if (e.target.closest("#plMsApply")) {
+    const list = plMsPeople();
+    const everyone = !!($("plMsEveryone") && $("plMsEveryone").checked);
+    if (plPreview(list, "microsoft").tooMany && !everyone) { plMsProblem = "Tick that it's right to take them off, or check Microsoft first."; return renderPeopleList(); }
+    plMsBusy = "apply"; plMsProblem = ""; renderPeopleList();
+    const { data, error } = await db.rpc("sync_employees", { people: list, feed: "microsoft", file: "Microsoft 365", everyone_confirmed: everyone });
+    plMsBusy = "";
+    if (error) { plMsProblem = error.message; return renderPeopleList(); }
+    plMsRead = null;
+    return plReload(`From Microsoft 365: ${data.joined} joined, ${data.changed} changed, ${data.left} left${data.back ? `, ${data.back} back` : ""}${
+      data.accounts ? `; ${data.accounts} accounts switched off or on` : ""}.`);
+  }
   if (e.target.closest("[data-pl-undo]")) {
     if (!confirm("Put the list back as it was before the last change? Anyone it switched off is switched back on.")) return;
     const { data, error } = await db.rpc("undo_employee_run");
@@ -277,6 +427,24 @@ document.addEventListener("click", async (e) => {
 });
 
 document.addEventListener("change", async (e) => {
+  if (["plMsWho", "plMsGroup", "plMsPlace", "plMsNumber"].includes(e.target.id)) {
+    // Choices changed: what was read no longer says what they'd do. Drawing
+    // again keeps what's picked, since the card reads it from the page.
+    plMsRead = null; plMsMessage = "";
+    if (e.target.id === "plMsWho" && e.target.value === "group") plMsLoadGroups();
+    return renderPeopleList();
+  }
+  if (e.target.id === "plMsSync") {
+    const on = e.target.checked;
+    if (on && !confirm("Every night, the People list is brought up to date from Microsoft 365, with the choices saved here. Turn it on?")) {
+      e.target.checked = false; return;
+    }
+    const { error } = await db.from("companies").update({ microsoft_sync: on }).eq("id", company.id);
+    if (error) { plMsProblem = /column/.test(error.message) ? "Run migration 0145 first." : error.message; e.target.checked = !on; return renderPeopleList(); }
+    setCompany(await db.rpc("my_company"));
+    plMsMessage = on ? "The list will be brought up to date from Microsoft 365 every night, at about 2 AM Mountain." : "The nightly sync is off.";
+    return renderPeopleList();
+  }
   if (e.target.id !== "plDeactivate") return;
   const on = e.target.checked;
   if (on && !confirm("From the next upload, anyone who leaves the list has their account switched off. Turn this on?")) {
