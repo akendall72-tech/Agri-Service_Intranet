@@ -85,6 +85,8 @@ let whoToCallOpen = (() => {
 })();
 
 function whoToCallHtml() {
+  // A company with no cards (0013 only made Agri-Service's) has no Who to call.
+  if (!supportRoles.length) return "";
   const names = supportRoles.map(r => esc(r.title)).join(" · ");
   return `<button type="button" class="group-title sc-fold" data-who-to-call
       aria-expanded="${whoToCallOpen}">Who to call<span class="sc-fold-go">${
@@ -598,12 +600,61 @@ async function saveRole(card) {
   say("Saved.", false);
 }
 
+// A new card's id: its title as a slug, and a stamp, since ids were one list
+// for every company until step 3's last part.
+const newRoleId = (title) =>
+  `${title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 30) || "card"}-${Date.now().toString(36)}`;
+const nextRoleOrder = () => Math.max(0, ...supportRoles.map(r => r.sort_order || 0)) + 10;
+
+async function insertRoles(rows, say) {
+  const { data, error } = await db.from("support_roles").insert(rows).select("*, support_people(*)");
+  if (error) return say(error.message, true);
+  if (!data || !data.length) return say("Nothing was added — this account isn't an admin.", true);
+  supportRoles.push(...data);
+  supportRoles.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+  renderSupport();
+}
+
+async function addRole(card) {
+  const get = (f) => card.querySelector(`[data-f="${f}"]`).value.trim();
+  const say = (text, bad) => speak(card, text, bad);
+  if (!get("title")) return say("The card needs a title.", true);
+  say("Adding…", false);
+  await insertRoles([{ id: newRoleId(get("title")), title: get("title"), subtitle: get("subtitle"),
+    symbol: get("symbol") || "lifepreserver.fill", sort_order: nextRoleOrder() }], say);
+}
+
+// The three Agri-Service started with, with nobody in them yet.
+async function addUsualRoles(row) {
+  const say = (text, bad) => speak(row, text, bad);
+  say("Adding…", false);
+  const start = nextRoleOrder();
+  await insertRoles([
+    ["Technical Support", "Stuck on a machine, a diagnostic, or a procedure? Reach out.", "wrench.and.screwdriver.fill"],
+    ["Parts Support", "Part numbers, availability, and chasing an order.", "shippingbox.fill"],
+    ["Sales Support", "Quotes, machine availability, and customer questions.", "briefcase.fill"],
+  ].map(([title, subtitle, symbol], i) => ({ id: newRoleId(title), title, subtitle, symbol, sort_order: start + i * 10 })), say);
+}
+
+async function removeRole(card) {
+  const role = supportRoles.find(r => r.id === card.dataset.id);
+  if (!role || !confirm(`Remove the ${role.title} card, and everyone on it, from the Support Center?`)) return;
+  const { data, error } = await db.from("support_roles").delete().eq("id", role.id).select();
+  if (error) return speak(card, error.message, true);
+  if (!data || !data.length) return speak(card, "Nothing was removed — this account isn't an admin.", true);
+  supportRoles = supportRoles.filter(r => r.id !== role.id);
+  renderSupport();
+}
+
 $("supportRoles").addEventListener("click", (event) => {
   const button = event.target.closest("button[data-act]");
   if (!button) return;
 
   switch (button.dataset.act) {
     case "save":          return saveRole(button.closest(".role"));
+    case "add-role":      return addRole(button.closest(".role"));
+    case "add-usual":     return addUsualRoles(button.closest(".row"));
+    case "remove-role":   return removeRole(button.closest(".role"));
     case "add-person":    return addPerson(button.closest(".prow"), button.dataset.role);
     case "save-person":   return savePerson(button.closest(".prow"));
     case "remove-person": return removePerson(button.closest(".prow"));

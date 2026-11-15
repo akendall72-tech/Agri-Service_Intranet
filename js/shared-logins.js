@@ -75,12 +75,6 @@ $("admin").addEventListener("click", async (event) => {
 function renderSupport() {
   const box = $("supportRoles");
 
-  if (!supportRoles.length) {
-    box.innerHTML = `<p class="error">No support roles found. Run migration
-      0013_support_roles.sql in the SQL editor, then reload this page.</p>`;
-    return;
-  }
-
   const field = (label, name, value, opts = {}) => `
     <div class="${opts.wide ? "wide" : ""}">
       <label>${label}</label>
@@ -133,6 +127,7 @@ function renderSupport() {
       </div>
       <div class="row" style="margin-top:6px">
         <button data-act="save">Save card</button>
+        <button class="ghost" data-act="remove-role">Remove card</button>
         <span class="msg"></span>
       </div>
       <div class="people">
@@ -140,5 +135,24 @@ function renderSupport() {
         ${personRow(r.id, null)}
       </div>
     </div>`;
-  }).join("");
+  }).join("") + supportNewCard(field);
+}
+
+// A company starts with no cards (only Agri-Service's were made by 0013), and
+// the Support Center leaves Who to call out until it has one.
+function supportNewCard(field) {
+  const none = !supportRoles.length;
+  return `${none ? `<p class="note">${esc(companyName())} has no Who to call cards yet, so the Support Center leaves that part out.
+      Start with the usual three, or add your own.</p>
+      <div class="row"><button data-act="add-usual">Add Technical, Parts and Sales Support</button><span class="msg"></span></div>` : ""}
+    <div class="role role-new">
+      <div class="role-head"><b>Add a card</b>
+        <span class="note">A kind of help, with the people to call for it.</span></div>
+      <div class="fields">
+        ${field("Card title", "title", "", { placeholder: "Service Desk" })}
+        ${field("Icon (SF Symbol)", "symbol", "lifepreserver.fill")}
+        ${field("Blurb", "subtitle", "", { wide: true, placeholder: "What to call them about" })}
+      </div>
+      <div class="row" style="margin-top:6px"><button data-act="add-role">Add the card</button><span class="msg"></span></div>
+    </div>`;
 }
