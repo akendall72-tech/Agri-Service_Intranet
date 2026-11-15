@@ -261,8 +261,50 @@ function signInAddress(typed) {
   return domain && !domain.includes(".") ? `${t}.signin.agri-barn.com` : t;
 }
 
+// Sign in with Microsoft (0142): offered once the email typed is at a company
+// that signs in that way, as the database's sign_in_with() says. Microsoft's
+// page, then back here signed in; or, if the gate said no, with why.
+const MICROSOFT_CLIENT_ID = "8ad0d919-7a6f-4ecc-a16d-441bc1dece67";
+let msAsked = "";
+$("email").addEventListener("input", () => {
+  const typed = $("email").value.trim().toLowerCase();
+  const domain = typed.includes("@") ? typed.slice(typed.lastIndexOf("@") + 1) : "";
+  if (!domain.includes(".")) { $("msSignIn").classList.add("hidden"); return; }
+  clearTimeout(msAsked.timer);
+  msAsked = { timer: setTimeout(async () => {
+    const { data } = await db.rpc("sign_in_with", { typed_email: typed });
+    if ($("email").value.trim().toLowerCase() === typed) $("msSignIn").classList.toggle("hidden", data !== "microsoft");
+  }, 350) };
+});
+$("msSignIn").onclick = async () => {
+  $("authError").textContent = ""; $("authError").className = "error";
+  const { error } = await db.auth.signInWithOAuth({ provider: "azure",
+    options: { redirectTo: location.origin + location.pathname, scopes: "email", queryParams: { login_hint: $("email").value.trim() } } });
+  if (error) $("authError").textContent = error.message;
+};
+// Back from Microsoft with a no from the gate, or from IT's approval of the
+// company's Microsoft 365: said once, then taken off the address.
+(function cameBack() {
+  const params = new URLSearchParams(location.search + location.hash.replace(/^#/, "&"));
+  const refused = params.get("error_description");
+  if (refused) $("authError").textContent = refused.replace(/\+/g, " ");
+  // IT may not have an account here: the sign-in card says it too.
+  const ms = params.get("microsoft");
+  if (ms === "connected") {
+    window.microsoftResult = { ok: `Microsoft 365 is connected${params.get("company") ? ` to ${params.get("company")}` : ""}${
+      params.get("domains") ? `, for ${params.get("domains")}` : ""}. Microsoft sign-in is on.` };
+  } else if (ms) {
+    window.microsoftResult = { no: `Microsoft 365 wasn't connected: ${(params.get("why") || "it didn't go through").replace(/\.$/, "")}.` };
+  }
+  if (window.microsoftResult) {
+    $("authError").textContent = window.microsoftResult.ok || window.microsoftResult.no;
+    $("authError").className = window.microsoftResult.ok ? "co-ok" : "error";
+  }
+  if (refused || ms) history.replaceState(null, "", location.pathname);
+})();
+
 $("signIn").onclick = async () => {
-  $("authError").textContent = "";
+  $("authError").textContent = ""; $("authError").className = "error";
   const { data, error } = await db.auth.signInWithPassword({
     email: signInAddress($("email").value),
     password: $("password").value
@@ -416,7 +458,12 @@ async function start() {
   $("trainingBtn").classList.toggle("hidden", !isTrainingManager());
   $("locationBtn").classList.toggle("hidden", !isLocationAdmin());
 
-  showHome();
+  // Back from IT approving Microsoft 365: an owner sees how it went, where it's kept.
+  if (window.microsoftResult && isOwner()) {
+    showAdmin();
+    document.querySelector('.tabs button[data-tab="company"]').click();
+    setTimeout(() => $("coMicrosoft") && $("coMicrosoft").scrollIntoView({ block: "center" }), 0);
+  } else showHome();
   // The rest, once it's in: the screen showing is drawn again with it, unless
   // something on it has been typed into or picked since it opened.
   rest.then(() => { refreshShown(); agcoRepairMaps(); }, (error) => console.error("loading the rest of the page", error));

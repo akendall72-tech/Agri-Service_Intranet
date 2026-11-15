@@ -57,6 +57,7 @@ function renderCompanyAdmin() {
       <p class="note">For the app. Until one is added it shows its built-in logo, which is Agri-Service's.</p>
       <div class="co-logos">${COMPANY_LOGOS.map(coLogoSlot).join("")}</div>
     </div>
+    ${coMicrosoftCard()}
     <div class="card">
       <h2>What Agri-Barn's platform did here</h2>
       <p class="note">Anything done to this company from the Platform page: accounts placed in it, and each visit by the platform
@@ -84,6 +85,44 @@ function coLogoSlot(slot) {
         ${path ? `<button type="button" class="btn-secondary" data-co-remove="${esc(slot.field)}" ${coBusy ? "disabled" : ""}>Use the built-in one</button>` : ""}
       </div>
     </div>`;
+}
+
+// Microsoft 365 (0142): connecting it, and Microsoft sign-in on or off.
+// What it says after IT's approval comes back starts as its message.
+let coMsLink = "", coMsBusy = false, coMsMessage = "", coMsError = "";
+if (window.microsoftResult) ({ ok: coMsMessage, no: coMsError } = window.microsoftResult);
+function coMicrosoftCard() {
+  const on = !!company.sign_in_microsoft, tenant = company.microsoft_tenant;
+  const said = `${coMsMessage ? `<p class="co-ok">${esc(coMsMessage)}</p>` : ""}${coMsError ? `<p class="error">${esc(coMsError)}</p>` : ""}`;
+  return `<div class="card" id="coMicrosoft">
+      <h2>Microsoft 365</h2>
+      ${tenant ? `
+        <p class="note">Connected${company.microsoft_connected_at ? ` ${esc(new Date(company.microsoft_connected_at).toLocaleDateString())}` : ""}${
+          company.microsoft_connected_by ? ` by ${esc(company.microsoft_connected_by)}` : ""}. People whose work email is at
+          ${esc((company.email_domains || []).join(", ") || "its domains")} and who are on the People list can sign in with their
+          Microsoft account: the sign-in screens offer it once they type their email. Anyone already with an account here signs in
+          with Microsoft into the account they have.</p>
+        <label class="pl-setting"><input type="checkbox" id="coMsOn" ${on ? "checked" : ""}>
+          <span><b>Sign in with Microsoft</b> for ${esc(company.name)}.</span></label>
+        <div class="co-actions"><button type="button" class="btn-secondary" id="coMsDisconnect" ${coMsBusy ? "disabled" : ""}>Disconnect</button></div>
+        ${said}`
+      : `
+        <p class="note">If ${esc(company.name)} uses Microsoft 365, its people can sign in with their work Microsoft account instead of
+          a password, and nobody hands out passwords. It needs your Microsoft 365 administrator to approve Agri-Barn once:
+          make the link, send it to them, and they click <b>Accept</b>. The email domains come from Microsoft when they do.</p>
+        <div class="co-actions"><button type="button" id="coMsLink" ${coMsBusy ? "disabled" : ""}>Make a link for IT</button></div>
+        ${coMsLink ? `<div class="co-mslink"><input type="text" id="coMsLinkText" readonly value="${esc(coMsLink)}">
+          <button type="button" class="btn-secondary" id="coMsCopy">Copy</button></div>
+          <p class="note">Good for a week, once. It needs a Global Administrator or Privileged Role Administrator of your Microsoft 365;
+            if that's you, open it yourself. When it's approved, this page says so.</p>` : ""}
+        ${said}`}
+    </div>`;
+}
+
+function coConsentLink(state) {
+  const q = new URLSearchParams({ client_id: MICROSOFT_CLIENT_ID, scope: "https://graph.microsoft.com/.default",
+    redirect_uri: `${SUPABASE_URL}/functions/v1/microsoft-connected`, state });
+  return `https://login.microsoftonline.com/organizations/v2.0/adminconsent?${q}`;
 }
 
 // Asks for the company again, so what's shown is what was kept.
@@ -144,14 +183,40 @@ async function coRemoveLogo(field) {
   renderCompanyAdmin();
 }
 
-document.addEventListener("click", (e) => {
+document.addEventListener("click", async (e) => {
+  if (e.target.closest("#coMsLink")) {
+    coMsMessage = ""; coMsError = ""; coMsBusy = true; renderCompanyAdmin();
+    const { data, error } = await db.rpc("start_microsoft_connect");
+    coMsBusy = false;
+    if (error) { coMsError = error.message; return renderCompanyAdmin(); }
+    coMsLink = coConsentLink(data); return renderCompanyAdmin();
+  }
+  if (e.target.closest("#coMsCopy")) {
+    coMsError = "";
+    try { await navigator.clipboard.writeText(coMsLink); coMsMessage = "Copied. Send it to your Microsoft 365 administrator."; }
+    catch { $("coMsLinkText").select(); coMsMessage = "Select the link and copy it."; }
+    return renderCompanyAdmin();
+  }
+  if (e.target.closest("#coMsDisconnect")) {
+    if (!confirm("Disconnect Microsoft 365? Nobody new can join with Microsoft, and the sign-in screens stop offering it. Accounts made with Microsoft stay.")) return;
+    coMsMessage = ""; coMsError = "";
+    const { error } = await db.rpc("set_microsoft_sign_in", { turn_on: false, disconnect: true });
+    if (error) coMsError = error.message; else { await coReload(); coMsMessage = "Microsoft 365 is disconnected."; }
+    return renderCompanyAdmin();
+  }
   if (e.target.closest("#coSave")) coSave();
   const pick = e.target.closest("[data-co-pick]");
   if (pick) $("coFile-" + pick.dataset.coPick).click();
   const remove = e.target.closest("[data-co-remove]");
   if (remove) coRemoveLogo(remove.dataset.coRemove);
 });
-document.addEventListener("change", (e) => {
+document.addEventListener("change", async (e) => {
+  if (e.target.id === "coMsOn") {
+    coMsMessage = ""; coMsError = "";
+    const { error } = await db.rpc("set_microsoft_sign_in", { turn_on: e.target.checked, disconnect: false });
+    if (error) coMsError = error.message; else { await coReload(); coMsMessage = e.target.checked ? "Microsoft sign-in is on." : "Microsoft sign-in is off."; }
+    return renderCompanyAdmin();
+  }
   const input = e.target.closest("[data-co-logo]");
   if (input) coSetLogo(input.dataset.coLogo, input.files && input.files[0]);
 });

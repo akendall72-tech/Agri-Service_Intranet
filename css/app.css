@@ -3777,3 +3777,13 @@ body.no-company .crumbs { display: none; }
 .join-code { font: 600 22px/1.2 ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: .08em; text-align: center; text-transform: uppercase; }
 .join-who { display: grid; gap: 2px; margin: 4px 0 12px; padding: 12px; border-radius: 10px; background: var(--bg); text-align: center; font-size: 13px; color: var(--muted); }
 .join-who > b { font-size: 18px; color: var(--ink, #1C1917); text-transform: uppercase; }
+
+/* Sign in with Microsoft (0142). */
+.ms-btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; margin-top: 10px;
+  background: #fff; color: #1C1917; border: 1px solid var(--line, #D6D3D1); }
+.ms-mark { display: grid; grid-template-columns: 8px 8px; gap: 2px; }
+.ms-mark i { display: block; width: 8px; height: 8px; }
+.ms-mark i:nth-child(1) { background: #F25022; } .ms-mark i:nth-child(2) { background: #7FBA00; }
+.ms-mark i:nth-child(3) { background: #00A4EF; } .ms-mark i:nth-child(4) { background: #FFB900; }
+.co-mslink { display: flex; gap: 8px; margin-top: 10px; }
+.co-mslink input { flex: 1; min-width: 0; font-size: 12.5px; }

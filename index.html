@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Which version this is. publish.sh stamps the date and commit here, and
      into version.json beside the page; "dev" is a copy that wasn't published. -->
-<meta name="app-version" content="2026-11-14.9077728">
+<meta name="app-version" content="2026-11-14.f19f9ca">
 <!-- Where this page may load things from and send things to. GitHub Pages
      can't send security headers, so it's here. Scripts come only from this
      site and the two script CDNs (each pinned with an integrity hash), and
@@ -34,7 +34,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
-<link rel="stylesheet" href="css/app.css?v=c52f5333ea">
+<link rel="stylesheet" href="css/app.css?v=0e441b8efc">
 </head>
 <body>
 
@@ -55,6 +55,8 @@
       <label for="password">Password</label>
       <input id="password" type="password" autocomplete="current-password">
       <button id="signIn">Sign in</button>
+      <!-- Shown when the email's company signs in with Microsoft (0142) -->
+      <button type="button" id="msSignIn" class="ms-btn hidden"><span class="ms-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>Continue with Microsoft</button>
       <p id="authError" class="error"></p>
     </div>
     <!-- A join slip (0141): drawn by join.js -->
@@ -1198,7 +1200,7 @@
      only names from an earlier file; boot.js starts the page and stays last.
      js/core.js has the rest. publish.sh adds ?v= to each, so a changed file is
      fetched fresh and an unchanged one comes from the browser's cache. -->
-<script src="js/core.js?v=8c9aa9968f"></script>
+<script src="js/core.js?v=fcb1c0f92f"></script>
 <script src="js/shell.js?v=79300523ad"></script>
 <script src="js/location-dashboard.js?v=893d310a68"></script>
 <script src="js/location-certifications.js?v=188701e85c"></script>
@@ -1245,7 +1247,7 @@
 <script src="js/online-courses.js?v=79fbda48f5"></script>
 <script src="js/training-reports.js?v=a0d90a8436"></script>
 <script src="js/imports.js?v=6261a6a472"></script>
-<script src="js/company.js?v=4dc2764d10"></script>
+<script src="js/company.js?v=cb7ade3f02"></script>
 <script src="js/people-list.js?v=00be2091fa"></script>
 <script src="js/join.js?v=9500ee286f"></script>
 <script src="js/platform.js?v=a56ec3583b"></script>
