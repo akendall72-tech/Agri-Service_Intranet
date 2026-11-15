@@ -3770,3 +3770,10 @@ body.no-company .crumbs { display: none; }
   body.printing-slips .pl-print, body.printing-slips .pl-print * { visibility: visible !important; }
   body.printing-slips .pl-print { position: absolute; left: 0; top: 0; width: 100%; grid-template-columns: repeat(2, 1fr); }
 }
+
+/* "Have a join slip?" on the sign-in card (0141). */
+.auth-join { margin: 14px 0 0; text-align: center; }
+.auth-join button { background: none; border: 0; padding: 4px; color: var(--red); font-weight: 600; cursor: pointer; }
+.join-code { font: 600 22px/1.2 ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: .08em; text-align: center; text-transform: uppercase; }
+.join-who { display: grid; gap: 2px; margin: 4px 0 12px; padding: 12px; border-radius: 10px; background: var(--bg); text-align: center; font-size: 13px; color: var(--muted); }
+.join-who > b { font-size: 18px; color: var(--ink, #1C1917); text-transform: uppercase; }

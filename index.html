@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Which version this is. publish.sh stamps the date and commit here, and
      into version.json beside the page; "dev" is a copy that wasn't published. -->
-<meta name="app-version" content="2026-11-14.d535cb5">
+<meta name="app-version" content="2026-11-14.9077728">
 <!-- Where this page may load things from and send things to. GitHub Pages
      can't send security headers, so it's here. Scripts come only from this
      site and the two script CDNs (each pinned with an integrity hash), and
@@ -34,7 +34,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
-<link rel="stylesheet" href="css/app.css?v=a84815116e">
+<link rel="stylesheet" href="css/app.css?v=c52f5333ea">
 </head>
 <body>
 
@@ -49,12 +49,17 @@
     <p class="note">Use the same account you use in the app. What you can see and
       change here follows the same rules — signing in from a browser grants
       nothing extra.</p>
-    <label for="email">Work email or sign-in name</label>
-    <input id="email" type="text" inputmode="email" autocapitalize="none" spellcheck="false" autocomplete="username">
-    <label for="password">Password</label>
-    <input id="password" type="password" autocomplete="current-password">
-    <button id="signIn">Sign in</button>
-    <p id="authError" class="error"></p>
+    <div id="signInForm">
+      <label for="email">Work email or sign-in name</label>
+      <input id="email" type="text" inputmode="email" autocapitalize="none" spellcheck="false" autocomplete="username">
+      <label for="password">Password</label>
+      <input id="password" type="password" autocomplete="current-password">
+      <button id="signIn">Sign in</button>
+      <p id="authError" class="error"></p>
+    </div>
+    <!-- A join slip (0141): drawn by join.js -->
+    <div id="joinForm" class="hidden"></div>
+    <p class="auth-join"><button type="button" id="joinToggle">Have a join slip?</button></p>
   </div>
 </section>
 
@@ -1242,6 +1247,7 @@
 <script src="js/imports.js?v=6261a6a472"></script>
 <script src="js/company.js?v=4dc2764d10"></script>
 <script src="js/people-list.js?v=00be2091fa"></script>
+<script src="js/join.js?v=9500ee286f"></script>
 <script src="js/platform.js?v=a56ec3583b"></script>
 <script src="js/boot.js?v=a6a254fead"></script>
 </body>
