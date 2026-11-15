@@ -689,6 +689,8 @@ function renderTsImport(problems = []) {
   const sharedNames = staff.filter((e, i, all) => nameCount[tsNameKey(e.first, e.last)] > 1
     && all.findIndex(x => tsNameKey(x.first, x.last) === tsNameKey(e.first, e.last)) === i)
     .map(e => `${e.first} ${e.last}`.trim());
+  // What a new All employees file would do to the People list (0140).
+  const pv = tsPending.employees && isOwner() && !plMissing ? plPreview(rows) : null;
   const appStores = new Set(allLocations.map(l => l.name.toLowerCase()));
   const strayStores = m.stores.filter(s => s !== "No store" && !appStores.has(s.toLowerCase())
     && m.people.some(p => p.store === s));
@@ -718,6 +720,13 @@ function renderTsImport(problems = []) {
       ${strayStores.length ? `<p class="note" style="margin:0 0 6px">Stores with no location of the same name in the app,
         so no location admin sees them (owners still do): ${strayStores.map(esc).join(", ")}. Rename the location under
         Groups &amp; Locations to match.</p>` : ""}
+      ${pv ? `<p class="note" style="margin:0 0 6px"><b>People list:</b> ${pv.joined} join, ${pv.moved} move location,
+        ${pv.leaving.length} leave${pv.back ? `, ${pv.back} come back` : ""}${pv.leaving.length && pv.leaving.length <= 8
+          ? ` (${pv.leaving.map(e => esc(plName(e))).join(", ")})` : ""}.</p>
+      ${pv.tooMany ? `<label class="pl-confirm"><input type="checkbox" id="tsEveryone">
+        <span>That takes ${pv.leaving.length} of ${pv.hereNow} people off the People list${pv.emptied.length
+          ? `, and everyone at ${esc(pv.emptied.join(", "))}` : ""}. If this file is one location's rather than everyone's, don't
+          publish it. <b>This file is everyone</b>: take them off.</span></label>` : ""}` : ""}
       <div class="row"><button data-act="ts-publish" ${has("employees") ? "" : "disabled"}>Publish</button>
         <button class="ghost" data-act="ts-discard">Discard</button><span class="msg"></span></div>
     </div>` : ""}`;
@@ -838,16 +847,32 @@ $("admin").addEventListener("click", async (event) => {
   const raw = {};
   Object.keys(TS_KINDS).forEach(k => { if (tsPending[k]) raw[k] = tsPending[k]; });
   const people = tsPeopleFromRaw({ ...(tsRaw || {}), ...raw });
+  // The People list's guard (0140), before anything is published.
+  const listing = raw.employees && isOwner() && !plMissing;
+  const everyone = !!($("tsEveryone") && $("tsEveryone").checked);
+  if (listing && plPreview(people).tooMany && !everyone) {
+    return speak(card, "This takes a lot of people off the People list. Tick that the file is everyone, or check the file.", true);
+  }
   button.disabled = true;
   speak(card, "Publishing…", false);
   const { error } = await db.rpc("publish_training_status", { raw, people });
   button.disabled = false;
   if (error) return speak(card, error.message, true);
+  let listNote = "";
+  if (listing) {
+    const sync = await db.rpc("sync_employees", { people, feed: "upload", file: raw.employees.file || "", everyone_confirmed: everyone });
+    const d = sync.data || {};
+    listNote = sync.error ? `The People list wasn't updated: ${sync.error.message}`
+      : `People list: ${d.joined} joined, ${d.changed} changed, ${d.left} left${d.back ? `, ${d.back} back` : ""}${
+        d.accounts ? `; ${d.accounts} accounts switched off or on` : ""}.`;
+    await loadEmployees();
+  }
   tsPending = { employees: null, credits: null, history: null };
   await loadTrainingStatus();
   renderTsImport();
   renderTsLive();
-  $("tsResult").innerHTML = `<p class="ok" style="margin-top:12px">Published. The app shows it the next time Training Status is opened.</p>`;
+  $("tsResult").innerHTML = `<p class="ok" style="margin-top:12px">Published. The app shows it the next time Training Status is opened.</p>`
+    + (listNote ? `<p class="note">${esc(listNote)}</p>` : "");
   // The AGCO maps follow the roster: a new technician gets one straight away.
   await agcoRebuild();
   renderAgcoLive();

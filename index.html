@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Which version this is. publish.sh stamps the date and commit here, and
      into version.json beside the page; "dev" is a copy that wasn't published. -->
-<meta name="app-version" content="2026-11-14.4f46611">
+<meta name="app-version" content="2026-11-14.3ec5643">
 <!-- Where this page may load things from and send things to. GitHub Pages
      can't send security headers, so it's here. Scripts come only from this
      site and the two script CDNs (each pinned with an integrity hash), and
@@ -34,7 +34,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
-<link rel="stylesheet" href="css/app.css?v=c2de2fa55b">
+<link rel="stylesheet" href="css/app.css?v=941b2090ba">
 </head>
 <body>
 
@@ -109,6 +109,7 @@
 
       <div class="nav-group">Setup</div>
       <button data-tab="org"><i data-icon="building"></i><span>Groups &amp; Locations</span></button>
+      <button data-tab="peoplelist" data-title="People list"><i data-icon="people"></i><span>People list</span></button>
       <button data-tab="company"><i data-icon="briefcase"></i><span>Company</span></button>
     </nav>
 
@@ -883,6 +884,11 @@
     </section>
 
     <!-- Employee handbook -->
+    <!-- People list (0140): drawn by renderPeopleList -->
+    <section id="tab-peoplelist" class="hidden">
+      <div id="peopleListAdmin"></div>
+    </section>
+
     <!-- Company (0133): drawn by renderCompanyAdmin -->
     <section id="tab-company" class="hidden">
       <div id="companyAdmin"></div>
@@ -1181,14 +1187,14 @@
      only names from an earlier file; boot.js starts the page and stays last.
      js/core.js has the rest. publish.sh adds ?v= to each, so a changed file is
      fetched fresh and an unchanged one comes from the browser's cache. -->
-<script src="js/core.js?v=0f0e0561d6"></script>
-<script src="js/shell.js?v=c484052d53"></script>
+<script src="js/core.js?v=a81d967b11"></script>
+<script src="js/shell.js?v=db992df383"></script>
 <script src="js/location-dashboard.js?v=b249c9b953"></script>
 <script src="js/location-certifications.js?v=188701e85c"></script>
 <script src="js/my-certifications.js?v=c7baa6cb5e"></script>
 <script src="js/operator-manuals.js?v=de83dc2ae1"></script>
 <script src="js/crane-qualifications.js?v=4336042851"></script>
-<script src="js/training-status.js?v=13c91dd44b"></script>
+<script src="js/training-status.js?v=7dacdecb57"></script>
 <script src="js/forklift.js?v=1aa3683ed6"></script>
 <script src="js/crane.js?v=e6888b49ef"></script>
 <script src="js/lift-plans.js?v=923f07f016"></script>
@@ -1229,6 +1235,7 @@
 <script src="js/training-reports.js?v=a0d90a8436"></script>
 <script src="js/imports.js?v=6261a6a472"></script>
 <script src="js/company.js?v=4dc2764d10"></script>
+<script src="js/people-list.js?v=ccce8e2f67"></script>
 <script src="js/platform.js?v=a56ec3583b"></script>
 <script src="js/boot.js?v=a6a254fead"></script>
 </body>

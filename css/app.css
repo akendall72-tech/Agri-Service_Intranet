@@ -3735,3 +3735,20 @@ body.no-company .crumbs { display: none; }
   .pf-wait { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .pf-wait .pf-wait-who, .pf-wait button { grid-column: 1 / -1; }
 }
+
+/* People list (0140). */
+.pl-run { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin: 12px 0;
+  padding: 10px 12px; border-radius: 10px; background: var(--bg); font-size: 14px; }
+.pl-setting, .pl-confirm { display: flex; gap: 10px; align-items: flex-start; margin: 12px 0; font-size: 14px; cursor: pointer; }
+.pl-setting input, .pl-confirm input { width: auto; margin-top: 3px; }
+.pl-confirm { padding: 10px 12px; border-radius: 10px; background: #FDF3E1; color: #6B4605; }
+.pl-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 10px; }
+.pl-chip { padding: 5px 12px; border-radius: 99px; border: 1px solid var(--line); background: var(--card); color: inherit; font-size: 13px; }
+.pl-chip.on { background: var(--red); border-color: var(--red); color: #fff; }
+#plSearch { width: 100%; max-width: 460px; }
+.pl-table td small { display: block; color: var(--muted); font-size: 12px; }
+.pl-table tr.pl-gone td { color: var(--muted); }
+.pl-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
+.pl-actions { margin-top: 12px; }
+@media (max-width: 760px) { .pl-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 480px) { .pl-fields { grid-template-columns: minmax(0, 1fr); } }
