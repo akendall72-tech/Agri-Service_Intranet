@@ -11,7 +11,7 @@
 // page's Training Status tab:
 //
 //   All employees        who everyone is, their job and store. Technicians are
-//                        the jobs with "Technician" in the title.
+//                        the jobs that count as technicians on Admin → Jobs.
 //   Credit Rules Report  each technician's hours toward the 24-hour AGCO
 //                        training credit, and whether they hold EPA 609.
 //   OLT and ILT          every course completion, with its date.
@@ -103,7 +103,10 @@ const tsEmployeeNumber = (value) => {
 
 const tsStoreName = (store) => tsText(store).replace(/^store\s*-\s*\d+\s*-\s*/i, "") || "No store";
 
-const tsIsTech = (job) => /\btechnician\b/i.test(job || "");
+// Who's a technician: what their job title counts as on Admin → People → Jobs
+// (0150), else guessed from its words. The database marks them by the same
+// rule when they're published, whatever this says; this is for the preview.
+const tsIsTech = (job) => jobKind(job) === "technician";
 
 // Which export a file is, from its column headings — the file names don't matter.
 function tsIdentify(rows) {

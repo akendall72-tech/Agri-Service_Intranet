@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Which version this is. publish.sh stamps the date and commit here, and
      into version.json beside the page; "dev" is a copy that wasn't published. -->
-<meta name="app-version" content="2026-11-17.eb80b32">
+<meta name="app-version" content="2026-11-17.149ed7b">
 <!-- Where this page may load things from and send things to. GitHub Pages
      can't send security headers, so it's here. Scripts come only from this
      site and the two script CDNs (each pinned with an integrity hash), and
@@ -96,6 +96,7 @@
       <div class="nav-group">People</div>
       <button data-tab="peoplelist" data-title="People list" class="active"><i data-icon="people"></i><span>People list</span></button>
       <button data-tab="people" data-title="Accounts"><i data-icon="key"></i><span>Accounts</span></button>
+      <button data-tab="jobs" data-title="Jobs"><i data-icon="briefcase"></i><span>Jobs</span></button>
 
       <div class="nav-group">Records</div>
       <button data-tab="inspections"><i data-icon="inspection"></i><span>Inspections</span></button>
@@ -948,6 +949,11 @@
       </section>
     </section>
 
+    <!-- Jobs (0150): drawn by renderJobs (jobs.js) -->
+    <section id="tab-jobs" class="hidden">
+      <div id="jobsAdmin"></div>
+    </section>
+
     <!-- Company (0133): drawn by renderCompanyAdmin -->
     <section id="tab-company" class="hidden">
       <div id="companyAdmin"></div>
@@ -1221,14 +1227,14 @@
      only names from an earlier file; boot.js starts the page and stays last.
      js/core.js has the rest. publish.sh adds ?v= to each, so a changed file is
      fetched fresh and an unchanged one comes from the browser's cache. -->
-<script src="js/core.js?v=bcb3ed4f08"></script>
-<script src="js/shell.js?v=c71a838619"></script>
+<script src="js/core.js?v=63e0a1dd05"></script>
+<script src="js/shell.js?v=317e4e2ee9"></script>
 <script src="js/location-dashboard.js?v=6dff455b18"></script>
 <script src="js/location-certifications.js?v=188701e85c"></script>
 <script src="js/my-certifications.js?v=c7baa6cb5e"></script>
 <script src="js/operator-manuals.js?v=de83dc2ae1"></script>
 <script src="js/crane-qualifications.js?v=4336042851"></script>
-<script src="js/training-status.js?v=617557b0b2"></script>
+<script src="js/training-status.js?v=699a4e4ba3"></script>
 <script src="js/forklift.js?v=1aa3683ed6"></script>
 <script src="js/crane.js?v=e6888b49ef"></script>
 <script src="js/lift-plans.js?v=923f07f016"></script>
@@ -1270,6 +1276,7 @@
 <script src="js/imports.js?v=a87bd44fe7"></script>
 <script src="js/company.js?v=3b9e89dc4f"></script>
 <script src="js/people-list.js?v=5df25b8095"></script>
+<script src="js/jobs.js?v=e55a3db18d"></script>
 <script src="js/join.js?v=9500ee286f"></script>
 <script src="js/platform.js?v=a56ec3583b"></script>
 <script src="js/boot.js?v=a6a254fead"></script>
