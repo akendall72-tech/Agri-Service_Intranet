@@ -1,18 +1,29 @@
-// People
+// Accounts
 //
-// The admin page's People tab: every account, roles, names and locations,
-// covering a location, employee numbers, designations and deactivating.
+// The admin page's Accounts tab (it was "People"; the People list is its
+// neighbour under People): every account, roles, names and locations,
+// covering a location, employee numbers, designations and deactivating. In
+// the Cab look, like the dashboards: tiles that filter the list under them.
+
+// Which accounts the tiles show: everyone, a role, no location, switched off.
+let ppFilter = "all";
+const PP_FILTERS = {
+  all: (r) => !r.deactivated_at,
+  owner: (r) => !r.deactivated_at && r.role === "owner",
+  admin: (r) => !r.deactivated_at && r.role === "admin",
+  employee: (r) => !r.deactivated_at && r.role === "employee",
+  nolocation: (r) => !r.deactivated_at && !r.location_id,
+  off: (r) => !!r.deactivated_at,
+};
 
 function renderPeople() {
   const q = ($("peopleSearch") ? $("peopleSearch").value : "").trim().toLowerCase();
-  // Deactivated accounts sink to the bottom rather than disappearing, so there's
-  // somewhere to reactivate them from.
   // Email as well as name: an account nobody has named yet is findable by the
-  // only thing it has.
-  const rows = people.filter(r => !q ||
+  // only thing it has. Switched-off accounts have their own tile, so there's
+  // somewhere to reactivate them from.
+  const rows = people.filter(PP_FILTERS[ppFilter] || PP_FILTERS.all).filter(r => !q ||
     (r.full_name || "").toLowerCase().includes(q) ||
-    (r.email || "").toLowerCase().includes(q))
-    .sort((a, b) => (!!a.deactivated_at) - (!!b.deactivated_at));
+    (r.email || "").toLowerCase().includes(q));
 
   const active = people.filter(r => !r.deactivated_at);
   const byRole = { owner: 0, admin: 0, employee: 0 };
@@ -22,13 +33,20 @@ function renderPeople() {
   const deactivated = people.length - active.length;
 
   if ($("peopleStats")) {
+    const tile = (id, label, n, sub, colour, hot) =>
+      cabTile(label, sxNum(n), sub, { colour, data: `data-pp-filter="${id}"`, on: ppFilter === id, hot });
     $("peopleStats").innerHTML =
-      `<span class="stat"><b>${active.length}</b>accounts</span>` +
-      `<span class="stat"><b>${byRole.admin + byRole.owner}</b>admins</span>` +
-      (withoutLocation
-        ? `<span class="stat"><b style="color:var(--red)">${withoutLocation}</b>no location set</span>`
-        : "") +
-      (deactivated ? `<span class="stat"><b>${deactivated}</b>deactivated</span>` : "");
+      tile("all", "Accounts", active.length, "Everyone who can sign in", "slate")
+      + tile("owner", "Owners", byRole.owner, "Everything, everywhere", "teal")
+      + tile("admin", "Location admins", byRole.admin, "Their locations' people", "green")
+      + tile("employee", "Employees", byRole.employee, "Their own records", "steel")
+      + tile("nolocation", "No location", withoutLocation, withoutLocation ? "Pick one for them" : "Everyone has one", withoutLocation ? "red" : "steel", withoutLocation > 0)
+      + tile("off", "Switched off", deactivated, deactivated ? "Can be reactivated" : "Nobody", "muted");
+  }
+  if ($("peopleCount")) {
+    const labels = { all: "everyone who can sign in", owner: "owners", admin: "location admins", employee: "employees",
+      nolocation: "no location set", off: "switched off" };
+    $("peopleCount").textContent = `${rows.length} · ${labels[ppFilter] || labels.all}`;
   }
 
   // Under the name, so the table fits the page: when the People table ran
@@ -70,7 +88,7 @@ function renderPeople() {
   // it for someone who signs in with a different email.
   const numberCell = (r) => editable(r)
     ? `<label class="note" style="display:flex;align-items:center;gap:6px;font-size:12.5px;margin-top:6px">Employee #
-         <input data-number-for="${esc(r.id)}" value="${esc(r.employee_number || "")}" placeholder="from UKG"
+         <input data-number-for="${esc(r.id)}" value="${esc(r.employee_number || "")}" placeholder="Number"
            inputmode="numeric" autocomplete="off" style="margin:0;width:90px;padding:4px 8px"></label>`
     : r.employee_number ? `<div class="note" style="font-size:12.5px;margin-top:4px">Employee #${esc(r.employee_number)}</div>` : "";
 
@@ -120,9 +138,22 @@ function renderPeople() {
         : esc(r.role) + (r.id === me.id ? ` <span class="note">· you</span>` : "")}</td>
       <td>${designationCell(r)}</td>
     </tr>`).join("")
-    || `<tr><td colspan="4" class="note">Nothing visible to you. If this is only
-        your own row, run migration 0021 in the SQL editor.</td></tr>`;
+    || `<tr><td colspan="4" class="note">${q || ppFilter !== "all" ? "Nobody matches." : "Nothing visible to you."}</td></tr>`;
 }
+
+// The tiles filter the list; the heroes link the two People pages.
+document.addEventListener("click", (event) => {
+  const tile = event.target.closest("[data-pp-filter]");
+  if (tile) {
+    ppFilter = ppFilter === tile.dataset.ppFilter && tile.dataset.ppFilter !== "all" ? "all" : tile.dataset.ppFilter;
+    return renderPeople();
+  }
+  const go = event.target.closest("[data-goto-tab]");
+  if (go) {
+    const tab = document.querySelector(`#adminNav [data-tab="${go.dataset.gotoTab}"]`);
+    if (tab) { tab.click(); window.scrollTo(0, 0); }
+  }
+});
 
 // One way in to the account function. Four controls use it now, and the part
 // worth getting right — digging the server's own sentence out of a response
@@ -177,7 +208,7 @@ document.addEventListener("change", async (event) => {
   const { problem } = await accountAction({ action: "setRole", id, role });
   picker.disabled = false;
 
-  const card = picker.closest(".card") || $("peopleTable");
+  const card = picker.closest(".card, .pp-panel") || $("peopleTable");
   if (problem) {
     picker.value = was;
     return speak(card, problem, true);
@@ -204,7 +235,7 @@ document.addEventListener("change", async (event) => {
   if (!pick || !pick.value) return;
   const person = people.find(r => r.id === pick.dataset.coverAdd);
   if (!person) return;
-  const loc = pick.value, card = pick.closest(".card") || $("peopleTable");
+  const loc = pick.value, card = pick.closest(".card, .pp-panel") || $("peopleTable");
   pick.disabled = true;
   const { error } = await db.from("covered_locations").insert({ person_id: person.id, location_id: loc });
   if (error) {
@@ -222,7 +253,7 @@ document.addEventListener("click", async (event) => {
   if (!b) return;
   const person = people.find(r => r.id === b.dataset.person);
   if (!person) return;
-  const loc = b.dataset.coverRemove, card = b.closest(".card") || $("peopleTable");
+  const loc = b.dataset.coverRemove, card = b.closest(".card, .pp-panel") || $("peopleTable");
   const name = person.full_name || person.email;
   if (!confirm(`Stop ${name} covering ${locations[loc] || loc}? They go back to looking after ${locations[person.location_id] || "their own location"} only.`)) return;
   b.disabled = true;
@@ -240,7 +271,7 @@ document.addEventListener("change", async (event) => {
   if (!field) return;
   const person = people.find(r => r.id === field.dataset.numberFor);
   if (!person) return;
-  const card = field.closest(".card") || $("peopleTable");
+  const card = field.closest(".card, .pp-panel") || $("peopleTable");
   const typed = field.value.trim();
   const clean = typed ? tsEmployeeNumber(typed) : "";
   if (clean === (person.employee_number || "")) { field.value = clean; return; }
@@ -267,7 +298,7 @@ document.addEventListener("change", async (event) => {
   const id = isName ? field.dataset.nameFor : field.dataset.shopFor;
   const person = people.find(r => r.id === id);
   if (!person) return;
-  const card = field.closest(".card") || $("peopleTable");
+  const card = field.closest(".card, .pp-panel") || $("peopleTable");
   const who = person.full_name || person.email || "this account";
 
   if (isName) {
@@ -325,7 +356,7 @@ document.addEventListener("change", async (event) => {
   const person = people.find(r => r.id === box.dataset.person);
   const designation = designations.find(d => d.id === box.dataset.designation);
   if (!person || !designation) return;
-  const card = box.closest(".card") || $("peopleTable");
+  const card = box.closest(".card, .pp-panel") || $("peopleTable");
   const who = person.full_name || person.email || "this account";
   const giving = box.checked;
 

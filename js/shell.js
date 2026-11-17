@@ -261,7 +261,7 @@ function showAdmin() {
 // The Safety dashboard: forklift certifications, lift plans, Safety Reports,
 // the Safety Desk and the safety data sheets, for Safety Managers. It shares the admin workspace and
 // its handlers, with its own sidebar and a dashboard at the front.
-let adminTab = "people", safetyTab = "safetyoverview", trainingTab = "trainingoverview";
+let adminTab = "peoplelist", safetyTab = "safetyoverview", trainingTab = "trainingoverview";
 
 // The Training dashboard: the 24-hour metric and who has it, the planning, the
 // Mock Schedule, AGCO Development and Skills, with the uploads that keep them

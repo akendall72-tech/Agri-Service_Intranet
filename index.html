@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Which version this is. publish.sh stamps the date and commit here, and
      into version.json beside the page; "dev" is a copy that wasn't published. -->
-<meta name="app-version" content="2026-11-15.0c50563">
+<meta name="app-version" content="2026-11-17.24704e3">
 <!-- Where this page may load things from and send things to. GitHub Pages
      can't send security headers, so it's here. Scripts come only from this
      site and the two script CDNs (each pinned with an integrity hash), and
@@ -34,7 +34,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
-<link rel="stylesheet" href="css/app.css?v=dc4bd91c7a">
+<link rel="stylesheet" href="css/app.css?v=9868a8e7f1">
 </head>
 <body>
 
@@ -93,9 +93,12 @@
     <nav id="adminNav" class="tabs hidden" aria-label="Admin">
       <button class="nav-item" data-home><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5m6-6-6 6 6 6"/></svg><span>Back to the app</span></button>
 
+      <div class="nav-group">People</div>
+      <button data-tab="peoplelist" data-title="People list" class="active"><i data-icon="people"></i><span>People list</span></button>
+      <button data-tab="people" data-title="Accounts"><i data-icon="key"></i><span>Accounts</span></button>
+
       <div class="nav-group">Records</div>
       <button data-tab="inspections"><i data-icon="inspection"></i><span>Inspections</span></button>
-      <button data-tab="people" class="active"><i data-icon="people"></i><span>People</span></button>
 
       <div class="nav-group">App content</div>
       <button data-tab="news"><i data-icon="news"></i><span>News</span></button>
@@ -116,7 +119,6 @@
 
       <div class="nav-group">Setup</div>
       <button data-tab="org"><i data-icon="building"></i><span>Groups &amp; Locations</span></button>
-      <button data-tab="peoplelist" data-title="People list"><i data-icon="people"></i><span>People list</span></button>
       <button data-tab="company"><i data-icon="briefcase"></i><span>Company</span></button>
     </nav>
 
@@ -358,60 +360,59 @@
     </section>
 
     <!-- People -->
-    <section id="tab-people">
-      <div class="card">
-        <h2>People</h2>
-        <div class="row" style="margin-bottom:12px">
-          <div id="peopleStats"></div>
-          <input class="search" id="peopleSearch" placeholder="Search a name or email…"
-                 style="margin-left:auto">
-          <span class="msg"></span>
-        </div>
-        <p class="note">As an admin you see your own location's people; as an owner,
-          everyone. <b>Owners change roles here.</b> An employee sees their own records;
-          a location admin sees everyone at their location; an owner sees everyone and can
-          reach this page. You can't change your own role, and the last owner can't be
-          demoted — otherwise one wrong tap leaves nobody able to undo it.</p>
-        <p class="note"><b>Owners also set a name and a location here.</b> Both are normally
-          chosen by the person on first sign-in in the app, and after that both are locked:
-          only an owner changes them, here. Anyone who only ever uses this page arrives with
-          neither. Type over the name; pick a location from the list. These go through the
-          same owner-only function deactivation does.</p>
-        <p class="note"><b>Also covers</b> is for an admin filling in at another location, when
-          one has lost its admin. Pick the location under their own and they're its admin too:
-          its lift plans, inspections, Skills sign-offs, Training Status, special tools and
-          Community, and the notifications that go with them. Their own home location doesn't
-          change. Take it away with &times; when the gap is filled.</p>
-        <p class="note"><b>Employee # is what finds someone's training records.</b> Each Training
-          Status upload fills it in from All employees, by work email. Type it yourself only for
-          someone who signs in with a different email from the one UKG has. Nobody can change
-          their own, and no two accounts can have the same one.</p>
-        <p class="note"><b>Deactivate, don't delete.</b> Deleting an account in Supabase is
-          refused while it has lift plans, support requests or Skills history, so those
-          records can't be lost with it. Only an account that never did anything can be
-          deleted.</p>
-        <p class="note">The email is the one they sign in with, shown here so an account
-          with no name yet is still recognisable. It's read-only: change it in
-          Supabase under Authentication → Users and it follows on its own.</p>
-        <p class="note"><b>Designations</b> are for owners only: Safety Manager and Training
-          Manager. They'll decide who can see or change things that belong to that job. Tick
-          one to give it, untick it to take it away; your own row too. Anyone who isn't an owner
-          can't hold one, and an owner made an admin or an employee loses theirs.</p>
-        <p class="note">When someone leaves, an owner presses <b>Deactivate</b>. They can't
-          sign in to the app or this page, they're signed out, and their notifications
-          stop. Everything they did — lift plans, sign-offs, inspections — stays, with their
-          name on it. <b>Reactivate</b> lets them back in with the same email and password.</p>
-        <div style="overflow-x:auto">
-          <table id="peopleTable">
-            <thead><tr>
-              <th data-sort="full_name">Name</th>
-              <th data-sort="location_id">Location</th>
-              <th data-sort="role">Role</th>
-              <th>Designation</th>
-            </tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
+    <!-- Accounts: drawn by renderPeople (people.js). The People pages are in the
+         Cab look (.cab-admin), like the dashboards. -->
+    <section id="tab-people" class="hidden">
+      <div class="sx cab-admin pp" style="--accent:var(--lit-slate)">
+        <section class="sx-hero">
+          <div class="sx-hero-text">
+            <span class="sx-kicker">People · Accounts</span>
+            <h2>Accounts</h2>
+            <p>Everyone who can sign in, with their role, location and designations. Owners change a role, give a
+              designation, set a name or a location, and switch an account off here. Who works here, and how they
+              get in, is on the <button type="button" class="cab-goto" data-goto-tab="peoplelist">People list</button>.</p>
+          </div>
+        </section>
+        <div class="sx-tiles six" id="peopleStats" style="--n:6"></div>
+        <section class="sx-panel pp-panel" style="--accent:var(--lit-slate)">
+          <header><h3>Accounts</h3><span id="peopleCount"></span>
+            <input class="search cab-search" id="peopleSearch" placeholder="Search a name or email…" aria-label="Search accounts"></header>
+          <span class="msg" role="status"></span>
+          <div class="lc-scroll">
+            <table class="lc-table pp-table" id="peopleTable">
+              <thead><tr>
+                <th data-sort="full_name">Name</th>
+                <th data-sort="location_id">Location</th>
+                <th data-sort="role">Role</th>
+                <th>Designation</th>
+              </tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
+        <section class="sx-panel" style="--accent:var(--lit-steel)">
+          <header><h3>How it works</h3></header>
+          <dl class="cab-rules">
+            <div><dt>Roles</dt><dd>An employee sees their own records, a location admin everyone at their locations, an owner
+              everyone. Nobody changes their own role, and the last owner can't be made anything else, so one wrong tap
+              never leaves nobody able to undo it.</dd></div>
+            <div><dt>Name and location</dt><dd>Chosen by the person at their first sign-in in the app, then locked: only an
+              owner changes them, here. Someone who only uses the web page arrives with neither: type the name, pick the
+              location.</dd></div>
+            <div><dt>Designations</dt><dd><b>Training Manager</b> opens the Training dashboard and <b>Safety Manager</b> the
+              Safety dashboard. Owners only: tick to give, untick to take away, your own row too. An owner made an admin or
+              an employee loses theirs.</dd></div>
+            <div><dt>Also covers</dt><dd>For an admin filling in at another location that has lost its admin: they become its
+              admin too, with its lift plans, inspections, sign-offs, training, tools and join slips. Their own location
+              doesn't change. Take it away with &times;.</dd></div>
+            <div><dt>Employee #</dt><dd>What finds someone's training records. It fills itself in from the People list by work
+              email; type it only for someone who signs in with a different email. Nobody changes their own, and no two
+              accounts share one.</dd></div>
+            <div><dt>Switching off</dt><dd><b>Deactivate</b> signs them out of the app and this page, stops their
+              notifications and ends any access. Everything they did stays, with their name on it. <b>Reactivate</b> lets
+              them back in. Never delete an account in Supabase.</dd></div>
+          </dl>
+        </section>
       </div>
     </section>
 
@@ -674,6 +675,20 @@
 
     <!-- Training articles -->
     <section id="tab-articles" class="hidden">
+      <!-- The Training Center's mission (0147): filled in by renderArticlesAdmin -->
+      <div class="card" id="missionCard">
+        <h2>Training Center mission</h2>
+        <p class="note">The first card in the Training Center, in the app, in your company's own words: what your training
+          is for, in a sentence or two. Leave it empty and there's no card. Phones pick up a change the next time their home
+          page opens.</p>
+        <textarea id="tcMission" rows="3" maxlength="600" aria-label="Training Center mission"
+          placeholder="We help everyone here learn the job, do it safely and keep getting better at it."></textarea>
+        <div class="row" style="margin-top:10px">
+          <button data-act="save-mission">Save the mission</button>
+          <span class="msg" role="status"></span>
+        </div>
+      </div>
+
       <div class="card">
         <h2>Training articles</h2>
         <p class="note">The articles under <b>Read up</b> in the Training Center, in the app and on
@@ -901,7 +916,7 @@
     </section>
 
     <!-- People list (0140): drawn by renderPeopleList -->
-    <section id="tab-peoplelist" class="hidden">
+    <section id="tab-peoplelist">
       <div id="peopleListAdmin"></div>
     </section>
 
@@ -1203,8 +1218,8 @@
      only names from an earlier file; boot.js starts the page and stays last.
      js/core.js has the rest. publish.sh adds ?v= to each, so a changed file is
      fetched fresh and an unchanged one comes from the browser's cache. -->
-<script src="js/core.js?v=8f4aeb9437"></script>
-<script src="js/shell.js?v=067db46201"></script>
+<script src="js/core.js?v=bcb3ed4f08"></script>
+<script src="js/shell.js?v=a45aa64fd9"></script>
 <script src="js/location-dashboard.js?v=6dff455b18"></script>
 <script src="js/location-certifications.js?v=188701e85c"></script>
 <script src="js/my-certifications.js?v=c7baa6cb5e"></script>
@@ -1218,7 +1233,7 @@
 <script src="js/support.js?v=f2dc4e83f3"></script>
 <script src="js/special-tools.js?v=fbaac4f097"></script>
 <script src="js/reminders.js?v=360d96f67d"></script>
-<script src="js/people.js?v=43db7cf566"></script>
+<script src="js/people.js?v=a7db3f7ee3"></script>
 <script src="js/events.js?v=28c038b72f"></script>
 <script src="js/community.js?v=1ecd0aaa6e"></script>
 <script src="js/fitness.js?v=1fa39ea073"></script>
@@ -1243,15 +1258,15 @@
 <script src="js/safety-data-sheets.js?v=2d8ed6ca78"></script>
 <script src="js/shared-logins.js?v=7d349137ec"></script>
 <script src="js/skills.js?v=8efb8a0583"></script>
-<script src="js/training-articles.js?v=a632240493"></script>
+<script src="js/training-articles.js?v=2eb9234aaf"></script>
 <script src="js/news.js?v=7666f3dcf1"></script>
 <script src="js/agco-map.js?v=ef25609d4d"></script>
 <script src="js/my-classes.js?v=632c8ac9a0"></script>
 <script src="js/online-courses.js?v=79fbda48f5"></script>
 <script src="js/training-reports.js?v=a0d90a8436"></script>
 <script src="js/imports.js?v=a87bd44fe7"></script>
-<script src="js/company.js?v=1080db7620"></script>
-<script src="js/people-list.js?v=e8595fdd36"></script>
+<script src="js/company.js?v=3b9e89dc4f"></script>
+<script src="js/people-list.js?v=7c06f4c517"></script>
 <script src="js/join.js?v=9500ee286f"></script>
 <script src="js/platform.js?v=a56ec3583b"></script>
 <script src="js/boot.js?v=a6a254fead"></script>

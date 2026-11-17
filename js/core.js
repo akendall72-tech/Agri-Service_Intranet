@@ -734,6 +734,15 @@ const icon = (name, size = 24) =>
 
 // A lit colour by name, for a style attribute: `--accent:var(--lit-amber)`.
 const lit = (name) => `--accent:var(--lit-${name || "slate"})`;
+// A count tile that filters the list under it, on an admin page in the Cab
+// look (the People pages): the dashboards' tile, picked when its filter is on.
+function cabTile(label, value, sub, { colour = "slate", data = "", on = false, hot = false } = {}) {
+  return `<button type="button" class="sx-tile${hot ? " hot" : ""}${on ? " open" : ""}" ${data} aria-pressed="${on}" style="${lit(colour)}">
+    <span class="sx-tile-label">${esc(label)}</span>
+    <b class="sx-tile-value">${value}</b>
+    <span class="sx-tile-sub">${sub}</span>
+  </button>`;
+}
 
 // A page's name in red. Opening a page, showView turns it into the band
 // across the top; anywhere else it's a red card.

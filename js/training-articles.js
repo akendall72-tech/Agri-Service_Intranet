@@ -180,6 +180,9 @@ window.addEventListener("resize", () => {
 // ---- admin ------------------------------------------------------------------------
 
 function renderArticlesAdmin() {
+  // The mission, unless it's being typed in.
+  const mission = $("tcMission");
+  if (mission && document.activeElement !== mission && !mission.dataset.dirty) mission.value = company.training_mission || "";
   const list = $("articleList");
   if (!list) return;
   if (articlesError) {
@@ -393,4 +396,27 @@ $("admin").addEventListener("click", async (event) => {
   speak(editor, fields.is_active
     ? "Saved. Phones show it the next time the Training Center is opened."
     : "Saved — hidden, so it isn't showing anywhere.", false);
+});
+
+// The Training Center's mission (0147), kept on the company: here beside the
+// articles, since it's the Training Manager's words for the same page.
+document.addEventListener("input", (event) => {
+  if (event.target.id === "tcMission") event.target.dataset.dirty = "1";
+});
+document.addEventListener("click", async (event) => {
+  const button = event.target.closest('[data-act="save-mission"]');
+  if (!button) return;
+  const card = button.closest(".card"), box = $("tcMission");
+  const mission = box.value.trim();
+  if (mission.length > 600) return speak(card, "The mission is up to 600 characters.", true);
+  button.disabled = true;
+  speak(card, "Saving…", false);
+  const { data, error } = await db.from("companies").update({ training_mission: mission || null }).eq("id", company.id).select("id");
+  button.disabled = false;
+  if (error) return speak(card, /training_mission/.test(error.message) ? "Run migration 0147 first." : error.message, true);
+  if (!data || !data.length) return speak(card, "Nothing was saved — only an owner can change the mission.", true);
+  setCompany(await db.rpc("my_company"));
+  delete box.dataset.dirty;
+  box.value = company.training_mission || "";
+  speak(card, mission ? "Saved. Phones show it the next time their home page opens." : "Saved: no mission card.", false);
 });

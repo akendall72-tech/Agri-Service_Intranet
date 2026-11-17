@@ -89,8 +89,9 @@ function coLogoSlot(slot) {
     </div>`;
 }
 
-// The company's own Training Center mission, and the features it has switched
-// on of those some companies have and others don't (0147).
+// The features the company has switched on, of those some companies have and
+// others don't (0147, 0149). The Training Center's mission, also 0147, is set
+// on the Training dashboard's Training Articles tab (training-articles.js).
 const CO_FEATURES = [
   { id: "agco", name: "AGCO dealer", what: "Everything that's AGCO's: the AGCO Development Map and catalog, AGCO's training-hours requirement (the dealer metric on Training Status, the Training dashboard and the Location Dashboard, the Mock Schedule, the AGCO Training Hours report), AGCO Academy's sessions on the Open Seat Report, and AGCO credit on courses." },
   { id: "apparel", name: "Apparel tab", what: "The app's Apparel tab, which opens your company's apparel store signed in. Set up the store's address and password under Shared Logins." },
@@ -99,12 +100,10 @@ let coSwBusy = false, coSwMessage = "", coSwError = "";
 function coSwitchesCard() {
   const on = new Set(company.features || []);
   return `<div class="card">
-      <h2>Training Center and features</h2>
-      <p class="note">The mission is the first card in the app's Training Center, in your words. Leave it empty for no card.</p>
-      <div class="co-fields co-fields-one">
-        <div><label for="coMission">Mission</label>
-          <textarea id="coMission" rows="3" maxlength="600" placeholder="What your training is for, in a sentence or two">${esc(company.training_mission || "")}</textarea></div>
-      </div>
+      <h2>Features</h2>
+      <p class="note">What ${esc(company.name)} has, of what some companies have and others don't. Without one, nobody sees it;
+        nothing is deleted when it's switched off. The Training Center's mission is set by the Training Manager, with the
+        Training Articles.</p>
       ${CO_FEATURES.map(f => `<label class="pl-setting"><input type="checkbox" data-co-feature="${esc(f.id)}" ${on.has(f.id) ? "checked" : ""}>
         <span><b>${esc(f.name)}.</b> ${esc(f.what)}</span></label>`).join("")}
       <div class="co-actions"><button type="button" id="coSwSave" ${coSwBusy ? "disabled" : ""}>Save</button></div>
@@ -114,12 +113,11 @@ function coSwitchesCard() {
 }
 
 async function coSwitchesSave() {
-  const mission = $("coMission").value.trim();
   const features = [...document.querySelectorAll("[data-co-feature]")].filter(b => b.checked).map(b => b.dataset.coFeature);
   coSwMessage = ""; coSwError = ""; coSwBusy = true; renderCompanyAdmin();
-  const { error } = await db.from("companies").update({ training_mission: mission || null, features }).eq("id", company.id);
+  const { error } = await db.from("companies").update({ features }).eq("id", company.id);
   coSwBusy = false;
-  if (error) { coSwError = /training_mission|features/.test(error.message) ? "Run migration 0147 first." : error.message; return renderCompanyAdmin(); }
+  if (error) { coSwError = /features/.test(error.message) ? "Run migration 0147 first." : error.message; return renderCompanyAdmin(); }
   await coReload();
   coSwMessage = "Saved. The app picks it up the next time its home page opens.";
   renderCompanyAdmin();

@@ -3798,3 +3798,65 @@ body.no-company .crumbs { display: none; }
    ones it has on <body data-features>. */
 body:not([data-features~="agco"]) [data-feature="agco"],
 body:not([data-features~="apparel"]) [data-feature="apparel"] { display: none !important; }
+
+/* ---- Admin pages in the Cab look (the People pages, 0150): the dashboards'
+   dark hero, tiles and panels, with the page's own inputs, buttons, badges
+   and tables made to sit on them. Everything here is under .cab-admin. */
+.cab-admin label, .cab-admin .note { color: var(--cab-sub); }
+.cab-admin .note b, .cab-admin .note strong { color: #fff; }
+.cab-admin .error { color: var(--lit-red); }
+.cab-admin a { color: var(--lit-slate); }
+.cab-admin input:not([type=checkbox]):not([type=radio]):not([type=file]), .cab-admin select, .cab-admin textarea {
+  background: rgba(0,0,0,.28); color: #fff; border: 1px solid rgba(255,255,255,.16); }
+.cab-admin input::placeholder, .cab-admin textarea::placeholder { color: rgba(255,255,255,.42); }
+.cab-admin input:focus, .cab-admin select:focus, .cab-admin textarea:focus { border-color: var(--accent, var(--lit-slate));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, var(--lit-slate)) 25%, transparent); outline: none; }
+.cab-admin select option { color: var(--ink); background: #fff; }
+.cab-admin input[type=checkbox] { accent-color: var(--accent, var(--lit-slate)); }
+.cab-admin .check, .cab-admin .pl-setting { color: #fff; }
+.cab-admin .pl-setting span { color: var(--cab-sub); }
+.cab-admin .pl-setting b { color: #fff; }
+.cab-admin button.pdf, .cab-admin button.ghost, .cab-admin button.btn-secondary {
+  background: rgba(255,255,255,.06); color: #fff; border: 1px solid rgba(255,255,255,.25); box-shadow: none; }
+.cab-admin button.pdf:hover, .cab-admin button.ghost:hover, .cab-admin button.btn-secondary:hover {
+  background: rgba(255,255,255,.13); color: #fff; border-color: rgba(255,255,255,.4); }
+.cab-admin button:disabled { opacity: .5; }
+.cab-admin .badge { background: rgba(255,255,255,.1); color: var(--cab-sub); }
+.cab-admin .badge.b-current { background: color-mix(in srgb, var(--lit-green) 16%, transparent); color: var(--lit-green); }
+.cab-admin .badge.b-expired { background: color-mix(in srgb, var(--lit-red) 16%, transparent); color: var(--lit-red); }
+.cab-admin .cover-chip { background: rgba(255,255,255,.1); color: #fff; border-color: rgba(255,255,255,.18); }
+.cab-admin .cover-chip button { color: var(--cab-sub); }
+.cab-admin .msg { color: var(--cab-sub); }
+.cab-admin .msg.bad, .cab-admin .msg.error { color: var(--lit-red); }
+.cab-admin .pf-ok, .cab-admin .co-ok { margin: 10px 0 0; padding: 8px 12px; border-radius: 10px; font-size: 13.5px;
+  background: color-mix(in srgb, var(--lit-green) 14%, transparent); color: var(--lit-green); }
+.cab-admin .pl-confirm { background: color-mix(in srgb, var(--lit-amber) 14%, transparent); color: var(--lit-amber); }
+.cab-admin .pl-run { padding: 10px 12px; border-radius: 10px; background: rgba(0,0,0,.22); color: var(--cab-sub); }
+.cab-admin .pl-run b { color: #fff; }
+.cab-admin .pl-ms-preview { background: rgba(0,0,0,.22); border-color: rgba(255,255,255,.1); }
+.cab-admin .pl-ms-last { color: var(--cab-sub); }
+.cab-admin .sx-panel > p:last-child { margin-bottom: 0; }
+/* A search box or a filter in a panel's header sits at its right. */
+.cab-admin .sx-panel header { flex-wrap: wrap; }
+.cab-admin .sx-panel header .cab-search { margin: 0 0 0 auto; width: min(280px, 100%); padding: 6px 12px; border-radius: 999px; font-size: 13.5px; }
+/* The tables: the Location Dashboard's dark table, with room for controls. */
+.cab-admin .lc-table td { white-space: normal; }
+.cab-admin .lc-table tr.gone td, .cab-admin .lc-table tr.pl-gone td { opacity: .55; }
+.cab-admin .lc-table td small { color: var(--cab-detail); }
+.cab-admin .lc-table input:not([type=checkbox]), .cab-admin .lc-table select { margin: 0; padding: 5px 9px; font-size: 13px; }
+.cab-admin .lc-table .check { font-size: 13px; }
+.cab-admin .lc-scroll { max-height: 70vh; }
+/* The ways in and the rules, as a plate of short definitions. */
+.cab-rules { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px 22px; margin: 0; }
+.cab-rules dt { color: var(--accent); font: 600 10.5px var(--font-mono); letter-spacing: .14em; text-transform: uppercase; margin-bottom: 4px; }
+.cab-rules dd { margin: 0; color: var(--cab-sub); font-size: 13.5px; line-height: 1.45; }
+.cab-rules dd b { color: #fff; }
+/* A link between the two People pages, in a hero's words. */
+button.cab-goto { display: inline; margin: 0; padding: 0; height: auto; border: 0; background: none; box-shadow: none;
+  color: var(--lit-slate); font: inherit; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+button.cab-goto:hover { background: none; color: #fff; }
+/* Tiles in even rows: all in one, or two by two on a narrow page, never three
+   and one left over. --n is how many a page has. */
+.cab-admin .sx-tiles { grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr)); }
+@container (max-width: 1100px) { .cab-admin .sx-tiles.six { --n: 3; } }
+@container (max-width: 720px) { .cab-admin .sx-tiles { --n: 2; } }

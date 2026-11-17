@@ -72,45 +72,70 @@ function renderPeopleList() {
   const shown = (plFilter === "left" ? gone : plFilter === "noaccount" ? noAccount : plFilter === "byhand" ? byHand : here)
     .filter(e => !q || [plName(e), e.email, e.employee_number, e.job, plPlace(e)].some(v => String(v || "").toLowerCase().includes(q)));
   const last = plRuns[0];
-  const chip = (id, label, n) => `<button type="button" class="pl-chip ${plFilter === id ? "on" : ""}" data-pl-filter="${id}">${esc(label)} <b>${n}</b></button>`;
+  const feed = company.microsoft_tenant && company.microsoft_sync ? "Microsoft 365, every night" : "the All employees upload";
+  const tile = (id, label, n, sub, colour, hot) =>
+    cabTile(label, sxNum(n), sub, { colour, data: `data-pl-filter="${id}"`, on: plFilter === id, hot });
+  const titles = { here: "Here now", noaccount: "No account yet", byhand: "Added by hand", left: "Left" };
 
-  box.innerHTML = plSlipSheet() + `<div class="card">
-      <h2>People list</h2>
-      <p class="note">Everyone who works here, kept up to date by ${company.microsoft_tenant ? "Microsoft 365 (below) or " : ""}the
-        All employees upload (Training → Uploads), and anyone added by hand. Someone missing from ${company.microsoft_tenant ? "them" : "an upload"}
-        is marked as left, never deleted, and someone added by hand is never taken off. Join slips are given from here.</p>
-      ${plError && !plMissing ? `<p class="error">${esc(plError)}</p>` : ""}
-      ${plMessage ? `<p class="pf-ok">${esc(plMessage)}</p>` : ""}
-      ${plProblem ? `<p class="error">${esc(plProblem)}</p>` : ""}
+  // The slips sheet is printed, so it stays a plain white card, above the rest.
+  box.innerHTML = plSlipSheet() + `<div class="sx cab-admin pl" style="${lit("teal")}">
+    <section class="sx-hero">
+      <div class="sx-hero-text">
+        <span class="sx-kicker">People · People list</span>
+        <h2>${sxNum(here.length)} ${here.length === 1 ? "person" : "people"} here</h2>
+        <p>Everyone who works for ${esc(companyName())}, kept up to date by ${esc(feed)}${company.microsoft_tenant ? "" : " or Microsoft 365"},
+          and anyone added by hand. Being on it is what lets someone in, with a join slip or Microsoft. Nobody is ever deleted:
+          someone who drops off is marked as left. Who can sign in, and what they can do, is on
+          <button type="button" class="cab-goto" data-goto-tab="people">Accounts</button>.</p>
+      </div>
+    </section>
+    ${plError && !plMissing ? `<p class="error">${esc(plError)}</p>` : ""}
+    ${plMessage ? `<p class="pf-ok">${esc(plMessage)}</p>` : ""}
+    ${plProblem ? `<p class="error">${esc(plProblem)}</p>` : ""}
+    <div class="sx-tiles" style="--n:4">
+      ${tile("here", "Here", here.length, "On the list now", "teal")}
+      ${tile("noaccount", "No account yet", noAccount.length, noAccount.length ? "Give them a join slip" : "Everyone has one", noAccount.length ? "amber" : "green", noAccount.length > 0)}
+      ${tile("byhand", "Added by hand", byHand.length, "No feed takes them off", "steel")}
+      ${tile("left", "Left", gone.length, "Kept, marked as left", "muted")}
+    </div>
+
+    <section class="sx-panel" style="${lit("teal")}">
+      <header><h3>${esc(titles[plFilter] || titles.here)}</h3><span>${sxNum(shown.length)}${q ? " matching" : ""}</span>
+        <input type="search" id="plSearch" class="cab-search" placeholder="Search name, number, email, job or location"
+          aria-label="Search the People list" value="${esc(plQuery)}"></header>
       ${last ? `<div class="pl-run">
         <span><b>${last.undone_at ? "Undone:" : "Last change:"}</b> ${esc(new Date(last.at).toLocaleString())}${last.file ? ` from ${esc(last.file)}` : ""}
           · ${last.joined} joined, ${last.changed} changed, ${last.left_list} left, ${last.back} back${last.by_name ? ` · ${esc(last.by_name)}` : ""}</span>
         ${!last.undone_at && last.by_name !== "migration 0140" ? `<button type="button" class="btn-secondary" data-pl-undo>Undo it</button>` : ""}
       </div>` : ""}
-      <label class="pl-setting"><input type="checkbox" id="plDeactivate" ${company.deactivate_leavers ? "checked" : ""}>
-        <span><b>Switch off the account of someone who leaves the list</b>, and back on if they return.
-          Owners' accounts are never switched off this way.</span></label>
-      ${plFilter === "noaccount" && noAccount.length ? `<div class="pl-actions"><button type="button" class="btn-secondary"
+      ${plFilter === "noaccount" && noAccount.length ? `<div class="pl-actions"><button type="button"
         data-pl-slips-all ${plSlipBusy ? "disabled" : ""}>Join slips for all ${noAccount.length} with no account</button></div>` : ""}
-      <div class="pl-chips">${chip("here", "Here", here.length)}${chip("noaccount", "No account yet", noAccount.length)}${chip("byhand", "Added by hand", byHand.length)}${chip("left", "Left", gone.length)}</div>
-      <input type="search" id="plSearch" placeholder="Search by name, number, email, job or location" value="${esc(plQuery)}">
-      ${!shown.length ? `<p class="note">Nobody${q ? " matches" : " here"}.</p>` : `
-      <div class="table-wrap"><table class="pl-table">
+      ${!shown.length ? `<p class="sx-empty">Nobody${q ? " matches" : " here"}.</p>` : `
+      <div class="lc-scroll"><table class="lc-table pl-table">
         <thead><tr><th>Name</th><th>Number</th><th>Email</th><th>Job</th><th>Location</th><th>From</th><th>Account</th><th></th></tr></thead>
         <tbody>${shown.map(e => { const a = plAccount(e); return `<tr class="${e.here ? "" : "pl-gone"}">
-          <td>${esc(plName(e))}${e.here ? "" : `<small>Left ${esc(new Date(e.left_at).toLocaleDateString())}</small>`}</td>
+          <td><b>${esc(plName(e))}</b>${e.here ? "" : `<small>Left ${esc(new Date(e.left_at).toLocaleDateString())}</small>`}</td>
           <td>${esc(e.employee_number || "")}</td><td>${esc(e.email || "")}</td><td>${esc(e.job || "")}</td><td>${esc(plPlace(e))}</td>
           <td>${e.source === "by hand" ? "By hand" : e.source === "upload" ? "Upload" : e.source === "microsoft" ? "Microsoft" : esc(e.source)}</td>
           <td>${!a ? `<span class="note">None yet</span>` : a.deactivated_at ? `<span class="badge b-none">Switched off</span>` : `<span class="badge b-current">Has one</span>`}</td>
           <td class="pl-do">${plSlipButton(e)}${e.source === "by hand" ? `<button type="button" class="pdf" data-pl-remove="${esc(e.id)}">Remove</button>` : ""}</td>
         </tr>`; }).join("")}</tbody>
       </table></div>`}
-    </div>
+    </section>
+
+    <section class="sx-panel" style="${lit("ember")}">
+      <header><h3>When someone leaves</h3></header>
+      <label class="pl-setting"><input type="checkbox" id="plDeactivate" ${company.deactivate_leavers ? "checked" : ""}>
+        <span><b>Switch off the account of someone who leaves the list</b>, and back on if they return.
+          Owners' accounts are never switched off this way. Off, an owner switches accounts off by hand on Accounts.</span></label>
+    </section>
+
     ${company.microsoft_tenant && isOwner() ? plMicrosoftCard() : ""}
-    <div class="card">
-      <h2>Add someone by hand</h2>
-      <p class="note">For someone the upload doesn't have yet: a new hire, a contractor. They need an employee number or a work
-        email. If a later upload has them, it takes them over.</p>
+
+    <section class="sx-panel" style="${lit("green")}">
+      <header><h3>Add someone by hand</h3></header>
+      <p class="sx-sub">For someone the feed doesn't have yet: a new hire, a contractor. They need an employee number or a work
+        email. If a later upload or Microsoft has them, it takes them over.</p>
       <div class="pl-fields">
         <div><label for="plFirst">First name</label><input type="text" id="plFirst" maxlength="60"></div>
         <div><label for="plLast">Last name</label><input type="text" id="plLast" maxlength="60"></div>
@@ -121,7 +146,8 @@ function renderPeopleList() {
           ${allLocations.filter(l => l.is_active !== false).map(l => `<option value="${esc(l.id)}">${esc(l.name)}</option>`).join("")}</select></div>
       </div>
       <div class="pl-actions"><button type="button" id="plAdd" ${plAdding ? "disabled" : ""}>Add to the list</button></div>
-    </div>`;
+    </section>
+  </div>`;
 }
 
 // A slip button for someone on the list: a join slip with no account yet, a
@@ -196,24 +222,38 @@ function renderLocationSlips() {
   const loc = lxCurrent();
   const here = plRows.filter(e => e.here && e.location_id === loc);
   const waiting = here.filter(e => !plAccount(e) && (e.employee_number || e.email));
-  box.innerHTML = plSlipSheet() + `<div class="card">
-      <h2>Join slips</h2>
-      <p class="note">Someone here with no account yet gets a join slip: a code they type into the app to make their own account
-        and password. Someone who's forgotten their password gets a password slip. Each lasts 14 days and works once; giving a new
-        one cancels the last.</p>
-      ${plProblem ? `<p class="error">${esc(plProblem)}</p>` : ""}
+  const withAccount = here.filter(e => plAccount(e)).length;
+  box.innerHTML = plSlipSheet() + `<div class="sx cab-admin lx" style="${lit("slate")}">
+    <section class="sx-hero">
+      <div class="sx-hero-text">
+        <span class="sx-kicker">${esc(lxName())} · Join slips</span>
+        <h2>${waiting.length ? `${sxNum(waiting.length)} with no account yet` : "Everyone here has an account"}</h2>
+        <p>Someone here with no account yet gets a join slip: a code they type into the app to make their own account and
+          password. Someone who's forgotten their password gets a password slip. Each lasts 14 days and works once; giving a
+          new one cancels the last.</p>
+      </div>
+    </section>
+    ${plProblem ? `<p class="error">${esc(plProblem)}</p>` : ""}
+    <div class="sx-tiles" style="--n:3">
+      ${cabTile("On the list", sxNum(here.length), `at ${esc(lxName())}`, { colour: "slate", data: 'data-sx-go=""' })}
+      ${cabTile("Have an account", sxNum(withAccount), "Can sign in", { colour: "green", data: 'data-sx-go=""' })}
+      ${cabTile("No account yet", sxNum(waiting.length), waiting.length ? "Give them a join slip" : "Nobody waiting", { colour: waiting.length ? "amber" : "green", hot: waiting.length > 0, data: 'data-sx-go=""' })}
+    </div>
+    <section class="sx-panel" style="${lit("slate")}">
+      <header><h3>People at ${esc(lxName())}</h3><span>${sxNum(here.length)}</span></header>
       ${waiting.length ? `<div class="pl-actions"><button type="button" data-pl-slips-here ${plSlipBusy ? "disabled" : ""}>
         Join slips for all ${waiting.length} at ${esc(lxName())} with no account</button></div>` : ""}
-      ${!here.length ? `<p class="note">Nobody at ${esc(lxName())} on the People list yet.</p>` : `
-      <div class="table-wrap"><table class="pl-table">
+      ${!here.length ? `<p class="sx-empty">Nobody at ${esc(lxName())} on the People list yet.</p>` : `
+      <div class="lc-scroll"><table class="lc-table pl-table">
         <thead><tr><th>Name</th><th>Sign in as</th><th>Job</th><th>Account</th><th></th></tr></thead>
         <tbody>${here.map(e => { const a = plAccount(e); return `<tr>
-          <td>${esc(plName(e))}</td><td>${esc(e.email || (e.employee_number ? `${e.employee_number}@${company.id}` : ""))}</td>
+          <td><b>${esc(plName(e))}</b></td><td>${esc(e.email || (e.employee_number ? `${e.employee_number}@${company.id}` : ""))}</td>
           <td>${esc(e.job || "")}</td>
           <td>${!a ? `<span class="note">None yet</span>` : a.deactivated_at ? `<span class="badge b-none">Switched off</span>` : `<span class="badge b-current">Has one</span>`}</td>
           <td class="pl-do">${plSlipButton(e)}</td></tr>`; }).join("")}</tbody>
       </table></div>`}
-    </div>`;
+    </section>
+  </div>`;
 }
 
 // ------------------------------------------------------------ Microsoft 365
@@ -247,8 +287,8 @@ function plMicrosoftCard() {
   const groupId = groupMode ? plMsChoices().group_id : null;
   const groups = plMsGroups || (company.microsoft_group_id ? [{ id: company.microsoft_group_id, name: company.microsoft_group_name || "The chosen group" }] : []);
   const last = plMsLast;
-  return `<div class="card" id="plMicrosoft">
-      <h2>From Microsoft 365</h2>
+  return `<section class="sx-panel" id="plMicrosoft" style="${lit("slate")}">
+      <header><h3>From Microsoft 365</h3></header>
       <p class="note">${esc(company.name)}'s Microsoft 365 is connected, so the list can keep itself up to date from its directory: each
         person's name, work email, job and location. Someone added in Microsoft is on the list by the next morning and can sign in with
         Microsoft; someone switched off or removed there is marked as left. Check what it would do first.</p>
@@ -277,7 +317,7 @@ function plMicrosoftCard() {
       ${plMsMessage ? `<p class="pf-ok">${esc(plMsMessage)}</p>` : ""}
       ${plMsProblem ? `<p class="error">${esc(plMsProblem)}</p>` : ""}
       ${plMsRead ? plMsPreviewHtml() : ""}
-    </div>`;
+    </section>`;
 }
 
 const plCount = (n, one, many = one + "s") => `${n} ${n === 1 ? one : many}`;
