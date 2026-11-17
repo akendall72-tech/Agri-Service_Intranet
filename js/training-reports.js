@@ -67,8 +67,8 @@ function renderRpAgco() {
   if (trainingStatusError) { host.innerHTML = `<div class="card"><p class="error">${esc(trainingStatusError)}</p></div>`; return; }
   const r = rpAgcoModel();
   if (!r.m.techs.length) {
-    host.innerHTML = `<div class="card"><p class="note" style="margin:0">No technicians yet. Upload the UKG reports under
-      Uploads → Training Status and this fills in.</p></div>`;
+    host.innerHTML = `<div class="card"><p class="note" style="margin:0">No technicians yet. Upload All employees on
+      Admin → People → People list, and this fills in.</p></div>`;
     return;
   }
   const a = r.all, metGoal = a.pct >= r.goalPct;
@@ -240,8 +240,7 @@ function renderRpClass() {
   if (trainingStatusError) { host.innerHTML = `<div class="card"><p class="error">${esc(trainingStatusError)}</p></div>`; return; }
   const m = tsModel(), courses = crCourses(m);
   if (!courses.length) {
-    host.innerHTML = `<div class="card"><p class="note" style="margin:0">No classes on the uploaded reports yet. Upload them
-      under Uploads → Training Status.</p></div>`;
+    host.innerHTML = `<div class="card"><p class="note" style="margin:0">No classes on anyone's record yet.</p></div>`;
     return;
   }
   rpClass.picked = rpClass.picked.filter(c => courses.some(x => x.name === c));
@@ -599,8 +598,7 @@ function crPageInner() {
   const model = tsModel();
   const courses = crCourses(model);
   if (!courses.length) {
-    return `<div class="card"><p class="note" style="margin:0">No classes on the uploaded reports yet.${
-      isOwner() ? " Upload them on the Training dashboard, under Uploads → <b>Training Status</b>." : ""}</p></div>`;
+    return `<div class="card"><p class="note" style="margin:0">No classes on anyone's record yet.</p></div>`;
   }
   // A class that went away with a new upload.
   if (crState.course && !courses.some(c => c.name === crState.course)) crState.course = null;

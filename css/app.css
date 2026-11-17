@@ -3878,3 +3878,13 @@ button.cab-goto:hover { background: none; color: #fff; }
 .cab-admin input::placeholder, .cab-admin textarea::placeholder { color: rgba(255,255,255,.55); }
 /* A row that really is switched off or gone says so in words too; dimmed, but readable. */
 .cab-admin .lc-table tr.gone td, .cab-admin .lc-table tr.pl-gone td { opacity: .7; }
+
+/* The All employees upload on the People list (it was the Training
+   dashboard's): the drop zone and its preview on a dark panel. */
+#plUpload { margin-top: 0; }
+#plUpload .drop { margin-top: 14px; background: rgba(0,0,0,.22); border-color: rgba(255,255,255,.28); color: var(--cab-sub); }
+#plUpload .drop.over { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.drop-pick { display: inline; color: var(--lit-amber); cursor: pointer; text-decoration: underline; }
+#plUpload .role { background: rgba(0,0,0,.22); border-color: rgba(255,255,255,.12); color: #fff; }
+#plUpload .ok { color: var(--lit-green); }
+#plUpload h4 { margin-top: 18px; }

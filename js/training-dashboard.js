@@ -29,9 +29,9 @@ function txUploads() {
   const osr = trainingReports.internal, osrAgco = trainingReports.agco;
   const catalog = ((agcoCatalog && agcoCatalog.source) || {}).catalog || {};
   const rows = [
-    block("All employees", src.employees, "trainingstatus"),
-    block(src.credits && src.credits.format === "rules" ? "Credit Rules" : "Credits All Time", src.credits, "trainingstatus"),
-    block("OLT and ILT", src.history, "trainingstatus"),
+    block("All employees", src.employees, "peoplelist"),
+    block(src.credits && src.credits.format === "rules" ? "Credit Rules" : "Credits All Time", src.credits, "peoplelist"),
+    block("OLT and ILT", src.history, "peoplelist"),
     { label: "Open Seat Report", tab: "openseat", date: osr ? new Date(osr.updated_at) : null,
       text: osr ? `Published ${new Date(osr.updated_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : "Not published yet", missing: !osr },
     { label: "AGCO sessions", tab: "openseat", date: osrAgco ? new Date(osrAgco.updated_at) : null,
@@ -51,7 +51,7 @@ function txUploads() {
 }
 
 function renderTrainingNavCounts(uploads) {
-  ["trainingstatus", "openseat", "agcocatalog"].forEach(tab => {
+  ["openseat", "agcocatalog"].forEach(tab => {
     const el = document.querySelector(`#trainingNav [data-tx-count="${tab}"]`);
     if (el) el.textContent = uploads.some(u => u.tab === tab && u.stale) ? "!" : "";
   });
@@ -114,7 +114,7 @@ function txDrillPanel(m, { goal, need, plan, close }) {
   if (txDrill === "techs") {
     color = "steel"; title = `Technicians · ${m.techs.length}`;
     sub = "Jobs with Technician in the title, on All Employees";
-    link = `<button type="button" class="sx-link" data-tx-go="trainingstatus">Training Status &rsaquo;</button>`;
+    link = `<button type="button" class="sx-link" data-tx-go="peoplelist">Training Status &rsaquo;</button>`;
     body = byLocation([...m.techs].sort(most), t => txWhoRow(t, false));
   } else if (txDrill === "met") {
     color = "green"; title = `Have ${need}+ hours · ${met.length}`;
@@ -181,8 +181,8 @@ function renderTrainingOverview() {
   const m = tsModel();
   if (!m.techs.length) {
     box.innerHTML = `<div class="sx"><section class="sx-hero"><div class="sx-hero-text"><span class="sx-kicker">Training dashboard</span>
-      <h2>No technicians yet</h2><p>Upload the UKG reports under Uploads → Training Status, and this fills in.</p></div>
-      <button type="button" class="sx-link" data-tx-go="trainingstatus">Upload them &rsaquo;</button></section></div>`;
+      <h2>No technicians yet</h2><p>Upload All employees on Admin → People → People list, and this fills in.</p></div>
+      <button type="button" class="sx-link" data-tx-go="peoplelist">Upload it &rsaquo;</button></section></div>`;
     return;
   }
   const goal = tsGoalPercent(), need = tsRequiredHours(), plan = tsPlanNumbers(m);
@@ -294,7 +294,7 @@ function txPlainOverview(box, uploads) {
     <section class="sx-hero"><div class="sx-hero-text"><span class="sx-kicker">Training dashboard</span>
       <h2>${m.people.length ? `${sxNum(m.people.length)} on Training Status` : "Nobody on Training Status yet"}</h2>
       <p>${m.people.length ? `${m.techs.length} technician${m.techs.length === 1 ? "" : "s"}, ${m.epaCount} with EPA 609.`
-        : "Upload All employees under Uploads, and this fills in."}</p></div></section>
+        : "Upload All employees on Admin → People → People list, and this fills in."}</p></div></section>
     <div class="sx-grid">
       <section class="sx-panel" style="${lit(stale.length ? "amber" : "green")}">
         <header><h3>Uploads</h3><span>${stale.length ? `${stale.length} need${stale.length === 1 ? "s" : ""} a fresh one` : "All current"}</span></header>
@@ -326,7 +326,12 @@ $("admin").addEventListener("click", (event) => {
   const store = event.target.closest("[data-tx-store]");
   if (store) { txStore = store.dataset.txStore === txStore ? "all" : store.dataset.txStore; return renderTrainingOverview(); }
   const go = event.target.closest("[data-tx-go]");
-  if (go) document.querySelector(`#trainingNav [data-tab="${go.dataset.txGo}"]`).click();
+  if (go) {
+    // The All employees upload is on Admin → People list, the other side of the page.
+    const here = document.querySelector(`#trainingNav [data-tab="${go.dataset.txGo}"]`);
+    if (here) here.click();
+    else { showAdmin(); const there = document.querySelector(`#adminNav [data-tab="${go.dataset.txGo}"]`); if (there) there.click(); }
+  }
 });
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Escape" || !txDrill || !$("txDrill")) return;

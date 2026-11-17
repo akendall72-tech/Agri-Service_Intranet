@@ -123,6 +123,8 @@ function renderPeopleList() {
       </table></div>`}
     </section>
 
+    <div id="plUploadSlot"></div>
+
     <section class="sx-panel" style="${lit("ember")}">
       <header><h3>When someone leaves</h3></header>
       <label class="pl-setting"><input type="checkbox" id="plDeactivate" ${company.deactivate_leavers ? "checked" : ""}>
@@ -148,7 +150,12 @@ function renderPeopleList() {
       <div class="pl-actions"><button type="button" id="plAdd" ${plAdding ? "disabled" : ""}>Add to the list</button></div>
     </section>
   </div>`;
+  // The All employees upload: the same panel each time, with any file still waiting in it.
+  const upload = plUploadPanel || (plUploadPanel = $("plUpload"));
+  const slot = $("plUploadSlot");
+  if (upload && slot) slot.replaceWith(upload);
 }
+let plUploadPanel = null;
 
 // A slip button for someone on the list: a join slip with no account yet, a
 // password slip with one. An admin doesn't give password slips for admins or

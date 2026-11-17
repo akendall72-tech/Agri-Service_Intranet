@@ -374,7 +374,7 @@ function trainingStatusView() {
   if (!model.people.length) {
     const uploaded = tsSources && tsSources.employees && tsSources.employees.file;
     return intro + `<div class="card"><p class="note">${!uploaded ? "No reports yet. " + (isOwner()
-      ? "Upload them on the Training dashboard, under Uploads → <b>Training Status</b>." : "The training department uploads them.")
+      ? "Upload All employees on Admin → People → <b>People list</b>." : "An owner uploads them.")
       : "Nobody at your location is on the latest reports."}</p></div>`;
   }
   const scope = isOwner() ? "All locations" : myLocations().length > 1
@@ -711,8 +711,8 @@ function renderTsImport(problems = []) {
       ${!has("employees") ? `<p class="error" style="margin:0 0 6px">All employees hasn't been uploaded yet — it's needed
         before anything can be published.</p>` : ""}
       ${m.techs.length ? `<p class="note" style="margin:0 0 6px">That makes <b>${m.techs.length} technicians</b>
-        (${Object.entries(jobs).map(([job, n]) => `${esc(job.replace(/^\d+\s*-\s*/, ""))} ${n}`).join(", ")}),
-        <b>${m.metCount}</b> with 24+ hours — <b>${tsPct(m.pct)}</b>.</p>` : ""}
+        (${Object.entries(jobs).map(([job, n]) => `${esc(job.replace(/^\d+\s*-\s*/, ""))} ${n}`).join(", ")})${companyHas("agco")
+          ? `, <b>${m.metCount}</b> with 24+ hours — <b>${tsPct(m.pct)}</b>` : ""}.</p>` : ""}
       ${m.missingCredits.length && has("credits") ? `<p class="note" style="margin:0 0 6px">Technicians not on the
         credits report (counted as not met): ${m.missingCredits.map(t => esc(t.name)).join(", ")}.</p>` : ""}
       ${unmatched.length && has("employees") ? `<p class="note" style="margin:0 0 6px">On the credits report but not
@@ -766,7 +766,7 @@ function renderTsLive() {
         ? `, exported ${esc(block.exported)}` : ""}` : "not uploaded yet"}</li>`;
     }).join("")}</ul>
     <p class="note" style="margin:0">Published ${esc(new Date(tsSources.updated_at).toLocaleString())}.
-      ${m.people.length} employees, ${m.techs.length} technicians, ${m.metCount} at 24+ hours (${tsPct(m.pct)}).</p>`;
+      ${m.people.length} employees, ${m.techs.length} technicians${companyHas("agco") ? `, ${m.metCount} at 24+ hours (${tsPct(m.pct)})` : ""}.</p>`;
 }
 
 $("tsFile").addEventListener("change", (e) => { tsReadFiles([...e.target.files]); e.target.value = ""; });
@@ -880,6 +880,7 @@ $("admin").addEventListener("click", async (event) => {
   renderTsLive();
   $("tsResult").innerHTML = `<p class="ok" style="margin-top:12px">Published. The app shows it the next time Training Status is opened.</p>`
     + (listNote ? `<p class="note">${esc(listNote)}</p>` : "");
+  renderPeopleList();
   // The AGCO maps follow the roster: a new technician gets one straight away.
   await agcoRebuild();
   renderAgcoLive();

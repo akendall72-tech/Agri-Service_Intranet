@@ -62,8 +62,8 @@
       <dt>Training Manager</dt>
       <dd>Has the <strong>Training dashboard</strong>: the Class Schedule and grading, Give Credit, the
         courses' training hours and record names, EPA 609, Online Courses, Training Articles, the Skills
-        competency list, Training Settings and the All employees upload. For an AGCO dealer, also the
-        AGCO Development Map, the Mock Schedule and AGCO's uploads. Approves forklift driving tests
+        competency list and Training Settings. For an AGCO dealer, also the AGCO Development Map, the
+        Mock Schedule and AGCO's uploads. Approves forklift driving tests
         before they count, and registers people for any class.</dd>
       <dt>Safety Manager</dt>
       <dd>Has the <strong>Safety dashboard</strong>: approves and publishes Safety Reports and is the only one
@@ -286,8 +286,10 @@
   <p>Pick one way to keep it current; anyone the others don't have can be added by hand.</p>
   <ul class="plain">
     <li><strong>The All employees upload</strong> — your HR system's export of everyone (at Agri-Service, UKG's
-      All employees report), uploaded by the Training Manager on the Training dashboard under Uploads. Before
-      it's published it says who would join, move location and leave.</li>
+      All employees report), uploaded by an owner on the People list itself, under <em>All employees upload</em>,
+      whenever people join, leave, change job or move. Before it's published it says who would join, move location
+      and leave. It also keeps Training Status's list of people, so a company whose People list comes from
+      Microsoft 365 keeps uploading it for that.</li>
     <li><strong>Microsoft 365</strong> — the list fills itself from your Microsoft directory, every night. See
       <em>The People list from Microsoft 365</em> below.</li>
     <li><strong>By hand</strong> — owners, on the People list: <strong>Add someone by hand</strong>, for a new
@@ -467,7 +469,8 @@
       reminders, the forms, Trivia and the rest: see <a href="#admin">The admin page</a>.</li>
     <li><strong>The Training and Safety dashboards</strong>, for the Training Manager and the Safety
       Manager. (The Location Dashboard is in the app too.)</li>
-    <li><strong>Uploads</strong> — All employees, and for an AGCO dealer, AGCO's catalog and Open Seat Report.</li>
+    <li><strong>Uploads</strong> — All employees, on the People list, and for an AGCO dealer, AGCO's catalog and
+      Open Seat Report on the Training dashboard.</li>
     <li><strong>Printouts and spreadsheets</strong> — the Location Dashboard's PDF report, the monthly
       Safety Report PDF, the AGCO Catalog as a CSV file (AGCO dealers), and the import templates.</li>
   </ul>
@@ -1482,12 +1485,12 @@
   <p>A location admin sees the people at their own locations, so the percentage is theirs.
     Owners see every location and the company-wide figure.</p>
 
-  <p class="role-head">For the Training Manager</p>
+  <p class="role-head">For owners</p>
   <h3>Keeping it up to date</h3>
   <p>Training records are kept here: every course completed (at Agri-Service, the history taken from
     UKG to start with), and every credit given and class completed since. The only upload is
-    <strong>All employees</strong>, your HR system's export of everyone, on the Training dashboard's
-    <em>All Employees</em> tab: who works here, their job, location, work email and employee number. It
+    <strong>All employees</strong>, your HR system's export of everyone, on Admin → People → <em>People
+    list</em>, under <em>All employees upload</em>: who works here, their job, location, work email and employee number. It
     also brings the People list up to date (see <a href="#people">Bringing people in</a>). Check the summary
     it shows (the number of technicians and the percentage), then press <strong>Publish</strong>.</p>
   <p>People are matched by their <strong>Employee Number</strong>, then by email, and their
@@ -1520,7 +1523,7 @@
       <tbody>
         <tr><td>See training status</td><td class="yes">Their own</td><td class="yes">Their location</td><td class="yes">Everyone</td></tr>
         <tr><td>Plan (AGCO dealers)</td><td class="no">No</td><td class="yes">Their location</td><td class="yes">Everyone</td></tr>
-        <tr><td>Upload All employees</td><td class="no">No</td><td class="no">No</td><td class="yes">Training Manager</td></tr>
+        <tr><td>Upload All employees</td><td class="no">No</td><td class="no">No</td><td class="yes">Yes</td></tr>
         <tr><td>Change the goal or hours (AGCO dealers)</td><td class="no">No</td><td class="no">No</td><td class="yes">Training Manager</td></tr>
         <tr><td>Give or remove credit by hand</td><td class="no">No</td><td class="no">No</td><td class="yes">Training Manager</td></tr>
       </tbody>
@@ -2054,7 +2057,7 @@
         <tr><td>Who Does What</td><td>Import the directory</td></tr>
         <tr><td>Special Tools</td><td>Download the whole list as CSV, with where every tool is. Bulk upload a changed list: it shows what will be added, changed and removed before anything is saved, and a tool that's checked out can't be removed or moved. Below that, the fields on the tool form: add, rename, reorder, hide or delete them, as text, long text, number, date, a pick list or yes/no. A new field is on every phone's form with no app update</td></tr>
         <tr><td>Groups &amp; Locations</td><td>Add, rename, reorder, switch off or delete groups and locations, and set each location's time zone. Switching one off takes it out of the pick lists but leaves everything already recorded against it. A location that people, lift plans or events belong to can't be deleted. <b>Other names</b> are the other names an upload or Microsoft 365 uses for a location: a person's location there finds its location here by the location's name, its id (made from the name it was first given) or any of these. Renaming a location adds its old name by itself. Each location says how many on All employees it covers, and a location name nothing answers to is named at the top, to be added</td></tr>
-        <tr><td>People list</td><td>The first page under <b>People</b>, in the Cab look, with tiles for who's here, who has no account yet, who was added by hand and who's left. Everyone who works here, how it's kept up to date (the All employees upload, Microsoft 365, or by hand), join slips and password slips, and whether leavers' accounts are switched off by themselves. Everything about it is in <a href="#people">Bringing people in</a></td></tr>
+        <tr><td>People list</td><td>The first page under <b>People</b>, in the Cab look, with tiles for who's here, who has no account yet, who was added by hand and who's left. Under the list, the <b>All employees upload</b> (it used to be on the Training dashboard): your HR system's export of everyone, which brings the People list and Training Status's people up to date; it says what it's for and when to use it, shows what a file would change, and changes nothing until <b>Publish</b>. Everyone who works here, how it's kept up to date (the All employees upload, Microsoft 365, or by hand), join slips and password slips, and whether leavers' accounts are switched off by themselves. Everything about it is in <a href="#people">Bringing people in</a></td></tr>
         <tr><td>Company</td><td>The company's name, as everyone sees it across the app and the web page, and its legal name, printed at the foot of PDFs and in the forklift evaluation's wording. The app's two logos: one in colour for its sign-in screens, and one drawn in white on its red headers and certificates, each a PNG of up to 1 MB, best with a clear background; without one, the app shows the company's name in type. The app picks up a change the next time its home page opens, and its sign-in screen shows the last company signed in on that phone. <b>IT tickets</b>: the address the Support Center's <em>Submit an IT Ticket</em> emails; empty hides the card. <b>Features</b>: what the company has switched on, <b>AGCO dealer</b> and the <b>Apparel tab</b> (see <a href="#roles">Who can do what</a>). The Training Center's mission is on the Training dashboard's Training Articles. <b>Microsoft 365</b>: connecting it, and Microsoft sign-in on or off (see <a href="#people">Bringing people in</a>). <b>What Agri-Barn's platform did here</b>: everything the platform owner did in the company, each visit with why they came</td></tr>
       </tbody>
     </table>
@@ -2112,8 +2115,9 @@
   <p>Owners who hold the <strong>Training Manager</strong> designation get a <strong>Training</strong> button
     between Admin and Safety in the top bar (in the menu on a phone). It opens their own side of the page, in
     the Cab look, with its own sidebar: the dashboard, <em>Planning</em> (the Class Schedule, and for an AGCO dealer the Mock Schedule),
-    <em>Development</em> (Skills, and AGCO Development), <em>Content</em> (Online Courses, Course Catalog, Course Credits and Training Articles), <em>Records</em> (Give Credit and EPA 609), <em>Reports</em>, <em>Setup</em> (Settings) and <em>Uploads</em>, everything that needs a file to
-    bring it up to date, in one place. A <b>!</b> beside an upload means it's out of date or missing.</p>
+    <em>Development</em> (Skills, and AGCO Development), <em>Content</em> (Online Courses, Course Catalog, Course Credits and Training Articles), <em>Records</em> (Give Credit and EPA 609), <em>Reports</em>, <em>Setup</em> (Settings) and, for an AGCO dealer, <em>Uploads</em>: AGCO's catalog and its Open Seat Report.
+    A <b>!</b> beside an upload means it's out of date or missing. The All employees upload is on Admin → People
+    → <em>People list</em>.</p>
   <p><strong>The Overview</strong>, for a company that isn't an AGCO dealer, shows who's on Training Status, how many
     technicians have EPA 609, Skills by level, and when each upload was made. For an AGCO dealer it leads with the
     dealer metric: the share of technicians with 24+ AGCO hours,
@@ -2144,7 +2148,6 @@
         <tr><td>Give Credit</td><td>Give someone credit for a course that isn't on their record. Pick the course (from the catalog, or type any name), the people (search by name, number or location), the date it was completed, the hours (filled in from the catalog) and whether it counts as AGCO credit, with an optional note. It shows the name it goes on records as, and whether it qualifies for crane work or opens the forklift driving test. It warns before giving the same course twice on the same day. <b>Given by hand</b> lists the last year's credits (Show older for the rest), searchable, with <b>Remove</b>. AGCO Development isn't ticked from it: that stays by hand</td></tr>
         <tr><td>Training Articles</td><td>The <b>Training Center mission</b> at the top: the first card in the app's Training Center, in your company's words; empty, there's no card. Then edit the articles under Read up in the Training Center right on the page — headings, bold, lists, links — or in HTML for layout like the level cards. Add, hide, reorder or delete articles</td></tr>
         <tr><td>Settings</td><td>For an AGCO dealer, the dealer metric: the share of technicians with the hours, and the hours, as AGCO sets them; the app and this page use new figures straight away. And how long a crane and rigging qualification lasts after passing Lifting and Rigging (empty: no expiration)</td></tr>
-        <tr><td>All Employees (upload)</td><td>Your HR system's export of everyone (UKG's All employees, at Agri-Service): who works here, their job, location, work email and employee number. The only Training Status upload: training records are kept here. Shows the technician count and percentage before you publish</td></tr>
         <tr><td>Open Seat Report (upload, AGCO dealers)</td><td>AGCO's Technical Training Catalog (or just its Open Seat Report sheet), for the report's AGCO tab. Our own classes are put on the Class Schedule and show on the report by themselves</td></tr>
         <tr><td>EPA 609</td><td>Who's EPA 609 certified. It's a certification tracked here, not a course. The Training Manager ticks people off (<b>Tick off</b>: the date certified and certificate number if you have them, a picture of the certificate as a photo or PDF, and a note), <b>Change</b>s one to add or replace the picture, or <b>Remove</b>s it. It's on their training record at once: Training Status, the dashboard's EPA 609 tile and the reports read it there, whether records come from the uploads or are built here. Shows technicians or everyone; filter by certified, not yet, or no picture yet; search by name, location or job. <b>View certificate</b> opens the picture. Pictures are private: the person, their location admin and owners can see them. Everyone starts as not yet, until they're ticked off</td></tr>
         <tr><td>AGCO Catalog (upload, AGCO dealers)</td><td>Upload AGCO's Technical Training Catalog; the card says which one is in use. Its Level 1–6 courses are what you tick on AGCO Development, and a new copy keeps the ticks. <b>Export to CSV</b> downloads the catalog in use, for a spreadsheet: each course's level, name and AGCO code, whether it came from the catalog or was added here, and how many technicians are ticked for it</td></tr>
