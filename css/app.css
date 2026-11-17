@@ -3860,3 +3860,21 @@ button.cab-goto:hover { background: none; color: #fff; }
 .cab-admin .sx-tiles { grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr)); }
 @container (max-width: 1100px) { .cab-admin .sx-tiles.six { --n: 3; } }
 @container (max-width: 720px) { .cab-admin .sx-tiles { --n: 2; } }
+
+/* Hovering a row in a dark table: the page's own tables turn a hovered row
+   almost white (tbody tr:hover, above), which washed out the white text here.
+   The row lights up a little in its panel's colour instead, and stays dark. */
+.lc-table tbody tr:hover { background: none; }
+.lc-table tbody tr:hover td, .lc-table tbody tr:hover th {
+  background-color: color-mix(in srgb, var(--accent, var(--lit-slate)) 14%, #262E34); }
+.lc-table td { color: #fff; }
+/* Secondary words in a dark table, bright enough not to look switched off. */
+.cab-admin .lc-table .note, .cab-admin .lc-table td small, .lc-table td small, .lc-who small { color: #C3CCD2; }
+/* Boxes you can type in look like it: a lighter fill and a clear edge. */
+.cab-admin input:not([type=checkbox]):not([type=radio]):not([type=file]), .cab-admin select, .cab-admin textarea {
+  background: rgba(255,255,255,.09); border-color: rgba(255,255,255,.28); color: #fff; }
+.cab-admin input:not([type=checkbox]):not([type=radio]):not([type=file]):hover, .cab-admin select:hover, .cab-admin textarea:hover {
+  border-color: rgba(255,255,255,.45); }
+.cab-admin input::placeholder, .cab-admin textarea::placeholder { color: rgba(255,255,255,.55); }
+/* A row that really is switched off or gone says so in words too; dimmed, but readable. */
+.cab-admin .lc-table tr.gone td, .cab-admin .lc-table tr.pl-gone td { opacity: .7; }
