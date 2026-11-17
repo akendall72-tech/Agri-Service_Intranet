@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Which version this is. publish.sh stamps the date and commit here, and
      into version.json beside the page; "dev" is a copy that wasn't published. -->
-<meta name="app-version" content="2026-11-17.149ed7b">
+<meta name="app-version" content="2026-11-17.79b30cb">
 <!-- Where this page may load things from and send things to. GitHub Pages
      can't send security headers, so it's here. Scripts come only from this
      site and the two script CDNs (each pinned with an integrity hash), and
@@ -157,8 +157,7 @@
       <button data-tab="trainingsettings" data-title="Training settings"><i data-icon="level"></i><span>Settings</span></button>
 
       <div class="nav-group" data-feature="agco">Uploads</div>
-      <button data-feature="agco" data-tab="openseat" data-title="Open Seat Report uploads"><i data-icon="calendar"></i><span>Open Seat Report</span><b class="nav-count tx-stale" data-tx-count="openseat"></b></button>
-      <button data-feature="agco" data-tab="agcocatalog" data-title="AGCO Catalog upload"><i data-icon="doc"></i><span>AGCO Catalog</span><b class="nav-count tx-stale" data-tx-count="agcocatalog"></b></button>
+      <button data-feature="agco" data-tab="agcocatalog" data-title="AGCO Training Catalog"><i data-icon="doc"></i><span>AGCO Training Catalog</span><b class="nav-count tx-stale" data-tx-count="agcocatalog"></b></button>
     </nav>
 
     <!-- The Safety dashboard: Safety Managers only. Its tabs share the admin
@@ -886,29 +885,6 @@
       <div id="inspAdmin"></div>
     </section>
 
-    <!-- Open seat report -->
-    <section id="tab-openseat" class="hidden">
-      <div class="card">
-        <h2>Open seat report</h2>
-        <div class="drop" id="osrDrop">
-          Drop the catalog here, or
-          <label for="osrFile" style="display:inline;color:var(--red);
-                 cursor:pointer;text-decoration:underline">choose files</label>
-          <input id="osrFile" type="file" class="hidden" multiple
-                 accept=".csv,.xlsx,.xls,text/csv">
-        </div>
-        <p class="note" style="margin-top:12px">AGCO's <b>Technical Training Catalog</b> workbook, or a copy with just its
-          Open Seat Report sheet: AGCO Academy's sessions and their seats, on the Open Seat Report's AGCO tab. Our own classes
-          are put on the Class Schedule and show on the report by themselves.</p>
-        <p class="note">Nothing changes in the app until you press <b>Publish</b>. Publishing replaces the previous copy.</p>
-        <div id="osrResult"></div>
-      </div>
-      <div class="card">
-        <h2>Published now</h2>
-        <div id="osrLive"></div>
-      </div>
-    </section>
-
     <!-- Employee handbook -->
     <!-- The Location Dashboard's Join slips (0141): drawn by renderLocationSlips -->
     <section id="tab-locationslips" class="hidden">
@@ -989,7 +965,8 @@
     </section>
 
     <!-- AGCO Development Map -->
-    <!-- AGCO's Technical Training Catalog, uploaded: one of the Training page's uploads -->
+    <!-- AGCO's Technical Training Catalog: one upload for its sessions and its
+         courses, drawn and wired by agco-catalog.js -->
     <section id="tab-agcocatalog" class="hidden">
       <div class="card">
         <h2>AGCO Technical Training Catalog</h2>
@@ -999,11 +976,20 @@
                  cursor:pointer;text-decoration:underline">choose the file</label>
           <input id="agcoFile" type="file" class="hidden" accept=".xlsx,.xls">
         </div>
-        <p class="note" style="margin-top:12px">Its LEVEL 1 to LEVEL 6 tabs are the courses you tick for each technician
-          on the AGCO Development tab, with any added there. Upload a new copy when AGCO changes its courses — the ticks,
-          and the courses added, are kept.</p>
-        <div id="agcoLive"></div>
+        <p class="note" style="margin-top:12px">The workbook AGCO sends its dealers. One upload publishes both of its parts:</p>
+        <ul class="note">
+          <li>its <b>Open Seat Report</b> sheet: AGCO Academy's sessions and their open seats, on the Open Seat Report's
+            AGCO tab;</li>
+          <li>its <b>LEVEL 1 to LEVEL 6</b> tabs: the courses you tick for each technician on AGCO Development, with any
+            added there.</li>
+        </ul>
+        <p class="note">Upload each new copy AGCO sends: the seats change week to week. Nothing changes until you press
+          <b>Publish</b>. The ticks, and the courses added on AGCO Development, are kept.</p>
         <div id="agcoResult"></div>
+      </div>
+      <div class="card">
+        <h2>Published now</h2>
+        <div id="agcoLive"></div>
       </div>
     </section>
 
@@ -1228,7 +1214,7 @@
      js/core.js has the rest. publish.sh adds ?v= to each, so a changed file is
      fetched fresh and an unchanged one comes from the browser's cache. -->
 <script src="js/core.js?v=63e0a1dd05"></script>
-<script src="js/shell.js?v=317e4e2ee9"></script>
+<script src="js/shell.js?v=2505e395eb"></script>
 <script src="js/location-dashboard.js?v=6dff455b18"></script>
 <script src="js/location-certifications.js?v=188701e85c"></script>
 <script src="js/my-certifications.js?v=c7baa6cb5e"></script>
@@ -1249,18 +1235,18 @@
 <script src="js/trivia.js?v=eb409c41ff"></script>
 <script src="js/fleet.js?v=240b3006b6"></script>
 <script src="js/safety-reports.js?v=6b5af13f7a"></script>
-<script src="js/training-dashboard.js?v=90985ad493"></script>
+<script src="js/training-dashboard.js?v=b97b5a9060"></script>
 <script src="js/safety-dashboard.js?v=4961233011"></script>
 <script src="js/safety-desk.js?v=b731cdcf03"></script>
 <script src="js/mock-schedule.js?v=e2754fe267"></script>
 <script src="js/groups-and-locations.js?v=c4e07136d1"></script>
-<script src="js/open-seat-report.js?v=167d239afe"></script>
+<script src="js/open-seat-report.js?v=41c156fae8"></script>
 <script src="js/inspections.js?v=2e9c8853b2"></script>
 <script src="js/hr.js?v=b9c0254418"></script>
 <script src="js/personal-inventory.js?v=e24b5aa871"></script>
 <script src="js/course-catalog.js?v=0cac591ad1"></script>
 <script src="js/training-credits.js?v=42d0991b38"></script>
-<script src="js/class-schedule.js?v=a9cc17e8d6"></script>
+<script src="js/class-schedule.js?v=25798032fe"></script>
 <script src="js/class-registration.js?v=81ec1c81ac"></script>
 <script src="js/class-grades.js?v=880fab3382"></script>
 <script src="js/epa-609.js?v=98c509a336"></script>
@@ -1269,7 +1255,8 @@
 <script src="js/skills.js?v=8efb8a0583"></script>
 <script src="js/training-articles.js?v=2eb9234aaf"></script>
 <script src="js/news.js?v=7666f3dcf1"></script>
-<script src="js/agco-map.js?v=ef25609d4d"></script>
+<script src="js/agco-map.js?v=6346d1735d"></script>
+<script src="js/agco-catalog.js?v=bba7e7a6c2"></script>
 <script src="js/my-classes.js?v=632c8ac9a0"></script>
 <script src="js/online-courses.js?v=79fbda48f5"></script>
 <script src="js/training-reports.js?v=7eb204fa76"></script>

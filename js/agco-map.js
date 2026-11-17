@@ -274,119 +274,13 @@ async function agcoRebuild() {
   return agcoPublishAll();
 }
 
-// ---- reading the catalog -----------------------------------------------------------
-
+// ---- the catalog's upload ---------------------------------------------------------
+//
+// AGCO's Technical Training Catalog is read and published, with the AGCO
+// Academy sessions in the same workbook, by the AGCO Training Catalog upload
+// (agco-catalog.js): agcoCatalogFrom, renderAgcoImport and renderAgcoLive are
+// there. A course's AGCO code, which the form below checks too:
 const AGCO_CODE = /^[A-Z]{5}[A-Z0-9]{10,20}$/;
-
-// The catalog's LEVEL 1 to LEVEL 6 tabs: each course's title and code. French
-// copies of the Level 2 courses are left out — they're the same courses.
-function agcoCatalogFrom(workbook, file) {
-  const levels = AGCO_LEVELS.map(info => {
-    const name = workbook.SheetNames.find(n => new RegExp(`^\\s*level\\s*${info.level}\\s*$`, "i").test(n));
-    if (!name) return null;
-    const rows = XLSX.utils.sheet_to_json(workbook.Sheets[name], { header: 1, raw: true, defval: "" });
-    const head = rows.findIndex(r => (r || []).some(c => tsText(c).toLowerCase() === "course title"));
-    if (head < 0) return null;
-    const titleAt = rows[head].findIndex(c => tsText(c).toLowerCase() === "course title");
-    const seen = new Set();
-    const courses = rows.slice(head + 1).map(r => {
-      const cells = (r || []).map(tsText);
-      const code = cells.find(c => AGCO_CODE.test(c)) || "";
-      let title = cells[titleAt] || "";
-      if (!title && /CRTMLP03/.test(code)) title = "Level 3: Application of Technical Theory";
-      return { title: title || code, code };
-    }).filter(c => c.title && !/^certification\s+technique/i.test(c.title))
-      .filter(c => { const k = c.title.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; });
-    return { ...info, courses };
-  });
-  if (levels.some(l => !l)) return null;
-  // "Open Seat Report 9-23-26" heads the catalog's first data tab: the date it's from.
-  let dated = "";
-  const osr = workbook.SheetNames.find(n => /^open seat report$/i.test(n.trim()));
-  if (osr && workbook.Sheets[osr] && workbook.Sheets[osr].A1) {
-    const m = tsText(workbook.Sheets[osr].A1.v).match(/(\d{1,2}-\d{1,2}-\d{2,4})/);
-    if (m) dated = m[1];
-  }
-  return { levels, source: { file: file.name, dated } };
-}
-
-async function agcoReadFiles(files) {
-  const problems = [];
-  for (const file of files) {
-    try {
-      const catalog = agcoCatalogFrom(XLSX.read(await file.arrayBuffer(), { type: "array" }), file);
-      if (catalog) agcoPending = catalog;
-      else problems.push(`${file.name}: not AGCO's Technical Training Catalog — it needs the LEVEL 1 to LEVEL 6 tabs.`);
-    } catch (e) {
-      problems.push(`${file.name}: couldn't be read (${e.message}).`);
-    }
-  }
-  renderAgcoImport(problems);
-  renderAgcoTechs();
-  renderAgcoRules();
-  renderAgcoBales();
-}
-
-// ---- admin: the AGCO Development tab ----------------------------------------------
-
-function renderAgcoImport(problems = []) {
-  const box = $("agcoResult");
-  if (!box) return;
-  if (!agcoPending && !problems.length) { box.innerHTML = ""; return; }
-  const levels = agcoPending ? agcoWithRules(agcoPending.levels) : [];
-  const keys = new Set(levels.flatMap(l => l.courses.map(agcoCourseKey)));
-  const orphaned = new Set(agcoMarks.filter(m => !keys.has(m.course_key)).map(m => m.title)).size;
-  box.innerHTML = `${problems.map(p => `<p class="error">${esc(p)}</p>`).join("")}
-    ${agcoPending ? `<div class="role" style="margin-top:12px">
-      <b>Ready to publish</b>
-      <p class="note" style="margin:6px 0 10px">${esc(agcoPending.source.file)}${agcoPending.source.dated
-        ? `, from ${esc(agcoPending.source.dated)}` : ""}: ${levels.map(l => `Level ${l.level} ${l.courses.length}`).join(", ")}
-        courses${agcoAdded().length ? `, with the ${agcoAdded().length} added here` : ""}.</p>
-      ${orphaned ? `<p class="note" style="margin:0 0 10px">${orphaned} ${orphaned === 1 ? "course that's" : "courses that are"} ticked
-        for someone ${orphaned === 1 ? "isn't" : "aren't"} on this catalog. The ticks are kept, but they won't count toward a level
-        until the course is back.</p>` : ""}
-      <div class="row"><button data-act="agco-publish">Publish</button>
-        <button class="ghost" data-act="agco-discard">Discard</button><span class="msg"></span></div>
-    </div>` : ""}`;
-}
-
-function renderAgcoLive() {
-  const box = $("agcoLive");
-  if (!box) return;
-  if (agcoError) {
-    box.innerHTML = `<p class="error">${/does not exist|schema cache/i.test(agcoError)
-      ? "Run migration 0073_agco_development_map.sql in the SQL editor, then reload this page." : esc(agcoError)}</p>`;
-    return;
-  }
-  const source = ((agcoCatalog && agcoCatalog.source) || {}).catalog || {};
-  const levels = agcoWithRules((agcoCatalog && agcoCatalog.levels) || []);
-  box.innerHTML = `<p class="note" style="margin:0"><b>In use:</b> ${levels.length
-    ? `${esc(source.file || "Technical Training Catalog")}${source.dated ? `, from ${esc(source.dated)}` : ""} —
-       ${levels.map(l => `Level ${l.level} ${l.courses.length}`).join(", ")} courses${agcoAdded().length
-         ? `, the ${agcoAdded().length} added here included` : ""}.`
-    : "no catalog yet."}</p>${levels.length ? `<div class="row" style="margin:10px 0 0">
-      <button type="button" class="ghost" data-act="agco-export">${icon("doc", 15)}Export to CSV</button></div>` : ""}`;
-}
-
-// The catalog as the database holds it, for a spreadsheet: every course on each
-// level, the ones added here included, and how many of today's technicians are
-// ticked for it. What's published, not a catalog read and waiting to publish.
-function agcoExportCsv() {
-  const levels = agcoWithRules((agcoCatalog && agcoCatalog.levels) || []);
-  const source = ((agcoCatalog && agcoCatalog.source) || {}).catalog || {};
-  const techs = new Set(agcoTechs().map(t => t.person_key));
-  const ticked = (c) => new Set(agcoMarks.filter(m => m.course_key === agcoCourseKey(c) && techs.has(m.person_key))
-    .map(m => m.person_key)).size;
-  downloadCSV(`AGCO Catalog ${new Date().toLocaleDateString("en-CA")}.csv`, [
-    ["Level", "Level name", "Course title", "AGCO course code", "From", "Technicians ticked"],
-    ...levels.flatMap(l => l.courses.map(c => [l.level, l.name, c.title, c.code || "",
-      c.added ? "Added here" : [source.file || "Technical Training Catalog", source.dated].filter(Boolean).join(", "), ticked(c)]))
-  ]);
-}
-
-$("admin").addEventListener("click", (event) => {
-  if (event.target.closest('button[data-act="agco-export"]')) agcoExportCsv();
-});
 
 // ---- admin: ticking a technician's courses -------------------------------------------
 //
@@ -654,7 +548,7 @@ $("admin").addEventListener("click", async (event) => {
   renderAgcoLive(); renderAgcoTechs(); renderAgcoRules();
   if (problem) return speak(card, `Saved, but the maps weren't rebuilt: ${problem}`, true);
   const label = $("agcoLevel5Need").selectedOptions[0].textContent;
-  speak(card, `Saved: ${label}. ${agcoPending ? "It applies when you publish the catalog waiting above." : "Every map has been rebuilt."}`, false);
+  speak(card, `Saved: ${label}. ${agcoPending ? "It applies when you publish the catalog waiting on AGCO Training Catalog." : "Every map has been rebuilt."}`, false);
 });
 
 // ---- admin: the haystack's labels -----------------------------------------------------
@@ -768,35 +662,6 @@ $("admin").addEventListener("click", async (event) => {
   $("agcoAddCode").value = "";
   say(`Added to Level ${level}. ${level <= 2 ? "Everyone now needs it to complete that level. " : ""}Every map has been rebuilt.`, false);
 });
-
-// ---- admin: publishing the catalog ------------------------------------------------------
-
-$("admin").addEventListener("click", async (event) => {
-  const button = event.target.closest("button[data-act]");
-  if (!button || !["agco-publish", "agco-discard"].includes(button.dataset.act)) return;
-  if (button.dataset.act === "agco-discard") {
-    agcoPending = null;
-    renderAgcoTechs(); renderAgcoRules();
-    return renderAgcoImport();
-  }
-  const box = button.closest(".role");
-  button.disabled = true;
-  speak(box, "Publishing…", false);
-  const problem = await agcoPublishAll(agcoPending.source);
-  button.disabled = false;
-  if (problem) return speak(box, problem, true);
-  agcoPending = null;
-  renderAgcoImport(); renderAgcoLive(); renderAgcoTechs(); renderAgcoRules(); renderAgcoBales();
-  $("agcoResult").innerHTML = `<p class="ok" style="margin-top:12px">Published. ${agcoPeople.length} technicians have a map,
-    in the Training Center in the app and on this page.</p>`;
-});
-
-$("agcoFile").addEventListener("change", (e) => { agcoReadFiles([...e.target.files]); e.target.value = ""; });
-["dragenter", "dragover"].forEach(type =>
-  $("agcoDrop").addEventListener(type, (e) => { e.preventDefault(); $("agcoDrop").classList.add("over"); }));
-["dragleave", "drop"].forEach(type =>
-  $("agcoDrop").addEventListener(type, () => $("agcoDrop").classList.remove("over")));
-$("agcoDrop").addEventListener("drop", (e) => { e.preventDefault(); agcoReadFiles([...e.dataTransfer.files]); });
 
 // ---- the map ---------------------------------------------------------------------------
 //

@@ -248,7 +248,7 @@ function showAdmin() {
   evalAgreed = null; evalNotice = "";
   safely(renderCerts, renderEvalForm, renderPlans, renderPeople, renderSupport, renderToolsAdmin,
     renderPayroll, renderDirectory, renderLogins, renderSharedReminders,
-    renderEvents, renderOrg, renderOsrImport, renderOsrLive, renderInspectionsAdmin,
+    renderEvents, renderOrg, renderInspectionsAdmin,
     renderCoursesAdmin, renderSdsAdmin, renderSdsPending, renderArticlesAdmin, renderSkillsAdmin,
     renderNewsAdmin, renderTsImport, renderTsLive, renderHandbook, renderAgcoImport, renderAgcoLive,
     renderAgcoTechs, renderAgcoRules, renderAgcoAdded, renderAgcoBales, renderMockSchedule, renderSafetyAdmin,
@@ -276,7 +276,7 @@ function showTraining(tab) {
   setMode("training");
   document.body.dataset.page = "training";
   evalAgreed = null; evalNotice = "";
-  safely(renderMockSchedule, renderSkillsAdmin, renderCoursesAdmin, renderArticlesAdmin, renderTsImport, renderTsLive, renderOsrImport, renderOsrLive,
+  safely(renderMockSchedule, renderSkillsAdmin, renderCoursesAdmin, renderArticlesAdmin, renderTsImport, renderTsLive,
     renderAgcoImport, renderAgcoLive, renderAgcoTechs, renderAgcoRules, renderAgcoAdded, renderAgcoBales,
     renderTrainingOverview, renderReports, renderOltAdmin, renderGiveCredit, renderCourseCredits, renderClassSchedule, renderEpa609);
   // A tab for a feature the company hasn't switched on isn't one to land on.
@@ -618,7 +618,7 @@ document.querySelectorAll(".tabs button[data-tab]").forEach(btn => {
     document.querySelectorAll(".tabs button[data-tab]").forEach(b =>
       b.classList.toggle("active", b === btn));
     ["certs", "plans", "people", "support", "payroll", "tools",
-      "directory", "logins", "reminders", "fleetcheck", "events", "fitness", "trivia", "org", "openseat", "inspections", "courses", "articles", "skillsadmin", "sds", "news", "handbook", "agco", "mock", "safetydesk", "safetyreportform", "safetyreports", "safetyoverview", "fkwaiting", "trainingoverview", "agcocatalog", "rpagco", "rpclass", "oltadmin", "locationoverview", "locationcerts", "manuals", "cranequals", "fkrequired", "crrequired", "craneinspection", "givecredit", "coursecredits", "classschedule", "trainingsettings", "epa609", "company", "peoplelist", "jobs", "locationslips"].forEach(name =>
+      "directory", "logins", "reminders", "fleetcheck", "events", "fitness", "trivia", "org", "inspections", "courses", "articles", "skillsadmin", "sds", "news", "handbook", "agco", "mock", "safetydesk", "safetyreportform", "safetyreports", "safetyoverview", "fkwaiting", "trainingoverview", "agcocatalog", "rpagco", "rpclass", "oltadmin", "locationoverview", "locationcerts", "manuals", "cranequals", "fkrequired", "crrequired", "craneinspection", "givecredit", "coursecredits", "classschedule", "trainingsettings", "epa609", "company", "peoplelist", "jobs", "locationslips"].forEach(name =>
       $("tab-" + name).classList.toggle("hidden", name !== btn.dataset.tab));
     $("adminTitle").textContent = btn.dataset.title || btn.querySelector("span").textContent.trim();
     if (btn.closest("#safetyNav")) safetyTab = btn.dataset.tab;

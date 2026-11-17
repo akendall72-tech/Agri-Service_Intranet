@@ -283,7 +283,7 @@ async function scReload() {
   if (!reports.error) trainingReports = Object.fromEntries((reports.data || []).map(r => [r.id, r]));
   await loadClassRegistrations();
   renderClassSchedule();
-  safely(renderEvents, renderOsrLive);
+  safely(renderEvents);
 }
 
 async function scSave(button, status) {

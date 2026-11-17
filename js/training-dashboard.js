@@ -26,32 +26,32 @@ function txUploads() {
     return { label, tab, file: b && b.file, date, text: b && b.exported ? `Exported ${b.exported}` : b && b.file ? "Uploaded" : "Not uploaded yet",
       missing: !(b && (b.file || b.exported)) };
   };
-  const osr = trainingReports.internal, osrAgco = trainingReports.agco;
+  // AGCO's Technical Training Catalog is one upload for both its parts: dated by
+  // its sessions, whose seats change week to week, when they've been published.
+  const sessions = trainingReports.agco;
   const catalog = ((agcoCatalog && agcoCatalog.source) || {}).catalog || {};
+  const catalogDate = sessions ? new Date(sessions.updated_at) : agcoCatalog && agcoCatalog.updated_at ? new Date(agcoCatalog.updated_at) : null;
   const rows = [
     block("All employees", src.employees, "peoplelist"),
     block(src.credits && src.credits.format === "rules" ? "Credit Rules" : "Credits All Time", src.credits, "peoplelist"),
     block("OLT and ILT", src.history, "peoplelist"),
-    { label: "Open Seat Report", tab: "openseat", date: osr ? new Date(osr.updated_at) : null,
-      text: osr ? `Published ${new Date(osr.updated_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : "Not published yet", missing: !osr },
-    { label: "AGCO sessions", tab: "openseat", date: osrAgco ? new Date(osrAgco.updated_at) : null,
-      text: osrAgco ? `Published ${new Date(osrAgco.updated_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : "Not published yet", missing: !osrAgco },
-    { label: "AGCO Catalog", tab: "agcocatalog", date: when(catalog.dated) || (agcoCatalog && agcoCatalog.updated_at ? new Date(agcoCatalog.updated_at) : null),
-      text: catalog.file ? `${catalog.file}${catalog.dated ? `, ${catalog.dated}` : ""}` : "Not uploaded yet", missing: !catalog.file, slow: true }
+    { label: "AGCO Training Catalog", tab: "agcocatalog", date: catalogDate,
+      text: catalog.file ? `${catalog.file}${catalog.dated ? `, ${catalog.dated}` : ""}`
+        : sessions ? `Published ${catalogDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : "Not uploaded yet",
+      missing: !sessions && !catalog.file }
   ];
-  // The catalog changes a few times a year; the rest weekly or monthly.
   rows.forEach(r => { r.days = r.date ? Math.floor((Date.now() - r.date) / SX_DAY) : null;
-    r.stale = r.missing || (r.days !== null && r.days > (r.slow ? 180 : 30)); });
-  // AGCO's sessions and catalog are an AGCO dealer's only (0149).
+    r.stale = r.missing || (r.days !== null && r.days > 30); });
+  // AGCO's catalog is an AGCO dealer's only (0149).
   const theirs = companyHas("agco") ? rows : rows.filter(r => !/^AGCO/.test(r.label));
-  // All internal (0127): records are kept here and our classes are scheduled
-  // here, so the UKG reports they came from aren't uploaded any more.
-  if (tsBuiltHere()) return theirs.filter(r => !(r.label === "OLT and ILT" || /^Credit/.test(r.label) || r.label === "Open Seat Report"));
+  // All internal (0127): records are kept here, so the UKG reports they came
+  // from aren't uploaded any more.
+  if (tsBuiltHere()) return theirs.filter(r => !(r.label === "OLT and ILT" || /^Credit/.test(r.label)));
   return theirs;
 }
 
 function renderTrainingNavCounts(uploads) {
-  ["openseat", "agcocatalog"].forEach(tab => {
+  ["agcocatalog"].forEach(tab => {
     const el = document.querySelector(`#trainingNav [data-tx-count="${tab}"]`);
     if (el) el.textContent = uploads.some(u => u.tab === tab && u.stale) ? "!" : "";
   });
@@ -272,7 +272,7 @@ function renderTrainingOverview() {
         <header><h3>AGCO Development</h3><button type="button" class="sx-link" data-tx-go="agco">Open &rsaquo;</button></header>
         ${tally && agcoPeople.length ? sxRankHtml([6, 5, 4, 3, 2, 1, 0].map(n => [n ? `Level ${n}` : "Not started", tally[n]]), "")
           + `<p class="sx-sub">The highest level each technician has completed in order.</p>`
-          : `<p class="sx-empty">No development maps yet. Upload the AGCO Catalog, then tick courses on AGCO Development.</p>`}
+          : `<p class="sx-empty">No development maps yet. Upload the AGCO Training Catalog, then tick courses on AGCO Development.</p>`}
       </section>
 
       <section class="sx-panel" style="${lit("slate")}">
