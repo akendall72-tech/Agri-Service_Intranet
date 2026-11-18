@@ -79,14 +79,19 @@ function txShopChart(m) {
 
 function txWhoRow(t, planning) {
   const pct = t.hours === null ? 0 : Math.min(100, t.hours / t.required * 100);
-  const need = Math.max(0, t.required - (t.hours || 0));
-  return `<div class="tx-who-row${planning && tsPlan.has(t.key) ? " planned" : ""}">
-    ${planning ? `<label class="tx-plan" title="Plan to get ${esc(t.first)} to ${t.required} hours"><input type="checkbox" data-ts-plan="${esc(t.key)}"${
-      tsPlan.has(t.key) ? " checked" : ""}><span>Plan</span></label>` : ""}
-    <span class="tx-who-name"><b>${esc(t.name)}</b><small>${esc(t.store)}${t.epa609 ? "" : " · no EPA 609"}</small></span>
-    <span class="tx-bar"><i class="${t.met ? "ok" : ""}" style="width:${pct}%"></i></span>
+  // Registered for classes that get them there (0152): ticked, and only
+  // cancelling the seat takes it off.
+  const note = tsPlanNote(t), auto = note.kind === "registered";
+  const reg = !t.met ? tsRegisteredHours(t) : 0;
+  return `<div class="tx-who-row${planning && tsPlanned(t) ? " planned" : ""}${planning && auto ? " registered" : ""}">
+    ${planning ? `<label class="tx-plan" title="${auto ? esc(note.title) : `Plan to get ${esc(t.first)} to ${t.required} hours`}"><input type="checkbox" data-ts-plan="${esc(t.key)}"${
+      tsPlanned(t) ? " checked" : ""}${auto ? " disabled" : ""}><span>Plan</span></label>` : ""}
+    <span class="tx-who-name"><b>${esc(t.name)}</b><small>${esc(t.store)}${t.epa609 ? "" : " · no EPA 609"}${
+      reg ? ` · <span title="${esc(tsRegisteredClasses(t))}">${reg} hrs registered</span>` : ""}</small></span>
+    <span class="tx-bar"><i class="${t.met ? "ok" : ""}" style="width:${pct}%"></i>${reg && !t.met
+      ? `<i class="tx-bar-reg" style="left:${pct}%;width:${Math.min(100 - pct, reg / t.required * 100)}%"></i>` : ""}</span>
     <span class="tx-hrs">${t.hours === null ? "—" : `${t.hours}<small> hrs</small>`}</span>
-    ${planning ? `<span class="tx-need">${tsPlan.has(t.key) ? "Planned" : `needs ${need}`}</span>` : ""}
+    ${planning ? `<span class="tx-need${auto ? " ok" : ""}" title="${esc(note.title)}">${note.text}</span>` : ""}
   </div>`;
 }
 
@@ -141,8 +146,9 @@ function txDrillPanel(m, { goal, need, plan, close }) {
     color = plan.projected >= tsGoal() ? "green" : "teal";
     title = `With your plan · ${tsPct(plan.projected)}`;
     sub = `${m.metCount} have ${need}+ hours, plus ${plan.planned} planned${plan.stillNeeded ? ` · ${plan.stillNeeded} more to reach ${goal}%` : ` · reaches ${goal}%`}`;
-    const planned = notMet.filter(t => tsPlan.has(t.key)), rest = notMet.filter(t => !tsPlan.has(t.key));
-    body = `<p class="sx-sub">Tick <b>Plan</b> for anyone you'll get to ${need} hours this year. The plan is saved to your account.</p>
+    const planned = notMet.filter(tsPlanned), rest = notMet.filter(t => !tsPlanned(t));
+    body = `<p class="sx-sub">Anyone registered for AGCO classes this year that get them to ${need} hours is planned by themselves.
+      Tick <b>Plan</b> for anyone else you'll get there; your ticks are saved to your account.</p>
       <h4>Planned · ${planned.length}</h4>${planned.length ? list(planned, true) : `<p class="sx-empty">Nobody yet.</p>`}
       ${rest.length ? `<h4>Not planned, closest first · ${rest.length}</h4>${list(rest, true)}` : ""}`;
   } else if (txDrill === "epa") {
@@ -248,8 +254,9 @@ function renderTrainingOverview() {
         <div class="tx-who">
           <div>
             <h4>Not there yet · ${notYet.length}</h4>
-            <p class="sx-sub">Tick <b>Plan</b> for anyone you'll get to ${need} hours this year: <b>${tsPct(plan.projected)}</b> with the plan${
-              plan.stillNeeded ? `, <b>${plan.stillNeeded} more</b> to reach ${goal}%` : `, which reaches ${goal}%`}. The plan is saved to your account.</p>
+            <p class="sx-sub">Anyone registered for AGCO classes this year that get them to ${need} hours is planned by themselves${
+              plan.registered ? ` (${plan.registered} now)` : ""}; tick <b>Plan</b> for anyone else you'll get there. <b>${tsPct(plan.projected)}</b> with the plan${
+              plan.stillNeeded ? `, <b>${plan.stillNeeded} more</b> to reach ${goal}%` : `, which reaches ${goal}%`}. Your ticks are saved to your account.</p>
             <div class="tx-who-list">${notYet.map(t => txWhoRow(t, true)).join("") || `<p class="sx-empty sx-clear">${icon("checkCircle", 18)} Everyone here has ${need} hours.</p>`}</div>
           </div>
           <div>

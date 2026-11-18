@@ -110,7 +110,8 @@ function lxFigures(loc) {
   const shortBy = (t) => Math.max(0, t.required - (t.hours || 0));
   const notMet = m.techs.filter(t => !t.met).sort((a, b) => shortBy(a) - shortBy(b) || byName(a, b));
   const met = m.techs.filter(t => t.met).sort((a, b) => (b.hours || 0) - (a.hours || 0) || byName(a, b));
-  const close = notMet.filter(t => t.hours !== null && shortBy(t) <= 8);
+  // Close, and not already registered for classes that get them there (0152).
+  const close = notMet.filter(t => t.hours !== null && shortBy(t) <= 8 && !tsByRegistration(t));
   const no609 = m.techs.filter(t => !t.epa609).sort(byName);
   const metGoal = m.techs.length && m.pct >= tsGoal();
 
@@ -253,6 +254,8 @@ function lxFigures(loc) {
 }
 
 function lxPlural(n, one, many = one + "s") { return `${n} ${n === 1 ? one : many}`; }
+// How many not there yet are registered for classes that get them there (0152).
+const lxRegistered = (people) => people.filter(tsByRegistration).length;
 
 function renderLocationOverview() {
   const box = $("lxOverview");
@@ -283,7 +286,8 @@ function renderLocationOverview() {
         <span class="sx-kicker">${esc(name)} · ${plural(roster.length, "person", "people")} on the UKG reports · ${plural(accounts.length, "app account")}</span>
         <h2>${m.techs.length ? `${tsPct(m.pct)} have ${need}+ hours` : "No technicians yet"}</h2>
         <p>${m.techs.length ? `${m.metCount} of ${m.techs.length} technicians here. ${metGoal
-          ? `<b class="ok">At or above the ${goal}% goal.</b>` : `The dealer goal is ${goal}%.`}${close.length ? ` ${close.length} ${close.length === 1 ? "is" : "are"} within 8 hours.` : ""}`
+          ? `<b class="ok">At or above the ${goal}% goal.</b>` : `The dealer goal is ${goal}%.`}${close.length ? ` ${close.length} ${close.length === 1 ? "is" : "are"} within 8 hours.` : ""}${
+            lxRegistered(notMet) ? ` ${lxRegistered(notMet)} ${lxRegistered(notMet) === 1 ? "is" : "are"} registered for classes that get them there.` : ""}`
           : noReports ? "Nobody here is on the latest Training Status reports yet." : "Nobody here has Technician in their job title."}</p>
       </div>
       ${m.techs.length ? `<div class="tx-gauge${metGoal ? " ok" : ""}" style="--p:${Math.min(100, m.pct * 100)}%;--g:${goal}" role="img"
@@ -358,11 +362,13 @@ function renderLocationOverview() {
       </section>
 
       ${companyHas("agco") ? `<section class="sx-panel sx-full" style="${lit(metGoal ? "green" : "amber")}">
-        <header><h3>AGCO dealer metric</h3><span>${m.techs.length ? `${m.metCount} of ${m.techs.length} technicians · goal ${goal}% dealer-wide` : ""}</span>
+        <header><h3>AGCO dealer metric</h3><span>${m.techs.length ? `${m.metCount} of ${m.techs.length} technicians${
+          lxRegistered(notMet) ? ` · ${lxRegistered(notMet)} registered to get there` : ""} · goal ${goal}% dealer-wide` : ""}</span>
           <button type="button" class="sx-link" data-view="training">Training Center &rsaquo;</button></header>
         ${m.techs.length ? `<div class="tx-who">
           <div><h4>Not there yet · ${notMet.length}</h4>
-            <p class="sx-sub">Closest first. Tick <b>Plan</b> for anyone you'll get to ${need} hours this year; the plan is yours, and shows on Training Status.</p>
+            <p class="sx-sub">Closest first. Anyone registered for AGCO classes this year that get them to ${need} hours is planned by
+              themselves; tick <b>Plan</b> for anyone else you'll get there. Your ticks are yours, and show on Training Status.</p>
             ${notMet.length ? `<div class="tx-who-list">${notMet.map(t => txWhoRow(t, true)).join("")}</div>`
               : `<p class="sx-empty sx-clear">${icon("checkCircle", 18)} Every technician here has ${need} hours.</p>`}</div>
           <div><h4>Have ${need}+ hours · ${met.length}</h4>
@@ -603,7 +609,7 @@ function lxReportPdf(loc) {
     : f.roster.length ? "Nobody here has Technician in their job title." : "Nobody here is on the latest Training Status reports yet.");
   if (techs && companyHas("agco")) {
     const [rows, tones] = toned([...f.notMet, ...f.met].map(t => [[t.name, job(t.job), t.hours === null ? "-" : String(t.hours),
-      t.met ? "Met" : `Needs ${f.shortBy(t)}${tsPlan.has(t.key) ? " - planned" : ""}`], t.met ? green : amber]));
+      t.met ? "Met" : `Needs ${f.shortBy(t)}${tsByRegistration(t) ? " - registered" : tsPlan.has(t.key) ? " - planned" : ""}`], t.met ? green : amber]));
     table([["Technician", 170], ["Job", 190], ["AGCO hours", 70, "r"], ["Status", CW - 430]], rows,
       { bold: 0, color: (row, i) => i === 3 ? tones.get(row) : null });
   }

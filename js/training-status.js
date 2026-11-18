@@ -29,6 +29,9 @@ let tsPeople = [], tsSources = null, tsRaw = null, trainingStatusError = null;
 // forklift_eligible_people(). The same list the app uses.
 let evalPeople = [];
 let tsPlan = new Set();            // person keys ticked as planned to reach 24
+// Each technician's AGCO hours they're registered for this year and haven't
+// earned yet, with the classes (0152), by person key. Empty before 0152.
+let tsRegistered = new Map();
 let tsState = { tab: "summary", filter: "all", store: null, everyone: false, year: null };
 let tsPending = { employees: null, credits: null, history: null };
 
@@ -51,12 +54,13 @@ const tsRequiredHours = () => {
 const tsGoal = () => tsGoalPercent() / 100;
 
 async function loadTrainingStatus() {
-  const [people, sources, plan, raw, evaluable] = await Promise.all([
+  const [people, sources, plan, raw, evaluable, registered] = await Promise.all([
     db.from("training_status_people").select("*"),
     db.rpc("training_status_sources"),
     db.from("training_plans").select("planned").maybeSingle(),
     db.from("training_status").select("*").eq("id", "current").maybeSingle(),
-    db.rpc("forklift_eligible_people")
+    db.rpc("forklift_eligible_people"),
+    db.rpc("training_plan_registrations")
   ]);
   trainingStatusError = people.error ? people.error.message : null;
   tsPeople = people.data || [];
@@ -67,8 +71,24 @@ async function loadTrainingStatus() {
     .filter(r => (r.email || "").toLowerCase() !== mine);
   tsSources = sources.error ? null : sources.data;
   tsPlan = new Set((plan.data && plan.data.planned) || []);
+  tsRegistered = new Map((registered.error ? [] : registered.data || [])
+    .map(r => [r.person_key, { hours: Number(r.hours) || 0, classes: r.classes || [] }]));
   tsRaw = raw.error ? null : raw.data;   // owners only
 }
+
+// ---- the plan ------------------------------------------------------------------------------
+//
+// Someone is planned when they're ticked by hand, or, by themselves, when
+// they're registered for AGCO classes this year that get them to the hours
+// (0152): 4 hours and a 16-hour class isn't enough; add an 8-hour class and
+// it is. The registered tick can't be taken off by hand; cancelling the seat
+// takes it off. The app's TrainingStatusStore says the same.
+const tsRegisteredHours = (t) => (tsRegistered.get(t.key) || {}).hours || 0;
+const tsByRegistration = (t) => !t.met && tsRegisteredHours(t) > 0 && (t.hours || 0) + tsRegisteredHours(t) >= t.required;
+const tsPlanned = (t) => !t.met && (tsPlan.has(t.key) || tsByRegistration(t));
+// "Fendt Track Level 4 (16 hrs, Dec 2), Electrical (8 hrs, Dec 9)", for a tooltip.
+const tsRegisteredClasses = (t) => ((tsRegistered.get(t.key) || {}).classes || [])
+  .map(c => `${c.title} (${Number(c.hours)} hrs, ${usDate(c.starts_on)})`).join(", ");
 
 // ---- reading the exports -------------------------------------------------------------
 
@@ -557,9 +577,19 @@ function tsHistoryTab(m) {
 }
 
 function tsPlanNumbers(m) {
-  const planned = m.techs.filter(t => !t.met && tsPlan.has(t.key)).length;
+  const planned = m.techs.filter(tsPlanned).length;
+  const registered = m.techs.filter(tsByRegistration).length;
   const projected = m.techs.length ? (m.metCount + planned) / m.techs.length : 0;
-  return { planned, projected, stillNeeded: Math.max(0, m.goalCount - m.metCount - planned) };
+  return { planned, registered, projected, stillNeeded: Math.max(0, m.goalCount - m.metCount - planned) };
+}
+
+// The words beside someone not there yet: registered, planned, or what's left.
+function tsPlanNote(t) {
+  const need = Math.max(0, t.required - (t.hours || 0)), reg = tsRegisteredHours(t);
+  if (tsByRegistration(t)) return { kind: "registered", text: "Registered", title: `Registered for ${tsRegisteredClasses(t)}` };
+  if (tsPlan.has(t.key)) return { kind: "planned", text: "Planned", title: reg ? `Ticked by hand · ${reg} hrs registered: ${tsRegisteredClasses(t)}` : "Ticked by hand" };
+  return reg ? { kind: "short", text: `needs ${need - reg} more`, title: `${reg} hrs registered: ${tsRegisteredClasses(t)}` }
+    : { kind: "short", text: `needs ${need}`, title: "" };
 }
 
 function tsPlanTab(m) {
@@ -570,10 +600,14 @@ function tsPlanTab(m) {
     return `<tr class="ts-group"><td colspan="3">${esc(store)} <span>${techs.filter(t => t.met).length} of ${techs.length} met</span></td></tr>` +
       techs.map(t => `<tr class="${t.met ? "ts-met" : ""}">
         <td><label class="check" style="margin:0"><input type="checkbox" data-ts-plan="${esc(t.key)}"
-          ${t.met || tsPlan.has(t.key) ? "checked" : ""} ${t.met ? "disabled" : ""}> <b>${esc(t.name)}</b></label></td>
+          ${t.met || tsPlanned(t) ? "checked" : ""} ${t.met || tsByRegistration(t) ? "disabled" : ""}> <b>${esc(t.name)}</b></label></td>
         <td>${tsHoursCell(t)}</td>
-        <td>${t.met ? `<span class="badge b-current">Met</span>` : tsPlan.has(t.key)
-          ? `<span class="badge b-answered">Planned</span>` : `<span class="note">Needs ${Math.max(0, t.required - (t.hours || 0))} hrs</span>`}</td></tr>`).join("");
+        <td>${t.met ? `<span class="badge b-current">Met</span>` : (() => { const n = tsPlanNote(t);
+          return n.kind === "registered" ? `<span class="badge b-current" title="${esc(n.title)}">Registered</span>
+              <div class="note">${esc(tsRegisteredClasses(t))}</div>`
+            : n.kind === "planned" ? `<span class="badge b-answered" title="${esc(n.title)}">Planned</span>`
+            : `<span class="note" title="${esc(n.title)}">${n.text.replace(/^needs/, "Needs")} hrs${tsRegisteredHours(t)
+              ? ` · ${tsRegisteredHours(t)} registered` : ""}</span>`; })()}</td></tr>`).join("");
   }).join("");
   return `<div class="ts-cards">
       <div class="card ts-kpi"><small>Now</small><strong>${tsPct(m.pct)}</strong>
@@ -581,14 +615,15 @@ function tsPlanTab(m) {
       <div class="card ts-kpi"><small>With the plan</small>
         <strong class="${n.projected >= tsGoal() ? "ok" : "short"}">${tsPct(n.projected)}</strong>
         ${tsMeter(m.pct, n.projected)}
-        <span>${n.planned} planned. ${n.stillNeeded
+        <span>${n.planned} planned${n.registered ? `, ${n.registered} by registration` : ""}. ${n.stillNeeded
           ? `<b>${n.stillNeeded} more</b> to reach ${tsGoalPercent()}%.`
           : `That reaches ${tsGoalPercent()}%.`}</span></div>
     </div>
     <div class="row" style="margin:0 0 12px">
-      <span class="note" style="flex:1">Tick the technicians you plan to get to ${tsRequiredHours()} hours. Your plan is saved to your
-        account, so it's the same in the app, and nobody else sees it.</span>
-      <button class="ghost" data-ts-clear ${n.planned ? "" : "disabled"}>Clear plan</button>
+      <span class="note" style="flex:1">Anyone registered for AGCO classes this year that get them to ${tsRequiredHours()} hours is
+        planned by themselves, and stays planned while they're registered. Tick anyone else you plan to get there. Your ticks are saved
+        to your account, so they're the same in the app, and nobody else sees them.</span>
+      <button class="ghost" data-ts-clear ${tsPlan.size ? "" : "disabled"}>Clear my ticks</button>
       <span class="msg" id="tsPlanMsg"></span></div>
     <div class="card" style="padding:0;overflow:hidden"><div style="overflow-x:auto"><table class="ts-table">
       <thead><tr><th>Technician</th><th>${tsHoursHead()}</th><th></th></tr></thead>
@@ -624,7 +659,7 @@ document.addEventListener("click", (event) => {
   const store = event.target.closest("[data-ts-store]");
   if (store) { tsState.store = store.dataset.tsStore; return tsRedraw(); }
   if (event.target.closest("[data-ts-clear]")) {
-    if (!confirm("Clear every planned tick?")) return;
+    if (!confirm("Clear every tick you made? Anyone registered for classes that get them there stays planned.")) return;
     tsPlan.clear();
     tsRedraw();
     return tsSavePlan();

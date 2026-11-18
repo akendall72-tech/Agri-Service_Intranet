@@ -1681,10 +1681,15 @@ button.tx-upload:hover { background: rgba(255,255,255,.09); }
 .tx-bar { height: 7px; border-radius: 99px; background: rgba(255,255,255,.09); }
 .tx-bar i { display: block; height: 100%; border-radius: 99px; background: var(--lit-amber); }
 .tx-bar i.ok { background: var(--lit-green); }
+/* The hours someone's registered for (0152), striped on after the ones they have. */
+.tx-bar { position: relative; overflow: hidden; }
+.tx-bar i.tx-bar-reg { position: absolute; top: 0; border-radius: 0 99px 99px 0;
+  background: repeating-linear-gradient(135deg, var(--lit-teal) 0 4px, transparent 4px 7px); }
 .tx-hrs { text-align: right; font: 700 15px var(--font-cab); font-variant-numeric: tabular-nums; }
 .tx-hrs small { font-size: 11px; color: var(--cab-detail); font-weight: 500; }
 .tx-need { text-align: right; color: var(--lit-amber); font: 600 11px var(--font-mono); text-transform: uppercase; letter-spacing: .04em; }
 .tx-who-row.planned .tx-need { color: var(--lit-teal); }
+.tx-who-row.registered .tx-need { color: var(--lit-green); }
 .tx-plan { display: inline-flex; align-items: center; gap: 5px; margin: 0; padding: 3px 8px; border-radius: 99px; cursor: pointer;
   border: 1px solid rgba(255,255,255,.2); color: var(--cab-sub); font: 600 10.5px var(--font-mono); letter-spacing: .06em; text-transform: uppercase; }
 .tx-plan input { width: auto; margin: 0; accent-color: var(--lit-teal); }
