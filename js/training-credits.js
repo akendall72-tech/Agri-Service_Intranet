@@ -55,7 +55,9 @@ const tcCourse = (typed) => {
 function tcCounts(name) {
   const key = tcKey(name), counts = [];
   if (key && key === tcKey(craneCourse())) counts.push("Qualifies for crane work");
-  if (key && key === tcKey(forkliftCourse())) counts.push("Opens the forklift driving test");
+  // A catalog course ticked "Counts for the forklift driving test" (0151),
+  // matched by its name on records as the database matches it.
+  if (key && allCourses.some(c => c.counts_for_forklift && tcKey(tcRecordName(c)) === key)) counts.push("Opens the forklift driving test");
   return counts;
 }
 // Every course name worth offering: the catalog's, then any already on a record.

@@ -170,7 +170,8 @@ function renderCoursesAdmin() {
       <div class="role" style="padding:12px 16px${c.is_active ? "" : ";opacity:.6"}" data-course="${esc(c.id)}">
         <div class="row" style="align-items:flex-start">
           <div style="flex:1;min-width:220px">
-            <b>${esc(c.title)}</b>${c.is_active ? "" : ` <span class="badge b-none">Not showing</span>`}
+            <b>${esc(c.title)}</b>${c.is_active ? "" : ` <span class="badge b-none">Not showing</span>`}${
+              c.counts_for_forklift ? ` <span class="badge b-expiring">Forklift driving test</span>` : ""}
             <div class="note">${esc([c.subtitle, c.level, c.credits, c.duration].filter(Boolean).join(" · "))}</div>
             <div class="note">👥 ${esc((c.audiences || []).join(", ") || "No audience set")} · order ${esc(c.sort_order)}</div>
           </div>
@@ -204,8 +205,10 @@ function fillCourseForm(course, { copy = false } = {}) {
   set("training_hours", course && course.training_hours != null ? Number(course.training_hours) : "");
   set("record_name", course && course.record_name);
   editor.querySelector('[data-c="counts_for_agco"]').checked = !!(course && course.counts_for_agco);
-  // The Training Manager sets a course's credits; other owners see them.
-  ["training_hours", "counts_for_agco", "record_name"].forEach(f =>
+  editor.querySelector('[data-c="counts_for_forklift"]').checked = !!(course && course.counts_for_forklift);
+  // The Training Manager sets a course's credits and whether it counts for
+  // the forklift driving test (0151); other owners see them.
+  ["training_hours", "counts_for_agco", "record_name", "counts_for_forklift"].forEach(f =>
     editor.querySelector(`[data-c="${f}"]`).disabled = !isTrainingManager());
   set("duration", course && course.duration);
   set("description", course && course.description);
@@ -285,7 +288,8 @@ $("admin").addEventListener("click", async (event) => {
     ...(isTrainingManager() ? {
       training_hours: hours === "" ? null : Number(hours),
       counts_for_agco: editor.querySelector('[data-c="counts_for_agco"]').checked,
-      record_name: get("record_name") || null
+      record_name: get("record_name") || null,
+      counts_for_forklift: editor.querySelector('[data-c="counts_for_forklift"]').checked
     } : {}),
     duration: get("duration") || null,
     audiences,
@@ -303,6 +307,7 @@ $("admin").addEventListener("click", async (event) => {
   const { data, error } = await query;
   if (error) {
     return speak(editor, /row-level/i.test(error.message) ? "Only an owner can change the catalog."
+      : /counts_for_forklift/i.test(error.message) ? "Run migration 0151_forklift_classes.sql in the SQL editor first."
       : /does not exist|schema cache/i.test(error.message)
         ? "Run migration 0032_course_catalog.sql in the SQL editor first." : error.message, true);
   }

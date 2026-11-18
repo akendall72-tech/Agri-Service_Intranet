@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Which version this is. publish.sh stamps the date and commit here, and
      into version.json beside the page; "dev" is a copy that wasn't published. -->
-<meta name="app-version" content="2026-11-17.79b30cb">
+<meta name="app-version" content="2026-11-17.8511ccb">
 <!-- Where this page may load things from and send things to. GitHub Pages
      can't send security headers, so it's here. Scripts come only from this
      site and the two script CDNs (each pinned with an integrity hash), and
@@ -816,6 +816,11 @@
             <input type="number" id="courseHours" data-c="training_hours" min="0" max="1000" step="0.5" inputmode="decimal" placeholder="24"></div>
           <div data-feature="agco"><label>AGCO</label>
             <label class="tc-check" for="courseAgco"><input type="checkbox" id="courseAgco" data-c="counts_for_agco"> Counts as AGCO credit</label></div>
+          <div class="wide"><label>Forklift</label>
+            <label class="tc-check" for="courseForklift"><input type="checkbox" id="courseForklift" data-c="counts_for_forklift"> Counts for the forklift driving test</label>
+            <p class="note" style="margin:4px 0 0">For a forklift class taught in person. Once it's on someone's training record (a class completed on
+              the Class Schedule, or Give Credit), they can be given the driving test within 30 days, as after passing the online forklift
+              course. The steps on everyone's forklift card then name this class. Only the Training Manager changes it.</p></div>
           <div class="wide"><label for="courseRecordName">Name on training records (optional)</label>
             <input type="text" id="courseRecordName" data-c="record_name" maxlength="200" placeholder="The same as the title">
             <p class="note" style="margin:4px 0 0">The name this course goes by on someone's record. Leave it empty unless another name is already
@@ -1214,14 +1219,14 @@
      js/core.js has the rest. publish.sh adds ?v= to each, so a changed file is
      fetched fresh and an unchanged one comes from the browser's cache. -->
 <script src="js/core.js?v=63e0a1dd05"></script>
-<script src="js/shell.js?v=2505e395eb"></script>
+<script src="js/shell.js?v=95a8d32bae"></script>
 <script src="js/location-dashboard.js?v=6dff455b18"></script>
 <script src="js/location-certifications.js?v=188701e85c"></script>
 <script src="js/my-certifications.js?v=c7baa6cb5e"></script>
 <script src="js/operator-manuals.js?v=de83dc2ae1"></script>
 <script src="js/crane-qualifications.js?v=4336042851"></script>
 <script src="js/training-status.js?v=699a4e4ba3"></script>
-<script src="js/forklift.js?v=1aa3683ed6"></script>
+<script src="js/forklift.js?v=98b2389722"></script>
 <script src="js/crane.js?v=e6888b49ef"></script>
 <script src="js/lift-plans.js?v=923f07f016"></script>
 <script src="js/crane-inspections.js?v=e5177a4340"></script>
@@ -1244,8 +1249,8 @@
 <script src="js/inspections.js?v=2e9c8853b2"></script>
 <script src="js/hr.js?v=b9c0254418"></script>
 <script src="js/personal-inventory.js?v=e24b5aa871"></script>
-<script src="js/course-catalog.js?v=0cac591ad1"></script>
-<script src="js/training-credits.js?v=42d0991b38"></script>
+<script src="js/course-catalog.js?v=95f86f4853"></script>
+<script src="js/training-credits.js?v=d5780674b7"></script>
 <script src="js/class-schedule.js?v=25798032fe"></script>
 <script src="js/class-registration.js?v=81ec1c81ac"></script>
 <script src="js/class-grades.js?v=880fab3382"></script>
@@ -1258,7 +1263,7 @@
 <script src="js/agco-map.js?v=6346d1735d"></script>
 <script src="js/agco-catalog.js?v=bba7e7a6c2"></script>
 <script src="js/my-classes.js?v=632c8ac9a0"></script>
-<script src="js/online-courses.js?v=79fbda48f5"></script>
+<script src="js/online-courses.js?v=c82df5d60c"></script>
 <script src="js/training-reports.js?v=7eb204fa76"></script>
 <script src="js/imports.js?v=a87bd44fe7"></script>
 <script src="js/company.js?v=3b9e89dc4f"></script>

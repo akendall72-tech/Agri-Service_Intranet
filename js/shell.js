@@ -340,7 +340,7 @@ const VIEWS = {
 
   forklift: () =>
     hero("Forklift Center",
-         "Your operator card, the online course that starts it, and the driving test.",
+         `Your operator card, ${fkRoute().startsIt} that starts it, and the driving test.`,
          true)
     + forkliftCourseCard()
     + certificationCard()

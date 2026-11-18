@@ -42,6 +42,10 @@ const fkMinutes = (m) => m < 60 ? `${m} minute${m === 1 ? "" : "s"}`
 function fkPassLine(t) {
   if (!fkPasses) return "";
   const r = fkPasses[String(t.email || "").toLowerCase()];
+  // No online pass: a forklift class on their training record (0151) gives
+  // the test its course date instead.
+  if (!r && t.course_completed_on) return `<div class="fk-course">${icon("checkCircle", 15)}<span>Forklift class completed
+    ${esc(newsDate(String(t.course_completed_on).slice(0, 10)))}, on their training record.</span></div>`;
   if (!r) return `<div class="note fk-course">No online course pass on record${t.email ? ` for ${esc(t.email)}` : ""}.</div>`;
   const quick = r.minutes_to_pass < FK_QUICK_MINUTES;
   const own = r.seconds_in_course ? ` The course's own clock says ${fkMinutes(Math.round(r.seconds_in_course / 60))}.` : "";
@@ -332,9 +336,11 @@ const tokens = (name) =>
 // ---- the online course and the 30 days after it (migration 0092) ----------------
 //
 // Nobody can be given a driving test until they've passed the online forklift
-// course, and then they have 30 days, to the end of the 30th day. Past that,
-// the course again. my_forklift_course() is the database's own answer, the
-// same one the app shows and the insert policy applies.
+// course, or completed a class ticked "Counts for the forklift driving test"
+// in the Course Catalog (0151), and then they have 30 days, to the end of the
+// 30th day. Past that, the course again. my_forklift_course() is the
+// database's own answer, the same one the app shows and the insert policy
+// applies.
 
 let fkCourse = null;
 
@@ -360,6 +366,35 @@ function fkStage(status) {
 const fkCourseLink = () => fkCourse && fkCourse.course_ready && fkCourse.course_id
   ? `course.html?c=${encodeURIComponent(fkCourse.course_id)}` : null;
 
+// What's set up for getting certified (0151): the online course, classes from
+// the Course Catalog, or either, and the words for each. With only the online
+// course they read as they always have. ForkliftCourse.swift words the app's
+// the same way.
+const fkOr = (list) => list.length <= 1 ? (list[0] || "") : `${list.slice(0, -1).join(", ")} or ${list[list.length - 1]}`;
+function fkRoute() {
+  const classes = (fkCourse && fkCourse.classes) || [];
+  const online = !!fkCourseLink();
+  const kind = !classes.length ? "online" : online ? "both" : "class";
+  const names = esc(fkOr(classes)), one = classes.length === 1;
+  return {
+    kind,
+    step1: kind === "online" ? ["Take the online course", online
+        ? "Click below to start, or find it any time in Training Center → Online Courses, here or in the app. Pass the quiz at the end; if you don't, take it again. You can stop partway and pick up where you left off."
+        : "It isn't up yet. When the training department adds it, it'll be in Training Center → Online Courses."]
+      : kind === "class" ? [one ? `Take ${names}` : "Take a forklift class",
+        `${one ? "A class" : `${names}: classes`} with the training department. Find the next one on the Open Seat Report in the `
+          + "Training Center, or ask your location admin. It counts once it's on your training record."]
+      : ["Take the online course or a class",
+        "The online course: click below to start, or find it any time in Training Center → Online Courses, here or in the app, "
+          + `and pass the quiz at the end. Or ${one ? `${names}, a class with the training department` : `a class with the training department, ${names}`}: `
+          + "find the next one on the Open Seat Report, or ask your location admin."],
+    startsIt: kind === "online" ? "the online course" : kind === "class" ? "the class" : "the course or class",
+    afterPass: kind === "online" ? "Once you pass" : kind === "class" ? "Once you've completed it" : "Once you've passed either",
+    again: kind === "online" ? "take the course again" : kind === "class" ? "take the class again" : "take the course or the class again",
+    redo: kind === "online" ? "Pass the online course again" : kind === "class" ? `Take ${names} again` : `Pass the online course or take ${names} again`
+  };
+}
+
 // The spot for the card while there's no valid one: how to get certified, the
 // days left for the driving test, or the course again. A test that's due shows
 // even beside a valid card, for someone renewing.
@@ -376,19 +411,22 @@ function forkliftCourseCard() {
     const accent = stage.daysLeft <= 3 ? "red" : "amber";
     const count = stage.daysLeft === 0 ? "Last day" : stage.daysLeft === 1 ? "1 day left" : `${stage.daysLeft} days left`;
     const passed = new Date(fkCourse.passed_at).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    const route = fkRoute();
     return `<div class="cab-card fk-card" style="${lit(accent)}">
       <span class="fk-eyebrow">Driving test due</span>
       <b class="fk-count">${count}</b>
       <p>Get it done by ${longDay(stage.last)}. Ask your location admin to give it.</p>
-      <p class="fk-small">You passed the online course on ${passed}. If the test isn't done by then, you'll take the course again.</p>
+      <p class="fk-small">${fkCourse.passed_class ? `You completed ${esc(fkCourse.passed_class)}` : "You passed the online course"} on ${passed}.
+        If the test isn't done by then, you'll ${route.again}.</p>
     </div>`;
   }
   if (valid || waiting) return "";
+  const route = fkRoute();
   if (stage.kind === "expired") {
     return `<div class="cab-card fk-card" style="${lit("amber")}">
-      <b>Take the course again</b>
+      <b>Take the ${route.kind === "class" ? "class" : "course"} again</b>
       <p>Your 30 days for the driving test ran out on ${stage.last.toLocaleDateString(undefined, { month: "long", day: "numeric" })}.
-        Pass the online course again and you'll have another 30 days.</p>
+        ${route.redo} and you'll have another 30 days.</p>
       ${link ? `<a class="oc-go" href="${link}">Take the online course &rarr;</a>` : ""}
     </div>`;
   }
@@ -396,11 +434,9 @@ function forkliftCourseCard() {
     <b>Get certified</b>
     <p>You need a forklift card before you can drive a forklift. Three steps:</p>
     <ol class="fk-steps">
-      <li><b>Take the online course</b><span>${link
-        ? "Click below to start, or find it any time in Training Center → Online Courses, here or in the app. Pass the quiz at the end; if you don't, take it again. You can stop partway and pick up where you left off."
-        : "It isn't up yet. When the training department adds it, it'll be in Training Center → Online Courses."}</span></li>
-      <li><b>Get your driving test within 30 days</b><span>Once you pass, ask your location admin for the driving test. They
-        watch you inspect and drive the truck, and record it in the app or here. Miss the 30 days and you'll take the course again.</span></li>
+      <li><b>${route.step1[0]}</b><span>${route.step1[1]}</span></li>
+      <li><b>Get your driving test within 30 days</b><span>${route.afterPass}, ask your location admin for the driving test. They
+        watch you inspect and drive the truck, and record it in the app or here. Miss the 30 days and you'll ${route.again}.</span></li>
       <li><b>Your card shows up here</b><span>The Training Manager approves the test, then your card appears in this spot.
         It's good for three years.</span></li>
     </ol>
@@ -603,11 +639,11 @@ function renderFkWaiting() {
   const n = (k, one, many) => `<b>${k}</b> ${k === 1 ? one : many}`;
 
   const sum = view === "ranout"
-    ? (ranOut.length ? `${n(ranOut.length, "person's", "people's")} 30 days ran out without a driving test. They need to take the online course again.`
+    ? (ranOut.length ? `${n(ranOut.length, "person's", "people's")} 30 days ran out without a driving test. They need to take the forklift course again.`
                      : "Nobody's 30 days have run out.")
     : view === "expiring"
     ? (expiring.length ? `${n(expiring.length, "person's card expires", "people's cards expire")} in the next 60 days, and they haven't started renewing.
-        To renew, they take the online course again, then the driving test within 30 days.`
+        To renew, they take the forklift course again, then the driving test within 30 days.`
                        : "No cards expire in the next 60 days without a renewal under way.")
     : (waiting.length ? `${n(waiting.length, "person is", "people are")} waiting for a driving test, soonest deadline first.`
                       : "Nobody is waiting for a driving test right now.");
@@ -617,8 +653,9 @@ function renderFkWaiting() {
     : `<td>${esc(passed(r.passed_at))}</td><td>${esc(day(r.last_day))}</td>${view === "ranout" ? "" : leftCell(until(r.last_day), 3)}`;
 
   box.innerHTML = `<h2>Driving tests due</h2>
-    <p class="note" style="margin:0 0 12px">Getting certified or renewing is the online forklift course, then a driving test within
-      30 days of passing it. These are the people part-way, or due to start.</p>
+    <p class="note" style="margin:0 0 12px">Getting certified or renewing is the forklift course (the online course, or a class that
+      counts for the driving test in the Course Catalog), then a driving test within 30 days of it. These are the people part-way, or
+      due to start.</p>
     <div class="row" style="margin-bottom:10px">
       <select id="fkWaitingStore" style="max-width:260px;margin:0" aria-label="Location">
         <option value="all">All locations</option>${stores.map(x => `<option${x === fkWaitingStore ? " selected" : ""}>${esc(x)}</option>`).join("")}
@@ -786,8 +823,8 @@ function renderEvalForm() {
     : (chosen.course_completed ? usDate(chosen.course_completed) : "Not on file yet")
       + (chosen.last_day ? ` · test due by ${fkDay(chosen.last_day).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}` : "");
   $("evalEligibleNote").textContent = evalPeople.length
-    ? `People who passed the online course in the last 30 days and haven't had their test, soonest deadline first: ${evalPeople.length}.`
-    : `Nobody can be given a driving test right now. People are listed here once they pass the online forklift course, for 30 days.`;
+    ? `People who passed the forklift course in the last 30 days and haven't had their test, soonest deadline first: ${evalPeople.length}.`
+    : `Nobody can be given a driving test right now. People are listed here for 30 days once they pass the forklift course.`;
   classes.innerHTML = EVAL_CLASSES.map(c =>
     `<button class="pdf${evalState.classes.has(c) ? " on" : ""}" data-eval-class="${esc(c)}"
       aria-pressed="${evalState.classes.has(c)}">${esc(c)}</button>`).join(" ");
