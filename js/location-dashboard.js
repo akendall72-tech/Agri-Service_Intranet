@@ -244,7 +244,16 @@ function lxFigures(loc) {
       items: needsReport.map(x => x.name) }
   ].filter(Boolean);
 
+  // Where this location lands with the plan: everyone met, plus everyone
+  // planned (registered for classes that get them there, 0152, or ticked by
+  // whoever's looking), against the dealer goal.
+  const planned = m.techs.filter(tsPlanned).length;
+  const plan = { planned, registered: m.techs.filter(tsByRegistration).length,
+    projected: m.techs.length ? (m.metCount + planned) / m.techs.length : 0,
+    stillNeeded: Math.max(0, Math.ceil(m.techs.length * goal / 100 - 1e-9) - m.metCount - planned) };
+
   return {
+    plan,
     name, today, short, roster, accounts, m, goal, need, shortBy, notMet, met, close, no609, metGoal, cards, fkDays,
     fk, testsDue, required, reqNot, craneRequired, craneReqNot, sKey, thisMonth, sBrief, sRows, briefPassed,
     reportSent, needsBrief, needsReport, sMissing, soon, cr, techsNoCrane, internal, classes, plansWaiting,
@@ -269,7 +278,7 @@ function renderLocationOverview() {
   const { name, short, roster, accounts, m, goal, need, notMet, met, close, no609, metGoal, cards, fkDays, fk,
     testsDue, required, reqNot, craneRequired, craneReqNot, sKey, sBrief, sRows, briefPassed, reportSent, sMissing,
     soon, cr, techsNoCrane, internal, classes, fleet, fleetOverdue, fleetSoon, tiresOut, tiresWorn,
-    fleetChecked, fleetYear, spent, fleetTone, lc, todo } = lxFigures(loc);
+    fleetChecked, fleetYear, spent, fleetTone, lc, todo, plan } = lxFigures(loc);
   if (document.body.classList.contains("location-mode")) $("adminTitle").textContent = `${name} Dashboard`;
   const plural = lxPlural;
   const line = (who, sub, note, tone) => `<div class="tx-who-row tx-line"><span class="tx-who-name"><b>${esc(who)}</b>${
@@ -287,12 +296,19 @@ function renderLocationOverview() {
         <h2>${m.techs.length ? `${tsPct(m.pct)} have ${need}+ hours` : "No technicians yet"}</h2>
         <p>${m.techs.length ? `${m.metCount} of ${m.techs.length} technicians here. ${metGoal
           ? `<b class="ok">At or above the ${goal}% goal.</b>` : `The dealer goal is ${goal}%.`}${close.length ? ` ${close.length} ${close.length === 1 ? "is" : "are"} within 8 hours.` : ""}${
-            lxRegistered(notMet) ? ` ${lxRegistered(notMet)} ${lxRegistered(notMet) === 1 ? "is" : "are"} registered for classes that get them there.` : ""}`
+            lxRegistered(notMet) ? ` ${lxRegistered(notMet)} ${lxRegistered(notMet) === 1 ? "is" : "are"} registered for classes that get them there.` : ""}
+          <b class="${plan.projected * 100 >= goal ? "ok" : ""}">With the plan, ${tsPct(plan.projected)}</b>: ${plan.planned} planned${
+            plan.stillNeeded ? `, ${plan.stillNeeded} more here for ${goal}%.` : `, which reaches ${goal}%.`}`
           : noReports ? "Nobody here is on the latest Training Status reports yet." : "Nobody here has Technician in their job title."}</p>
       </div>
-      ${m.techs.length ? `<div class="tx-gauge${metGoal ? " ok" : ""}" style="--p:${Math.min(100, m.pct * 100)}%;--g:${goal}" role="img"
-        aria-label="${tsPct(m.pct)} of ${esc(name)} technicians, goal ${goal}%"><i class="tx-gauge-goal"></i>
-        <b>${Math.round(m.pct * 100)}<small>%</small></b><span>Goal ${goal}%</span></div>` : ""}
+      ${m.techs.length ? `<div class="lx-gauges">
+        <div class="tx-gauge${metGoal ? " ok" : ""}" style="--p:${Math.min(100, m.pct * 100)}%;--g:${goal}" role="img"
+          aria-label="Now: ${tsPct(m.pct)} of ${esc(name)} technicians, goal ${goal}%"><i class="tx-gauge-goal"></i>
+          <b>${Math.round(m.pct * 100)}<small>%</small></b><span>Now</span></div>
+        <div class="tx-gauge plan${plan.projected * 100 >= goal ? " ok" : ""}" style="--p:${Math.min(100, plan.projected * 100)}%;--g:${goal}" role="img"
+          aria-label="With the plan: ${tsPct(plan.projected)} of ${esc(name)} technicians, goal ${goal}%"><i class="tx-gauge-goal"></i>
+          <b>${Math.round(plan.projected * 100)}<small>%</small></b><span>Planned</span></div>
+      </div>` : ""}
     </section>
 
     <div class="sx-tiles">
@@ -363,12 +379,12 @@ function renderLocationOverview() {
 
       ${companyHas("agco") ? `<section class="sx-panel sx-full" style="${lit(metGoal ? "green" : "amber")}">
         <header><h3>AGCO dealer metric</h3><span>${m.techs.length ? `${m.metCount} of ${m.techs.length} technicians${
-          lxRegistered(notMet) ? ` · ${lxRegistered(notMet)} registered to get there` : ""} · goal ${goal}% dealer-wide` : ""}</span>
+          lxRegistered(notMet) ? ` · ${lxRegistered(notMet)} registered to get there` : ""} · ${tsPct(plan.projected)} with the plan · goal ${goal}% dealer-wide` : ""}</span>
           <button type="button" class="sx-link" data-view="training">Training Center &rsaquo;</button></header>
         ${m.techs.length ? `<div class="tx-who">
           <div><h4>Not there yet · ${notMet.length}</h4>
             <p class="sx-sub">Closest first. Anyone registered for AGCO classes this year that get them to ${need} hours is planned by
-              themselves; tick <b>Plan</b> for anyone else you'll get there. Your ticks are yours, and show on Training Status.</p>
+              themselves. ${tsPlanHandNote()}</p>
             ${notMet.length ? `<div class="tx-who-list">${notMet.map(t => txWhoRow(t, true)).join("")}</div>`
               : `<p class="sx-empty sx-clear">${icon("checkCircle", 18)} Every technician here has ${need} hours.</p>`}</div>
           <div><h4>Have ${need}+ hours · ${met.length}</h4>
@@ -570,7 +586,8 @@ function lxReportPdf(loc) {
   const techs = f.m.techs.length, people = f.sRows.length, worn = f.tiresOut.length + f.tiresWorn.length;
   const boxes = [
     ...(companyHas("agco") ? [["AGCO DEALER METRIC", techs ? `${Math.round(f.m.pct * 100)}%` : "-",
-      techs ? `${f.m.metCount} of ${techs} technicians have ${f.need}+ hrs` : "No technicians here", !techs ? grey : f.metGoal ? green : amber]] : []),
+      techs ? `${f.m.metCount} of ${techs} have ${f.need}+ hrs, ${Math.round(f.plan.projected * 100)}% planned` : "No technicians here",
+      !techs ? grey : f.metGoal ? green : amber]] : []),
     ["SAFETY BRIEF", f.sBrief && people ? `${f.briefPassed} of ${people}` : "-",
       f.sBrief ? `passed the ${month} brief` : `None published for ${month}`, !f.sBrief || !people ? grey : f.briefPassed === people ? green : amber],
     ["SAFETY REPORTS", srCounts && people ? `${f.reportSent} of ${people}` : "-",
@@ -605,7 +622,7 @@ function lxReportPdf(loc) {
 
   // The AGCO dealer metric, for an AGCO dealer (0149).
   if (companyHas("agco")) section("AGCO dealer metric", techs
-    ? `${f.m.metCount} of ${techs} technicians here have ${f.need} or more AGCO hours (${tsPct(f.m.pct)}). The dealer goal is ${f.goal}%, dealer-wide. Not there yet are listed first, closest first.`
+    ? `${f.m.metCount} of ${techs} technicians here have ${f.need} or more AGCO hours (${tsPct(f.m.pct)}). With the plan, ${tsPct(f.plan.projected)}: ${f.plan.planned} planned${f.plan.registered ? `, ${f.plan.registered} of them registered for classes that get them there` : ""}. The dealer goal is ${f.goal}%, dealer-wide. Not there yet are listed first, closest first.`
     : f.roster.length ? "Nobody here has Technician in their job title." : "Nobody here is on the latest Training Status reports yet.");
   if (techs && companyHas("agco")) {
     const [rows, tones] = toned([...f.notMet, ...f.met].map(t => [[t.name, job(t.job), t.hours === null ? "-" : String(t.hours),

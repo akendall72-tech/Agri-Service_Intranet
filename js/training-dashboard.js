@@ -84,8 +84,9 @@ function txWhoRow(t, planning) {
   const note = tsPlanNote(t), auto = note.kind === "registered";
   const reg = !t.met ? tsRegisteredHours(t) : 0;
   return `<div class="tx-who-row${planning && tsPlanned(t) ? " planned" : ""}${planning && auto ? " registered" : ""}">
-    ${planning ? `<label class="tx-plan" title="${auto ? esc(note.title) : `Plan to get ${esc(t.first)} to ${t.required} hours`}"><input type="checkbox" data-ts-plan="${esc(t.key)}"${
-      tsPlanned(t) ? " checked" : ""}${auto ? " disabled" : ""}><span>Plan</span></label>` : ""}
+    ${planning ? `<label class="tx-plan" title="${auto || !isTrainingManager() ? esc(note.title || "Only the Training Manager ticks the plan")
+      : `Plan to get ${esc(t.first)} to ${t.required} hours`}"><input type="checkbox" data-ts-plan="${esc(t.key)}"${
+      tsPlanned(t) ? " checked" : ""}${auto || !isTrainingManager() ? " disabled" : ""}><span>Plan</span></label>` : ""}
     <span class="tx-who-name"><b>${esc(t.name)}</b><small>${esc(t.store)}${t.epa609 ? "" : " · no EPA 609"}${
       reg ? ` · <span title="${esc(tsRegisteredClasses(t))}">${reg} hrs registered</span>` : ""}</small></span>
     <span class="tx-bar"><i class="${t.met ? "ok" : ""}" style="width:${pct}%"></i>${reg && !t.met
@@ -148,7 +149,7 @@ function txDrillPanel(m, { goal, need, plan, close }) {
     sub = `${m.metCount} have ${need}+ hours, plus ${plan.planned} planned${plan.stillNeeded ? ` · ${plan.stillNeeded} more to reach ${goal}%` : ` · reaches ${goal}%`}`;
     const planned = notMet.filter(tsPlanned), rest = notMet.filter(t => !tsPlanned(t));
     body = `<p class="sx-sub">Anyone registered for AGCO classes this year that get them to ${need} hours is planned by themselves.
-      Tick <b>Plan</b> for anyone else you'll get there; your ticks are saved to your account.</p>
+      ${tsPlanHandNote()}</p>
       <h4>Planned · ${planned.length}</h4>${planned.length ? list(planned, true) : `<p class="sx-empty">Nobody yet.</p>`}
       ${rest.length ? `<h4>Not planned, closest first · ${rest.length}</h4>${list(rest, true)}` : ""}`;
   } else if (txDrill === "epa") {
@@ -255,8 +256,8 @@ function renderTrainingOverview() {
           <div>
             <h4>Not there yet · ${notYet.length}</h4>
             <p class="sx-sub">Anyone registered for AGCO classes this year that get them to ${need} hours is planned by themselves${
-              plan.registered ? ` (${plan.registered} now)` : ""}; tick <b>Plan</b> for anyone else you'll get there. <b>${tsPct(plan.projected)}</b> with the plan${
-              plan.stillNeeded ? `, <b>${plan.stillNeeded} more</b> to reach ${goal}%` : `, which reaches ${goal}%`}. Your ticks are saved to your account.</p>
+              plan.registered ? ` (${plan.registered} now)` : ""}. ${tsPlanHandNote()} <b>${tsPct(plan.projected)}</b> with the plan${
+              plan.stillNeeded ? `, <b>${plan.stillNeeded} more</b> to reach ${goal}%` : `, which reaches ${goal}%`}.</p>
             <div class="tx-who-list">${notYet.map(t => txWhoRow(t, true)).join("") || `<p class="sx-empty sx-clear">${icon("checkCircle", 18)} Everyone here has ${need} hours.</p>`}</div>
           </div>
           <div>

@@ -28,7 +28,11 @@ let tsPeople = [], tsSources = null, tsRaw = null, trainingStatusError = null;
 // course in the last 30 days and haven't been tested, from
 // forklift_eligible_people(). The same list the app uses.
 let evalPeople = [];
-let tsPlan = new Set();            // person keys ticked as planned to reach 24
+// The Training Manager's hand ticks (0153): technicians planned to get to the
+// hours some other way, such as credit from outside. One plan for the company,
+// by person key; only the Training Manager changes it.
+let tsPlan = new Set();
+let tsPlanMarks = new Map();       // person key -> { marked_by_name, marked_at }
 // Each technician's AGCO hours they're registered for this year and haven't
 // earned yet, with the classes (0152), by person key. Empty before 0152.
 let tsRegistered = new Map();
@@ -57,7 +61,7 @@ async function loadTrainingStatus() {
   const [people, sources, plan, raw, evaluable, registered] = await Promise.all([
     db.from("training_status_people").select("*"),
     db.rpc("training_status_sources"),
-    db.from("training_plans").select("planned").maybeSingle(),
+    db.from("training_plan_marks").select("person_key, marked_by_name, marked_at"),
     db.from("training_status").select("*").eq("id", "current").maybeSingle(),
     db.rpc("forklift_eligible_people"),
     db.rpc("training_plan_registrations")
@@ -70,7 +74,9 @@ async function loadTrainingStatus() {
   evalPeople = (evaluable.data || [])
     .filter(r => (r.email || "").toLowerCase() !== mine);
   tsSources = sources.error ? null : sources.data;
-  tsPlan = new Set((plan.data && plan.data.planned) || []);
+  const marks = plan.error ? [] : plan.data || [];
+  tsPlanMarks = new Map(marks.map(r => [r.person_key, r]));
+  tsPlan = new Set(tsPlanMarks.keys());
   tsRegistered = new Map((registered.error ? [] : registered.data || [])
     .map(r => [r.person_key, { hours: Number(r.hours) || 0, classes: r.classes || [] }]));
   tsRaw = raw.error ? null : raw.data;   // owners only
@@ -82,7 +88,8 @@ async function loadTrainingStatus() {
 // they're registered for AGCO classes this year that get them to the hours
 // (0152): 4 hours and a 16-hour class isn't enough; add an 8-hour class and
 // it is. The registered tick can't be taken off by hand; cancelling the seat
-// takes it off. The app's TrainingStatusStore says the same.
+// takes it off. Anyone else is ticked by the Training Manager (0153). The
+// app's TrainingStatusStore says the same.
 const tsRegisteredHours = (t) => (tsRegistered.get(t.key) || {}).hours || 0;
 const tsByRegistration = (t) => !t.met && tsRegisteredHours(t) > 0 && (t.hours || 0) + tsRegisteredHours(t) >= t.required;
 const tsPlanned = (t) => !t.met && (tsPlan.has(t.key) || tsByRegistration(t));
@@ -587,7 +594,11 @@ function tsPlanNumbers(m) {
 function tsPlanNote(t) {
   const need = Math.max(0, t.required - (t.hours || 0)), reg = tsRegisteredHours(t);
   if (tsByRegistration(t)) return { kind: "registered", text: "Registered", title: `Registered for ${tsRegisteredClasses(t)}` };
-  if (tsPlan.has(t.key)) return { kind: "planned", text: "Planned", title: reg ? `Ticked by hand · ${reg} hrs registered: ${tsRegisteredClasses(t)}` : "Ticked by hand" };
+  if (tsPlan.has(t.key)) {
+    const mark = tsPlanMarks.get(t.key) || {};
+    const by = `Ticked${mark.marked_by_name ? ` by ${mark.marked_by_name}` : " by the Training Manager"}${mark.marked_at ? `, ${usDate(String(mark.marked_at).slice(0, 10))}` : ""}`;
+    return { kind: "planned", text: "Planned", title: reg ? `${by} · ${reg} hrs registered: ${tsRegisteredClasses(t)}` : by };
+  }
   return reg ? { kind: "short", text: `needs ${need - reg} more`, title: `${reg} hrs registered: ${tsRegisteredClasses(t)}` }
     : { kind: "short", text: `needs ${need}`, title: "" };
 }
@@ -600,7 +611,7 @@ function tsPlanTab(m) {
     return `<tr class="ts-group"><td colspan="3">${esc(store)} <span>${techs.filter(t => t.met).length} of ${techs.length} met</span></td></tr>` +
       techs.map(t => `<tr class="${t.met ? "ts-met" : ""}">
         <td><label class="check" style="margin:0"><input type="checkbox" data-ts-plan="${esc(t.key)}"
-          ${t.met || tsPlanned(t) ? "checked" : ""} ${t.met || tsByRegistration(t) ? "disabled" : ""}> <b>${esc(t.name)}</b></label></td>
+          ${t.met || tsPlanned(t) ? "checked" : ""} ${t.met || tsByRegistration(t) || !isTrainingManager() ? "disabled" : ""}> <b>${esc(t.name)}</b></label></td>
         <td>${tsHoursCell(t)}</td>
         <td>${t.met ? `<span class="badge b-current">Met</span>` : (() => { const n = tsPlanNote(t);
           return n.kind === "registered" ? `<span class="badge b-current" title="${esc(n.title)}">Registered</span>
@@ -621,9 +632,8 @@ function tsPlanTab(m) {
     </div>
     <div class="row" style="margin:0 0 12px">
       <span class="note" style="flex:1">Anyone registered for AGCO classes this year that get them to ${tsRequiredHours()} hours is
-        planned by themselves, and stays planned while they're registered. Tick anyone else you plan to get there. Your ticks are saved
-        to your account, so they're the same in the app, and nobody else sees them.</span>
-      <button class="ghost" data-ts-clear ${tsPlan.size ? "" : "disabled"}>Clear my ticks</button>
+        planned by themselves, and stays planned while they're registered. ${tsPlanHandNote()}</span>
+      ${isTrainingManager() ? `<button class="ghost" data-ts-clear ${tsPlan.size ? "" : "disabled"}>Clear the hand ticks</button>` : ""}
       <span class="msg" id="tsPlanMsg"></span></div>
     <div class="card" style="padding:0;overflow:hidden"><div style="overflow-x:auto"><table class="ts-table">
       <thead><tr><th>Technician</th><th>${tsHoursHead()}</th><th></th></tr></thead>
@@ -637,18 +647,40 @@ function tsRedraw() {
   document.querySelectorAll("[data-ts-tab]").forEach(b => b.classList.toggle("on", b.dataset.tsTab === tsState.tab));
 }
 
-let tsSaveTimer = null;
-function tsSavePlan() {
-  clearTimeout(tsSaveTimer);
-  tsSaveTimer = setTimeout(async () => {
-    const { error } = await db.from("training_plans")
-      .upsert({ planned: [...tsPlan] }, { onConflict: "user_id" });
-    const msg = $("tsPlanMsg");
-    if (msg) {
-      msg.textContent = error ? `Not saved: ${error.message}` : "Saved";
-      msg.className = "msg " + (error ? "error" : "ok");
-    }
-  }, 500);
+// Who ticks by hand, in words for whoever's looking.
+const tsPlanHandNote = () => isTrainingManager()
+  ? "Tick anyone else you plan to get there some other way, such as credit from outside the company. Everyone who sees the plan sees your ticks."
+  : "The Training Manager ticks anyone else planned to get there some other way, such as credit from outside the company.";
+
+// Everywhere the plan shows, after a tick changes.
+function tsPlanChanged() {
+  tsRedraw();
+  if (document.body.classList.contains("training-mode")) renderTrainingOverview();
+  if (document.body.classList.contains("location-mode")) renderLocationOverview();
+}
+
+function tsPlanSaid(text, bad) {
+  const msg = $("tsPlanMsg");
+  if (msg) { msg.textContent = text; msg.className = "msg " + (bad ? "error" : "ok"); }
+  else if (bad) alert(text);
+}
+
+// A tick saves at once, to the one plan (0153). The database holds it to the
+// Training Manager; the boxes are only there for them.
+async function tsSetPlanned(key, on) {
+  if (!isTrainingManager()) return;
+  const { error } = on
+    ? await db.from("training_plan_marks").insert({ person_key: key })
+    : await db.from("training_plan_marks").delete().eq("person_key", key);
+  if (error && !(on && /duplicate/i.test(error.message))) {
+    if (on) { tsPlan.delete(key); tsPlanMarks.delete(key); } else tsPlan.add(key);
+    tsPlanChanged();
+    return tsPlanSaid(/row-level|permission/i.test(error.message) ? "Only the Training Manager ticks the plan."
+      : /does not exist|schema cache/i.test(error.message) ? "Run migration 0153_training_manager_plan.sql in the SQL editor first."
+      : `Not saved: ${error.message}`, true);
+  }
+  if (on) tsPlanMarks.set(key, { marked_by_name: (profile && profile.full_name) || "", marked_at: new Date().toISOString() });
+  tsPlanSaid("Saved", false);
 }
 
 document.addEventListener("click", (event) => {
@@ -659,10 +691,15 @@ document.addEventListener("click", (event) => {
   const store = event.target.closest("[data-ts-store]");
   if (store) { tsState.store = store.dataset.tsStore; return tsRedraw(); }
   if (event.target.closest("[data-ts-clear]")) {
-    if (!confirm("Clear every tick you made? Anyone registered for classes that get them there stays planned.")) return;
-    tsPlan.clear();
-    tsRedraw();
-    return tsSavePlan();
+    if (!isTrainingManager() || !tsPlan.size) return;
+    if (!confirm(`Clear all ${tsPlan.size} hand ticks from the plan, for everyone? Anyone registered for classes that get them there stays planned.`)) return;
+    const keys = [...tsPlan];
+    tsPlan.clear(); tsPlanMarks.clear();
+    tsPlanChanged();
+    db.from("training_plan_marks").delete().in("person_key", keys).then(({ error }) => {
+      if (error) { keys.forEach(k => tsPlan.add(k)); tsPlanChanged(); tsPlanSaid(`Not cleared: ${error.message}`, true); }
+      else tsPlanSaid("Cleared", false);
+    });
   }
 });
 
@@ -670,11 +707,10 @@ document.addEventListener("change", (event) => {
   const box = event.target.closest("[data-ts-plan]");
   if (box) {
     const key = box.dataset.tsPlan;
-    if (box.checked) tsPlan.add(key); else tsPlan.delete(key);
-    tsRedraw();
-    if (document.body.classList.contains("training-mode")) renderTrainingOverview();
-    if (document.body.classList.contains("location-mode")) renderLocationOverview();
-    return tsSavePlan();
+    if (!isTrainingManager()) { box.checked = !box.checked; return; }
+    if (box.checked) tsPlan.add(key); else { tsPlan.delete(key); tsPlanMarks.delete(key); }
+    tsPlanChanged();
+    return tsSetPlanned(key, box.checked);
   }
   if (event.target.matches("[data-ts-everyone]")) { tsState.everyone = event.target.checked; return tsRedraw(); }
   if (event.target.matches("[data-ts-year]")) { tsState.year = event.target.value; return tsRedraw(); }

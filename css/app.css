@@ -1631,6 +1631,13 @@ body.location-mode #admin .page-head h1 { color: #fff; font: 700 30px/1.1 var(--
 .tx-gauge b { position: relative; z-index: 1; margin-top: -10px; font: 700 46px/1 var(--font-cab); color: #fff; font-variant-numeric: tabular-nums; }
 .tx-gauge b small { font-size: 22px; }
 .tx-gauge span { position: absolute; z-index: 1; bottom: 40px; color: var(--cab-sub); font: 600 10.5px var(--font-mono); letter-spacing: .12em; text-transform: uppercase; }
+/* The Location Dashboard's two dials: now, and with the plan (teal until it reaches the goal). */
+.lx-gauges { display: flex; gap: 14px; flex-wrap: wrap; justify-content: flex-end; }
+.lx-gauges .tx-gauge { width: 136px; height: 136px; }
+.lx-gauges .tx-gauge b { font-size: 40px; }
+.lx-gauges .tx-gauge span { bottom: 32px; font-size: 9.5px; letter-spacing: .08em; }
+.tx-gauge.plan:not(.ok) { background: conic-gradient(var(--lit-teal) var(--p), rgba(255,255,255,.1) 0);
+  box-shadow: 0 0 22px color-mix(in srgb, var(--lit-teal) 25%, transparent); }
 
 .tx-chart { display: grid; gap: 8px; }
 .tx-plot { position: relative; display: flex; align-items: stretch; gap: 12px; height: 190px; padding-top: 18px;
