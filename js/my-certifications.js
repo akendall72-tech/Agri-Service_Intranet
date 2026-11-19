@@ -9,16 +9,20 @@
 // out come from the app, which sets them on the phone.
 
 let mycCerts = [], mycEpa = null, mycError = null;
+// Their latest EPA 609 upload (0154): waiting for the Training Manager, or
+// not approved and why. Null before 0154, or with none.
+let mycEpaUpload = null;
 // The form, while it's open: the kind being added or changed, and the row if
 // it's one already saved.
 let mycEditing = null;
 
 async function loadMyCerts() {
   if (!me) return;
-  const [own, epa] = await Promise.all([
+  const [own, epa, upload] = await Promise.all([
     db.from("personal_certifications").select("id,kind,name,issued_by,number,issued_on,expires_on,note,photo_path")
       .eq("user_id", me.id).order("id"),
-    mycLoadEpa()]);
+    mycLoadEpa(), mycLoadEpaUpload()]);
+  mycEpaUpload = upload;
   mycError = own.error ? own.error.message : null;
   // Soonest to run out first; those that don't run out last.
   mycCerts = (own.data || []).sort((a, b) => String(a.expires_on || "9999").localeCompare(String(b.expires_on || "9999"))
@@ -41,6 +45,14 @@ async function mycLoadEpa() {
   const { data } = await db.from("epa_certifications").select(columns).eq("email", email).limit(1);
   return (data || []).find(c => String(c.email || "").toLowerCase() === email) || null;
 }
+
+async function mycLoadEpaUpload() {
+  const { data, error } = await db.from("epa_submissions")
+    .select("id,status,certified_on,certificate_number,photo_path,submitted_at,decided_by_name,decision_note")
+    .eq("user_id", me.id).order("submitted_at", { ascending: false }).limit(1);
+  return error ? null : (data || [])[0] || null;
+}
+const mycEpaWaiting = () => mycEpaUpload && mycEpaUpload.status === "pending" ? mycEpaUpload : null;
 
 const mycKind = (id) => CERT_KINDS.find(k => k.id === id);
 const mycHeld = (kind) => mycCerts.find(c => c.kind === kind);
@@ -122,8 +134,17 @@ function myCertsView() {
     <div class="inv-list">
       ${row({ button: `data-view="forklift"`, icon: "forklift", title: "Forklift", ...forklift })}
       ${row({ button: `data-view="rigging"`, icon: "rigging", title: "Crane & rigging", ...craneRow })}
-      ${row({ icon: "safety", title: "EPA 609", line: epaLine, tag: epaHeld ? "Certified" : "None", tint: epaHeld ? "green" : "slate",
-        after: mycEpa && mycEpa.photo_path ? `<button type="button" class="ghost myc-view" data-myc-epa>View certificate</button>` : "" })}
+      ${epaHeld
+        ? row({ icon: "safety", title: "EPA 609", line: epaLine, tag: "Certified", tint: "green",
+            after: mycEpa && mycEpa.photo_path ? `<button type="button" class="ghost myc-view" data-myc-epa>View certificate</button>` : "" })
+        : mycEpaWaiting()
+        ? row({ button: `data-myc-edit="epa"`, icon: "safety", title: "EPA 609", tag: "Waiting", tint: "amber",
+            line: `Uploaded ${fmtDate(String(mycEpaUpload.submitted_at).slice(0, 10))}: waiting for the Training Manager to approve it` })
+        : mycEpaUpload && mycEpaUpload.status === "declined"
+        ? row({ button: `data-myc-edit="epa"`, icon: "safety", title: "EPA 609", tag: "Upload again", tint: "ember",
+            line: `Not approved${mycEpaUpload.decision_note ? `: ${mycEpaUpload.decision_note}` : ""}`, extra: "Upload it again" })
+        : row({ button: `data-myc-edit="epa"`, icon: "safety", title: "EPA 609", tag: "Upload", tint: "slate",
+            line: "Not certified. Upload your certificate, and the Training Manager approves it." })}
     </div>
     <div class="cab-heading">Optional<span class="trail">Your location admin sees these</span></div>
     <div class="inv-list">${tracked.join("")}</div>
@@ -136,7 +157,85 @@ function myCertsView() {
   </div>`;
 }
 
+// Their own EPA 609 certificate, sent to the Training Manager (0154). Once
+// it's approved it's their certification, on their training record.
+function mycEpaFormHtml() {
+  const up = mycEpaWaiting();
+  return `<div class="card inv-form myc-form" data-myc-form>
+    <h2>${up ? "Your EPA 609 upload" : "Upload your EPA 609 certificate"}</h2>
+    <p class="note" style="margin-top:0">The Training Manager checks it and approves it; then it's on your training record, and you're
+      told. ${up ? "It's waiting for them now: you can change it or take it back until they answer." : ""}</p>
+    <div class="fields">
+      <div><label for="mycEpaOn">Certified on (optional)</label>
+        <input id="mycEpaOn" type="date" max="${todayISO()}" value="${esc(up ? up.certified_on || "" : "")}"></div>
+      <div><label for="mycEpaNumber">Certificate number (optional)</label>
+        <input id="mycEpaNumber" type="text" maxlength="100" value="${esc(up ? up.certificate_number : "")}"></div>
+      <div class="wide"><label for="mycEpaPhoto">Picture of the certificate${up ? ": choose one to replace it" : ""}</label>
+        <input id="mycEpaPhoto" type="file" accept="image/*,application/pdf">
+        <p class="note">A photo or a PDF, up to 10 MB. You, the Training Manager, your location admin and the owners can see it.
+          ${up && up.photo_path ? `<button type="button" class="myc-link" data-myc-epa-upload>View the picture you sent</button>` : ""}</p></div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button type="button" data-myc-epa-save>${up ? "Save changes" : "Send it for approval"}</button>
+      <button type="button" class="ghost" data-myc-cancel>Cancel</button>
+      ${up ? `<button type="button" class="ghost danger" data-myc-epa-withdraw>Take it back</button>` : ""}
+      <span class="msg"></span>
+    </div>
+  </div>`;
+}
+
+// The picture first, into their own folder, then the upload that points at
+// it: the Training Manager never sees one without a picture.
+async function mycEpaSave(button) {
+  const form = button.closest("[data-myc-form]");
+  const up = mycEpaWaiting();
+  const file = $("mycEpaPhoto").files[0];
+  if (!up && !file) return speak(form, "Choose a photo or a PDF of your certificate.", true);
+  if (file && file.size > 10 * 1024 * 1024) return speak(form, "That file is over 10 MB. Choose a smaller picture or PDF.", true);
+  button.disabled = true;
+  speak(form, up ? "Saving…" : "Sending…", false);
+  let path = null;
+  if (file) {
+    const picture = await certificatePicture(file);
+    path = `${me.id}/${crypto.randomUUID()}.${picture.ext}`;
+    const { error } = await db.storage.from("epa-certificates").upload(path, picture.blob, { contentType: picture.type });
+    if (error) { button.disabled = false; return speak(form, `The picture didn't upload (${error.message}). Try again.`, true); }
+  }
+  const fields = { certified_on: $("mycEpaOn").value || null, certificate_number: $("mycEpaNumber").value.trim(),
+    ...(path ? { photo_path: path } : {}) };
+  const { data, error } = up
+    ? await db.from("epa_submissions").update(fields).eq("id", up.id).select("id")
+    : await db.from("epa_submissions").insert(fields).select("id");
+  if (error || !(data || []).length) {
+    if (path) await db.storage.from("epa-certificates").remove([path]);
+    button.disabled = false;
+    return speak(form, !error ? "That didn't save. Reload and try again."
+      : /does not exist|schema cache/i.test(error.message) ? "Uploading EPA 609 isn't switched on yet. Ask the Training Manager."
+      : /one_waiting|duplicate/i.test(error.message) ? "You have one waiting already. Reload the page to see it."
+      : error.message, true);
+  }
+  if (up && path && up.photo_path) await db.storage.from("epa-certificates").remove([up.photo_path]);
+  if (!up) notify("epa_submission", data[0].id);
+  mycEditing = null;
+  await loadMyCerts();
+  showView("mycerts");
+}
+
+async function mycEpaWithdraw(button) {
+  const form = button.closest("[data-myc-form]");
+  const up = mycEpaWaiting();
+  if (!up || !confirm("Take back your EPA 609 upload? The Training Manager won't see it, and the picture is deleted.")) return;
+  button.disabled = true;
+  const { error } = await db.from("epa_submissions").delete().eq("id", up.id);
+  if (error) { button.disabled = false; return speak(form, error.message, true); }
+  if (up.photo_path) await db.storage.from("epa-certificates").remove([up.photo_path]);
+  mycEditing = null;
+  await loadMyCerts();
+  showView("mycerts");
+}
+
 function mycFormHtml() {
+  if (mycEditing.kind === "epa") return mycEpaFormHtml();
   const kind = mycKind(mycEditing.kind);
   const c = mycEditing.id ? mycCerts.find(x => x.id === mycEditing.id) : kind ? mycHeld(kind.id) : null;
   const years = kind ? kind.years : 1;
@@ -248,7 +347,7 @@ document.addEventListener("click", async (event) => {
     mycEditing = { kind: edit.dataset.mycEdit, id: edit.dataset.mycId || null };
     showView("mycerts");
     const form = document.querySelector("[data-myc-form]");
-    if (form) { form.scrollIntoView({ block: "start" }); $("mycName").focus({ preventScroll: true }); }
+    if (form) { form.scrollIntoView({ block: "start" }); const first = $("mycName") || $("mycEpaOn"); if (first) first.focus({ preventScroll: true }); }
     return;
   }
   if (t.closest("[data-myc-cancel]")) { mycEditing = null; return showView("mycerts"); }
@@ -263,4 +362,9 @@ document.addEventListener("click", async (event) => {
     return;
   }
   if (t.closest("[data-myc-epa]") && mycEpa && mycEpa.photo_path) mycOpenPicture("epa-certificates", mycEpa.photo_path);
+  if (t.closest("[data-myc-epa-upload]") && mycEpaWaiting() && mycEpaWaiting().photo_path) mycOpenPicture("epa-certificates", mycEpaWaiting().photo_path);
+  const epaSave = t.closest("[data-myc-epa-save]");
+  if (epaSave) return mycEpaSave(epaSave);
+  const epaWithdraw = t.closest("[data-myc-epa-withdraw]");
+  if (epaWithdraw) return mycEpaWithdraw(epaWithdraw);
 });

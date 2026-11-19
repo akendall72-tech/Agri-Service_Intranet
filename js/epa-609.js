@@ -5,8 +5,14 @@
 // or a PDF), and it's on their training record at once: Training Status, the
 // dashboard's EPA 609 tile and the reports read it there. Other owners can
 // look. The database holds the rules and keeps the pictures private.
+//
+// People can also upload their own, from My Certifications (0154). Those wait
+// here for the Training Manager: approved, it's ticked off as theirs, exactly
+// as a tick-off is; not approved, they're told why and can upload again.
 
 let epaCerts = [], epaError = null, epaNotSetUp = false;
+// Uploads waiting for the Training Manager, oldest first (0154).
+let epaUploads = [];
 let epaView = { who: "techs", show: "all", q: "" };
 // The person being ticked off or changed, by their record's key.
 let epaEditing = null;
@@ -19,6 +25,8 @@ async function loadEpaCerts() {
   epaError = error ? error.message : null;
   epaNotSetUp = !!error && /does not exist|schema cache/i.test(error.message);
   epaCerts = error ? [] : data || [];
+  const waiting = await db.from("epa_submissions").select("*").eq("status", "pending").order("submitted_at").order("id");
+  epaUploads = waiting.error ? [] : waiting.data || [];
 }
 
 // Theirs by employee number when both have one, otherwise by work email.
@@ -45,8 +53,10 @@ function renderEpa609() {
     .sort((a, b) => (a.p.store || "").localeCompare(b.p.store || "") || epaName(a.p).localeCompare(epaName(b.p)));
   const chip = (group, value, label) => `<button type="button" class="chip${epaView[group] === value ? " on" : ""}" data-epa-${group}="${value}">${label}</button>`;
   const manager = isTrainingManager();
+  const count = document.querySelector("[data-epa-count]");
+  if (count) count.textContent = epaUploads.length ? String(epaUploads.length) : "";
 
-  box.innerHTML = `<div class="card">
+  box.innerHTML = `${epaWaitingHtml(manager)}<div class="card">
       <h2>EPA 609 certifications</h2>
       <p class="note">Who's EPA 609 certified, ticked off here with a picture of their certificate. It goes on their training record at once,
         for Training Status, the dashboard and the reports. ${manager ? "" : "Only the Training Manager ticks people off."}</p>
@@ -65,6 +75,37 @@ function renderEpa609() {
         <tbody>${people.map(({ p, c }) => epaRowHtml(p, c, manager)).join("")}</tbody></table></div>`
         : `<p class="note">Nobody matches.</p>`}
     </div>`;
+}
+
+// The uploads waiting for the Training Manager.
+function epaWaitingHtml(manager) {
+  if (!epaUploads.length) return "";
+  return `<div class="card epa-waiting" style="border-left:4px solid var(--amber, #E8A317)">
+    <h2>Waiting for approval · ${epaUploads.length}</h2>
+    <p class="note">Uploaded by people themselves, from My Certifications. ${manager
+      ? "Check the picture, then <b>Approve</b>: it's ticked off as theirs and on their training record at once, and they're told. <b>Not approved</b> tells them why, and they can upload again."
+      : "Only the Training Manager approves them."}</p>
+    <div style="overflow-x:auto"><table class="ts-table epa-table">
+      <thead><tr><th>Person</th><th>Their certificate</th><th>Uploaded</th><th></th></tr></thead>
+      <tbody>${epaUploads.map(u => `<tr>
+        <td><b>${esc(u.person_name || u.email || "Someone")}</b><small>${esc(u.store || "Not on Training Status")}</small></td>
+        <td><small>${esc([u.certified_on && `Certified ${newsDate(u.certified_on)}`, u.certificate_number && `#${u.certificate_number}`]
+          .filter(Boolean).join(" · ") || "No date or number given")}</small>
+          ${u.photo_path ? `<button type="button" class="linkish" data-epa-upload-view="${esc(u.id)}">View certificate</button>`
+            : `<span class="epa-missing">No picture</span>`}</td>
+        <td>${esc(newsDate(String(u.submitted_at).slice(0, 10)))}</td>
+        <td class="epa-act">${manager ? `<button type="button" class="pdf" data-epa-approve="${esc(u.id)}">Approve</button>
+          <button type="button" class="pdf" data-epa-decline="${esc(u.id)}">Not approved</button>` : ""}</td>
+      </tr>`).join("")}</tbody></table></div>
+  </div>`;
+}
+
+// Opened straight away so the browser doesn't take it for a pop-up, then pointed at the picture.
+async function epaOpenPicture(path) {
+  const tab = window.open("", "_blank");
+  const { data, error } = await db.storage.from("epa-certificates").createSignedUrl(path, 600);
+  if (error || !data) { if (tab) tab.close(); return alert(error ? error.message : "The picture couldn't be opened."); }
+  if (tab) tab.location = data.signedUrl; else window.location.href = data.signedUrl;
 }
 
 function epaRowHtml(p, c, manager) {
@@ -161,12 +202,34 @@ document.addEventListener("click", async (event) => {
   const view = t.closest("[data-epa-view]");
   if (view) {
     const c = epaCerts.find(x => x.id === view.dataset.epaView);
-    if (!c || !c.photo_path) return;
-    // Opened straight away so the browser doesn't take it for a pop-up, then pointed at the picture.
-    const tab = window.open("", "_blank");
-    const { data, error } = await db.storage.from("epa-certificates").createSignedUrl(c.photo_path, 600);
-    if (error || !data) { if (tab) tab.close(); return alert(error ? error.message : "The picture couldn't be opened."); }
-    if (tab) tab.location = data.signedUrl; else window.location.href = data.signedUrl;
+    if (c && c.photo_path) epaOpenPicture(c.photo_path);
+    return;
+  }
+  const upView = t.closest("[data-epa-upload-view]");
+  if (upView) {
+    const u = epaUploads.find(x => x.id === upView.dataset.epaUploadView);
+    if (u && u.photo_path) epaOpenPicture(u.photo_path);
+    return;
+  }
+  // The Training Manager's answer to an upload (0154).
+  const answer = t.closest("[data-epa-approve], [data-epa-decline]");
+  if (answer) {
+    const approve = !!answer.dataset.epaApprove;
+    const u = epaUploads.find(x => x.id === (answer.dataset.epaApprove || answer.dataset.epaDecline));
+    if (!u) return;
+    let reason = "";
+    if (!approve) {
+      reason = prompt(`Why isn't ${u.person_name || "their"} certificate approved? They'll see this, so say what to fix.`, "");
+      if (reason === null) return;
+      if (!reason.trim()) return alert("Say why, so they know what to fix.");
+    }
+    answer.closest("td").querySelectorAll("button").forEach(b => { b.disabled = true; });
+    const { error } = await db.rpc("decide_epa_submission", { submission: u.id, approve, reason });
+    if (error) { answer.closest("td").querySelectorAll("button").forEach(b => { b.disabled = false; }); return alert(error.message); }
+    notify("epa_submission", u.id);
+    await Promise.all([loadEpaCerts(), loadTrainingStatus()]);
+    renderEpa609();
+    safely(renderTsLive, renderTrainingOverview);
     return;
   }
   const remove = t.closest("[data-epa-remove]");
