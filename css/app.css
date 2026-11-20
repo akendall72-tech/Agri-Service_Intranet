@@ -216,7 +216,26 @@ button.chip { border-radius: 999px; padding: 6px 13px; font-size: 13.5px; font-w
 button.chip:hover { background: var(--paper); color: var(--ink); border-color: var(--muted); }
 button.chip.on { background: var(--ink); border-color: var(--ink); color: #fff; }
 .fkreq-add { display: grid; gap: 6px; max-width: 640px; }
-.fkreq-add input { margin: 0; }
+.fkreq-add > label { font-weight: 600; font-size: 14px; color: var(--ink); }
+/* A search box at full size, with its magnifier inside. */
+.reqsearch { position: relative; }
+.reqsearch svg { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+.reqsearch input { width: 100%; height: 46px; margin: 0; padding: 0 14px 0 40px; font-size: 15px; border-radius: 10px;
+  border: 1px solid var(--line-strong); background: #fff; }
+.reqsearch input:focus { border-color: var(--red); box-shadow: 0 0 0 3px color-mix(in srgb, var(--red) 15%, transparent); outline: none; }
+/* Required by job (0155): the Safety Manager's two boxes. */
+.reqjobs { margin: 0 0 18px; padding: 14px 16px; border-radius: 12px; border: 1px solid var(--line); background: var(--canvas, #FAF9F8); max-width: 760px; }
+.reqjobs h3 { margin: 0 0 4px; font-size: 15px; }
+.reqjobs .note { margin: 0 0 12px; }
+.reqjobs-boxes { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.reqjob { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border-radius: 10px; cursor: pointer;
+  border: 1px solid var(--line-strong); background: #fff; margin: 0; }
+.reqjob.on { border-color: #17702F; background: #F2FAF4; }
+.reqjob input { width: 20px; height: 20px; margin: 1px 0 0; accent-color: #17702F; flex: none; }
+.reqjob b { display: block; font-size: 14.5px; }
+.reqjob small { display: block; color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+.reqjob-tag { display: inline-block; padding: 3px 9px; border-radius: 99px; font-size: 12px; font-weight: 600; color: #17702F;
+  background: #E6F4EA; cursor: help; }
 .fkreq-matches { display: grid; gap: 4px; }
 .fkreq-matches button { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto auto; column-gap: 12px;
   align-items: center; width: 100%; margin: 0; height: auto; padding: 8px 12px; text-align: left; white-space: normal;

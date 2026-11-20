@@ -657,7 +657,7 @@ async function loadAll({ restInBackground = false } = {}) {
 
   const rest = Promise.all([loadEvents(), loadInspections(), loadCourses(), loadSds(),
     loadArticles(), loadSkills(), loadNews(), loadTrainingStatus(), loadCrane(), loadCompanyDocs(), loadTools(),
-    loadAgco(), loadMockSchedules(), loadSafetyDesk(), loadSafetyReportData(), loadCommunity(), loadFitness(), loadTrivia(), loadFleet(), loadCraneInspections(), loadTrainingCredits(), loadScheduledClasses().then(loadClassRegistrations), loadEpaCerts(), loadTrackedCerts(), loadMyCerts(), loadManuals(), loadEmployees(), loadJobKinds(), loadOnlineCourses(), loadForkliftCourse(), loadFkWaiting(), loadInventory()]);
+    loadAgco(), loadMockSchedules(), loadSafetyDesk(), loadSafetyReportData(), loadCommunity(), loadFitness(), loadTrivia(), loadFleet(), loadCraneInspections(), loadTrainingCredits(), loadScheduledClasses().then(loadClassRegistrations), loadEpaCerts(), loadTrackedCerts(), loadMyCerts(), loadManuals(), loadEmployees(), loadJobKinds(), loadRequiredKinds(), loadOnlineCourses(), loadForkliftCourse(), loadFkWaiting(), loadInventory()]);
   // Wrapped, because an async function handing back a promise would wait for it.
   if (restInBackground) return { rest };
   await rest;
@@ -712,6 +712,7 @@ const ICONS = {
   checkCircle: '<circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8 5.7-5.8"/>',
   info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.5v.01"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
+  search: '<circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.4-4.4"/>',
   warning: '<path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17.5v.01"/>',
   headphones: '<path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4.5" height="7" rx="1.5"/><rect x="16.5" y="14" width="4.5" height="7" rx="1.5"/>',
   book: '<path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5Z"/><path d="M5 19.5A1.5 1.5 0 0 0 6.5 21H19v-3M9 7h6"/>',

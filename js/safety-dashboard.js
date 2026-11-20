@@ -690,6 +690,47 @@ const reqKinds = {
 // The people on a list who don't hold it today.
 const reqNotMet = (kind) => reqKinds[kind].rows.filter(r => !reqKinds[kind].status(r).met);
 
+// The Safety Manager's boxes (0155): every technician, or every parts person,
+// required by their job. The database keeps each list to them: anyone who
+// gets the job is on it at once, anyone who leaves it comes off, and people
+// added by hand stay whatever their job. What counts as which is the Jobs
+// page's (0150), as jobKind() says it.
+let reqJobKinds = [], reqJobKindsError = null;
+const REQ_JOBS = [{ job: "technician", label: "Every technician", one: "technician", many: "technicians" },
+  { job: "parts", label: "Every parts person", one: "parts person", many: "parts people" }];
+
+async function loadRequiredKinds() {
+  const { data, error } = await db.from("required_operator_kinds").select("list,kind,set_by_name,set_at");
+  reqJobKindsError = error ? error.message : null;
+  reqJobKinds = error ? [] : data || [];
+}
+const reqJobTicked = (kind, job) => reqJobKinds.find(x => x.list === kind && x.kind === job);
+
+function reqJobsHtml(kind, canChange) {
+  if (reqJobKindsError) {
+    return /required_operator_kinds|does not exist|schema cache/i.test(reqJobKindsError)
+      ? `<p class="note">Run migration 0155_required_by_job.sql in the SQL editor to require every technician or parts person.</p>` : "";
+  }
+  const k = reqKinds[kind];
+  return `<div class="reqjobs">
+    <h3>Required by job</h3>
+    <p class="note">Tick one and everyone with that job is required: now, and whenever someone new gets it. Whoever moves to another
+      job comes off. What counts as a technician or a parts person is set on Admin → People → Jobs.</p>
+    <div class="reqjobs-boxes">${REQ_JOBS.map(j => {
+      const ticked = reqJobTicked(kind, j.job);
+      const n = tsPeople.filter(p => jobKind(p.job) === j.job).length;
+      const on = k.rows.filter(r => r.auto_kind === j.job).length;
+      return `<label class="reqjob${ticked ? " on" : ""}">
+        <input type="checkbox" data-req-job="${j.job}"${ticked ? " checked" : ""}${canChange ? "" : " disabled"}>
+        <span><b>${j.label}</b>
+          <small>${n} ${n === 1 ? j.one : j.many} on Training Status${ticked ? (on === n ? ", all on the list" : `, ${on} on the list`) : ""}</small>
+          ${ticked ? `<small>Ticked${ticked.set_by_name ? ` by ${esc(ticked.set_by_name)}` : ""}${ticked.set_at
+            ? `, ${esc(fmtDate(String(ticked.set_at).slice(0, 10)))}` : ""}</small>` : ""}</span>
+      </label>`;
+    }).join("")}</div>
+  </div>`;
+}
+
 // Their row on the UKG roster, where they still are on it.
 function reqRoster(row) {
   return tsPeople.find(t => t.person_key === row.person_key)
@@ -771,9 +812,11 @@ function renderRequired(kind) {
 
   box.innerHTML = `<h2>${k.title}</h2>
     <p class="note" style="margin:0 0 12px">${k.intro()}</p>
+    ${reqJobsHtml(kind, canChange)}
     ${canChange ? `<div class="fkreq-add">
-      <label for="reqSearch-${kind}">Require someone</label>
-      <input id="reqSearch-${kind}" class="search" type="search" data-req-search placeholder="Search All employees by name, location or job" autocomplete="off" value="${esc(k.query)}">
+      <label for="reqSearch-${kind}">Require someone by name</label>
+      <div class="reqsearch">${icon("search", 17)}
+        <input id="reqSearch-${kind}" type="search" data-req-search placeholder="Search All employees by name, location or job" autocomplete="off" value="${esc(k.query)}"></div>
       ${words.length ? (matches.length ? `<div class="fkreq-matches">${matches.map(t => `<button type="button" data-req-add="${esc(t.person_key)}">
           <b>${esc(`${t.first_name} ${t.last_name}`.trim())}</b><span>${esc([t.store, (t.job || "").replace(/^\d+\s*-\s*/, "")].filter(Boolean).join(" · "))}</span>
           <em>Require</em></button>`).join("")}</div>`
@@ -796,14 +839,17 @@ function renderRequired(kind) {
     ${shown.length ? `<div style="overflow-x:auto"><table class="sd-missing fkreq-table">
       <thead><tr><th>Name</th><th>Location</th><th>Status</th><th>Why</th>${canChange ? "<th></th>" : ""}</tr></thead>
       <tbody>${shown.map(x => `<tr>
-        <td><b>${esc(x.name)}</b><div class="note" style="font-size:12px">Added by ${esc(x.r.required_by_name || "the Safety Manager")}${
+        <td><b>${esc(x.name)}</b><div class="note" style="font-size:12px">${x.r.auto_kind
+          ? `Required as ${x.r.auto_kind === "technician" ? "a technician" : "a parts person"}` : `Added by ${esc(x.r.required_by_name || "the Safety Manager")}`}${
           x.r.required_at ? `, ${esc(fmtDate(String(x.r.required_at).slice(0, 10)))}` : ""}</div></td>
         <td>${esc(x.store)}</td>
         <td><span class="badge ${tone(x.st.tone)}">${esc(x.st.label)}</span>${
           x.st.why ? `<div class="note" style="font-size:12px">${esc(x.st.why)}</div>` : ""}</td>
         <td>${canChange ? `<input data-req-note="${esc(x.r.person_key)}" value="${esc(x.r.note || "")}" maxlength="300"
               placeholder="${k.placeholder}" aria-label="Why ${esc(x.name)} is required" style="margin:0;min-width:160px">` : esc(x.r.note || "—")}</td>
-        ${canChange ? `<td style="text-align:right"><button type="button" class="ghost" data-req-remove="${esc(x.r.person_key)}">Remove</button></td>` : ""}
+        ${canChange ? `<td style="text-align:right">${x.r.auto_kind
+          ? `<span class="reqjob-tag" title="On the list because of their job. Untick ${x.r.auto_kind === "technician" ? "Every technician" : "Every parts person"}, or change what their job counts as on Jobs, to take them off.">By job</span>`
+          : `<button type="button" class="ghost" data-req-remove="${esc(x.r.person_key)}">Remove</button>`}</td>` : ""}
       </tr>`).join("")}</tbody></table></div>` : ""}`;
 }
 
@@ -824,6 +870,28 @@ $("admin").addEventListener("change", async (event) => {
   if (!kind) return;
   const k = reqKinds[kind];
   if (event.target.matches("[data-req-store]")) { k.store = event.target.value; return renderRequired(kind); }
+  // A box (0155): the database puts everyone with the job on the list, or
+  // takes off those it put there; then the list is read again.
+  const box = event.target.closest("[data-req-job]");
+  if (box) {
+    const job = box.dataset.reqJob, on = box.checked, label = REQ_JOBS.find(j => j.job === job);
+    if (!on && !confirm(`Stop requiring ${label.label.toLowerCase()}? Everyone on the list only because of that job comes off it. People you added by hand stay.`)) {
+      box.checked = true;
+      return;
+    }
+    box.disabled = true;
+    const { error } = on
+      ? await db.from("required_operator_kinds").insert({ list: kind, kind: job })
+      : await db.from("required_operator_kinds").delete().eq("list", kind).eq("kind", job);
+    if (error && !(on && /duplicate/i.test(error.message))) {
+      box.checked = !on; box.disabled = false;
+      return alert(/row-level security/i.test(error.message) ? "Only the Safety Manager changes this." : `Not saved: ${error.message}`);
+    }
+    const [rows] = await Promise.all([db.from(k.table).select("*").order("name"), loadRequiredKinds()]);
+    if (!rows.error) k.rows = rows.data || [];
+    renderRequired(kind); renderSafetyNavCounts();
+    return;
+  }
   const note = event.target.closest("[data-req-note]");
   if (!note) return;
   const row = k.rows.find(r => r.person_key === note.dataset.reqNote);
