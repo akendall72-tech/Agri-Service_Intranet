@@ -135,23 +135,40 @@ $("view").addEventListener("click", (event) => {
 });
 
 // ---- admin ------------------------------------------------------------------------
+//
+// The Training dashboard's Course Catalog, in the Cab look: the catalog as it
+// stands, filtered by its tiles and the search, and the form, shut until Add a
+// course, Edit or Copy opens it. Saving or cancelling shuts it again and goes
+// back to the course in the list.
+
+let caOpen = false;        // the form is showing
+let caFilter = "all";      // all | showing | hidden | agco
+let caQuery = "";
+let caSaid = "";           // what the last save or delete said, over the list
+let caJust = null;         // the course just saved, lit up for a moment
+
+const CA_TITLES = { all: "Courses", showing: "Showing", hidden: "Hidden", agco: "AGCO credit" };
+
+function caMatches(c) {
+  if (caFilter === "showing" && !c.is_active) return false;
+  if (caFilter === "hidden" && c.is_active) return false;
+  if (caFilter === "agco" && !c.counts_for_agco) return false;
+  const q = caQuery.trim().toLowerCase();
+  return !q || [c.title, c.subtitle, c.category, c.level, c.duration, c.record_name, c.description,
+    ...(c.audiences || []), ...(c.topics || [])].filter(Boolean).join(" ").toLowerCase().includes(q);
+}
 
 function renderCoursesAdmin() {
   const editor = $("courseEditor");
   if (!editor) return;
-  const list = $("courseList");
+  editor.classList.toggle("hidden", !caOpen);
 
   if (coursesError) {
-    list.innerHTML = `<p class="error">${/does not exist|schema cache/i.test(coursesError)
+    $("courseStats").innerHTML = "";
+    $("courseList").innerHTML = `<p class="error">${/does not exist|schema cache/i.test(coursesError)
       ? "Run migration 0032_course_catalog.sql in the SQL editor, then reload this page."
       : esc(coursesError)}</p>`;
     return;
-  }
-
-  // A fresh form starts at the end of the list.
-  const order = editor.querySelector('[data-c="sort_order"]');
-  if (!editingCourseId && !order.value) {
-    order.value = allCourses.reduce((m, c) => Math.max(m, c.sort_order || 0), 0) + 10;
   }
 
   // Categories people have used, offered while typing.
@@ -159,30 +176,75 @@ function renderCoursesAdmin() {
     .map(c => `<option value="${esc(c)}">`).join("");
   renderAudienceChoices();
 
-  const live = allCourses.filter(c => c.is_active).length;
-  $("courseStats").innerHTML = `<span class="stat"><b>${allCourses.length}</b>courses</span>` +
-    `<span class="stat"><b>${live}</b>showing</span>` +
-    `<span class="stat"><b>${new Set(allCourses.map(c => c.category)).size}</b>categories</span>`;
+  if (caFilter === "agco" && !companyHas("agco")) caFilter = "all";
+  const showing = allCourses.filter(c => c.is_active).length;
+  const hidden = allCourses.length - showing;
+  const agco = allCourses.filter(c => c.counts_for_agco).length;
+  const cats = new Set(allCourses.map(c => c.category || "General")).size;
+  const tile = (key, label, value, sub, colour) =>
+    cabTile(label, sxNum(value), sub, { colour, data: `data-ca-filter="${key}"`, on: caFilter === key });
+  const tiles = [
+    tile("all", "Courses", allCourses.length, `In ${cats} ${cats === 1 ? "category" : "categories"}`, "teal"),
+    tile("showing", "Showing", showing, "In the app and on this page", "green"),
+    companyHas("agco") && tile("agco", "AGCO credit", agco, "Count toward AGCO hours", "amber"),
+    tile("hidden", "Hidden", hidden, hidden ? "Kept here, out of the catalog" : "None hidden", "muted")
+  ].filter(Boolean);
+  $("courseStats").style.setProperty("--n", tiles.length);
+  $("courseStats").innerHTML = tiles.join("");
 
-  list.innerHTML = allCourses.length ? groupCourses(allCourses).map(([cat, courses]) => `
-    <div class="section-title" style="margin-top:18px">${esc(cat)}</div>
-    ${courses.map(c => `
-      <div class="role" style="padding:12px 16px${c.is_active ? "" : ";opacity:.6"}" data-course="${esc(c.id)}">
-        <div class="row" style="align-items:flex-start">
-          <div style="flex:1;min-width:220px">
-            <b>${esc(c.title)}</b>${c.is_active ? "" : ` <span class="badge b-none">Not showing</span>`}${
-              c.counts_for_forklift ? ` <span class="badge b-expiring">Forklift driving test</span>` : ""}
-            <div class="note">${esc([c.subtitle, c.level, c.credits, c.duration].filter(Boolean).join(" · "))}</div>
-            <div class="note">👥 ${esc((c.audiences || []).join(", ") || "No audience set")} · order ${esc(c.sort_order)}</div>
-          </div>
-          <div class="row" style="gap:6px">
-            <button class="pdf" data-act="edit-course">Edit</button>
-            <button class="pdf" data-act="copy-course">Copy</button>
-            <button class="pdf" data-act="delete-course">Delete</button>
-          </div>
-        </div>
-        <span class="msg"></span>
-      </div>`).join("")}`).join("") : `<p class="note">No courses yet. Add one above.</p>`;
+  renderCaList();
+}
+
+function renderCaList() {
+  const list = $("courseList");
+  const shown = allCourses.filter(caMatches);
+  const q = caQuery.trim();
+  $("courseListTitle").textContent = CA_TITLES[caFilter] || CA_TITLES.all;
+  $("courseCount").textContent = `${sxNum(shown.length)}${q ? " matching" : ""}`;
+  const said = $("courseSaid");
+  said.textContent = caSaid;
+  said.classList.toggle("hidden", !caSaid);
+
+  list.innerHTML = !allCourses.length
+    ? `<p class="sx-empty">No courses yet. <b>Add a course</b> starts the catalog.</p>`
+    : !shown.length ? `<p class="sx-empty">No course ${q ? "matches" : "here"}.</p>`
+    : groupCourses(shown).map(([cat, courses]) => `
+      <h4>${esc(cat)} <span>${courses.length}</span></h4>
+      <div class="ca-courses">${courses.map(caCourseHtml).join("")}</div>`).join("");
+  caJust = null;
+}
+
+function caCourseHtml(c) {
+  const hours = c.training_hours != null
+    ? `${tcHours(c.training_hours)} training ${Number(c.training_hours) === 1 ? "hour" : "hours"}` : "";
+  const meta = [
+    c.level && `<span>${icon("level", 14)}${esc(c.level)}</span>`,
+    c.duration && `<span>${icon("clock", 14)}${esc(c.duration)}</span>`,
+    hours && `<span>${icon("training", 14)}${esc(hours)}</span>`,
+    `<span>${icon("people", 14)}${esc((c.audiences || []).join(", ") || "No audience set")}</span>`
+  ].filter(Boolean).join("");
+  const tags = [
+    !c.is_active && `<span class="ca-tag off">Hidden</span>`,
+    c.counts_for_agco && companyHas("agco") && `<span class="ca-tag agco">AGCO credit</span>`,
+    c.counts_for_forklift && `<span class="ca-tag fk">Forklift driving test</span>`
+  ].filter(Boolean).join("");
+  const editing = caOpen && editingCourseId === c.id;
+  return `<article class="ca-course${c.is_active ? "" : " off"}${editing ? " editing" : ""}${caJust === c.id ? " just" : ""}"
+      data-course="${esc(c.id)}">
+    <div class="ca-main">
+      <div class="ca-head"><b>${esc(c.title)}</b>${tags}</div>
+      ${c.subtitle ? `<span class="ca-subtitle">${esc(c.subtitle)}</span>` : ""}
+      ${c.description ? `<p class="ca-desc">${esc(c.description)}</p>` : ""}
+      <div class="ca-meta">${meta}${c.record_name ? `<span>On records as ${esc(c.record_name)}</span>` : ""}
+        <span class="ca-order">Order ${esc(c.sort_order)}</span></div>
+    </div>
+    <div class="ca-do">
+      ${editing ? `<span class="ca-editing">Editing</span>` : `<button type="button" class="pdf" data-act="edit-course">Edit</button>`}
+      <button type="button" class="pdf" data-act="copy-course">Copy</button>
+      <button type="button" class="pdf" data-act="delete-course">Delete</button>
+    </div>
+    <span class="msg"></span>
+  </article>`;
 }
 
 function renderAudienceChoices(selected) {
@@ -190,7 +252,7 @@ function renderAudienceChoices(selected) {
   const current = selected || [...box.querySelectorAll("button.on")].map(b => b.dataset.audience);
   const all = [...new Set([...DEFAULT_AUDIENCES, ...courseAudiences(allCourses), ...current])];
   box.innerHTML = all.map(a => `<button type="button" class="chip${current.includes(a) ? " on" : ""}"
-    data-audience="${esc(a)}">${esc(a)}</button>`).join("");
+    data-audience="${esc(a)}" aria-pressed="${current.includes(a)}">${esc(a)}</button>`).join("");
 }
 
 function fillCourseForm(course, { copy = false } = {}) {
@@ -208,8 +270,12 @@ function fillCourseForm(course, { copy = false } = {}) {
   editor.querySelector('[data-c="counts_for_forklift"]').checked = !!(course && course.counts_for_forklift);
   // The Training Manager sets a course's credits and whether it counts for
   // the forklift driving test (0151); other owners see them.
+  const manager = isTrainingManager();
   ["training_hours", "counts_for_agco", "record_name", "counts_for_forklift"].forEach(f =>
-    editor.querySelector(`[data-c="${f}"]`).disabled = !isTrainingManager());
+    editor.querySelector(`[data-c="${f}"]`).disabled = !manager);
+  $("courseCreditNote").textContent = manager
+    ? "The Credits line on the catalog is written from these. Only the Training Manager changes them."
+    : "Only the Training Manager changes these. The Credits line on the catalog is written from them.";
   set("duration", course && course.duration);
   set("description", course && course.description);
   set("topics", course ? (course.topics || []).join("\n") : "");
@@ -220,21 +286,60 @@ function fillCourseForm(course, { copy = false } = {}) {
   set("new_audience", "");
   renderAudienceChoices(course ? [...(course.audiences || [])] : []);
 
-  $("courseEditorTitle").textContent = editingCourseId ? "Edit course" : "Add a course";
+  $("courseEditorTitle").textContent = editingCourseId ? "Edit course" : copy ? "Copy a course" : "Add a course";
+  $("courseEditorSub").textContent = editingCourseId ? course.category || ""
+    : copy ? `From ${course.title}` : "";
   editor.querySelector('[data-act="save-course"]').textContent = editingCourseId ? "Save changes" : "Add course";
-  editor.querySelector('[data-act="cancel-course"]').classList.toggle("hidden", !course);
   speak(editor, "", false);
 }
 
+// Opens the form on a course (or a new one) and goes to it.
+function caOpenForm(course, options) {
+  caOpen = true;
+  caSaid = "";
+  fillCourseForm(course, options);
+  renderCoursesAdmin();
+  $("courseEditor").scrollIntoView({ behavior: "smooth", block: "start" });
+  $("courseTitle").focus({ preventScroll: true });
+}
+
+// Shuts the form and goes back to the course in the list.
+function caCloseForm(backTo) {
+  caOpen = false;
+  fillCourseForm(null);
+  renderCoursesAdmin();
+  const row = backTo && document.querySelector(`#courseList [data-course="${CSS.escape(backTo)}"]`);
+  if (row) row.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+$("admin").addEventListener("input", (event) => {
+  if (event.target.id !== "courseSearch") return;
+  caQuery = event.target.value;
+  renderCaList();
+});
+
 $("admin").addEventListener("click", async (event) => {
   const audienceChip = event.target.closest("#courseAudienceChoices button[data-audience]");
-  if (audienceChip) { audienceChip.classList.toggle("on"); return; }
+  if (audienceChip) {
+    audienceChip.setAttribute("aria-pressed", audienceChip.classList.toggle("on"));
+    return;
+  }
+
+  const filter = event.target.closest("#courseStats [data-ca-filter]");
+  if (filter) {
+    const key = filter.dataset.caFilter;
+    caFilter = key === caFilter ? "all" : key;
+    caSaid = "";
+    return renderCoursesAdmin();
+  }
 
   const button = event.target.closest("button[data-act]");
   if (!button) return;
   const act = button.dataset.act;
-  if (!["add-audience", "save-course", "cancel-course", "edit-course", "copy-course", "delete-course"].includes(act)) return;
+  if (!["new-course", "add-audience", "save-course", "cancel-course", "edit-course", "copy-course", "delete-course"].includes(act)) return;
   const editor = $("courseEditor");
+
+  if (act === "new-course") return caOpenForm(null);
 
   if (act === "add-audience") {
     const input = editor.querySelector('[data-c="new_audience"]');
@@ -246,13 +351,11 @@ $("admin").addEventListener("click", async (event) => {
     return;
   }
 
-  if (act === "cancel-course") return fillCourseForm(null);
+  if (act === "cancel-course") return caCloseForm(editingCourseId);
 
   if (act === "edit-course" || act === "copy-course") {
     const course = allCourses.find(c => c.id === button.closest("[data-course]").dataset.course);
-    fillCourseForm(course, { copy: act === "copy-course" });
-    editor.scrollIntoView({ behavior: "smooth", block: "start" });
-    return;
+    return caOpenForm(course, { copy: act === "copy-course" });
   }
 
   if (act === "delete-course") {
@@ -262,10 +365,12 @@ $("admin").addEventListener("click", async (event) => {
                  `To take it out of the catalog for now, edit it and set Showing to No.`)) return;
     const { data, error } = await db.from("courses").delete().eq("id", course.id).select();
     if (error) return speak(row, error.message, true);
-    if (!data || !data.length) return speak(row, "Nothing deleted — only an owner can remove courses.", true);
-    if (editingCourseId === course.id) fillCourseForm(null);
+    if (!data || !data.length) return speak(row, "Nothing deleted. Only an owner can remove courses.", true);
+    if (editingCourseId === course.id) { caOpen = false; fillCourseForm(null); }
     await loadCourses();
-    return renderCoursesAdmin();
+    caSaid = `Deleted ${course.title}.`;
+    renderCoursesAdmin();
+    return renderCourseCredits();
   }
 
   // save-course
@@ -311,13 +416,17 @@ $("admin").addEventListener("click", async (event) => {
       : /does not exist|schema cache/i.test(error.message)
         ? "Run migration 0032_course_catalog.sql in the SQL editor first." : error.message, true);
   }
-  if (!data || !data.length) return speak(editor, "Nothing changed — only an owner can edit courses.", true);
+  if (!data || !data.length) return speak(editor, "Nothing changed. Only an owner can edit courses.", true);
 
   const added = !editingCourseId;
+  const id = editingCourseId || data[0].id;
   await loadCourses();
-  fillCourseForm(null);
-  renderCoursesAdmin();
+  // Back to the course, wherever the filters had got to.
+  const saved = allCourses.find(c => c.id === id);
+  if (saved && !caMatches(saved)) { caFilter = "all"; caQuery = ""; $("courseSearch").value = ""; }
+  caSaid = `${added ? "Added" : "Saved"} ${row.title}. ${row.is_active
+    ? "Phones show it the next time the catalog is opened." : "It's hidden from the catalog until Showing is Yes."}`;
+  caJust = id;
+  caCloseForm(id);
   renderCourseCredits();
-  speak(editor, `${added ? "Added" : "Saved"}${row.is_active ? ". Phones show it next time the catalog is opened."
-    : " — not showing in the catalog until Showing is Yes."}`, false);
 });

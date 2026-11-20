@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Which version this is. publish.sh stamps the date and commit here, and
      into version.json beside the page; "dev" is a copy that wasn't published. -->
-<meta name="app-version" content="2026-11-20.daa3cf6">
+<meta name="app-version" content="2026-11-20.397710c">
 <!-- Where this page may load things from and send things to. GitHub Pages
      can't send security headers, so it's here. Scripts come only from this
      site and the two script CDNs (each pinned with an integrity hash), and
@@ -34,7 +34,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
-<link rel="stylesheet" href="css/app.css?v=948c4c1822">
+<link rel="stylesheet" href="css/app.css?v=39e0947ff1">
 </head>
 <body>
 
@@ -799,70 +799,102 @@
     <section id="tab-coursecredits" class="hidden"><div id="courseCredits"></div></section>
 
     <section id="tab-courses" class="hidden">
-      <div class="card" id="courseEditor">
-        <h2 id="courseEditorTitle">Add a course</h2>
-        <p class="note">Courses show in the Course Catalog in the app and on this page.
-          They're grouped under their category, and categories run in the order of
-          their first course, so <b>Order</b> arranges both — use tens (10, 20, 30)
-          to leave room to slot one in later.</p>
-        <div class="fields">
-          <div class="wide"><label>Course title</label>
-            <input type="text" data-c="title" placeholder="Fendt Track Level 4 Foundations"></div>
-          <div class="wide"><label>Subtitle (optional)</label>
-            <input type="text" data-c="subtitle" placeholder="900/1100 Series VMT Track Tractors"></div>
-          <div><label>Category</label>
-            <input type="text" data-c="category" list="courseCategories" placeholder="Fendt Equipment">
-            <datalist id="courseCategories"></datalist></div>
-          <div><label>Level (optional)</label>
-            <input type="text" data-c="level" placeholder="Level 4"></div>
-          <div><label for="courseHours">Training hours</label>
-            <input type="number" id="courseHours" data-c="training_hours" min="0" max="1000" step="0.5" inputmode="decimal" placeholder="24"></div>
-          <div data-feature="agco"><label>AGCO</label>
-            <label class="tc-check" for="courseAgco"><input type="checkbox" id="courseAgco" data-c="counts_for_agco"> Counts as AGCO credit</label></div>
-          <div class="wide"><label>Forklift</label>
-            <label class="tc-check" for="courseForklift"><input type="checkbox" id="courseForklift" data-c="counts_for_forklift"> Counts for the forklift driving test</label>
-            <p class="note" style="margin:4px 0 0">For a forklift class taught in person. Once it's on someone's training record (a class completed on
-              the Class Schedule, or Give Credit), they can be given the driving test within 30 days, as after passing the online forklift
-              course. The steps on everyone's forklift card then name this class. Only the Training Manager changes it.</p></div>
-          <div class="wide"><label for="courseRecordName">Name on training records (optional)</label>
-            <input type="text" id="courseRecordName" data-c="record_name" maxlength="200" placeholder="The same as the title">
-            <p class="note" style="margin:4px 0 0">The name this course goes by on someone's record. Leave it empty unless another name is already
-              in use: Lifting and Rigging is <b>Lifting and Rigging ILT</b> on records, the name the crane setting looks for.</p></div>
-          <div><label>Length (optional)</label>
-            <input type="text" data-c="duration" placeholder="3 Days"></div>
-          <div class="wide"><label>Who it's for — tap all that apply</label>
-            <div class="chips" id="courseAudienceChoices" style="margin-bottom:8px"></div>
-            <div class="row" style="margin-bottom:12px">
-              <input type="text" data-c="new_audience" placeholder="Someone else, e.g. Sales" style="max-width:260px;margin:0">
-              <button type="button" class="pdf" data-act="add-audience">Add</button>
-            </div></div>
-          <div class="wide"><label>Description</label>
-            <textarea data-c="description" rows="5"></textarea></div>
-          <div><label>Key topics — one per line</label>
-            <textarea data-c="topics" rows="5"></textarea></div>
-          <div><label>Prerequisites — one per line, blank for none</label>
-            <textarea data-c="prerequisites" rows="5"></textarea></div>
-          <div><label>Order</label>
-            <input type="text" data-c="sort_order"></div>
-          <div><label>Showing in the catalog</label>
-            <select data-c="is_active">
-              <option value="yes">Yes</option>
-              <option value="no">No — hidden</option>
-            </select></div>
-        </div>
-        <div class="row">
-          <button data-act="save-course">Add course</button>
-          <button class="ghost hidden" data-act="cancel-course">Cancel</button>
-          <span class="msg"></span>
-        </div>
-      </div>
+      <!-- The Course Catalog in the Cab look: the catalog as it stands, and the
+           form, shut until Add a course, Edit or Copy opens it. course-catalog.js
+           draws the tiles and the list; the form stays here so its fields keep
+           their ids. -->
+      <div class="sx cab-admin ca" style="--accent:var(--lit-teal)">
+        <section class="sx-hero">
+          <div class="sx-hero-text">
+            <span class="sx-kicker">Training · Content</span>
+            <h2>Every course, under its category</h2>
+            <p>What people can look up in the Course Catalog, in the app and on this page.
+              <b>Copy</b> starts a new course with the same details; a hidden course stays here and can be switched back on.</p>
+          </div>
+          <button type="button" class="ca-add" data-act="new-course"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add a course</button>
+        </section>
+        <div class="sx-tiles" id="courseStats"></div>
 
-      <div class="card">
-        <h2>Courses</h2>
-        <div id="courseStats" style="margin-bottom:6px"></div>
-        <p class="note"><b>Copy</b> starts a new course with the same details. A course
-          set to not showing stays here, faded, and can be switched back on.</p>
-        <div id="courseList"></div>
+        <section class="sx-panel ca-editor hidden" id="courseEditor" style="--accent:var(--lit-amber)">
+          <header><h3 id="courseEditorTitle">Add a course</h3><span id="courseEditorSub"></span></header>
+          <h4>The course</h4>
+          <div class="fields">
+            <div class="wide"><label for="courseTitle">Course title</label>
+              <input type="text" id="courseTitle" data-c="title" placeholder="Fendt Track Level 4 Foundations"></div>
+            <div class="wide"><label for="courseSubtitle">Subtitle (optional)</label>
+              <input type="text" id="courseSubtitle" data-c="subtitle" placeholder="900/1100 Series VMT Track Tractors"></div>
+            <div><label for="courseCategory">Category</label>
+              <input type="text" id="courseCategory" data-c="category" list="courseCategories" placeholder="Fendt Equipment">
+              <datalist id="courseCategories"></datalist></div>
+            <div><label for="courseLevel">Level (optional)</label>
+              <input type="text" id="courseLevel" data-c="level" placeholder="Level 4"></div>
+            <div><label for="courseDuration">Length (optional)</label>
+              <input type="text" id="courseDuration" data-c="duration" placeholder="3 Days"></div>
+          </div>
+
+          <h4>Credit</h4>
+          <p class="sx-sub" id="courseCreditNote">Only the Training Manager changes these.</p>
+          <div class="fields">
+            <div><label for="courseHours">Training hours</label>
+              <input type="number" id="courseHours" data-c="training_hours" min="0" max="1000" step="0.5" inputmode="decimal" placeholder="24"></div>
+            <div data-feature="agco"><label>AGCO</label>
+              <label class="tc-check" for="courseAgco"><input type="checkbox" id="courseAgco" data-c="counts_for_agco"> Counts as AGCO credit</label></div>
+            <div class="wide"><label>Forklift</label>
+              <label class="tc-check" for="courseForklift"><input type="checkbox" id="courseForklift" data-c="counts_for_forklift"> Counts for the forklift driving test</label>
+              <p class="note ca-help">For a forklift class taught in person. Once it's on someone's training record (a class completed on
+                the Class Schedule, or Give Credit), they can be given the driving test within 30 days, as after passing the online forklift
+                course. The steps on everyone's forklift card then name this class.</p></div>
+            <div class="wide"><label for="courseRecordName">Name on training records (optional)</label>
+              <input type="text" id="courseRecordName" data-c="record_name" maxlength="200" placeholder="The same as the title">
+              <p class="note ca-help">The name this course goes by on someone's record. Leave it empty unless another name is already
+                in use: Lifting and Rigging is <b>Lifting and Rigging ILT</b> on records, the name the crane setting looks for.</p></div>
+          </div>
+
+          <h4>Who it's for</h4>
+          <div class="chips" id="courseAudienceChoices"></div>
+          <div class="ca-audience-add">
+            <input type="text" id="courseNewAudience" data-c="new_audience" placeholder="Someone else, e.g. Sales" aria-label="Another audience">
+            <button type="button" class="pdf" data-act="add-audience">Add</button>
+          </div>
+
+          <h4>What it covers</h4>
+          <div class="fields">
+            <div class="wide"><label for="courseDescription">Description</label>
+              <textarea id="courseDescription" data-c="description" rows="5"></textarea></div>
+            <div><label for="courseTopics">Key topics, one per line</label>
+              <textarea id="courseTopics" data-c="topics" rows="5"></textarea></div>
+            <div><label for="coursePrereqs">Prerequisites, one per line (blank for none)</label>
+              <textarea id="coursePrereqs" data-c="prerequisites" rows="5"></textarea></div>
+          </div>
+
+          <h4>In the catalog</h4>
+          <div class="fields">
+            <div><label for="courseOrder">Order</label>
+              <input type="text" id="courseOrder" data-c="sort_order" inputmode="numeric">
+              <p class="note ca-help">Categories run in the order of their first course, so Order arranges both. Tens (10, 20, 30)
+                leave room to slot one in later.</p></div>
+            <div><label for="courseShowing">Showing in the catalog</label>
+              <select id="courseShowing" data-c="is_active">
+                <option value="yes">Yes</option>
+                <option value="no">No, hidden</option>
+              </select></div>
+          </div>
+
+          <div class="cg-bar ca-bar">
+            <span class="msg"></span>
+            <button type="button" class="ghost" data-act="cancel-course">Cancel</button>
+            <button type="button" data-act="save-course">Add course</button>
+          </div>
+        </section>
+
+        <section class="sx-panel ca-list" style="--accent:var(--lit-teal)">
+          <header><h3 id="courseListTitle">Courses</h3><span id="courseCount"></span>
+            <input type="search" id="courseSearch" class="cab-search" placeholder="Search title, category, level or topic"
+              aria-label="Search the catalog" autocomplete="off"></header>
+          <p class="co-ok hidden" id="courseSaid" role="status"></p>
+          <div id="courseList"></div>
+        </section>
       </div>
     </section>
 
@@ -1252,7 +1284,7 @@
 <script src="js/inspections.js?v=2e9c8853b2"></script>
 <script src="js/hr.js?v=b9c0254418"></script>
 <script src="js/personal-inventory.js?v=e24b5aa871"></script>
-<script src="js/course-catalog.js?v=95f86f4853"></script>
+<script src="js/course-catalog.js?v=3cafcfd87d"></script>
 <script src="js/training-credits.js?v=d5780674b7"></script>
 <script src="js/class-schedule.js?v=50982c058c"></script>
 <script src="js/class-registration.js?v=81ec1c81ac"></script>

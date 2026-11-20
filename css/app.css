@@ -550,6 +550,68 @@ button.mc-action.mc-leave { margin-left: 16px; opacity: .75; }
 .cg-bar button { margin: 0; }
 @media (max-width: 900px) { .cg-layout { grid-template-columns: 1fr; } }
 @media (max-width: 640px) { .cg-book { margin-left: 0; } }
+/* The Course Catalog's admin page (course-catalog.js), in the Cab look: the
+   catalog as rows under their categories, and the form in its own panel,
+   shut until Add a course, Edit or Copy opens it. */
+.ca .sx-hero p b { color: #fff; }
+button.ca-add { flex: none; gap: 8px; height: auto; padding: 11px 18px; border-radius: 12px; font-size: 15px; }
+.ca-editor, .ca-course { scroll-margin-top: 76px; }
+.ca-editor > h4:first-of-type { margin-top: 0; }
+.ca-editor .fields { align-items: start; }
+.ca-editor .sx-sub { margin-top: -2px; }
+.ca-help { margin: 4px 0 12px; font-size: 12.5px; line-height: 1.45; }
+.ca-audience-add { display: flex; gap: 8px; max-width: 420px; }
+.ca-audience-add input { margin: 0; }
+.ca-audience-add button { margin: 0; flex: none; }
+.ca-bar .msg { margin-right: auto; }
+.cab-admin button.chip { background: rgba(255,255,255,.06); color: #fff; border-color: rgba(255,255,255,.25); }
+.cab-admin button.chip:hover { background: rgba(255,255,255,.13); color: #fff; border-color: rgba(255,255,255,.4); }
+.cab-admin button.chip.on { background: var(--accent); border-color: var(--accent); color: #1F1600; }
+.cab-admin .tc-check { color: #fff; font-size: 14px; }
+.cab-admin .tc-check:has(input:disabled) { opacity: .6; cursor: not-allowed; }
+.cab-admin input:not([type=checkbox]):disabled, .cab-admin select:disabled, .cab-admin textarea:disabled { opacity: .55; cursor: not-allowed; }
+/* The browser greys a switched-off checkbox until a tick can't be seen on a
+   dark panel; drawn here, a ticked one stays ticked for whoever can't change it. */
+.ca-editor .tc-check input[type=checkbox] { appearance: none; display: grid; place-items: center; flex: none; width: 18px; height: 18px;
+  margin: 0; border-radius: 5px; border: 1.5px solid rgba(255,255,255,.45); background: rgba(255,255,255,.06); cursor: pointer; }
+.ca-editor .tc-check input[type=checkbox]:checked { background: var(--accent); border-color: var(--accent); }
+.ca-editor .tc-check input[type=checkbox]:checked::after { content: ""; width: 5px; height: 9px; margin-top: -2px;
+  border: solid #1F1600; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.ca-editor .tc-check input[type=checkbox]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ca-editor .tc-check input[type=checkbox]:disabled { cursor: not-allowed; }
+#courseSaid { margin: 0 0 12px; }
+#courseList > h4:first-child { margin-top: 2px; }
+.ca-list h4 { display: flex; align-items: baseline; gap: 8px; }
+.ca-list h4 span { color: var(--cab-detail); }
+.ca-courses { display: grid; gap: 6px; }
+.ca-course { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 10px 16px; padding: 12px 14px; border-radius: 12px;
+  background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.08); }
+.ca-course:hover { background: rgba(255,255,255,.06); }
+.ca-course.off { opacity: .72; }
+.ca-course.editing { opacity: 1; border-color: var(--lit-amber); background: color-mix(in srgb, var(--lit-amber) 10%, transparent); }
+.ca-course.just { animation: ca-just 2.6s ease-out; }
+@keyframes ca-just { from { border-color: var(--lit-green); background: color-mix(in srgb, var(--lit-green) 16%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .ca-course.just { animation: none; border-color: var(--lit-green); } }
+.ca-main { flex: 1 1 320px; min-width: 0; display: grid; gap: 3px; }
+.ca-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.ca-head b { font: 600 16.5px/1.25 var(--font-cab); letter-spacing: .03em; text-transform: uppercase; overflow-wrap: anywhere; }
+.ca-subtitle { color: #DCE2E6; font-size: 13.5px; }
+.ca-desc { margin: 4px 0 2px; max-width: 90ch; color: var(--cab-sub); font-size: 13px; line-height: 1.45;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ca-meta { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 4px; color: #C3CCD2; font-size: 12.5px; }
+.ca-meta span { display: inline-flex; align-items: center; gap: 5px; }
+.ca-meta svg { flex: none; color: var(--accent); }
+.ca-order { color: var(--cab-detail); font-family: var(--font-mono); letter-spacing: .04em; }
+.ca-tag { padding: 1px 7px; border-radius: 6px; border: 1px solid currentColor; white-space: nowrap;
+  font: 600 10px var(--font-mono); letter-spacing: .06em; text-transform: uppercase; }
+.ca-tag.off { color: var(--lit-muted); }
+.ca-tag.agco { color: var(--lit-green); }
+.ca-tag.fk { color: var(--lit-amber); }
+.ca-do { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.ca-do button { margin: 0; }
+.ca-editing { padding: 0 6px; color: var(--lit-amber); font: 600 11px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
+.ca-course > .msg { flex-basis: 100%; }
+.ca-course > .msg:empty { display: none; }
 /* Changeover (0125) */
 .co-now { border-left: 4px solid var(--line-strong); }
 .co-now.here { border-left-color: var(--green, #1E8A3C); }
