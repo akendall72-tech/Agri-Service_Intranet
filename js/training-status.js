@@ -400,7 +400,7 @@ function trainingStatusView() {
       ? "Training Status isn't switched on yet." : esc(trainingStatusError)}</p></div>`;
   }
   const model = tsModel();
-  if (!admin) return intro + tsSelfView(model) + `<p class="note ts-sources">${tsSourcesNote(tsSources)}</p>`;
+  if (!admin) return intro + tsSelfView(model);
   if (!model.people.length) {
     const uploaded = tsSources && tsSources.employees && tsSources.employees.file;
     return intro + `<div class="card"><p class="note">${!uploaded ? "No reports yet. " + (isOwner()
@@ -417,8 +417,7 @@ function trainingStatusView() {
     <div class="row ts-tabs"><div class="chips" style="margin:0">${tabs.map(([id, label]) =>
       `<button class="chip${tsState.tab === id ? " on" : ""}" data-ts-tab="${id}">${label}</button>`).join("")}</div>
       <span class="pill">${scope}</span></div>
-    <div id="tsBody">${tsBody(model)}</div>
-    <p class="note ts-sources">${tsSourcesNote(tsSources)}</p></div>`;
+    <div id="tsBody">${tsBody(model)}</div></div>`;
 }
 
 // An employee's own record: hours toward 24, 609, and what they've taken.
@@ -455,21 +454,6 @@ function tsSelfView(m) {
 
 // Records built here from the history and the credits, not the uploads (0125).
 const tsBuiltHere = () => !!(tsSources && tsSources.records_from === "here");
-
-function tsSourcesNote(sources) {
-  if (!sources) return "";
-  if (sources.records_from === "here") {
-    const part = (label, block) => block && (block.file || block.exported)
-      ? `${label}${block.exported ? ` exported ${esc(block.exported)}` : ""}` : `${label} not uploaded`;
-    return `Built here from the training history${sources.history_taken_at ? ` (taken ${esc(newsDate(String(sources.history_taken_at).slice(0, 10)))})` : ""}
-      and the credits given and classes completed since, with ${part("All employees", sources.employees)}.`;
-  }
-  const part = (label, block) => block && (block.file || block.exported)
-    ? `${label}${block.exported ? ` exported ${esc(block.exported)}` : ""}` : `${label} not uploaded`;
-  return `From ${part("All employees", sources.employees)}; ${part(sources.credits && sources.credits.format === "rules"
-    ? "Credit Rules" : "Credits All Time", sources.credits)}; ${
-    part("OLT and ILT", sources.history)}.`;
-}
 
 function tsBody(model) {
   switch (tsState.tab) {

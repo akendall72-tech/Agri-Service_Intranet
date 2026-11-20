@@ -486,17 +486,50 @@ button.mc-action.mc-leave { margin-left: 16px; opacity: .75; }
 /* Grades (0124) */
 .cg-line { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .cs-actions button.pdf.on { background: var(--ink); color: #fff; border-color: var(--ink); }
-.cg-book { margin: 0 0 14px 62px; padding: 14px 16px; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); background: var(--paper); }
-.cg-book .cr-head { margin-top: 0; }
-.cg-table td { vertical-align: middle; }
-.cg-table td small { display: block; color: var(--muted); font-size: 12.5px; }
-.cg-table select, .cg-table input { margin: 0; min-width: 112px; }
-.cg-table td:first-child { min-width: 130px; }
-.cg-table input { width: 110px; min-width: 0; }
-.cg-table tr.cg-dirty td { background: var(--caution-soft); }
-.cg-quick { gap: 8px; margin-top: 8px; }
-.cg-walkin { margin-top: 12px; max-width: 520px; }
-.cg-bar { margin-top: 12px; gap: 8px; }
+/* Grade Classes (class-grades.js): the classes beside the gradebook, in the
+   Cab look. A grade changes its row in place; the bar stays at the bottom. */
+.cg-layout { display: grid; grid-template-columns: minmax(240px, 320px) minmax(0, 1fr); gap: 14px; align-items: start; margin-top: 14px; }
+.cg-classes h4:first-of-type { margin-top: 0; }
+.cg-pick { display: block; width: 100%; margin: 0 0 6px; padding: 10px 12px; text-align: left; border-radius: 10px; cursor: pointer;
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); color: #fff; box-shadow: none; height: auto; }
+.cg-pick:hover { background: rgba(255,255,255,.08); }
+.cg-pick.on { border-color: var(--lit-teal); background: color-mix(in srgb, var(--lit-teal) 14%, transparent); }
+.cg-pick b { display: block; font: 600 15px/1.25 var(--font-cab); letter-spacing: .03em; text-transform: uppercase; }
+.cg-pick span { display: block; color: var(--cab-sub); font-size: 12.5px; margin-top: 2px; }
+.cg-pick em { display: block; color: var(--accent); font: 600 11px var(--font-mono); font-style: normal; letter-spacing: .06em; margin-top: 4px; }
+.cg-more { margin: 6px 0 0; }
+.cg-people { display: grid; gap: 6px; }
+.cg-person { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; padding: 9px 10px;
+  border-radius: 10px; background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.07); }
+.cg-person .cg-who { flex: 1 1 150px; min-width: 0; }
+.cg-seg, .cg-person .cg-score { flex: none; }
+.cg-seg button { flex: none; }
+.cg-person.dirty { border-color: color-mix(in srgb, var(--lit-amber) 55%, transparent); background: color-mix(in srgb, var(--lit-amber) 8%, transparent); }
+.cg-who b { display: block; font-size: 14.5px; overflow-wrap: anywhere; }
+.cg-who span { display: block; color: var(--cab-sub); font-size: 12.5px; }
+.cg-tag { display: inline-block; margin-left: 4px; padding: 1px 6px; border-radius: 6px; font: 600 10px var(--font-mono); font-style: normal;
+  letter-spacing: .06em; text-transform: uppercase; color: var(--lit-amber); border: 1px solid currentColor; }
+.cg-tag.ok { color: var(--lit-green); }
+.cg-seg { display: inline-flex; border-radius: 9px; overflow: hidden; border: 1px solid rgba(255,255,255,.18); }
+.cab-admin .cg-seg button.cg-choice { height: 34px; padding: 0 12px; margin: 0; border: 0; border-radius: 0; box-shadow: none; background: transparent;
+  color: var(--cab-sub); font: 600 12.5px var(--font-body, inherit); white-space: nowrap; cursor: pointer; }
+.cab-admin .cg-seg button.cg-choice + button.cg-choice { border-left: 1px solid rgba(255,255,255,.18); }
+.cab-admin .cg-seg button.cg-choice:hover:not(:disabled) { background: rgba(255,255,255,.08); color: #fff; }
+.cab-admin .cg-seg button.cg-choice.on { background: var(--lit-teal); color: #0B1A1A; }
+.cab-admin .cg-seg button.cg-choice.on[data-cg-value="no_show"], .cab-admin .cg-seg button.cg-choice.on[data-cg-value="not_passed"] {
+  background: var(--lit-amber); color: #1F1600; }
+.cab-admin .cg-seg button.cg-choice:disabled { opacity: .35; cursor: default; }
+.cab-admin input.cg-score { width: 88px; margin: 0; }
+.cg-quick { gap: 8px; margin-top: 10px; }
+.cg-walkin { margin-top: 14px; max-width: 520px; }
+.cg-walkin label { display: block; margin-bottom: 4px; }
+.cg-bar { position: sticky; bottom: 0; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 16px -18px -18px -27px;
+  padding: 12px 18px 12px 27px; border-top: 1px solid rgba(255,255,255,.1); border-radius: 0 0 16px 16px;
+  background: color-mix(in srgb, var(--cab-bottom) 94%, transparent); backdrop-filter: blur(6px); }
+.cg-state { color: var(--cab-sub); font-size: 13px; margin-right: auto; }
+.cg-state.dirty { color: var(--lit-amber); font-weight: 600; }
+.cg-bar button { margin: 0; }
+@media (max-width: 900px) { .cg-layout { grid-template-columns: 1fr; } }
 @media (max-width: 640px) { .cg-book { margin-left: 0; } }
 /* Changeover (0125) */
 .co-now { border-left: 4px solid var(--line-strong); }
@@ -538,7 +571,6 @@ button.mc-action.mc-leave { margin-left: 16px; opacity: .75; }
 .ts-classes time { color: var(--muted); white-space: nowrap; font-size: 12.5px; font-variant-numeric: tabular-nums; }
 .ts-tags { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
 .ts-n { opacity: .6; margin-left: 2px; font-weight: 500; }
-.ts-sources { margin-top: 14px; }
 .ts-entries { display: flex; flex-wrap: wrap; gap: 2px 10px; margin-top: 4px; font-size: 12px; color: var(--muted); }
 .ts-tabs { justify-content: space-between; }
 .ts-year { display: flex; gap: 8px; align-items: baseline; font-weight: 700; margin: 14px 0 6px; }

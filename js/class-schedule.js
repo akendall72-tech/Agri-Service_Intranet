@@ -233,7 +233,7 @@ function scClassHtml(c) {
           `<li><span>${esc(h.what)}</span><small>${esc(h.by || "")}${h.by ? " · " : ""}${esc(newsDate(String(h.at).slice(0, 10)))}</small></li>`).join("")}</ul></details>` : ""}
       </div>
       <div class="row cs-actions">${actions}</div>
-    </div>${cgBookHtml(c)}`;
+    </div>`;
 }
 
 // ---- saving ----------------------------------------------------------------------------------

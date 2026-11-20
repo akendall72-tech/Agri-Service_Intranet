@@ -611,8 +611,7 @@ function crPageInner() {
       </div>
       <div class="cr-report">${crState.course ? crReport(model)
         : `<div class="card"><p class="note" style="margin:0">Pick a class to see who has taken it and who hasn't.</p></div>`}</div>
-    </div>
-    <p class="note ts-sources">${tsSourcesNote(tsSources)}</p>`;
+    </div>`;
 }
 
 function crCourseList(courses) {
