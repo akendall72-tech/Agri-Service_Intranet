@@ -486,8 +486,36 @@ function certificationCard() {
       <p class="note" style="margin-top:16px">
         Issued by the ${esc(companyName())} Training Department</p>
     </div>
+  </div>${fkRenewHtml(cert, waitingNote)}`;
+}
+
+// Renewing, whenever they like: their card running out, or a new truck and
+// everyone through again. Offered while they hold a card and haven't already
+// started: not during their 30 days, not while a test waits. The app's
+// ForkliftRenewButton says the same.
+function fkRenewHtml(cert, waitingNote) {
+  if (!cert || waitingNote || !fkCourse || fkStage(fkCourse).kind === "due") return "";
+  return `<div class="cab-card fk-card fk-renew" style="${lit("amber")}">
+    <b>Renew my certification</b>
+    <p>Take the course and a driving test again, for a new card: when yours is running out, or when the company asks
+      everyone to, for a new truck. Yours stays valid until the new test is approved.</p>
+    <button type="button" class="oc-go" data-fk-renew>Renew &rarr;</button>
   </div>`;
 }
+
+// What renewing takes, asked first; then the online course opens, or, for a
+// class, where to find one.
+document.addEventListener("click", (event) => {
+  if (!event.target.closest("[data-fk-renew]")) return;
+  const route = fkRoute(), link = fkCourseLink();
+  const what = route.kind === "online" ? "You take the online course again"
+    : route.kind === "class" ? `You take ${fkOr((fkCourse && fkCourse.classes) || [])} again (find the next one on the Open Seat Report, or ask your location admin)`
+    : `You take the online course, or ${fkOr((fkCourse && fkCourse.classes) || [])}, again`;
+  const text = `${what}, then your location admin gives you a driving test within 30 days of it. Your card stays valid until `
+    + "the Training Manager approves the new test, and the new card runs three years from then.";
+  if (!link) return alert(text);
+  if (confirm(`Renew your forklift certification?\n\n${text}\n\nStart the online course now?`)) window.location.href = link;
+});
 
 // ---------------------------------------------------------------- status
 

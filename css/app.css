@@ -3530,10 +3530,11 @@ button.cr-course.on { background: var(--red-soft); color: var(--red-dark); font-
 .oc-state.done { color: var(--lit-green); font-weight: 600; }
 .oc-state.going { color: var(--lit-slate); font-weight: 600; }
 .oc-state.failed { color: var(--lit-amber); font-weight: 600; }
-a.oc-go { flex: none; padding: 10px 16px; border-radius: 10px; background: var(--red); color: #fff; text-decoration: none;
-  font: 700 15px var(--font-cab); letter-spacing: .05em; text-transform: uppercase; }
-a.oc-go:hover { filter: brightness(1.1); }
-a.oc-go:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+a.oc-go, button.oc-go { flex: none; padding: 10px 16px; border-radius: 10px; background: var(--red); color: #fff; text-decoration: none;
+  font: 700 15px var(--font-cab); letter-spacing: .05em; text-transform: uppercase; border: 0; height: auto; box-shadow: none; cursor: pointer; }
+a.oc-go:hover, button.oc-go:hover { filter: brightness(1.1); }
+a.oc-go:focus-visible, button.oc-go:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.fk-renew { margin-top: 14px; }
 .oc-card.done a.oc-go { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.25); }
 @media (max-width: 600px) { .oc-card { flex-direction: column; align-items: stretch; } a.oc-go { text-align: center; } }
 /* The Forklift Center's spot for the card, before there's a card (0092). */
