@@ -1,0 +1,4 @@
+{
+  "about": "Read by the old Agri-Service app (AppMove.swift). When Agri-Barn is ready, \"moved\" gets the old app's bundle ID with Agri-Barn's name and link, and the old app tells its people. Nothing listed: nothing shows.",
+  "moved": {}
+}
