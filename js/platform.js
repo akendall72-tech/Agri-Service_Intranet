@@ -68,9 +68,9 @@ function platformBody() {
 
 function pfCompanyCard(c) {
   const open = pfOpen === c.id;
-  return `<div class="pf-company ${open ? "open" : ""}">
+  return `<div class="pf-company ${open ? "open" : ""}${c.deactivated_at ? " off" : ""}">
       <button type="button" class="pf-company-head" data-pf-open="${esc(c.id)}" aria-expanded="${open}">
-        <span class="pf-company-name"><b>${esc(c.name)}</b><small>${esc(c.id)}${(c.email_domains || []).length ? ` · ${esc(c.email_domains.join(", "))}` : ""}</small></span>
+        <span class="pf-company-name"><b>${esc(c.name)}${c.deactivated_at ? ` <span class="badge b-expired">Deactivated</span>` : ""}</b><small>${esc(c.id)}${(c.email_domains || []).length ? ` · ${esc(c.email_domains.join(", "))}` : ""}</small></span>
         <span class="pf-company-facts">
           <span><b>${Number(c.active || 0)}</b> active</span>
           <span><b>${Number(c.owners || 0)}</b> ${Number(c.owners) === 1 ? "owner" : "owners"}</span>
@@ -103,6 +103,7 @@ function pfCompanyDetail(c) {
             for them, with why you came.</p></div>
         <button type="button" class="btn-secondary" data-pf-visit="${esc(c.id)}" ${pfBusy ? "disabled" : ""}>Open as its owner</button>
       </div>
+      ${pfActiveSection(c)}
       <h3>People</h3>
       ${!people ? `<p class="note">Loading…</p>` : !people.length ? `<p class="note">Nobody yet. Place its first owner from Accounts waiting.</p>` : `
       <div class="table-wrap"><table class="pf-table">
@@ -112,6 +113,31 @@ function pfCompanyDetail(c) {
           <td>${esc(p.email || "")}</td><td>${esc(p.role)}</td><td>${esc(p.location || "—")}</td>
           <td>${esc(pfWhen(p.last_sign_in))}</td></tr>`).join("")}</tbody>
       </table></div>`}
+    </div>`;
+}
+
+// Deactivating a company (0158): its people are signed out and see nothing
+// until it's reactivated. Nothing is deleted. The reason goes in the log its
+// owners read.
+function pfActiveSection(c) {
+  if (!("deactivated_at" in c)) {
+    return `<p class="note pf-switch">Run migration 0158_company_deactivation.sql in the SQL editor to deactivate a company.</p>`;
+  }
+  if (c.deactivated_at) {
+    return `<div class="pf-switch off">
+        <div><b>Deactivated ${esc(pfWhen(c.deactivated_at))}</b>${c.deactivated_by_name ? ` by ${esc(c.deactivated_by_name)}` : ""}
+          ${c.deactivated_reason ? `<q>${esc(c.deactivated_reason)}</q>` : ""}
+          <p class="note">Its people are signed out and see nothing; no new accounts, join slips or notifications. Everything it had
+            is still here. You can still open it as its owner.</p></div>
+        <button type="button" data-pf-on="${esc(c.id)}" ${pfBusy ? "disabled" : ""}>Reactivate</button>
+      </div>`;
+  }
+  return `<div class="pf-switch">
+      <div><label for="pfOffWhy-${esc(c.id)}">Deactivate this company</label>
+        <input type="text" id="pfOffWhy-${esc(c.id)}" maxlength="300" placeholder="Why, for its owners: the agreement ended">
+        <p class="note">Everyone in it is signed out and sees nothing until it's reactivated: no new accounts, join slips or
+          notifications. Nothing is deleted. Its owners read the reason in their log once it's back.</p></div>
+      <button type="button" class="pf-danger" data-pf-off="${esc(c.id)}" ${pfBusy ? "disabled" : ""}>Deactivate</button>
     </div>`;
 }
 
@@ -167,6 +193,8 @@ function pfWhat(l) {
   return l.action === "account placed" ? `${d.name || d.email || "An account"} placed as ${d.role}`
     : l.action === "company created" ? "Company made"
     : l.action === "company changed" ? "Company changed"
+    : l.action === "company deactivated" ? `Company deactivated${d.reason ? `: ${d.reason}` : ""}`
+    : l.action === "company reactivated" ? "Company reactivated"
     : l.action === "visit started" ? `Visit started${d.reason ? `: ${d.reason}` : ""}`
     : l.action === "visit ended" ? "Visit ended"
     : ["added", "changed", "removed"].includes(l.action)
@@ -236,6 +264,25 @@ document.addEventListener("click", (e) => {
       if (error) { pfBusy = false; pfProblem = error.message; renderPlatformBody(); return; }
       location.reload();
     });
+    return;
+  }
+  const off = e.target.closest("[data-pf-off]");
+  if (off) {
+    const id = off.dataset.pfOff, c = pfCompanies.find(x => x.id === id) || { name: id };
+    const why = ($("pfOffWhy-" + id).value || "").trim();
+    if (!why) { pfProblem = `Say why ${c.name} is being deactivated. Its owners read it in their log.`; return renderPlatformBody(); }
+    const typed = prompt(`Deactivate ${c.name}? Everyone in it is signed out and sees nothing until it's reactivated. `
+      + `Nothing is deleted.\n\nType ${id} to deactivate it.`);
+    if (typed === null) return;
+    if (typed.trim().toLowerCase() !== id) { pfProblem = `That wasn't ${id}, so nothing changed.`; return renderPlatformBody(); }
+    pfRun(() => db.rpc("platform_set_company_active", { target: id, active: false, why }), `${c.name} is deactivated.`);
+    return;
+  }
+  const on = e.target.closest("[data-pf-on]");
+  if (on) {
+    const id = on.dataset.pfOn, c = pfCompanies.find(x => x.id === id) || { name: id };
+    if (!confirm(`Reactivate ${c.name}? Its people can sign in again and find everything as it was.`)) return;
+    pfRun(() => db.rpc("platform_set_company_active", { target: id, active: true, why: null }), `${c.name} is active again.`);
     return;
   }
   if (e.target.closest("[data-pf-leave]")) {

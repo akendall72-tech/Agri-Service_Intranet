@@ -405,8 +405,22 @@ db.auth.onAuthStateChange((event) => {
 document.addEventListener("visibilitychange", async () => {
   if (document.visibilityState !== "visible" || !me) return;
   const { data } = await db.auth.getSession();
-  if (!data.session) signInRanOut();
+  if (!data.session) return signInRanOut();
+  await outIfCompanyDeactivated();
 });
+
+// A company deactivated on the platform (0158): its people see nothing, so
+// they're signed out and told which company. Before 0158 the question has no
+// answer, and nobody is.
+async function outIfCompanyDeactivated() {
+  const { data: name } = await db.rpc("my_company_deactivated");
+  if (!name) return false;
+  await db.auth.signOut();
+  me = null;
+  document.body.classList.remove("signed-in");
+  $("authError").textContent = `${name} has been deactivated on Agri-Barn. Nothing has been deleted; ask your manager if that's a mistake.`;
+  return true;
+}
 $("adminBtn").onclick = () => document.body.classList.contains("admin-mode") ? showHome() : showAdmin();
 $("safetyBtn").onclick = () => document.body.classList.contains("safety-mode") ? showHome() : showSafety();
 $("trainingBtn").onclick = () => document.body.classList.contains("training-mode") ? showHome() : showTraining();
@@ -417,6 +431,7 @@ async function start() {
   const { data: { user } } = await db.auth.getUser();
   if (!user) return;
   me = user;
+  if (await outIfCompanyDeactivated()) return;
   lastActive = Date.now();
   try { localStorage.setItem(IDLE_KEY, String(lastActive)); } catch { /* private window: this tab only */ }
 

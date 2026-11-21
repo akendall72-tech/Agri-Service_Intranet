@@ -3823,6 +3823,17 @@ body.visiting { padding-bottom: 72px; }
   padding-top: 14px; border-top: 1px solid var(--line); }
 .pf-visit .note { margin: 4px 0 0; }
 @media (max-width: 640px) { .pf-visit { grid-template-columns: minmax(0, 1fr); } }
+/* Deactivating a company (0158): the last thing in its details, in red. */
+.pf-switch { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; align-items: end; margin-top: 16px;
+  padding-top: 14px; border-top: 1px solid var(--line); }
+.pf-switch .note { margin: 4px 0 0; }
+.pf-switch.off { align-items: center; padding: 12px 14px; border: 1px solid var(--red-soft); border-radius: 10px; background: #FDF3F5; }
+.pf-switch q { display: block; margin-top: 4px; color: var(--ink-2); font-style: italic; }
+button.pf-danger { background: #fff; color: var(--red-dark); border: 1px solid var(--red); box-shadow: none; }
+button.pf-danger:hover { background: var(--red); color: #fff; }
+.pf-company.off .pf-company-head { background: #FBF7F6; }
+.pf-company.off .pf-company-name b { color: var(--muted); }
+@media (max-width: 640px) { .pf-switch { grid-template-columns: minmax(0, 1fr); } }
 /* In no company there's no company home page to go back to. */
 body.no-company .crumbs { display: none; }
 .pf-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
