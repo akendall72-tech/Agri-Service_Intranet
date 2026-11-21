@@ -607,6 +607,11 @@ button.ca-add { flex: none; gap: 8px; height: auto; padding: 11px 18px; border-r
 .ca-tag.off { color: var(--lit-muted); }
 .ca-tag.agco { color: var(--lit-green); }
 .ca-tag.fk { color: var(--lit-amber); }
+.ca-tag.crane { color: var(--lit-steel); }
+/* How long the crane & rigging qualification lasts, under its box. */
+.ca-months { margin: 6px 0 0 26px; }
+.ca-months label { margin-bottom: 4px; }
+.ca-months input { width: 110px; margin: 0; }
 .ca-do { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .ca-do button { margin: 0; }
 .ca-editing { padding: 0 6px; color: var(--lit-amber); font: 600 11px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; }
@@ -807,9 +812,6 @@ button.news-pin:disabled { background: transparent; cursor: default; }
 .crane-table .cab-tag.off { color: #fff; background: #CC0033; border-color: #CC0033; box-shadow: 0 0 10px rgba(204,0,51,.5); }
 .crane-table .cab-tag.none { --accent: var(--cab-detail); }
 .crane-table .cab-tag.exp { --accent: var(--lit-amber); }
-.crane-expiry { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
-.crane-expiry label { display: block; margin-bottom: 6px; }
-.crane-expiry .note { margin: 8px 0 0; }
 .crane-table button.quiet { padding: 6px 12px; border-radius: 9px; font: 600 12.5px var(--font-cab);
   letter-spacing: .05em; text-transform: uppercase; box-shadow: none; }
 .crane-table .where { display: none; }

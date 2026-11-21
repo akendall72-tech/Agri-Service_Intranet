@@ -8,22 +8,31 @@
 
 // ---- crane & rigging qualification (migration 0045) ------------------------------------
 //
-// Qualified means the qualifying course (a setting, see craneCourse below) is
-// on the person's training history
-// (the OLT and ILT report uploaded for Training Status). It lasts as long as
-// the setting says, from the day the course was completed — or for good, while
-// the setting is empty, which is how it starts (migration 0087). A location
-// admin or owner can remove it with a reason and restore it — only for someone
-// who has taken the course; the database enforces that.
+// Qualified means a course ticked "Counts for the crane & rigging
+// qualification" in the Course Catalog (migration 0157) is on the person's
+// training record, under its name on records. It lasts as many months as that
+// course says, from the day it was completed, or for good while that's empty.
+// A location admin or owner can remove it with a reason and restore it, only
+// for someone who has taken the course; the database enforces that.
 
-// Which course qualifies someone is a SETTING (migration 0051), not a
-// constant: UKG renames courses, and a rename used to mean editing this file,
-// the app and a migration. The name below is only what to show before the
-// settings have loaded, or if they can't be reached.
+// The ticked courses, from the settings: what each is called, its name on
+// records, and how many months it lasts. Before 0157 (or before the settings
+// load) the one course the old setting named.
 const CRANE_COURSE_FALLBACK = "Lifting and Rigging ILT";
+const craneMonthsOk = (n) => { const m = Number(n); return m > 0 && m <= 240 ? m : null; };
+function craneCourses() {
+  if (tsSources && Array.isArray(tsSources.crane_courses)) {
+    return tsSources.crane_courses.map(c => ({ title: tsText(c.title), record: tsText(c.record_name || c.title),
+      months: craneMonthsOk(c.months) }));
+  }
+  const named = tsText(tsSources && tsSources.crane_course).trim() || CRANE_COURSE_FALLBACK;
+  return [{ title: named, record: named, months: craneMonthsOk(tsSources && tsSources.crane_valid_months) }];
+}
+// The qualifying courses by name, for wording: "Lifting and Rigging", or
+// "A or B", or a plain description when none is ticked.
 const craneCourse = () => {
-  const named = tsText(tsSources && tsSources.crane_course).trim();
-  return named || CRANE_COURSE_FALLBACK;
+  const titles = uniqueText(craneCourses().map(c => c.title).filter(Boolean));
+  return titles.length ? titles.join(" or ") : "a crane & rigging course";
 };
 // Course names are typed by people: "Lifting and Rigging ILT" and
 // "lifting and  rigging ilt" are the same course. Must match course_key() in
@@ -39,24 +48,36 @@ async function loadCrane() {
   craneOverrides = new Map((data || []).map(o => [o.person_key, o]));
 }
 
+// The latest qualifying course on someone's record, with the course it was
+// (crane: its title and months).
 const craneCompletion = (row) => {
-  const wanted = craneCourseKey(craneCourse());
-  return (row.classes || []).find(c => craneCourseKey(c.course) === wanted) || null;
+  const byKey = new Map(craneCourses().map(c => [craneCourseKey(c.record), c]));
+  const done = (row.classes || []).filter(c => byKey.has(craneCourseKey(c.course)))
+    .sort((a, b) => String(b.completed || "").localeCompare(String(a.completed || "")))[0];
+  return done ? { ...done, crane: byKey.get(craneCourseKey(done.course)) } : null;
 };
 
-// How many months a qualification lasts, or null for no expiration (0087).
+// How many months a qualification lasts when every ticked course says the
+// same, for wording; null when they differ or it doesn't run out.
 const craneValidMonths = () => {
-  const n = Number(tsSources && tsSources.crane_valid_months);
-  return n > 0 && n <= 240 ? n : null;
+  const months = [...new Set(craneCourses().map(c => c.months))];
+  return months.length === 1 ? months[0] : null;
 };
-// The day it runs out: that many months after the course was completed.
-function craneExpiry(completion, months = craneValidMonths()) {
+// The day it runs out: as many months after the course was completed as that
+// course says.
+function craneExpiry(completion, months = completion && completion.crane ? completion.crane.months : null) {
   if (!months || !completion || !completion.completed) return null;
   const d = dateOnly(completion.completed);
   const day = d.getDate();
   d.setDate(1); d.setMonth(d.getMonth() + months);
   d.setDate(Math.min(day, new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()));
   return d;
+}
+// ", completed in the last 24 months", or how each course differs, or nothing.
+function craneMonthsWords() {
+  const months = craneValidMonths();
+  if (months) return `, completed in the last ${months} months`;
+  return craneCourses().some(c => c.months) ? ", for as long as that course's qualification lasts" : "";
 }
 const craneDay = (d) => d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
@@ -85,7 +106,7 @@ function craneCard() {
         <div class="name">${esc((profile && profile.full_name) || `${mine.first_name} ${mine.last_name}`)}</div>
         <span class="badge b-current">Qualified</span>
         <dl>
-          <div><dt>Course</dt><dd>${craneCourse()}</dd></div>
+          <div><dt>Course</dt><dd>${esc(status.completion.crane ? status.completion.crane.title : craneCourse())}</dd></div>
           <div><dt>Completed</dt><dd>${esc(newsDate(status.completion.completed))}</dd></div>
           <div><dt>Location</dt><dd>${esc(mine.store || "-")}</dd></div>
           <div><dt>Expires</dt><dd>${status.expires ? esc(craneDay(status.expires)) : "No expiration"}</dd></div>
@@ -104,13 +125,13 @@ function craneCard() {
   if (status.kind === "expired") {
     return `<div class="crane-alert removed">${warnIcon}<div>
       <b>Qualification expired</b>
-      <p>Your Crane &amp; Rigging Qualification ran out on ${esc(craneDay(status.expires))}, ${craneValidMonths()} months after you
-        completed ${craneCourse()} on ${esc(newsDate(status.completion.completed))}. Take the course again to be qualified;
+      <p>Your Crane &amp; Rigging Qualification ran out on ${esc(craneDay(status.expires))}, ${status.completion.crane.months} months after you
+        completed ${esc(status.completion.crane.title)} on ${esc(newsDate(status.completion.completed))}. Take the course again to be qualified;
         ask the training department when the next class is.</p></div></div>`;
   }
   return `<div class="crane-alert caution">${warnIcon}<div>
     <b>Not qualified yet</b>
-    <p>You're qualified for crane and rigging work once the ${craneCourse()} course shows on your
+    <p>You're qualified for crane and rigging work once ${esc(craneCourse())} shows on your
       training history${mine ? "" : " — and your training record wasn't found"}. Ask the training
       department when the next class is.</p></div></div>`;
 }
@@ -125,12 +146,12 @@ function craneAdminSection() {
   const counts = { qualified: 0, expired: 0, removed: 0, none: 0 };
   tsPeople.forEach(r => { counts[craneStatus(r).kind]++; });
   const filters = [["all", "All", tsPeople.length], ["qualified", "Qualified", counts.qualified],
-    ...(craneValidMonths() || counts.expired ? [["expired", "Expired", counts.expired]] : []),
+    ...(craneCourses().some(c => c.months) || counts.expired ? [["expired", "Expired", counts.expired]] : []),
     ["removed", "Removed", counts.removed], ["none", "Not taken", counts.none]];
   return `<section id="craneAdmin">
     <div class="group-title">Crane qualifications</div>
     <p class="osr-desc">${isOwner() ? "Everyone" : "Everyone at your location"}. Qualified means ${esc(craneCourse())} is on
-      their training history${craneValidMonths() ? `, completed in the last ${craneValidMonths()} months` : ""}. You can remove a
+      their training history${craneMonthsWords()}. You can remove a
       qualification, with a reason, and restore it — only for someone who has taken the course, and never your own.</p>
     <div class="cab-pills">${filters.map(([id, label, n]) =>
       `<button type="button" class="cab-pill${craneFilter === id ? " on" : ""}" data-crane-filter="${id}">${label}<span>${n}</span></button>`).join("")}</div>

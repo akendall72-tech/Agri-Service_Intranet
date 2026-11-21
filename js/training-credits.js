@@ -54,7 +54,8 @@ const tcCourse = (typed) => {
 // What a course on a record counts for, beyond its hours.
 function tcCounts(name) {
   const key = tcKey(name), counts = [];
-  if (key && key === tcKey(craneCourse())) counts.push("Qualifies for crane work");
+  // A catalog course ticked "Counts for the crane & rigging qualification" (0157).
+  if (key && allCourses.some(c => c.counts_for_crane && tcKey(tcRecordName(c)) === key)) counts.push("Qualifies for crane work");
   // A catalog course ticked "Counts for the forklift driving test" (0151),
   // matched by its name on records as the database matches it.
   if (key && allCourses.some(c => c.counts_for_forklift && tcKey(tcRecordName(c)) === key)) counts.push("Opens the forklift driving test");

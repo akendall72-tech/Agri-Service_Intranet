@@ -103,8 +103,8 @@ function renderCraneQuals() {
   box.innerHTML = `<div class="card cq">
     <h2>Crane qualifications</h2>
     <p class="note" style="margin:0 0 12px">Everyone on All employees and where they stand on the Crane &amp; Rigging
-      Qualification: qualified means ${esc(craneCourse())} is on their training history${craneValidMonths()
-      ? `, completed in the last ${craneValidMonths()} months` : ", with no expiry"}. Click a column to sort by it, again to reverse.</p>
+      Qualification: qualified means ${esc(craneCourse())} is on their training history${craneMonthsWords() || ", with no expiry"}.
+      Which courses count, and for how long, is ticked in the Course Catalog. Click a column to sort by it, again to reverse.</p>
     <div class="cq-tally">
       <div><b>${count("qualified") + count("expiring")}</b><span>Qualified</span></div>
       <div class="warn"><b>${count("expiring")}</b><span>Expiring in ${CQ_SOON_DAYS} days</span></div>

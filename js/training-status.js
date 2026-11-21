@@ -811,8 +811,6 @@ function renderTsLive() {
   if (goalInput && document.activeElement !== goalInput) goalInput.value = tsGoalPercent();
   const hoursInput = $("tsHoursInput");
   if (hoursInput && document.activeElement !== hoursInput) hoursInput.value = tsRequiredHours();
-  const monthsInput = $("craneMonthsInput");
-  if (monthsInput && document.activeElement !== monthsInput) monthsInput.value = craneValidMonths() || "";
   if (!tsSources || !(tsSources.employees && tsSources.employees.file)) {
     box.innerHTML = `<p class="note">Nothing published yet.</p>`;
     return;
@@ -867,38 +865,6 @@ $("admin").addEventListener("click", async (event) => {
   await loadTrainingStatus();
   renderTsLive();
   speak(card, `Saved. ${tsGoalPercent()}% of technicians with ${tsRequiredHours()}+ hours.`, false);
-});
-
-$("admin").addEventListener("click", async (event) => {
-  const button = event.target.closest('button[data-act="crane-months"]');
-  if (!button) return;
-  const card = $("craneExpiryRow");
-  const raw = $("craneMonthsInput").value.trim();
-  const months = raw === "" ? null : Number(raw);
-  if (months !== null && !(Number.isInteger(months) && months >= 1 && months <= 240)) {
-    return speak(card, "Enter whole months from 1 to 240, or leave it empty for no expiration.", true);
-  }
-  if (months === craneValidMonths()) return speak(card, "That's already the setting.", false);
-  // Say how many people it would take off the qualified list before saving.
-  if (months) {
-    const today = new Date(new Date().toDateString());
-    const lapsed = tsPeople.filter(r => { const c = craneCompletion(r); return c && craneExpiry(c, months) < today; }).length;
-    if (!confirm(`Make the Crane & Rigging Qualification last ${months} months from the day the course was completed?\n\n`
-        + (lapsed ? `${lapsed} ${lapsed === 1 ? "person's qualification" : "people's qualifications"} would show as expired straight away, `
-          + `in the app and on this page, until they take the course again.`
-          : "Nobody's qualification would expire straight away."))) return;
-  }
-  button.disabled = true;
-  const { data, error } = await db.from("training_status")
-    .upsert({ id: "current", crane_valid_months: months }, { onConflict: "company_id,id" }).select("crane_valid_months");
-  button.disabled = false;
-  if (error) return speak(card, /crane_valid_months/.test(error.message)
-    ? "Run migration 0087_crane_expiry_setting.sql in the SQL editor first." : error.message, true);
-  if (!data || !data.length) return speak(card, "Not saved — only an owner can change this.", true);
-  await loadTrainingStatus();
-  renderTsLive();
-  redrawCrane();
-  speak(card, months ? `Saved. A qualification now lasts ${months} months.` : "Saved. The qualification doesn't expire.", false);
 });
 
 $("admin").addEventListener("click", async (event) => {

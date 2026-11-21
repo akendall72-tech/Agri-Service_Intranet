@@ -226,7 +226,8 @@ function caCourseHtml(c) {
   const tags = [
     !c.is_active && `<span class="ca-tag off">Hidden</span>`,
     c.counts_for_agco && companyHas("agco") && `<span class="ca-tag agco">AGCO credit</span>`,
-    c.counts_for_forklift && `<span class="ca-tag fk">Forklift driving test</span>`
+    c.counts_for_forklift && `<span class="ca-tag fk">Forklift driving test</span>`,
+    c.counts_for_crane && `<span class="ca-tag crane">Crane &amp; rigging${c.crane_months ? ` · ${esc(c.crane_months)} months` : ""}</span>`
   ].filter(Boolean).join("");
   const editing = caOpen && editingCourseId === c.id;
   return `<article class="ca-course${c.is_active ? "" : " off"}${editing ? " editing" : ""}${caJust === c.id ? " just" : ""}"
@@ -268,10 +269,14 @@ function fillCourseForm(course, { copy = false } = {}) {
   set("record_name", course && course.record_name);
   editor.querySelector('[data-c="counts_for_agco"]').checked = !!(course && course.counts_for_agco);
   editor.querySelector('[data-c="counts_for_forklift"]').checked = !!(course && course.counts_for_forklift);
-  // The Training Manager sets a course's credits and whether it counts for
-  // the forklift driving test (0151); other owners see them.
+  editor.querySelector('[data-c="counts_for_crane"]').checked = !!(course && course.counts_for_crane);
+  set("crane_months", course && course.crane_months);
+  caShowCraneMonths();
+  // The Training Manager sets a course's credits, whether it counts for the
+  // forklift driving test (0151) and for crane & rigging (0157); other owners
+  // see them.
   const manager = isTrainingManager();
-  ["training_hours", "counts_for_agco", "record_name", "counts_for_forklift"].forEach(f =>
+  ["training_hours", "counts_for_agco", "record_name", "counts_for_forklift", "counts_for_crane", "crane_months"].forEach(f =>
     editor.querySelector(`[data-c="${f}"]`).disabled = !manager);
   $("courseCreditNote").textContent = manager
     ? "The Credits line on the catalog is written from these. Only the Training Manager changes them."
@@ -311,6 +316,40 @@ function caCloseForm(backTo) {
   const row = backTo && document.querySelector(`#courseList [data-course="${CSS.escape(backTo)}"]`);
   if (row) row.scrollIntoView({ behavior: "smooth", block: "center" });
 }
+
+// How long the crane & rigging qualification lasts shows with its box.
+function caShowCraneMonths() {
+  $("courseCraneMonthsRow").classList.toggle("hidden", !$("courseCrane").checked);
+}
+
+// People qualified now who wouldn't be with these crane courses: the course
+// no longer counts, or it would run out straight away.
+function caCraneLosses(courses) {
+  const today = new Date(new Date().toDateString());
+  const byKey = new Map(courses.map(c => [craneCourseKey(c.record), c]));
+  return tsPeople.filter(r => {
+    if (craneStatus(r).kind !== "qualified") return false;
+    const done = (r.classes || []).filter(c => byKey.has(craneCourseKey(c.course)))
+      .sort((a, b) => String(b.completed || "").localeCompare(String(a.completed || "")))[0];
+    if (!done) return true;
+    const ends = craneExpiry({ ...done, crane: byKey.get(craneCourseKey(done.course)) });
+    return !!ends && ends < today;
+  }).length;
+}
+
+// The ticked courses as the settings give them, from the catalog just saved,
+// so the crane screens follow without waiting for Training Status to reload.
+function caCraneSettingsFromCatalog() {
+  if (!tsSources) return;
+  tsSources.crane_courses = [...allCourses].filter(c => c.counts_for_crane)
+    .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0) || a.title.localeCompare(b.title))
+    .map(c => ({ title: c.title, record_name: c.record_name || c.title, months: c.crane_months }));
+  if (typeof redrawCrane === "function") redrawCrane();
+}
+
+$("admin").addEventListener("change", (event) => {
+  if (event.target.id === "courseCrane") caShowCraneMonths();
+});
 
 $("admin").addEventListener("input", (event) => {
   if (event.target.id !== "courseSearch") return;
@@ -369,6 +408,7 @@ $("admin").addEventListener("click", async (event) => {
     if (editingCourseId === course.id) { caOpen = false; fillCourseForm(null); }
     await loadCourses();
     caSaid = `Deleted ${course.title}.`;
+    if (course.counts_for_crane) caCraneSettingsFromCatalog();
     renderCoursesAdmin();
     return renderCourseCredits();
   }
@@ -384,6 +424,12 @@ $("admin").addEventListener("click", async (event) => {
 
   const hours = get("training_hours");
   if (hours !== "" && !(Number(hours) >= 0 && Number(hours) <= 1000)) return speak(editor, "Training hours are a number from 0 to 1000.", true);
+  const crane = editor.querySelector('[data-c="counts_for_crane"]').checked;
+  const monthsRaw = crane ? get("crane_months") : "";
+  const months = monthsRaw === "" ? null : Number(monthsRaw);
+  if (months !== null && !(Number.isInteger(months) && months >= 1 && months <= 240)) {
+    return speak(editor, "The crane & rigging qualification lasts whole months from 1 to 240, or leave it empty so it doesn't run out.", true);
+  }
   const row = {
     title: get("title"),
     subtitle: get("subtitle") || null,
@@ -394,7 +440,9 @@ $("admin").addEventListener("click", async (event) => {
       training_hours: hours === "" ? null : Number(hours),
       counts_for_agco: editor.querySelector('[data-c="counts_for_agco"]').checked,
       record_name: get("record_name") || null,
-      counts_for_forklift: editor.querySelector('[data-c="counts_for_forklift"]').checked
+      counts_for_forklift: editor.querySelector('[data-c="counts_for_forklift"]').checked,
+      counts_for_crane: crane,
+      crane_months: months
     } : {}),
     duration: get("duration") || null,
     audiences,
@@ -405,6 +453,22 @@ $("admin").addEventListener("click", async (event) => {
     is_active: get("is_active") === "yes"
   };
 
+  // Unticking a crane course, or making its qualification shorter, can take
+  // it away from people who have it now: say how many before saving.
+  const before = allCourses.find(c => c.id === editingCourseId);
+  if (isTrainingManager() && (before ? (!!before.counts_for_crane !== crane || (before.crane_months ?? null) !== months) : crane)) {
+    const record = row.record_name || (before && before.record_name) || row.title;
+    const after = allCourses.filter(c => c.counts_for_crane && c.id !== editingCourseId)
+      .map(c => ({ title: c.title, record: c.record_name || c.title, months: c.crane_months }))
+      .concat(crane ? [{ title: row.title, record, months }] : []);
+    const losing = caCraneLosses(after);
+    if (losing && !confirm(`${losing} ${losing === 1 ? "person who is" : "people who are"} crane & rigging qualified now `
+        + `wouldn't be: ${crane ? "their qualification would have run out." : "the course they took would no longer count."}\n\n`
+        + "They'd show as not qualified in the app and on this page until they take a qualifying course again. Save anyway?")) {
+      return speak(editor, "", false);
+    }
+  }
+
   speak(editor, "Saving…", false);
   const query = editingCourseId
     ? db.from("courses").update(row).eq("id", editingCourseId).select()
@@ -412,6 +476,7 @@ $("admin").addEventListener("click", async (event) => {
   const { data, error } = await query;
   if (error) {
     return speak(editor, /row-level/i.test(error.message) ? "Only an owner can change the catalog."
+      : /counts_for_crane|crane_months/i.test(error.message) ? "Run migration 0157_crane_course_box.sql in the SQL editor first."
       : /counts_for_forklift/i.test(error.message) ? "Run migration 0151_forklift_classes.sql in the SQL editor first."
       : /does not exist|schema cache/i.test(error.message)
         ? "Run migration 0032_course_catalog.sql in the SQL editor first." : error.message, true);
@@ -427,6 +492,7 @@ $("admin").addEventListener("click", async (event) => {
   caSaid = `${added ? "Added" : "Saved"} ${row.title}. ${row.is_active
     ? "Phones show it the next time the catalog is opened." : "It's hidden from the catalog until Showing is Yes."}`;
   caJust = id;
+  caCraneSettingsFromCatalog();
   caCloseForm(id);
   renderCourseCredits();
 });

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Which version this is. publish.sh stamps the date and commit here, and
      into version.json beside the page; "dev" is a copy that wasn't published. -->
-<meta name="app-version" content="2026-11-20.087c912">
+<meta name="app-version" content="2026-11-20.c7c032c">
 <!-- Where this page may load things from and send things to. GitHub Pages
      can't send security headers, so it's here. Scripts come only from this
      site and the two script CDNs (each pinned with an integrity hash), and
@@ -34,7 +34,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
-<link rel="stylesheet" href="css/app.css?v=39e0947ff1">
+<link rel="stylesheet" href="css/app.css?v=2bba1114c6">
 </head>
 <body>
 
@@ -154,8 +154,8 @@
       <button data-feature="agco" data-tab="rpagco" data-title="AGCO Training Hours"><i data-icon="level"></i><span>AGCO Training Hours</span></button>
       <button data-tab="rpclass" data-title="Class Report"><i data-icon="doc"></i><span>Class Report</span></button>
 
-      <div class="nav-group">Setup</div>
-      <button data-tab="trainingsettings" data-title="Training settings"><i data-icon="level"></i><span>Settings</span></button>
+      <div class="nav-group" data-feature="agco">Setup</div>
+      <button data-feature="agco" data-tab="trainingsettings" data-title="Training settings"><i data-icon="level"></i><span>Settings</span></button>
 
       <div class="nav-group" data-feature="agco">Uploads</div>
       <button data-feature="agco" data-tab="agcocatalog" data-title="AGCO Training Catalog"><i data-icon="doc"></i><span>AGCO Training Catalog</span><b class="nav-count tx-stale" data-tx-count="agcocatalog"></b></button>
@@ -775,23 +775,6 @@
           <span class="msg"></span>
         </div>
       </div>
-      <div class="card" id="craneCourseCard">
-        <h2>Crane &amp; rigging qualification</h2>
-        <p class="note">Passing <b>Lifting and Rigging</b> qualifies someone for crane and rigging work: graded on the Class
-          Schedule, or given on Give Credit. It goes on their record as <b>Lifting and Rigging ILT</b>, the name UKG used, so
-          everyone already qualified stays qualified.</p>
-        <div class="crane-expiry" id="craneExpiryRow">
-          <label for="craneMonthsInput"><b>Expires after</b></label>
-          <div class="row">
-            <input type="number" id="craneMonthsInput" min="1" max="240" step="1" placeholder="Never"
-                   style="width:110px;margin:0" aria-describedby="craneMonthsNote"> <span>months</span>
-            <button data-act="crane-months">Save</button>
-            <span class="msg"></span>
-          </div>
-          <p class="note" id="craneMonthsNote">How long a qualification lasts, counted from the day the course was completed.
-            Leave it empty for no expiration, as it is now. Taking the course again starts it over. For example, 24 is two years.</p>
-        </div>
-      </div>
     </section>
     <section id="tab-epa609" class="hidden"><div id="epa609"></div></section>
     <!-- Grade Classes (0124): drawn by renderClassGrades (class-grades.js) -->
@@ -845,10 +828,20 @@
               <p class="note ca-help">For a forklift class taught in person. Once it's on someone's training record (a class completed on
                 the Class Schedule, or Give Credit), they can be given the driving test within 30 days, as after passing the online forklift
                 course. The steps on everyone's forklift card then name this class.</p></div>
+            <div class="wide"><label>Crane &amp; rigging</label>
+              <label class="tc-check" for="courseCrane"><input type="checkbox" id="courseCrane" data-c="counts_for_crane"> Counts for the crane &amp; rigging qualification</label>
+              <div class="ca-months hidden" id="courseCraneMonthsRow">
+                <label for="courseCraneMonths">Qualification lasts</label>
+                <div class="row"><input type="number" id="courseCraneMonths" data-c="crane_months" min="1" max="240" step="1"
+                  inputmode="numeric" placeholder="Never" aria-describedby="courseCraneHelp"> <span>months</span></div>
+              </div>
+              <p class="note ca-help" id="courseCraneHelp">Passing it qualifies someone for crane and rigging work once it's on their training
+                record: graded on the Class Schedule, or Give Credit. It lasts that many months from the day they completed it; leave it
+                empty and it doesn't run out. Taking the course again starts it over.</p></div>
             <div class="wide"><label for="courseRecordName">Name on training records (optional)</label>
               <input type="text" id="courseRecordName" data-c="record_name" maxlength="200" placeholder="The same as the title">
-              <p class="note ca-help">The name this course goes by on someone's record. Leave it empty unless another name is already
-                in use: Lifting and Rigging is <b>Lifting and Rigging ILT</b> on records, the name the crane setting looks for.</p></div>
+              <p class="note ca-help">The name this course goes by on someone's record. Leave it empty unless people's records already
+                call it something else: Lifting and Rigging is <b>Lifting and Rigging ILT</b> on records.</p></div>
           </div>
 
           <h4>Who it's for</h4>
@@ -1259,10 +1252,10 @@
 <script src="js/location-certifications.js?v=188701e85c"></script>
 <script src="js/my-certifications.js?v=556796f1db"></script>
 <script src="js/operator-manuals.js?v=de83dc2ae1"></script>
-<script src="js/crane-qualifications.js?v=4336042851"></script>
-<script src="js/training-status.js?v=1e82216eaa"></script>
+<script src="js/crane-qualifications.js?v=43a7e30c8e"></script>
+<script src="js/training-status.js?v=8a9e0fc230"></script>
 <script src="js/forklift.js?v=94362d24f2"></script>
-<script src="js/crane.js?v=e6888b49ef"></script>
+<script src="js/crane.js?v=d5bf085e07"></script>
 <script src="js/lift-plans.js?v=923f07f016"></script>
 <script src="js/crane-inspections.js?v=e5177a4340"></script>
 <script src="js/support.js?v=f2dc4e83f3"></script>
@@ -1284,8 +1277,8 @@
 <script src="js/inspections.js?v=2e9c8853b2"></script>
 <script src="js/hr.js?v=b9c0254418"></script>
 <script src="js/personal-inventory.js?v=e24b5aa871"></script>
-<script src="js/course-catalog.js?v=3cafcfd87d"></script>
-<script src="js/training-credits.js?v=d5780674b7"></script>
+<script src="js/course-catalog.js?v=5efbfba051"></script>
+<script src="js/training-credits.js?v=f43197d478"></script>
 <script src="js/class-schedule.js?v=50982c058c"></script>
 <script src="js/class-registration.js?v=81ec1c81ac"></script>
 <script src="js/class-grades.js?v=fe97463e12"></script>
