@@ -1,4 +1,10 @@
 {
-  "about": "Read by the old Agri-Service app (AppMove.swift). When Agri-Barn is ready, \"moved\" gets the old app's bundle ID with Agri-Barn's name and link, and the old app tells its people. Nothing listed: nothing shows.",
-  "moved": {}
+  "about": "Read by the old Agri-Service app (AppMove.swift). \"moved\" lists the old app's bundle ID with Agri-Barn's name and its TestFlight link, and the old app says \"Agri-Service is now Agri-Barn\". \"required\": true takes away Not now.",
+  "moved": {
+    "com.agriservice.trainingapp": {
+      "name": "Agri-Barn",
+      "link": "https://testflight.apple.com/join/TH4XYH9f",
+      "required": false
+    }
+  }
 }
