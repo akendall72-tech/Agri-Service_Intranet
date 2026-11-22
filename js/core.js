@@ -585,6 +585,11 @@ const LAST_COMPANY = "agri.lastCompany";
 // the top, the browser tab's title, the news editor's hint.
 function showCompany() {
   document.querySelectorAll(".brand-name").forEach(el => { el.textContent = companyCaps(); });
+  // The company's own home photo behind the home page (0161); without one,
+  // Agri-Barn's evening sky, from the styles. None is built into the site.
+  const photo = company.home_photo_path
+    ? db.storage.from("company-logos").getPublicUrl(company.home_photo_path).data.publicUrl : "";
+  document.body.style.setProperty("--home-photo", photo ? `url("${photo.replace(/"/g, "%22")}")` : "none");
   // Anything marked data-feature is there only for a company with it on: the
   // page says which it has, and the styles hide the rest, drawn now or later.
   document.body.dataset.features = COMPANY_FEATURES.filter(companyHas).join(" ");

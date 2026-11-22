@@ -5,8 +5,9 @@
 // from, and the built-in Agri-Service that stands in when there's nothing to
 // read, is in core.js (company, setCompany).
 
-// The most a logo can be: the company-logos bucket's limit.
+// The most a logo can be, and a home photo (0161's bucket limit is 3 MB).
 const LOGO_MAX_BYTES = 1024 * 1024;
+const PHOTO_MAX_BYTES = 3 * 1024 * 1024;
 let coBusy = false, coMessage = "", coError = "";
 // What the platform did to this company (0138, 0139): companies made, accounts
 // placed, visits, and every change made during one.
@@ -22,7 +23,9 @@ const COMPANY_LOGOS = [
   { field: "logo_path", file: "logo", title: "Logo, in colour",
     where: "On the app's sign-in screens, on white. A PNG; a clear background looks best." },
   { field: "logo_mono_path", file: "mark", title: "Logo, one colour",
-    where: "On the app's red headers and certificates, drawn in white. A PNG with a clear background: everything that isn't clear turns white." }
+    where: "On the app's red headers and certificates, drawn in white. A PNG with a clear background: everything that isn't clear turns white." },
+  { field: "home_photo_path", file: "home", title: "Home photo", photo: true,
+    where: "Behind the home page, in the app and on this page. A JPEG or PNG, taller than it's wide works best on phones, up to 3 MB." }
 ];
 
 function renderCompanyAdmin() {
@@ -53,8 +56,9 @@ function renderCompanyAdmin() {
       ${coError ? `<p class="error">${esc(coError)}</p>` : ""}
     </div>
     <div class="card">
-      <h2>Logos</h2>
-      <p class="note">For the app. Until one is added it shows its built-in logo, which is Agri-Service's.</p>
+      <h2>Logos and home photo</h2>
+      <p class="note">Your company's own, for the app and this page. Until a logo is added, your name shows in its place;
+        until a home photo is, Agri-Barn's evening sky.</p>
       <div class="co-logos">${COMPANY_LOGOS.map(coLogoSlot).join("")}</div>
     </div>
     ${coItCard()}
@@ -75,16 +79,18 @@ function coLogoSlot(slot) {
   const path = company[slot.field];
   const url = path ? db.storage.from("company-logos").getPublicUrl(path).data.publicUrl : null;
   const mono = slot.field === "logo_mono_path";
+  const kind = slot.photo ? "a JPEG or PNG" : "a PNG";
   return `<div class="co-logo">
       <b>${esc(slot.title)}</b>
       <p class="note">${esc(slot.where)}</p>
-      <div class="co-preview ${mono ? "co-preview-mono" : ""}">
-        ${url ? `<img src="${esc(url)}" alt="${esc(slot.title)}">` : `<span>The app's built-in logo</span>`}
+      <div class="co-preview ${mono ? "co-preview-mono" : ""}${slot.photo ? " co-preview-photo" : ""}">
+        ${url ? `<img src="${esc(url)}" alt="${esc(slot.title)}">`
+          : `<span>${slot.photo ? "Agri-Barn's evening sky" : "Your company's name"}</span>`}
       </div>
       <div class="co-actions">
-        <button type="button" class="btn-secondary" data-co-pick="${esc(slot.field)}" ${coBusy ? "disabled" : ""}>${path ? "Replace" : "Add"} a PNG</button>
-        <input type="file" accept="image/png" id="coFile-${esc(slot.field)}" data-co-logo="${esc(slot.field)}" hidden>
-        ${path ? `<button type="button" class="btn-secondary" data-co-remove="${esc(slot.field)}" ${coBusy ? "disabled" : ""}>Use the built-in one</button>` : ""}
+        <button type="button" class="btn-secondary" data-co-pick="${esc(slot.field)}" ${coBusy ? "disabled" : ""}>${path ? "Replace" : "Add"} ${kind}</button>
+        <input type="file" accept="${slot.photo ? "image/jpeg,image/png" : "image/png"}" id="coFile-${esc(slot.field)}" data-co-logo="${esc(slot.field)}" hidden>
+        ${path ? `<button type="button" class="btn-secondary" data-co-remove="${esc(slot.field)}" ${coBusy ? "disabled" : ""}>Remove</button>` : ""}
       </div>
     </div>`;
 }
@@ -218,30 +224,36 @@ async function coSetLogo(field, file) {
   coMessage = ""; coError = "";
   const slot = COMPANY_LOGOS.find(s => s.field === field);
   if (!slot || !file) return;
-  if (file.type !== "image/png") { coError = "A logo has to be a PNG."; return renderCompanyAdmin(); }
-  if (file.size > LOGO_MAX_BYTES) { coError = "That picture is over 1 MB. Save a smaller copy and try again."; return renderCompanyAdmin(); }
+  const types = slot.photo ? ["image/jpeg", "image/png"] : ["image/png"];
+  if (!types.includes(file.type)) { coError = slot.photo ? "A home photo has to be a JPEG or PNG." : "A logo has to be a PNG."; return renderCompanyAdmin(); }
+  const most = slot.photo ? PHOTO_MAX_BYTES : LOGO_MAX_BYTES;
+  if (file.size > most) { coError = `That picture is over ${slot.photo ? 3 : 1} MB. Save a smaller copy and try again.`; return renderCompanyAdmin(); }
   coBusy = true; renderCompanyAdmin();
   // A new name each time, so the app sees the change and fetches it rather
   // than keeping its copy of the old one.
-  const path = `${company.id}/${slot.file}-${Date.now()}.png`;
+  const path = `${company.id}/${slot.file}-${Date.now()}.${file.type === "image/jpeg" ? "jpg" : "png"}`;
   const old = company[field];
-  const up = await db.storage.from("company-logos").upload(path, file, { contentType: "image/png" });
+  const up = await db.storage.from("company-logos").upload(path, file, { contentType: file.type });
   if (up.error) { coBusy = false; coError = up.error.message; return renderCompanyAdmin(); }
   const { error } = await db.from("companies").update({ [field]: path }).eq("id", company.id);
   if (error) {
     await db.storage.from("company-logos").remove([path]);
-    coBusy = false; coError = error.message; return renderCompanyAdmin();
+    coBusy = false;
+    coError = /home_photo_path/.test(error.message) ? "Run migration 0161_company_home_photo.sql in the SQL editor first." : error.message;
+    return renderCompanyAdmin();
   }
   if (old) await db.storage.from("company-logos").remove([old]);
   await coReload();
   coBusy = false;
-  coMessage = `${slot.title} saved. The app shows it from the next time its home page opens.`;
+  coMessage = slot.photo ? "Home photo saved. It's behind this page's home now, and the app's from the next time its home page opens."
+    : `${slot.title} saved. The app shows it from the next time its home page opens.`;
   renderCompanyAdmin();
 }
 
 async function coRemoveLogo(field) {
   const slot = COMPANY_LOGOS.find(s => s.field === field);
-  if (!slot || !confirm(`Go back to the app's built-in logo for "${slot.title}"?`)) return;
+  if (!slot || !confirm(slot.photo ? "Remove the home photo? The home page goes back to Agri-Barn's evening sky."
+    : `Remove "${slot.title}"? Your company's name shows in its place.`)) return;
   coMessage = ""; coError = "";
   coBusy = true; renderCompanyAdmin();
   const old = company[field];
@@ -250,7 +262,7 @@ async function coRemoveLogo(field) {
   if (old) await db.storage.from("company-logos").remove([old]);
   await coReload();
   coBusy = false;
-  coMessage = "Back to the built-in logo.";
+  coMessage = slot.photo ? "Removed. The home page shows Agri-Barn's evening sky." : "Removed. Your company's name shows in its place.";
   renderCompanyAdmin();
 }
 

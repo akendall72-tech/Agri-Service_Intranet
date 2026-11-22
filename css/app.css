@@ -2129,16 +2129,14 @@ body.signed-in[data-page]::before { content: ""; position: fixed; z-index: -1; i
   pointer-events: none; }
 @media (max-width: 960px) { body.signed-in[data-page]::before { left: 0; } }
 body[data-page="view"]::before { background: linear-gradient(#F6F7F8, #BCC3C8); }
+/* Home: the company's own photo (--home-photo, set by showCompany from 0161's
+   home_photo_path), dimmed towards the bottom; without one, Agri-Barn's
+   evening, dark sky and the glow of the horizon, as on the app's icon. */
 body[data-page="home"]::before {
   background: linear-gradient(rgba(0,0,0,.08), rgba(0,0,0,.12) 40%, rgba(0,0,0,.55)),
-              #0D1012 url("../images/home-field-wide.jpg") 50% 55% / cover no-repeat;
-}
-/* A phone, or a window taller than it's wide: the Fendt 1050, as in the app. */
-@media (max-aspect-ratio: 1/1) {
-  body[data-page="home"]::before {
-    background: linear-gradient(rgba(0,0,0,0) 30%, rgba(0,0,0,.08) 60%, rgba(0,0,0,.5)),
-                #0D1012 url("../images/home-tractor-tall.jpg") 50% 40% / cover no-repeat;
-  }
+              var(--home-photo, none) 50% 45% / cover no-repeat,
+              radial-gradient(70% 45% at 50% 100%, rgba(255,103,40,.5), rgba(204,0,51,.16) 55%, transparent 80%),
+              linear-gradient(#141A1E, #20252A 55%, #3A2018);
 }
 
 /* The red band under the top bar: the greeting at home, a page's name
@@ -3800,7 +3798,7 @@ p.mc-foot { max-width: 760px; margin: 16px 0 0; color: var(--cab-heading); }
 .co-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
 .co-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 12px; }
 .co-ok { margin: 12px 0 0; padding: 8px 12px; border-radius: 8px; background: #E6F4EA; color: #17692E; font-size: 13.5px; }
-.co-logos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 12px; }
+.co-logos { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 12px; }
 .co-logo { min-width: 0; }
 .co-logo .note { margin: 4px 0 8px; }
 .co-preview { display: flex; align-items: center; justify-content: center; height: 96px; padding: 14px; border: 1px solid var(--line, #E7E5E4);
@@ -3809,6 +3807,11 @@ p.mc-foot { max-width: 760px; margin: 16px 0 0; color: var(--cab-heading); }
 /* The red header, as the app draws it: the mark in white. */
 .co-preview-mono { background: #CC0033; color: rgba(255, 255, 255, .85); border-color: #CC0033; }
 .co-preview-mono img { filter: brightness(0) invert(1); }
+/* The home photo (0161): as it fills the page, or the evening sky without one. */
+.co-preview-photo { padding: 0; overflow: hidden; color: rgba(255, 255, 255, .8); border-color: #20252A;
+  background: radial-gradient(70% 45% at 50% 100%, rgba(255,103,40,.5), rgba(204,0,51,.16) 55%, transparent 80%),
+              linear-gradient(#141A1E, #20252A 55%, #3A2018); }
+.co-preview-photo img { width: 100%; height: 100%; max-height: none; object-fit: cover; }
 @media (max-width: 640px) { .co-fields, .co-logos { grid-template-columns: minmax(0, 1fr); } }
 
 /* Platform (0138): the page above every company. */
