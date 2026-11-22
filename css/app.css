@@ -836,8 +836,8 @@ label.cab-card.lp-new::before, div.cab-card.lp-new::before { content: ""; positi
   width: 3px; border-radius: 3px; background: var(--accent); box-shadow: 0 0 7px color-mix(in srgb, var(--accent) 65%, transparent); }
 .lp-new .lp-new-main span { white-space: normal; }
 .lp-ref-note { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 8px 2px 0; font-size: 13px; color: var(--ink-2); }
-label.linkish.crosby-replace { display: inline; margin: 0; color: var(--red); font-size: 13px; font-weight: 500; cursor: pointer; }
-label.linkish.crosby-replace:hover { text-decoration: underline; }
+label.linkish.guide-replace { display: inline; margin: 0; color: var(--red); font-size: 13px; font-weight: 500; cursor: pointer; }
+label.linkish.guide-replace:hover { text-decoration: underline; }
 .lp-cap .lp-hint.lp-odd { color: #8A5A00; font-weight: 500; }
 .lp-new { display: flex; align-items: center; gap: 14px; padding: 14px 18px 14px 27px; }
 .lp-new .cab-glyph { margin: 0; height: auto; }

@@ -231,8 +231,8 @@ function riggingView() {
     + ciSectionHtml()
     + `<div class="crane">`
     + craneCard()
-    // As the app's Crane Center: the way into a new plan, and the Crosby guide.
-    + `<div class="lp-start">${lpNewCard()}${crosbyCard()}</div>${crosbyFooter()}`
+    // As the app's Crane Center: the way into a new plan, and the Rigging Guide.
+    + `<div class="lp-start">${lpNewCard()}${guideCard()}</div>${guideFooter()}`
     + (isAdmin() ? group("Waiting on you", others.filter(p => p.status === "submitted"),
         "Nothing to approve right now.") : "")
     + group("Your plans", mine, "You haven't submitted a lift plan yet. Start one above, here or in the app.")
@@ -243,60 +243,67 @@ function riggingView() {
     + `</div>`;
 }
 
-// ---- the Crosby Lifting Guide ------------------------------------------------
+// ---- the Rigging Guide -------------------------------------------------------
 //
-// The reference the app carries in its Crane Center: sling angles, working load
-// limits and rigging hardware. The app ships the PDF inside itself, to read
-// with no signal. Here it's a company document (0046), in the private
-// company-docs bucket like the handbook, so only people signed in can open it
-// and it stays off the public site. An owner uploads it once, on this card.
+// The company's own rigging reference, whoever publishes it: sling angles,
+// working load limits and rigging hardware. A company document (0046), in the
+// private company-docs bucket like the handbook, so only people signed in can
+// open it and it stays off the public site. An owner uploads it on this card,
+// and it's on the Crane Center here and in the app, which keeps a copy once
+// it's opened, to read with no signal.
+//
+// Its id is "crosby": it was Crosby's guide, built into the app for everyone,
+// until each company uploaded its own. The id stays so an uploaded guide stays
+// put; what anyone reads is "Rigging Guide".
 
-const CROSBY = { id: "crosby", title: "Crosby Lifting Guide",
+const RIGGING_GUIDE = { id: "crosby", title: "Rigging Guide",
   summary: "Sling angles, working load limits and rigging hardware reference." };
-let crosbyNote = "", crosbyBusy = false;
+let guideNote = "", guideBusy = false;
 
-function crosbyCard() {
-  const guide = companyDocs.find(d => d.id === CROSBY.id);
+function guideCard() {
+  const guide = companyDocs.find(d => d.id === RIGGING_GUIDE.id);
   const inner = (sub) => `<span class="cab-glyph">${icon("book", 22)}</span>
-    <span class="lp-new-main"><b>${CROSBY.title}</b><span>${sub}</span></span>`;
+    <span class="lp-new-main"><b>${RIGGING_GUIDE.title}</b><span>${sub}</span></span>`;
   if (guide) {
-    return `<button type="button" class="cab-card lp-new" data-doc-open="${CROSBY.id}" style="${lit("amber")}">
-      ${inner(esc(guide.summary || CROSBY.summary))}<span class="cab-chev" aria-hidden="true">&nearr;</span></button>`;
+    return `<button type="button" class="cab-card lp-new" data-doc-open="${RIGGING_GUIDE.id}" style="${lit("amber")}">
+      ${inner(esc(guide.summary || RIGGING_GUIDE.summary))}<span class="cab-chev" aria-hidden="true">&nearr;</span></button>`;
   }
   // Not uploaded yet: an owner's card is the way to put it here.
   if (isOwner()) {
-    return `<label class="cab-card lp-new crosby-up${crosbyBusy ? " busy" : ""}" for="crosbyFile" style="${lit("amber")}">
-      ${inner(crosbyBusy ? "Uploading…" : "Upload the guide's PDF to put it here for everyone. The app has its own copy.")}
+    return `<label class="cab-card lp-new guide-up${guideBusy ? " busy" : ""}" for="guideFile" style="${lit("amber")}">
+      ${inner(guideBusy ? "Uploading…" : "Upload your rigging guide's PDF to put it here and in the app, for everyone.")}
       <span class="cab-chev" aria-hidden="true">${icon("plus", 18)}</span></label>`;
   }
   return `<div class="cab-card lp-new off" style="${lit("amber")}">
-    ${inner("Not on the web page yet. It's in the Crane Center in the app.")}</div>`;
+    ${inner("Not uploaded yet. An owner puts your rigging guide here.")}</div>`;
 }
 
 // Under the cards: how the upload went, and for an owner, a way to replace it.
-function crosbyFooter() {
-  const guide = companyDocs.find(d => d.id === CROSBY.id);
-  const replace = isOwner() && guide && !crosbyBusy
-    ? `<label class="linkish crosby-replace" for="crosbyFile">Replace the Crosby guide's PDF</label>` : "";
-  return `${isOwner() ? `<input type="file" id="crosbyFile" class="hidden" accept="application/pdf,.pdf">` : ""}
-    ${crosbyNote || replace ? `<p class="lp-ref-note">${crosbyNote ? `<span>${esc(crosbyNote)}</span>` : ""}${replace}</p>` : ""}`;
+function guideFooter() {
+  const guide = companyDocs.find(d => d.id === RIGGING_GUIDE.id);
+  const replace = isOwner() && guide && !guideBusy
+    ? `<label class="linkish guide-replace" for="guideFile">Replace the rigging guide's PDF</label>` : "";
+  return `${isOwner() ? `<input type="file" id="guideFile" class="hidden" accept="application/pdf,.pdf">` : ""}
+    ${guideNote || replace ? `<p class="lp-ref-note">${guideNote ? `<span>${esc(guideNote)}</span>` : ""}${replace}</p>` : ""}`;
 }
 
-async function uploadCrosby(file) {
-  const done = (note) => { crosbyBusy = false; crosbyNote = note; if (viewShown === "rigging") showView("rigging"); };
+async function uploadGuide(file) {
+  const done = (note) => { guideBusy = false; guideNote = note; if (viewShown === "rigging") showView("rigging"); };
   if (!/\.pdf$/i.test(file.name) && file.type !== "application/pdf") return done("The guide needs to be a PDF.");
   if (file.size > 40 * 1024 * 1024) return done("That file is over 40 MB.");
-  const previous = companyDocs.find(d => d.id === CROSBY.id);
+  const previous = companyDocs.find(d => d.id === RIGGING_GUIDE.id);
   // A new name each time, as the handbook's, so nobody is handed a stale copy.
   const path = `crosby/${Date.now()}.pdf`;
-  crosbyBusy = true;
-  crosbyNote = "";
+  guideBusy = true;
+  guideNote = "";
   if (viewShown === "rigging") showView("rigging");
   const { error: uploadError } = await db.storage.from("company-docs")
     .upload(path, file, { contentType: "application/pdf", upsert: false });
   if (uploadError) return done(`It didn't upload: ${uploadError.message}`);
-  const { data, error } = await db.from("company_documents").upsert({ id: CROSBY.id,
-    title: (previous && previous.title) || CROSBY.title, summary: (previous && previous.summary) || CROSBY.summary,
+  // Always called the Rigging Guide, whoever's it is; a summary written
+  // before stays.
+  const { data, error } = await db.from("company_documents").upsert({ id: RIGGING_GUIDE.id,
+    title: RIGGING_GUIDE.title, summary: (previous && previous.summary) || RIGGING_GUIDE.summary,
     file_path: path, file_size: file.size }, { onConflict: "company_id,id" }).select();
   if (error || !data || !data.length) {
     await db.storage.from("company-docs").remove([path]);
@@ -306,14 +313,14 @@ async function uploadCrosby(file) {
     await db.storage.from("company-docs").remove([previous.file_path]);
   }
   await loadCompanyDocs();
-  done(previous ? "Replaced. Everyone opening it now gets the new one." : "Uploaded. It's on everyone's Crane Center now.");
+  done(previous ? "Replaced. Everyone opening it now gets the new one." : "Uploaded. It's on everyone's Crane Center now, here and in the app.");
 }
 
 document.addEventListener("change", (event) => {
-  if (event.target.id !== "crosbyFile") return;
+  if (event.target.id !== "guideFile") return;
   const file = event.target.files[0];
   event.target.value = "";
-  if (file) uploadCrosby(file);
+  if (file) uploadGuide(file);
 });
 
 // A fresh link each time it's opened, so a page left open all day still opens
