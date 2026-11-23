@@ -230,6 +230,18 @@ function renderLocationSlips() {
   const here = plRows.filter(e => e.here && e.location_id === loc);
   const waiting = here.filter(e => !plAccount(e) && (e.employee_number || e.email));
   const withAccount = here.filter(e => plAccount(e)).length;
+  // The Field Ready tick (0162), for an employee here with an account, at a
+  // company linked to it: an admin gives it to their location's employees.
+  const tickCell = (a) => {
+    if (!a || a.deactivated_at || a.role !== "employee" || !companyLinkedToInspect()) return "";
+    if (!inspectTicks) {
+      if (!inspectTicksLoading) loadInspectTicks();
+      return "";
+    }
+    const on = !!(inspectTicks[a.id] || {}).inspect_access;
+    return `<label class="check" style="margin:6px 0 0;font-size:12.5px;white-space:nowrap">
+      <input type="checkbox" data-inspect-for="${esc(a.id)}"${on ? " checked" : ""}> Opens ${esc(INSPECT_APP_NAME)}</label>`;
+  };
   box.innerHTML = plSlipSheet() + `<div class="sx cab-admin lx" style="${lit("slate")}">
     <section class="sx-hero">
       <div class="sx-hero-text">
@@ -256,7 +268,7 @@ function renderLocationSlips() {
         <tbody>${here.map(e => { const a = plAccount(e); return `<tr>
           <td><b>${esc(plName(e))}</b></td><td>${esc(e.email || (e.employee_number ? `${e.employee_number}@${company.id}` : ""))}</td>
           <td>${esc(e.job || "")}</td>
-          <td>${!a ? `<span class="note">None yet</span>` : a.deactivated_at ? `<span class="badge b-none">Switched off</span>` : `<span class="badge b-current">Has one</span>`}</td>
+          <td>${!a ? `<span class="note">None yet</span>` : a.deactivated_at ? `<span class="badge b-none">Switched off</span>` : `<span class="badge b-current">Has one</span>`}${tickCell(a)}</td>
           <td class="pl-do">${plSlipButton(e)}</td></tr>`; }).join("")}</tbody>
       </table></div>`}
     </section>

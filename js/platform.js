@@ -104,6 +104,7 @@ function pfCompanyDetail(c) {
         <button type="button" class="btn-secondary" data-pf-visit="${esc(c.id)}" ${pfBusy ? "disabled" : ""}>Open as its owner</button>
       </div>
       ${pfActiveSection(c)}
+      ${pfInspectSection(c)}
       <h3>People</h3>
       ${!people ? `<p class="note">Loading…</p>` : !people.length ? `<p class="note">Nobody yet. Place its first owner from Accounts waiting.</p>` : `
       <div class="table-wrap"><table class="pf-table">
@@ -138,6 +139,23 @@ function pfActiveSection(c) {
         <p class="note">Everyone in it is signed out and sees nothing until it's reactivated: no new accounts, join slips or
           notifications. Nothing is deleted. Its owners read the reason in their log once it's back.</p></div>
       <button type="button" class="pf-danger" data-pf-off="${esc(c.id)}" ${pfBusy ? "disabled" : ""}>Deactivate</button>
+    </div>`;
+}
+
+// The company's organization in Field Ready (0162). Field Ready names the
+// company back (its setup/agri_barn_link.sql prints the organization's id);
+// both have to, before anyone opens it from Agri-Barn. Empty unlinks.
+function pfInspectSection(c) {
+  if (!("inspect_org" in c)) {
+    return `<p class="note pf-switch">Run migration 0162_field_ready_link.sql to link a company to ${esc(INSPECT_APP_NAME)}.</p>`;
+  }
+  return `<div class="pf-switch">
+      <div><label for="pfInspect-${esc(c.id)}">${esc(INSPECT_APP_NAME)} organization</label>
+        <input type="text" id="pfInspect-${esc(c.id)}" maxlength="36" spellcheck="false" autocomplete="off"
+          value="${esc(c.inspect_org || "")}" placeholder="Its id in ${esc(INSPECT_APP_NAME)}, or empty: not linked">
+        <p class="note">${c.inspect_org ? "Linked." : "Not linked."} Its owners tick who may open ${esc(INSPECT_APP_NAME)} from
+          Agri-Barn, on People. ${esc(INSPECT_APP_NAME)} has to name this company back (${esc(c.id)}) before anyone gets in.</p></div>
+      <button type="button" class="btn-secondary" data-pf-inspect="${esc(c.id)}" ${pfBusy ? "disabled" : ""}>Save link</button>
     </div>`;
 }
 
@@ -264,6 +282,20 @@ document.addEventListener("click", (e) => {
       if (error) { pfBusy = false; pfProblem = error.message; renderPlatformBody(); return; }
       location.reload();
     });
+    return;
+  }
+  const link = e.target.closest("[data-pf-inspect]");
+  if (link) {
+    const id = link.dataset.pfInspect, c = pfCompanies.find(x => x.id === id) || { name: id };
+    const org = ($("pfInspect-" + id).value || "").trim().toLowerCase();
+    if (org && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(org)) {
+      pfProblem = `That isn't a ${INSPECT_APP_NAME} organization id: it looks like 8-4-4-4-12 letters and numbers.`;
+      return renderPlatformBody();
+    }
+    if (!org && c.inspect_org && !confirm(`Unlink ${c.name} from ${INSPECT_APP_NAME}? Nobody can open it from Agri-Barn `
+      + `until it's linked again. The ticks stay.`)) return;
+    pfRun(() => db.rpc("platform_link_inspect", { target: id, org: org || null }),
+      org ? `${c.name} is linked to ${INSPECT_APP_NAME}.` : `${c.name} isn't linked to ${INSPECT_APP_NAME}.`);
     return;
   }
   const off = e.target.closest("[data-pf-off]");

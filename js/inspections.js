@@ -513,14 +513,14 @@ $("admin").addEventListener("click", async (event) => {
 function inspectionView() {
   const head = hero("Inspection Center",
     "Walk-arounds, equipment checks and the records that go with them.", true);
-  if (inspError) return head + `<div class="card"><p class="error">Inspections couldn't be loaded.</p></div>`;
+  if (inspError) return head + inspectAppCard() + `<div class="card"><p class="error">Inspections couldn't be loaded.</p></div>`;
   const forms = inspForms.filter(f => f.is_active);
-  if (!forms.length) return head + comingSoon("No inspections have been set up yet.");
+  if (!forms.length) return head + inspectAppCard() + comingSoon("No inspections have been set up yet.");
 
   const notice = inspNotice
     ? `<div class="card insp-notice"><p class="ok" style="margin:0">${esc(inspNotice)}</p></div>` : "";
   inspNotice = "";
-  return head + notice + forms.map(form => {
+  return head + notice + inspectAppCard() + forms.map(form => {
     const records = inspections.filter(r => r.form_id === form.id);
     // Only whoever started an inspection can finish it (0065), so only theirs.
     const toDo = form.has_after_class
@@ -546,6 +546,59 @@ function inspectionView() {
       ${records.map(r => inspRecordHtml(r, false)).join("") || `<p class="note" style="margin-left:4px">None yet.</p>`}`;
   }).join("");
 }
+
+// ---- Field Ready (0162) ----------------------------------------------------------
+//
+// For someone with the tick at a company linked to it: Open Field Ready asks
+// the inspect-link function for a one-time sign-in link, and opens it in a new
+// tab, where Field Ready's website signs them in. The tab is opened inside the
+// click, so the browser doesn't block it, and pointed at the link once it's
+// back. Their tick is read on its own, so this works before 0162 has run.
+
+let myInspectAccess = null, myInspectLoading = false, inspectAppProblem = "";
+
+async function loadMyInspectAccess() {
+  myInspectLoading = true;
+  const { data } = await db.from("profiles").select("inspect_access").eq("id", me.id).maybeSingle();
+  myInspectLoading = false;
+  myInspectAccess = !!(data && data.inspect_access);
+  if (myInspectAccess && viewShown === "inspection") showView("inspection");
+}
+
+function inspectAppCard() {
+  if (!companyLinkedToInspect() || !me) return "";
+  if (myInspectAccess === null) {
+    if (!myInspectLoading) loadMyInspectAccess();
+    return "";
+  }
+  if (!myInspectAccess) return "";
+  return `<div class="link-grid" style="margin-bottom:14px">
+      <button type="button" class="link-card" data-inspect-open style="width:100%;text-align:left;${lit("green")}">
+        <span class="well">${icon("inspection")}</span>
+        <span><b>Open ${esc(INSPECT_APP_NAME)}</b>
+          <span>Preseason inspections of your customers' guidance and planter technology, in ${esc(INSPECT_APP_NAME)},
+            signed in as you.</span>
+          <span class="go">Open ${esc(INSPECT_APP_NAME)} &nearr;</span></span>
+      </button></div>
+    ${inspectAppProblem ? `<p class="error" role="alert" style="margin:-4px 4px 14px">${esc(inspectAppProblem)}</p>` : ""}`;
+}
+
+document.addEventListener("click", async (event) => {
+  if (!event.target.closest("[data-inspect-open]")) return;
+  inspectAppProblem = "";
+  const tab = window.open("", "_blank");
+  const { data, error } = await db.functions.invoke("inspect-link", { body: { action: "open" } });
+  let said = data;
+  if (error) said = await (error.context && error.context.json ? error.context.json().catch(() => null) : null);
+  if (said && said.url && tab) {
+    tab.opener = null;
+    tab.location = said.url;
+    return;
+  }
+  if (tab) tab.close();
+  inspectAppProblem = (said && said.error) || `${INSPECT_APP_NAME} didn't open. Try again in a moment.`;
+  if (viewShown === "inspection") showView("inspection");
+});
 
 // ---- filling one in --------------------------------------------------------------
 //

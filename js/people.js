@@ -112,6 +112,23 @@ function renderPeople() {
           `<option value="${esc(l.id)}">${esc(l.name)}</option>`).join("")}</select>` : ""}</div>`;
   };
 
+  // The Field Ready tick (0162), at a company linked to it: owners give it
+  // here; a location's admins give it to their employees on their dashboard.
+  const inspectCell = (r) => {
+    if (!companyLinkedToInspect()) return "";
+    if (!inspectTicks) return `<div class="note" style="font-size:12.5px;margin-top:6px">${esc(INSPECT_APP_NAME)}…</div>`;
+    const tick = inspectTicks[r.id] || {};
+    const by = tick.inspect_access_by_name
+      ? `${tick.inspect_access ? "Given" : "Taken away"} by ${tick.inspect_access_by_name}${
+          tick.inspect_access_at ? ", " + new Date(tick.inspect_access_at).toLocaleDateString() : ""}` : "";
+    if (!isOwner() || r.deactivated_at) {
+      return tick.inspect_access ? `<div class="note" style="font-size:12.5px;margin-top:6px">Opens ${esc(INSPECT_APP_NAME)}</div>` : "";
+    }
+    return `<label class="check" style="margin:6px 0 0;font-size:12.5px;white-space:nowrap"${by ? ` title="${esc(by)}"` : ""}>
+        <input type="checkbox" data-inspect-for="${esc(r.id)}"${tick.inspect_access ? " checked" : ""}> Opens ${esc(INSPECT_APP_NAME)}</label>`;
+  };
+  if (companyLinkedToInspect() && !inspectTicks && !inspectTicksLoading) loadInspectTicks();
+
   const shopPicker = (r) => `<select data-shop-for="${esc(r.id)}" style="margin:0;min-width:130px">
       <option value=""${!r.location_id ? " selected" : ""}>— not set —</option>
       ${allLocations.map(l => `<option value="${esc(l.id)}"${
@@ -126,6 +143,7 @@ function renderPeople() {
         <div class="note" style="font-size:12.5px;margin-top:4px;overflow-wrap:anywhere">${esc(
           [r.id === me.id ? "you" : "", r.email || "no email", groupNames(r.groups)].filter(Boolean).join(" · "))}</div>
         ${numberCell(r)}
+        ${inspectCell(r)}
         ${account(r) ? `<div style="margin-top:6px">${account(r)}</div>` : ""}</td>
       <td>${editable(r) ? shopPicker(r)
         : r.location_id ? esc(locations[r.location_id] || r.location_id)
@@ -346,6 +364,44 @@ document.addEventListener("change", async (event) => {
   person.location_id = picked || null;
   renderPeople();          // the "no location set" count at the top changes
   speak(card, picked ? `${who} is at ${to}.` : `${who} has no location set.`, false);
+});
+
+// The Field Ready tick (0162): who has it, loaded on its own so the page
+// works before the migration has run, and only at a linked company.
+let inspectTicks = null, inspectTicksLoading = false;
+async function loadInspectTicks() {
+  inspectTicksLoading = true;
+  const ticks = await allRows(() => db.from("profiles")
+    .select("id,inspect_access,inspect_access_by_name,inspect_access_at").order("id"));
+  inspectTicksLoading = false;
+  inspectTicks = {};
+  (ticks.data || []).forEach(t => { inspectTicks[t.id] = t; });
+  if ($("peopleTable")) renderPeople();
+  if ($("locationSlips")) renderLocationSlips();
+}
+
+// Given and taken away with set_inspect_access(), which holds the rules: an
+// owner for anyone, an admin for their location's employees, never directly.
+// On People (owners) and the Location Dashboard's join slips (admins).
+document.addEventListener("change", async (event) => {
+  const box = event.target.closest("[data-inspect-for]");
+  if (!box) return;
+  const person = people.find(r => r.id === box.dataset.inspectFor);
+  if (!person) return;
+  const card = box.closest(".card, .pp-panel, .sx-panel") || $("peopleTable");
+  const who = person.full_name || person.email || "this account";
+  const giving = box.checked;
+  box.disabled = true;
+  const { error } = await db.rpc("set_inspect_access", { person: person.id, allowed: giving });
+  box.disabled = false;
+  if (error) {
+    box.checked = !giving;
+    return speak(card, error.message, true);
+  }
+  inspectTicks = { ...(inspectTicks || {}), [person.id]: { id: person.id, inspect_access: giving,
+    inspect_access_by_name: (profile && profile.full_name) || "", inspect_access_at: new Date().toISOString() } };
+  speak(card, giving ? `${who} can open ${INSPECT_APP_NAME} from Agri-Barn.`
+                     : `${who} can no longer open ${INSPECT_APP_NAME} from Agri-Barn.`, false);
 });
 
 // Designations: straight to the table, since the rules are in the database —

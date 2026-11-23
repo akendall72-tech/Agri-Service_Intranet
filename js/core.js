@@ -560,6 +560,12 @@ const companyHas = (feature) => Array.isArray(company.features)
 // What a company can switch on, as company_features() says.
 const COMPANY_FEATURES = ["agco", "apparel"];
 
+// The inspection app, Field Ready (0162): its name in one place, since it may
+// be renamed (Agri-Barn Inspect), and whether this company is linked to it.
+// Only the platform links a company; owners then tick who may open it.
+const INSPECT_APP_NAME = "Field Ready";
+const companyLinkedToInspect = () => !!company.inspect_org;
+
 // The company's IT mailbox for Submit an IT Ticket (0144), or "" for none.
 const itTicketEmail = () => String(company.it_ticket_email || "").trim();
 
