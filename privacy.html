@@ -22,7 +22,7 @@
     <div class="hero">
       <p class="eyebrow">Agri-Barn</p>
       <h1>Privacy Policy</h1>
-      <p class="updated">Last updated November 23, 2026</p>
+      <p class="updated">Last updated November 24, 2026</p>
     </div>
 
     <div class="card">
@@ -55,6 +55,10 @@
           the vehicles you drive and their service, events you sign up for, and what you post, comment or react
           to on Social, what you report on Social and why, and whose posts you've hidden. Photos you take or choose
           for these are saved with them.</li>
+        <li><strong>Your company's vehicles, if your company connects Motive:</strong> from the company's Motive
+          fleet account, each vehicle's fleet number, VIN, year, make and model, its mileage and engine hours, and
+          where it was last reported. Only the latest location is kept, with no history. Motive also says who last
+          drove a vehicle; Agri-Barn doesn't keep that.</li>
         <li><strong>Apple Health, only if you join the Fitness Challenge:</strong> your daily totals (steps,
           distance, flights climbed, your activity rings and their goals, exercise minutes and workouts) to score
           you on the company leaderboard. The app only reads from Apple Health; it never writes to it.</li>
@@ -62,7 +66,7 @@
           phone, which of our apps it's for, and which kinds you've switched on. The token is removed when you sign
           out.</li>
       </ul>
-      <p>We don't collect your location, your contacts, your browsing, or advertising identifiers. The app has
+      <p>The app never asks for your phone's location. We don't collect your contacts, your browsing, or advertising identifiers. The app has
         no advertising and no analytics or tracking tools, and doesn't track you across other companies' apps or
         websites. Nothing is sold.</p>
     </div>
@@ -70,8 +74,8 @@
     <div class="card">
       <h2>How it's used</h2>
       <p>Only to run Agri-Barn for your company: your training records and, for an AGCO dealer, AGCO's requirements, your
-        certifications and when they expire, safety, lift plans and inspections, the company's news and events,
-        and reminders and notifications about them.</p>
+        certifications and when they expire, safety, lift plans and inspections, the company's vehicles and their
+        service, the company's news and events, and reminders and notifications about them.</p>
       <p>Health information is used only to score the Fitness Challenge. It's never used for advertising or
         marketing, and never sold or shared outside the app.</p>
     </div>
@@ -85,6 +89,8 @@
           welding certification, CPR or first aid that you add is seen by them too; any other certification you
           add, only you can see.</li>
         <li><strong>The Safety Manager</strong> is the only one who sees who sent a Safety Report.</li>
+        <li><strong>Where a company vehicle is</strong>, if your company connects Motive, is seen only by the
+          company's owners and the admins of the location the vehicle belongs to.</li>
         <li><strong>Prime Theory Labs</strong> can open your company's records to help it, for up to two hours at a
           time. Every change made during such a visit is logged, with why, for your company's owners to read.</li>
         <li><strong>Your company's owners</strong> see what you report on Social, with your name and reason, to
@@ -99,7 +105,9 @@
         <li><strong>Our service providers:</strong> Supabase stores the records and pictures and handles signing
           in. Apple distributes the app and delivers its notifications. Microsoft, if your company signs in with
           Microsoft 365, signs you in and, if your company chooses, provides its directory (names, work emails,
-          jobs, departments, offices and employee IDs) to keep the People list up to date. GitHub hosts the web
+          jobs, departments, offices and employee IDs) to keep the People list up to date. Motive, if your
+          company connects its Motive account, provides its vehicles' details, mileage and latest locations;
+          Agri-Barn only reads from Motive and never changes anything there. GitHub hosts the web
           page's files. The web
           page loads its fonts from Google Fonts and some code from public code libraries (jsDelivr and cdnjs),
           which see your browser's internet address as any website would. They handle information only to provide
@@ -113,6 +121,9 @@
       <p>Records are stored on Supabase's servers, and some are kept on your phone so the app works with no
         signal. Information travels encrypted, and access rules on the server limit each person to what their
         role allows. Pictures are stored privately and shown only to the people allowed to see them.</p>
+      <p>If your company connects Motive, the keys Motive gives Agri-Barn are kept on the server, where no one
+        signed in can read them. When an owner disconnects Motive, the keys and every vehicle location from Motive
+        are deleted.</p>
       <p>Your work records are your company's records. When you leave, your account is switched off
         and you're signed out everywhere, but what you did, such as your training record, lift plans and
         inspections, stays with the company.</p>
