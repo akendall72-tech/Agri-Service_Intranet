@@ -64,6 +64,7 @@ function renderCompanyAdmin() {
     ${coItCard()}
     ${coSwitchesCard()}
     ${coMicrosoftCard()}
+    ${coMotiveCard()}
     <div class="card">
       <h2>What Agri-Barn's platform did here</h2>
       <p class="note">Anything done to this company from the Platform page: accounts placed in it, and each visit by the platform
@@ -196,6 +197,37 @@ function coMicrosoftCard() {
     </div>`;
 }
 
+// Motive (0164): the company's vehicles, mileage and locations come into the
+// Fleet Center. An owner connects it once, signing in to Motive themselves or
+// sending the link to whoever manages their Motive account.
+let coMoLink = "", coMoBusy = false, coMoMessage = "", coMoError = "";
+if (window.motiveResult) ({ ok: coMoMessage, no: coMoError } = window.motiveResult);
+function coMotiveCard() {
+  if (!("motive_company" in company)) return "";
+  const said = `${coMoMessage ? `<p class="co-ok">${esc(coMoMessage)}</p>` : ""}${coMoError ? `<p class="error">${esc(coMoError)}</p>` : ""}`;
+  return `<div class="card" id="coMotive">
+      <h2>Motive</h2>
+      ${company.motive_company ? `
+        <p class="note">Connected to <b>${esc(company.motive_company_name || "your Motive account")}</b>${
+          company.motive_connected_at ? ` ${esc(new Date(company.motive_connected_at).toLocaleDateString())}` : ""}${
+          company.motive_connected_by ? ` by ${esc(company.motive_connected_by)}` : ""}. Agri-Barn reads your vehicles, their
+          mileage and where they are, and changes nothing in Motive.</p>
+        <div class="co-actions"><button type="button" class="btn-secondary" id="coMoDisconnect" ${coMoBusy ? "disabled" : ""}>Disconnect</button></div>
+        ${said}`
+      : `
+        <p class="note">If ${esc(company.name)} uses Motive, connect it once and your vehicles come into the Fleet Center by fleet
+          number, their mileage keeps itself up to date, and owners and location admins see where they are on a map. Agri-Barn
+          only reads from Motive. It needs someone who manages your Motive account to sign in and approve it.</p>
+        <div class="co-actions"><button type="button" id="coMoConnect" ${coMoBusy ? "disabled" : ""}>Connect Motive</button></div>
+        ${coMoLink ? `<div class="co-mslink"><input type="text" id="coMoLinkText" readonly value="${esc(coMoLink)}">
+          <button type="button" class="btn-secondary" id="coMoCopy">Copy</button>
+          <button type="button" id="coMoOpen">Open</button></div>
+          <p class="note">Good for a day, once. Open it if you manage your Motive account; otherwise copy it to whoever does.
+            When it's approved, this page says so.</p>` : ""}
+        ${said}`}
+    </div>`;
+}
+
 function coConsentLink(state) {
   const q = new URLSearchParams({ client_id: MICROSOFT_CLIENT_ID, scope: "https://graph.microsoft.com/.default",
     redirect_uri: `${SUPABASE_URL}/functions/v1/microsoft-connected`, state });
@@ -285,6 +317,29 @@ document.addEventListener("click", async (e) => {
     coMsMessage = ""; coMsError = "";
     const { error } = await db.rpc("set_microsoft_sign_in", { turn_on: false, disconnect: true });
     if (error) coMsError = error.message; else { await coReload(); coMsMessage = "Microsoft 365 is disconnected."; }
+    return renderCompanyAdmin();
+  }
+  if (e.target.closest("#coMoConnect")) {
+    coMoMessage = ""; coMoError = ""; coMoBusy = true; renderCompanyAdmin();
+    const { data, error } = await db.functions.invoke("motive", { body: { action: "connect" } });
+    let said = data;
+    if (error) said = await (error.context && error.context.json ? error.context.json().catch(() => null) : null);
+    coMoBusy = false;
+    if (!said || !said.url) { coMoError = (said && said.error) || "Motive couldn't be reached. Try again in a minute."; return renderCompanyAdmin(); }
+    coMoLink = said.url; return renderCompanyAdmin();
+  }
+  if (e.target.closest("#coMoOpen")) { location.href = coMoLink; return; }
+  if (e.target.closest("#coMoCopy")) {
+    coMoError = "";
+    try { await navigator.clipboard.writeText(coMoLink); coMoMessage = "Copied. Send it to whoever manages your Motive account."; }
+    catch { $("coMoLinkText").select(); coMoMessage = "Select the link and copy it."; }
+    return renderCompanyAdmin();
+  }
+  if (e.target.closest("#coMoDisconnect")) {
+    if (!confirm("Disconnect Motive? Vehicles stop updating from it and their locations are forgotten. Nothing in Motive changes.")) return;
+    coMoMessage = ""; coMoError = "";
+    const { error } = await db.rpc("disconnect_motive");
+    if (error) coMoError = error.message; else { await coReload(); coMoMessage = "Motive is disconnected."; }
     return renderCompanyAdmin();
   }
   if (e.target.closest("#coItSave")) return coItSave();

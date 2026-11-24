@@ -300,7 +300,14 @@ $("msSignIn").onclick = async () => {
     $("authError").textContent = window.microsoftResult.ok || window.microsoftResult.no;
     $("authError").className = window.microsoftResult.ok ? "co-ok" : "error";
   }
-  if (refused || ms) history.replaceState(null, "", location.pathname);
+  // Motive (0164), back from approving Agri-Barn: said on the Company tab.
+  const mo = params.get("motive");
+  if (mo === "connected") {
+    window.motiveResult = { ok: `Motive is connected${params.get("account") ? `: ${params.get("account")}` : ""}.` };
+  } else if (mo) {
+    window.motiveResult = { no: `Motive wasn't connected: ${(params.get("why") || "it didn't go through").replace(/\.$/, "")}.` };
+  }
+  if (refused || ms || mo) history.replaceState(null, "", location.pathname);
 })();
 
 $("signIn").onclick = async () => {
