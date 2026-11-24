@@ -19,6 +19,9 @@
 // meter, serviced by hours or months, or no meter, serviced by the calendar.
 // The weekly checklist (fleet_check_items) is kept by owners on the Admin
 // dashboard's Fleet Check tab; each check keeps the items as worded that day.
+//
+// With the company's Motive connected, owners and admins also see where each
+// vehicle is: fleet-map.js, which loads with the vehicles here.
 
 let fvVehicles = [], fvEquipment = [], fvServices = [], fvChecks = [], fvPeople = [];
 let fvItems = [], fvItemsError = null;
@@ -49,7 +52,8 @@ async function loadFleet() {
     db.from("fleet_equipment").select("*").order("created_at"),
     allRows(() => db.from("fleet_services").select("*").order("done_on", { ascending: false }).order("id")),
     allRows(() => db.from("fleet_checks").select("*").order("checked_on", { ascending: false }).order("id"), 2000),
-    db.from("fleet_check_items").select("*").order("sort_order").order("label")
+    db.from("fleet_check_items").select("*").order("sort_order").order("label"),
+    fmLoad()
   ]);
   // Before 0118 there's no checklist; the check is the meter and the tires.
   fvItemsError = items.error ? items.error.message : null;
@@ -236,6 +240,7 @@ function fvRedraw() {
   if ($("view").classList.contains("hidden")) return;
   if (viewShown === "fleet" && $("fvPage")) $("fvPage").innerHTML = fvPageHtml();
   if (viewShown === "fleetvehicle" && $("fvVehicle")) $("fvVehicle").innerHTML = fvVehicleHtml();
+  fmMount();
 }
 
 function fvPageHtml() {
@@ -262,6 +267,7 @@ function fvPageHtml() {
     ${mine.length ? mine.map(v => fvCardHtml(v, false)).join("") : `<button type="button" class="cm-card fv-empty" data-fv-add>
         <b>Add your vehicle</b><span>The pickup, service truck or forklift you look after: its fleet number, when it was last
           serviced, its tires, and any equipment on it.</span><span class="cm-go">Add a vehicle &rarr;</span></button>`}
+    ${fmFleetHtml()}
     ${others.length ? `<div class="cm-kind fv-tabs" role="group" aria-label="Which vehicles">
         <button type="button" class="${fvAttentionOnly ? "" : "on"}" data-fv-filter="all" aria-pressed="${!fvAttentionOnly}">All · ${others.length}</button>
         <button type="button" class="${fvAttentionOnly ? "on" : ""}" data-fv-filter="attention" aria-pressed="${fvAttentionOnly}">Needs attention · ${
@@ -304,6 +310,8 @@ function fleetVehicleView() {
   const v = fvVehicle(openFleetId);
   if (!v) return hero("Fleet Center") + `<div class="cm"><div class="cm-card cm-empty"><b>That vehicle isn't here</b>
     <p>It may have been deleted, or handed to someone at another location.</p></div></div>`;
+  // Its map, if it has one, once the page is drawn.
+  setTimeout(fmMount);
   return hero(fvName(v), [fvDescription(v), FV_KINDS[v.kind]].filter(Boolean).join(" · ")) +
     `<div class="cm fv" id="fvVehicle">${fvVehicleHtml()}</div>`;
 }
@@ -328,6 +336,7 @@ function fvVehicleHtml() {
       </div>`}
     </div>
     ${fvPanel ? fvPanelHtml(v) : ""}
+    ${fmWhereHtml(v)}
     <div class="cm-card fv-service${due.level === "overdue" ? " alert" : ""}">
       ${fvRing(due, 84)}
       <div><b class="fv-level ${due.level}">${esc(FV_LEVEL[due.level][0])}</b>

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Which version this is. publish.sh stamps the date and commit here, and
      into version.json beside the page; "dev" is a copy that wasn't published. -->
-<meta name="app-version" content="2026-11-24.d7bf41b">
+<meta name="app-version" content="2026-11-24.11aa89d">
 <!-- Where this page may load things from and send things to. GitHub Pages
      can't send security headers, so it's here. Scripts come only from this
      site and the two script CDNs (each pinned with an integrity hash), and
@@ -15,7 +15,7 @@
      sure the hash still matches it): an onclick attribute or a script tag
      slipped into a page through a missed esc() simply doesn't run. Pictures
      stay open to any https site: a news story's picture is the article's own. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-QGgOMunEbx4cxRKcfra/xBhnDHyAVHb6WAfUhcAWUoE=' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' blob: https://gzmtxsgaulzkghaqyibt.supabase.co; connect-src 'self' https://gzmtxsgaulzkghaqyibt.supabase.co wss://gzmtxsgaulzkghaqyibt.supabase.co; frame-src 'self' blob: https://gzmtxsgaulzkghaqyibt.supabase.co; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-QGgOMunEbx4cxRKcfra/xBhnDHyAVHb6WAfUhcAWUoE=' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.apple-mapkit.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' blob: https://gzmtxsgaulzkghaqyibt.supabase.co; connect-src 'self' https://gzmtxsgaulzkghaqyibt.supabase.co wss://gzmtxsgaulzkghaqyibt.supabase.co https://*.apple-mapkit.com https://*.ls.apple.com https://*.geo.apple.com; frame-src 'self' blob: https://gzmtxsgaulzkghaqyibt.supabase.co; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
 <!-- Shown only as the top page. Another site could otherwise load this one in
      an invisible frame and trick someone into clicking its buttons
      (clickjacking); the header that would forbid that can't be sent from
@@ -34,7 +34,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
-<link rel="stylesheet" href="css/app.css?v=8c08d69b7d">
+<link rel="stylesheet" href="css/app.css?v=f33dac3cbe">
 </head>
 <body>
 
@@ -110,6 +110,7 @@
       <button data-tab="manuals" data-title="Operator's Manuals"><i data-icon="book"></i><span>Operator's Manuals</span></button>
       <button data-tab="reminders"><i data-icon="reminders"></i><span>Reminders</span></button>
       <button data-tab="fleetcheck" data-title="Weekly Fleet Check"><i data-icon="fleet"></i><span>Fleet Check</span></button>
+      <button data-tab="vehiclemap" data-title="Vehicles &amp; Locations"><i data-icon="map"></i><span>Vehicles &amp; Locations</span></button>
       <button data-tab="support"><i data-icon="support"></i><span>Support Center</span></button>
       <button data-tab="logins"><i data-icon="key"></i><span>Shared Logins</span></button>
 
@@ -913,6 +914,9 @@
     <!-- The weekly fleet check's checklist (0118), drawn by fleet.js -->
     <section id="tab-fleetcheck" class="hidden"><div id="fleetCheckAdmin"></div></section>
 
+    <!-- Motive's vehicles, matched, added and placed at their locations (0165), drawn by fleet-map.js -->
+    <section id="tab-vehiclemap" class="hidden"><div id="vehicleMapAdmin"></div></section>
+
     <!-- Inspections: forms, questions and submitted inspections, drawn by JS -->
     <section id="tab-inspections" class="hidden">
       <div id="inspAdmin"></div>
@@ -1247,7 +1251,7 @@
      js/core.js has the rest. publish.sh adds ?v= to each, so a changed file is
      fetched fresh and an unchanged one comes from the browser's cache. -->
 <script src="js/core.js?v=dec3722482"></script>
-<script src="js/shell.js?v=4a8a44d064"></script>
+<script src="js/shell.js?v=df825ded36"></script>
 <script src="js/location-dashboard.js?v=91f293e319"></script>
 <script src="js/location-certifications.js?v=188701e85c"></script>
 <script src="js/my-certifications.js?v=556796f1db"></script>
@@ -1266,7 +1270,8 @@
 <script src="js/community.js?v=1ecd0aaa6e"></script>
 <script src="js/fitness.js?v=1fa39ea073"></script>
 <script src="js/trivia.js?v=eb409c41ff"></script>
-<script src="js/fleet.js?v=240b3006b6"></script>
+<script src="js/fleet.js?v=b40d8ed576"></script>
+<script src="js/fleet-map.js?v=32dba9aef7"></script>
 <script src="js/safety-reports.js?v=6b5af13f7a"></script>
 <script src="js/training-dashboard.js?v=67b678b891"></script>
 <script src="js/safety-dashboard.js?v=85813c9fc6"></script>

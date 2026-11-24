@@ -23,7 +23,7 @@
       <p>What the app does, how each screen works, on the phone and on the web page at
   agri-barn.com, who can do what, and how people get in. Written for everyone who uses it, from a
   technician's first sign-in to the owners who run it for their company.</p>
-      <p class="updated">Updated November 23, 2026</p>
+      <p class="updated">Updated November 24, 2026</p>
     </div>
     <nav class="card toc" aria-label="On this page">
       <h2>On this page</h2>
@@ -1312,6 +1312,17 @@
     the items as they were worded that day.</p>
   <p>Once every vehicle you drive has this week's check, the reminder ticks itself. Each check also adds a
     point to the chart. Anyone who doesn't drive a vehicle never sees the reminder.</p>
+  <p><strong>Where they are.</strong> If your company has connected its Motive fleet account (an owner does it on
+    the web page, under Admin → Company), owners and location admins see where each vehicle is: a <em>Where they
+    are</em> map on the Fleet Center, and a <em>Where it is</em> card on each vehicle's page, with the nearest place
+    Motive names, how long ago it was seen, and directions. Teal is parked, green is on the move, grey hasn't been
+    seen in a day. Only the latest location is kept, never a trail, and employees don't see it. A matched vehicle's
+    mileage comes from Motive as well, and is never lowered. A vehicle reports a location only if it has a Motive
+    gateway, or a driver signed in to Motive's app in it; a forklift usually has neither.</p>
+  <p>Owners sort Motive's vehicles on the web page, under Admin → <em>Vehicles &amp; Locations</em>. They match the
+    Fleet Center's by fleet number on their own; the rest can be linked to a vehicle, added, or ignored (a sold
+    truck, a trailer). Each vehicle is put at the location it works from, which decides whose admins see it, and
+    each location's spot is placed on the map there.</p>
 
   <h3>Who sees which vehicle</h3>
   <div class="table-wrap">
@@ -1325,6 +1336,7 @@
         <tr><td>Weekly check, log service, equipment, edit, retire</td><td class="yes">Their own</td><td class="yes">Their locations'</td><td class="yes">All</td></tr>
         <tr><td>Change the driver</td><td class="no">No</td><td class="yes">Within their locations</td><td class="yes">Anyone</td></tr>
         <tr><td>Delete a vehicle</td><td class="yes">One they added and drive</td><td class="yes">Their locations'</td><td class="yes">All</td></tr>
+        <tr><td>See where it is (with Motive)</td><td class="no">No</td><td class="yes">Their locations'</td><td class="yes">All</td></tr>
       </tbody>
     </table>
   </div>
@@ -2132,6 +2144,7 @@
         <tr><td>Operator's Manuals</td><td>Upload a machine's operator's manual as a PDF, up to 50 MB on the current plan, with its make, model and the locations it's for, or every location. People see the ones for their location in the Support Center. Change its details or replace the PDF, or remove it. Shows how much of the plan's storage is in use</td></tr>
         <tr><td>Reminders</td><td>Add, change, switch off or delete the reminders everyone gets</td></tr>
         <tr><td>Fleet Check</td><td>The checklist on every vehicle's weekly check: add, reword, reorder, hide or delete items, each with optional help under it, and tick the kinds of vehicle it's for (pickups, service trucks, forklifts; none ticked for all). Each is answered OK or Needs attention. Rewording or deleting one never changes a check already done</td></tr>
+        <tr><td>Vehicles &amp; Locations</td><td>With Motive connected: every Motive vehicle on a map, coloured by its location. Link one that's waiting to a Fleet Center vehicle, add it (or <b>Add all</b>, each at its suggested location), or ignore it; move a vehicle to another location; place each location on the map. See <a href="#fleet">Fleet Center</a></td></tr>
         <tr><td>Support Center</td><td>Edit the cards, add and remove the people in them</td></tr>
         <tr><td>Shared Logins</td><td>Set up the apparel store's address and password, or change them. Only matters with the Apparel tab switched on</td></tr>
         <tr><td>Payroll</td><td>Import the payroll calendar</td></tr>
@@ -2139,7 +2152,7 @@
         <tr><td>Special Tools</td><td>Download the whole list as CSV, with where every tool is. Bulk upload a changed list: it shows what will be added, changed and removed before anything is saved, and a tool that's checked out can't be removed or moved. Below that, the fields on the tool form: add, rename, reorder, hide or delete them, as text, long text, number, date, a pick list or yes/no. A new field is on every phone's form with no app update</td></tr>
         <tr><td>Groups &amp; Locations</td><td>Add, rename, reorder, switch off or delete groups and locations, and set each location's time zone. Switching one off takes it out of the pick lists but leaves everything already recorded against it. A location that people, lift plans or events belong to can't be deleted. <b>Other names</b> are the other names an upload or Microsoft 365 uses for a location: a person's location there finds its location here by the location's name, its id (made from the name it was first given) or any of these. Renaming a location adds its old name by itself. Each location says how many on All employees it covers, and a location name nothing answers to is named at the top, to be added</td></tr>
         <tr><td>People list</td><td>The first page under <b>People</b>, in the Cab look, with tiles for who's here, who has no account yet, who was added by hand and who's left. Under the list, the <b>All employees upload</b> (it used to be on the Training dashboard): your HR system's export of everyone, which brings the People list and Training Status's people up to date; it says what it's for and when to use it, shows what a file would change, and changes nothing until <b>Publish</b>. Everyone who works here, how it's kept up to date (the All employees upload, Microsoft 365, or by hand), join slips and password slips, and whether leavers' accounts are switched off by themselves. Everything about it is in <a href="#people">Bringing people in</a></td></tr>
-        <tr><td>Company</td><td>The company's name, as everyone sees it across the app and the web page, and its legal name, printed at the foot of PDFs and in the forklift evaluation's wording. The app's two logos: one in colour for its sign-in screens, and one drawn in white on its red headers and certificates, each a PNG of up to 1 MB, best with a clear background; without one, the app shows the company's name in type. <b>Home photo</b>: a JPEG or PNG of up to 3 MB behind the home page, in the app and on the web page; without one, Agri-Barn's evening sky. No company's logos or photos are built into the app. The app picks up a change the next time its home page opens, and its sign-in screen shows the last company signed in on that phone (Agri-Barn on a phone that's never known one). <b>IT tickets</b>: the address the Support Center's <em>Submit an IT Ticket</em> emails; empty hides the card. <b>Features</b>: what the company has switched on, <b>AGCO dealer</b> and the <b>Apparel tab</b> (see <a href="#roles">Who can do what</a>). The Training Center's mission is on the Training dashboard's Training Articles. <b>Microsoft 365</b>: connecting it, and Microsoft sign-in on or off (see <a href="#people">Bringing people in</a>). <b>What Agri-Barn's platform did here</b>: everything the platform owner did in the company, each visit with why they came</td></tr>
+        <tr><td>Company</td><td>The company's name, as everyone sees it across the app and the web page, and its legal name, printed at the foot of PDFs and in the forklift evaluation's wording. The app's two logos: one in colour for its sign-in screens, and one drawn in white on its red headers and certificates, each a PNG of up to 1 MB, best with a clear background; without one, the app shows the company's name in type. <b>Home photo</b>: a JPEG or PNG of up to 3 MB behind the home page, in the app and on the web page; without one, Agri-Barn's evening sky. No company's logos or photos are built into the app. The app picks up a change the next time its home page opens, and its sign-in screen shows the last company signed in on that phone (Agri-Barn on a phone that's never known one). <b>IT tickets</b>: the address the Support Center's <em>Submit an IT Ticket</em> emails; empty hides the card. <b>Features</b>: what the company has switched on, <b>AGCO dealer</b> and the <b>Apparel tab</b> (see <a href="#roles">Who can do what</a>). The Training Center's mission is on the Training dashboard's Training Articles. <b>Microsoft 365</b>: connecting it, and Microsoft sign-in on or off (see <a href="#people">Bringing people in</a>). <b>Motive</b>: connecting the company's Motive fleet account, or disconnecting it, which deletes every location from it (see <a href="#fleet">Fleet Center</a>). <b>What Agri-Barn's platform did here</b>: everything the platform owner did in the company, each visit with why they came</td></tr>
       </tbody>
     </table>
   </div>
