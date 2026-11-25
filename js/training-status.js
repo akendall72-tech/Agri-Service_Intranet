@@ -59,9 +59,9 @@ const tsGoal = () => tsGoalPercent() / 100;
 
 async function loadTrainingStatus() {
   const [people, sources, plan, raw, evaluable, registered] = await Promise.all([
-    db.from("training_status_people").select("*"),
+    allRows(() => db.from("training_status_people").select("*").order("person_key")),
     db.rpc("training_status_sources"),
-    db.from("training_plan_marks").select("person_key, marked_by_name, marked_at"),
+    allRows(() => db.from("training_plan_marks").select("person_key, marked_by_name, marked_at").order("person_key")),
     db.from("training_status").select("*").eq("id", "current").maybeSingle(),
     db.rpc("forklift_eligible_people"),
     db.rpc("training_plan_registrations")

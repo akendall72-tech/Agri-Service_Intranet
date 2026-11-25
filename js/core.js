@@ -1,5 +1,5 @@
 // ============================================================================
-// Agri-Service web page: the script
+// Agri-Barn web page: the script
 // ============================================================================
 //
 // One page, its script in one file per feature. index.html loads them in a
@@ -59,7 +59,7 @@
 // details, and the person gets a way to reload. This comes first so that even
 // a library that failed to load from its CDN ends in a message, not a blank page.
 function reportFault(where, error) {
-  console.error(`Agri-Service: ${where} failed.`, error);
+  console.error(`Agri-Barn: ${where} failed.`, error);
   showBanner("faultBanner", "Part of this page didn't work. Reload to try again; if it keeps happening, tell the training department.");
 }
 
@@ -137,6 +137,14 @@ const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // or a row could slip between two pages. upTo stops early, for a list that
 // only ever wants its newest so many. The app's allRows() does the same.
 const PAGE_ROWS = 1000;
+
+// The Supabase plan's storage limits, for the pages that upload big files
+// (Operator's Manuals, Online Courses): the most any one file can be, and all
+// storage together. The free plan's today. On Pro, raise them here, raise the
+// storage buckets' own limits to match (Storage settings, then each bucket's
+// file_size_limit), and the Field Guide's numbers.
+const PLAN_FILE_MB = 50;
+const PLAN_STORAGE_BYTES = 1024 * 1024 * 1024;
 async function allRows(query, upTo = Infinity) {
   let rows = [];
   while (rows.length < upTo) {
@@ -625,7 +633,7 @@ async function loadAll({ restInBackground = false } = {}) {
     db.from("locations").select("*").order("sort_order"),
     allRows(() => db.from("forklift_certifications").select("*").order("id")),
     readPlans(),
-    db.from("profiles").select("id,full_name,email,role,location_id,groups,deactivated_at,created_at,employee_number,company_id"),
+    allRows(() => db.from("profiles").select("id,full_name,email,role,location_id,groups,deactivated_at,created_at,employee_number,company_id").order("id")),
     db.from("support_roles").select("*, support_people(*)").order("sort_order"),
     db.from("weekly_tasks").select("*").eq("is_active", true).order("sort_order"),
     db.from("personal_tasks").select("*").is("archived_at", null),

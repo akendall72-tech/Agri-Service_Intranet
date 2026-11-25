@@ -8,11 +8,10 @@
 // the admin page's Operator's Manuals tab. The database decides who sees what;
 // this only draws it.
 
-// The most a PDF can be: the free Supabase plan's limit on any one file. On
-// Pro, raise it here and on the bucket (see 0131).
-const MANUAL_MAX_MB = 50;
-// The free plan's storage, all buckets together.
-const STORAGE_PLAN_BYTES = 1024 * 1024 * 1024;
+// The most a PDF can be, and all storage together: the Supabase plan's, kept
+// in core.js (PLAN_FILE_MB, PLAN_STORAGE_BYTES).
+const MANUAL_MAX_MB = PLAN_FILE_MB;
+const STORAGE_PLAN_BYTES = PLAN_STORAGE_BYTES;
 
 let omManuals = [], omError = null, omNotSetUp = false, omStorage = null;
 let omQuery = "", omPlace = null;

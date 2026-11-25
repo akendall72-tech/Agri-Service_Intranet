@@ -13,7 +13,7 @@
   if (window.top === window.self) document.getElementById("topOnly").remove();
   else window.top.location = window.self.location.href;
 </script>
-<title>Online Course · Agri-Service</title>
+<title>Online Course · Agri-Barn</title>
 <link rel="icon" href="images/barn.svg" type="image/svg+xml">
 <!--
   The course player: one online course (SCORM 1.2), full screen, with a thin
@@ -161,7 +161,7 @@ async function start() {
   if (!found || !found.current_version) return show("This course isn't available", "It may have been taken down. Check Online Courses.");
   course = found;
   $("title").textContent = course.title;
-  document.title = `${course.title} · Agri-Service`;
+  document.title = `${course.title} · Agri-Barn`;
 
   // Their latest attempt: carried on if it isn't finished, otherwise a new one
   // on the current version.

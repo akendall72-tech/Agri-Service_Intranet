@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Which version this is. publish.sh stamps the date and commit here, and
      into version.json beside the page; "dev" is a copy that wasn't published. -->
-<meta name="app-version" content="2026-11-25.ae1eb54">
+<meta name="app-version" content="2026-11-25.a6b3066">
 <!-- Where this page may load things from and send things to. GitHub Pages
      can't send security headers, so it's here. Scripts come only from this
      site and the two script CDNs (each pinned with an integrity hash), and
@@ -25,7 +25,7 @@
   if (window.top === window.self) document.getElementById("topOnly").remove();
   else window.top.location = window.self.location.href;
 </script>
-<title>Agri-Service</title>
+<title>Agri-Barn</title>
 <!-- The tab icon: a little red barn. SVG where the browser takes it, a PNG for
      Safari, and a larger one for a phone's home screen. -->
 <link rel="icon" type="image/png" sizes="32x32" href="images/barn-32.png">
@@ -34,7 +34,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
-<link rel="stylesheet" href="css/app.css?v=f33dac3cbe">
+<link rel="stylesheet" href="css/app.css?v=af5fcde0e4">
 </head>
 <body>
 
@@ -467,7 +467,7 @@
                 <textarea id="newsFieldBody" data-n="body" rows="12" maxlength="20000"></textarea></div>
               <div><label for="newsFieldSource">From</label>
                 <input type="text" id="newsFieldSource" data-n="source_name" maxlength="80"
-                       placeholder="Fendt, PTx, Agri-Service…"></div>
+                       placeholder="Fendt, PTx, your company…"></div>
               <div><label for="newsFieldDate">Date</label>
                 <input type="date" id="newsFieldDate" data-n="published_on"></div>
               <div><label for="newsFieldShowing">Showing</label>
@@ -537,7 +537,7 @@
       <div class="card">
         <h2>Who does what</h2>
         <div class="drop" id="directoryDrop">
-          Drop <b>Agri-Service Directory(Who Does What).csv</b> here, or
+          Drop the <b>Who Does What</b> CSV here, or
           <label for="directoryFile" style="display:inline;color:var(--red);
                  cursor:pointer;text-decoration:underline">choose a file</label>
           <input id="directoryFile" type="file" class="hidden"
@@ -936,7 +936,7 @@
       <section class="sx-panel" id="plUpload" style="--accent:var(--lit-amber)">
         <header><h3>All employees upload</h3></header>
         <dl class="cab-rules">
-          <div><dt>What it is</dt><dd>Your HR system's export of everyone who works here (at Agri-Service, UKG's
+          <div><dt>What it is</dt><dd>Your HR system's export of everyone who works here (from UKG, its
             <b>All employees</b> report): name, employee number, work email, job and location.</dd></div>
           <div><dt>What it does</dt><dd>Brings the <b>People list</b> up to date, which decides who can get in, and
             <b>Training Status</b>'s list of people: who's a technician and where everyone works. It also gives each
@@ -1250,14 +1250,14 @@
      only names from an earlier file; boot.js starts the page and stays last.
      js/core.js has the rest. publish.sh adds ?v= to each, so a changed file is
      fetched fresh and an unchanged one comes from the browser's cache. -->
-<script src="js/core.js?v=dec3722482"></script>
+<script src="js/core.js?v=e35e179212"></script>
 <script src="js/shell.js?v=df825ded36"></script>
 <script src="js/location-dashboard.js?v=91f293e319"></script>
 <script src="js/location-certifications.js?v=188701e85c"></script>
 <script src="js/my-certifications.js?v=556796f1db"></script>
-<script src="js/operator-manuals.js?v=365c075f32"></script>
+<script src="js/operator-manuals.js?v=7763432dd3"></script>
 <script src="js/crane-qualifications.js?v=43a7e30c8e"></script>
-<script src="js/training-status.js?v=8a9e0fc230"></script>
+<script src="js/training-status.js?v=8c742f244d"></script>
 <script src="js/forklift.js?v=94362d24f2"></script>
 <script src="js/crane.js?v=88d6301304"></script>
 <script src="js/lift-plans.js?v=923f07f016"></script>
@@ -1290,13 +1290,13 @@
 <script src="js/epa-609.js?v=9dfa343f6a"></script>
 <script src="js/safety-data-sheets.js?v=2d8ed6ca78"></script>
 <script src="js/shared-logins.js?v=7d349137ec"></script>
-<script src="js/skills.js?v=8efb8a0583"></script>
+<script src="js/skills.js?v=ed6ab1b8f0"></script>
 <script src="js/training-articles.js?v=2eb9234aaf"></script>
 <script src="js/news.js?v=7666f3dcf1"></script>
 <script src="js/agco-map.js?v=6346d1735d"></script>
 <script src="js/agco-catalog.js?v=bba7e7a6c2"></script>
 <script src="js/my-classes.js?v=632c8ac9a0"></script>
-<script src="js/online-courses.js?v=c82df5d60c"></script>
+<script src="js/online-courses.js?v=b105357fd5"></script>
 <script src="js/training-reports.js?v=08291b73a5"></script>
 <script src="js/imports.js?v=a87bd44fe7"></script>
 <script src="js/company.js?v=a63d374934"></script>

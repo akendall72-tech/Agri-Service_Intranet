@@ -14,8 +14,8 @@
 
 let ocCourses = [], ocVersions = [], ocAttempts = [], ocError = null, ocNotSetUp = false;
 let ocBusy = null;               // { courseId, text } while an upload runs
-// The free plan's limit on one file. A bigger one is refused before anything uploads.
-const OC_FILE_LIMIT = 50 * 1024 * 1024;
+// The Supabase plan's limit on one file (core.js). A bigger one is refused before anything uploads.
+const OC_FILE_LIMIT = PLAN_FILE_MB * 1024 * 1024;
 
 async function loadOnlineCourses() {
   const [courses, versions, attempts] = await Promise.all([
@@ -97,7 +97,7 @@ function renderOltAdmin() {
       <h2>Add a course</h2>
       <p class="note">Upload the zip your authoring tool publishes for <b>SCORM 1.2</b> (Captivate: Publish → SCORM 1.2, zipped).
         The page reads the course's title and the page it starts on, and the course is added unpublished so you can open it
-        and check it first. Each file in it can be up to 50 MB on the current Supabase plan; a bigger video needs a lower
+        and check it first. Each file in it can be up to ${PLAN_FILE_MB} MB on the current Supabase plan; a bigger video needs a lower
         quality setting when it's published.</p>
       <div class="row">
         <input type="file" id="ocNewZip" accept=".zip,application/zip" style="max-width:420px;margin:0">
@@ -307,7 +307,7 @@ async function ocUpload(file, course, card, button) {
     const pkg = await ocReadPackage(zip);
     const big = pkg.files.filter(f => f.size > OC_FILE_LIMIT);
     if (big.length) {
-      throw new Error(`${big.map(f => `${f.path} (${ocBytes(f.size)})`).join(", ")} ${big.length === 1 ? "is" : "are"} over the 50 MB a file the ` +
+      throw new Error(`${big.map(f => `${f.path} (${ocBytes(f.size)})`).join(", ")} ${big.length === 1 ? "is" : "are"} over the ${PLAN_FILE_MB} MB a file the ` +
         `current Supabase plan allows. Publish the course again with a lower video quality, then upload that.`);
     }
     const id = course ? course.id : crypto.randomUUID();
