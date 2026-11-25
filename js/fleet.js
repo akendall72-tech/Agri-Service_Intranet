@@ -909,6 +909,9 @@ async function fvSaveVehicle(button) {
 // all of them (none ticked). Taking one off the list or rewording it never
 // changes a check already done: each check keeps the items as worded that day.
 
+// The item whose editor is open, if any.
+let fvaOpen = null;
+
 function renderFleetCheckAdmin() {
   const box = $("fleetCheckAdmin");
   if (!box) return;
@@ -917,32 +920,79 @@ function renderFleetCheckAdmin() {
       ? "Run migration 0118_fleet_checklist_and_forklifts.sql in the SQL editor, then reload this page." : esc(fvItemsError)}</p></div>`;
     return;
   }
-  const kinds = (i) => Object.entries(FV_KINDS).map(([k, t]) => `<label class="fva-kind"><input type="checkbox" data-fva-kind="${k}"${
-    (i.kinds || []).includes(k) ? " checked" : ""}> ${t}</label>`).join("");
-  box.innerHTML = `<div class="card">
-    <h2>Weekly fleet check</h2>
-    <p class="note">The checklist on every vehicle's weekly check, after the meter and the tires. Each item is answered <b>OK</b> or
-      <b>Needs attention</b>, with a note; anything needing attention shows on the vehicle and its Location Dashboard until the next
-      check. Tick the kinds of vehicle an item is for, or none for all of them. Changes reach the app and this page straight away.</p>
-    <p class="note"><b>Showing: No</b> takes an item off the check and can be switched back. Rewording or deleting one never changes a
-      check already done: each check keeps the items as they were worded that day.</p>
-    ${fvItems.length ? fvItems.map((i, n) => `<div class="role${i.is_active ? "" : " off"}" style="padding:16px${i.is_active ? "" : ";opacity:.6"}" data-fva-item="${esc(i.id)}">
-      <div class="fields">
-        <div class="wide"><label>Item</label><input type="text" data-fva="label" maxlength="80" value="${esc(i.label)}"></div>
-        <div class="wide"><label>Help (optional, shown under it)</label><input type="text" data-fva="detail" maxlength="200" value="${esc(i.detail || "")}"></div>
-        <div class="wide"><label>For</label><div class="fva-kinds">${kinds(i)}</div></div>
-        <div><label>Showing</label><select data-fva="is_active">
-          <option value="yes"${i.is_active ? " selected" : ""}>Yes</option><option value="no"${i.is_active ? "" : " selected"}>No</option></select></div>
+  const asked = fvItems.filter(i => i.is_active), hidden = fvItems.length - asked.length;
+  const forKind = (k) => asked.filter(i => !(i.kinds || []).length || i.kinds.includes(k)).length;
+  const kindsText = (i) => (i.kinds || []).length ? i.kinds.map(k => FV_KINDS[k] || k).join(", ") : "Every vehicle";
+  const columns = 5;
+  box.innerHTML = `<div class="sx cab-admin fva" style="${lit("teal")}">
+    <section class="sx-hero">
+      <div class="sx-hero-text">
+        <span class="sx-kicker">Fleet · Fleet Check</span>
+        <h2>The weekly vehicle check</h2>
+        <p>Every week, each driver checks the vehicles they drive: the odometer or hour meter, the tires, then this checklist, each
+          item answered <b>OK</b> or <b>Needs attention</b> with a note. Anything needing attention shows on the vehicle and its
+          Location Dashboard until the next check. Changes reach the app and this page straight away.</p>
       </div>
-      <div class="row">
-        <button data-fva-act="save">Save</button>
-        <button class="ghost" data-fva-act="up"${n === 0 ? " disabled" : ""} aria-label="Move up">&uarr;</button>
-        <button class="ghost" data-fva-act="down"${n === fvItems.length - 1 ? " disabled" : ""} aria-label="Move down">&darr;</button>
-        <button class="ghost" data-fva-act="delete">Delete</button>
-        <span class="msg"></span>
-      </div>
-    </div>`).join("") : `<p class="note">No items yet: the weekly check is the meter and the tires.</p>`}
-    <div class="row" style="margin-top:10px"><button data-fva-act="add">Add an item</button><span class="msg" id="fvaMsg"></span></div>
+    </section>
+    <div class="sx-tiles" style="--n:3">
+      ${Object.entries(FV_KINDS).map(([k, t]) => cabTile(`${t}s`, sxNum(forKind(k)), forKind(k) === 1 ? "item on its check" : "items on its check",
+        { colour: "teal" })).join("")}
+    </div>
+
+    <section class="sx-panel" style="${lit("teal")}">
+      <header><h3>Checklist</h3><span>${asked.length} asked${hidden ? `, ${hidden} hidden` : ""}</span></header>
+      ${fvItems.length ? `<div class="lc-scroll grows"><table class="lc-table cab-list">
+        <thead><tr><th>#</th><th>Item</th><th>For</th><th>On the check</th><th></th></tr></thead>
+        <tbody>${fvItems.map((i, n) => `<tr class="${i.is_active ? "" : "off"}${fvaOpen === i.id ? " open" : ""}" data-fva-item="${esc(i.id)}">
+            <td>${n + 1}</td>
+            <td><b>${esc(i.label)}</b>${i.detail ? `<small>${esc(i.detail)}</small>` : ""}</td>
+            <td>${esc(kindsText(i))}</td>
+            <td>${i.is_active ? `<span class="badge b-current">Asked</span>` : `<span class="badge">Hidden</span>`}</td>
+            <td class="pl-do"><span class="cab-actions">
+              <button type="button" class="ghost cab-arrow" data-fva-act="up" aria-label="Move ${esc(i.label)} up"${n === 0 ? " disabled" : ""}>&uarr;</button>
+              <button type="button" class="ghost cab-arrow" data-fva-act="down" aria-label="Move ${esc(i.label)} down"${n === fvItems.length - 1 ? " disabled" : ""}>&darr;</button>
+              <button type="button" class="pdf" data-fva-edit="${esc(i.id)}" aria-expanded="${fvaOpen === i.id}">${fvaOpen === i.id ? "Close" : "Edit"}</button></span></td>
+          </tr>
+          ${fvaOpen === i.id ? `<tr class="editor"><td colspan="${columns}">${fvaEditorHtml(i)}</td></tr>` : ""}`).join("")}
+        </tbody>
+      </table></div>` : `<p class="sx-empty">No items yet: the check is the meter and the tires.</p>`}
+      <div class="row cab-add"><button type="button" data-fva-act="add">Add an item</button><span class="msg" id="fvaMsg"></span></div>
+    </section>
+
+    <section class="sx-panel" style="${lit("steel")}">
+      <header><h3>How it works</h3></header>
+      <dl class="cab-rules">
+        <div><dt>For</dt><dd>Tick the kinds of vehicle an item is for, or none for every vehicle. A forklift isn't asked about
+          washer fluid.</dd></div>
+        <div><dt>Hidden</dt><dd>Takes an item off the check, and it can be asked again. Deleting it can't be undone.</dd></div>
+        <div><dt>Checks already done</dt><dd>Keep the items as they were worded that day, so rewording or deleting one never
+          changes them.</dd></div>
+        <div><dt>Order</dt><dd>The order here is the order the check asks them in, in the app and on the web page.</dd></div>
+      </dl>
+    </section>
+  </div>`;
+}
+
+function fvaEditorHtml(i) {
+  return `<div data-fva-item="${esc(i.id)}">
+    <div class="fields">
+      <div class="wide"><label for="fvaLabel">Item</label>
+        <input type="text" id="fvaLabel" data-fva="label" maxlength="80" value="${esc(i.label)}"></div>
+      <div class="wide"><label for="fvaDetail">Help, shown under it (optional)</label>
+        <input type="text" id="fvaDetail" data-fva="detail" maxlength="200" value="${esc(i.detail || "")}"></div>
+      <div class="wide"><label>For (none ticked: every vehicle)</label>
+        <div class="fva-kinds">${Object.entries(FV_KINDS).map(([k, t]) => `<label class="fva-kind"><input type="checkbox" data-fva-kind="${k}"${
+          (i.kinds || []).includes(k) ? " checked" : ""}> ${t}</label>`).join("")}</div></div>
+      <div><label for="fvaShowing">On the check</label>
+        <select id="fvaShowing" data-fva="is_active">
+          <option value="yes"${i.is_active ? " selected" : ""}>Asked</option>
+          <option value="no"${i.is_active ? "" : " selected"}>Hidden</option></select></div>
+    </div>
+    <div class="row">
+      <button type="button" data-fva-act="save">Save the item</button>
+      <button type="button" class="ghost" data-fva-act="delete">Delete it</button>
+      <span class="msg"></span>
+    </div>
   </div>`;
 }
 
@@ -953,22 +1003,31 @@ async function fvaReload() {
 }
 
 $("admin").addEventListener("click", async (event) => {
+  const edit = event.target.closest("[data-fva-edit]");
+  if (edit) { fvaOpen = fvaOpen === edit.dataset.fvaEdit ? null : edit.dataset.fvaEdit; return renderFleetCheckAdmin(); }
   const button = event.target.closest("button[data-fva-act]");
   if (!button) return;
   const act = button.dataset.fvaAct;
+  const panelSay = (text, bad) => speak($("fvaMsg").closest(".row"), text, bad);
+  const refused = (error) => error.message.includes("row-level") ? "Only an owner can change the checklist." : error.message;
   if (act === "add") {
-    const { error } = await db.from("fleet_check_items").insert({ label: "New item", is_active: false,
-      sort_order: (Math.max(0, ...fvItems.map(i => i.sort_order || 0)) + 10) });
-    if (error) return speak(button.closest(".row"), error.message.includes("row-level") ? "Only an owner can change the checklist." : error.message, true);
+    const { data, error } = await db.from("fleet_check_items").insert({ label: "New item", is_active: false,
+      sort_order: (Math.max(0, ...fvItems.map(i => i.sort_order || 0)) + 10) }).select("id");
+    if (error) return panelSay(refused(error), true);
+    fvaOpen = data && data[0] ? data[0].id : null;
     await fvaReload();
-    return speak($("fvaMsg").closest(".row"), "Added, not showing yet. Word it, set Showing to Yes, and save.", false);
+    const editor = document.querySelector("#fleetCheckAdmin tr.editor [data-fva-item]");
+    if (editor) { speak(editor, "Added at the bottom, hidden for now. Word it, set On the check to Asked, and save.", false); editor.scrollIntoView({ block: "center" }); }
+    return;
   }
   const box = button.closest("[data-fva-item]"), id = box.dataset.fvaItem, item = fvItems.find(i => i.id === id);
   if (act === "delete") {
-    if (!confirm(`Delete "${item.label}" from the checklist? Checks already done keep it. "Showing: No" can be undone; this can't.`)) return;
+    if (!confirm(`Delete "${item.label}" from the checklist? Checks already done keep it. Hiding it can be undone; this can't.`)) return;
     const { data, error } = await db.from("fleet_check_items").delete().eq("id", id).select("id");
-    if (error || !(data || []).length) return speak(box, error ? error.message : "Not deleted — only an owner can change the checklist.", true);
-    return fvaReload();
+    if (error || !(data || []).length) return speak(box, error ? refused(error) : "Not deleted: only an owner can change the checklist.", true);
+    fvaOpen = null;
+    await fvaReload();
+    return panelSay(`Deleted "${item.label}".`, false);
   }
   if (act === "up" || act === "down") {
     const at = fvItems.findIndex(i => i.id === id), other = fvItems[act === "up" ? at - 1 : at + 1];
@@ -980,7 +1039,7 @@ $("admin").addEventListener("click", async (event) => {
     for (const row of order) {
       if (fvItems.find(i => i.id === row.id).sort_order === row.sort_order) continue;
       const { error } = await db.from("fleet_check_items").update({ sort_order: row.sort_order }).eq("id", row.id);
-      if (error) return speak(box, error.message, true);
+      if (error) return panelSay(refused(error), true);
     }
     return fvaReload();
   }
@@ -992,8 +1051,9 @@ $("admin").addEventListener("click", async (event) => {
     kinds: [...box.querySelectorAll("[data-fva-kind]:checked")].map(c => c.dataset.fvaKind),
     is_active: box.querySelector('[data-fva="is_active"]').value === "yes"
   }).eq("id", id).select("id");
-  if (error) return speak(box, error.message, true);
-  if (!(data || []).length) return speak(box, "Not saved — only an owner can change the checklist.", true);
+  if (error) return speak(box, refused(error), true);
+  if (!(data || []).length) return speak(box, "Not saved: only an owner can change the checklist.", true);
+  fvaOpen = null;
   await fvaReload();
-  speak(document.querySelector(`[data-fva-item="${CSS.escape(id)}"]`), "Saved.", false);
+  panelSay(`Saved "${label}".`, false);
 });

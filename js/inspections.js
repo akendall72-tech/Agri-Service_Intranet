@@ -273,7 +273,7 @@ function inspListHtml() {
 
     <section class="sx-panel" style="${lit("green")}">
       <header><h3>Forms</h3><span>${inspForms.length}</span></header>
-      ${inspForms.length ? `<div class="lc-scroll"><table class="lc-table insp-table">
+      ${inspForms.length ? `<div class="lc-scroll"><table class="lc-table cab-list">
         <thead><tr><th>Form</th><th>Questions</th><th>Parts</th><th>In the app</th><th>Inspections</th><th></th></tr></thead>
         <tbody>${inspForms.map(f => {
           const questions = f.inspection_fields || [];
@@ -288,7 +288,7 @@ function inspListHtml() {
             <td class="pl-do"><button type="button" class="pdf" data-insp-edit-form="${esc(f.id)}">Edit</button></td>
           </tr>`; }).join("")}</tbody>
       </table></div>` : `<p class="sx-empty">No forms yet. Add the first one below.</p>`}
-      <div class="row insp-add">
+      <div class="row cab-add">
         <input type="text" id="inspNewForm" placeholder="New form's name" maxlength="120" aria-label="New form's name">
         <button type="button" data-act="insp-add-form">Add a form</button>
         <span class="msg"></span>
@@ -331,7 +331,7 @@ function inspRowsHtml() {
   if (!all.length) {
     return `<p class="sx-empty">${inspections.length ? "None match." : "No inspections yet: they're done from the Inspection Center."}</p>`;
   }
-  return `<div class="lc-scroll"><table class="lc-table insp-table">
+  return `<div class="lc-scroll"><table class="lc-table cab-list">
     <thead><tr><th>Machine</th><th>Form</th><th>By</th><th>Started</th><th>Status</th><th></th></tr></thead>
     <tbody>${shown.map(r => {
       const photos = inspPhotoPaths(r).length;
@@ -339,7 +339,7 @@ function inspRowsHtml() {
         <td><b>${esc(inspTitle(r))}</b>${photos ? `<small>${photos} photo${photos === 1 ? "" : "s"}</small>` : ""}</td>
         <td>${esc(inspFormTitle(r.form_id))}</td>
         <td>${esc(r.created_by_name || "")}<small>${esc(locations[r.location_id] || "")}</small></td>
-        <td class="insp-when">${esc(r.submitted_at ? new Date(r.submitted_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "")}</td>
+        <td class="when">${esc(r.submitted_at ? new Date(r.submitted_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "")}</td>
         <td>${!inspTwoPart(r) ? `<span class="badge">Done</span>` : inspToDo(r)
           ? `<span class="badge b-todo">After class to do</span>` : `<span class="badge b-current">Complete</span>`}</td>
         <td class="pl-do"><button type="button" class="pdf" data-insp-open="${esc(r.id)}">Open</button></td>
@@ -355,7 +355,7 @@ function inspFormEditorHtml(form) {
   const questions = form.inspection_fields || [];
   const typeName = (t) => (INSP_TYPES.find(([v]) => v === t) || [t, t])[1];
   return `
-    <button type="button" class="insp-back" data-insp-back>${icon("chevronLeft", 16)}All forms and inspections</button>
+    <button type="button" class="cab-back" data-insp-back>${icon("chevronLeft", 16)}All forms and inspections</button>
     <section class="sx-panel" style="${lit("green")}" data-form="${esc(form.id)}">
       <header><h3>${esc(form.title)}</h3><span>${form.is_active ? "Showing in the app" : "Hidden from the app"}</span></header>
       <div class="fields">
@@ -382,9 +382,9 @@ function inspFormEditorHtml(form) {
     <section class="sx-panel" style="${lit("slate")}">
       <header><h3>Questions</h3><span>${questions.filter(q => q.is_active).length} asked${questions.some(q => !q.is_active)
         ? `, ${questions.filter(q => !q.is_active).length} hidden` : ""}</span></header>
-      ${questions.length ? `<div class="lc-scroll insp-questions"><table class="lc-table insp-table">
+      ${questions.length ? `<div class="lc-scroll grows"><table class="lc-table cab-list">
         <thead><tr><th>#</th><th>Question</th><th>Answer</th><th>Required</th>${form.has_after_class ? "<th>After class</th>" : ""}<th>In the app</th><th></th></tr></thead>
-        <tbody>${questions.map((q, n) => `<tr class="${q.is_active ? "" : "insp-off"}${inspOpenQuestion === q.id ? " insp-open" : ""}">
+        <tbody>${questions.map((q, n) => `<tr class="${q.is_active ? "" : "off"}${inspOpenQuestion === q.id ? " open" : ""}">
             <td>${n + 1}</td>
             <td><b>${esc(q.label)}</b>${q.help_text ? `<small>${esc(q.help_text)}</small>` : ""}${q.field_type === "choice" && (q.options || []).length
               ? `<small>${esc((q.options || []).join(" · "))}</small>` : ""}</td>
@@ -392,15 +392,15 @@ function inspFormEditorHtml(form) {
             <td>${q.is_required ? "Yes" : "No"}</td>
             ${form.has_after_class ? `<td>${q.field_type === "photos" ? "Taken again" : q.after_class === "carry" ? "Carried over" : "Asked again"}</td>` : ""}
             <td>${q.is_active ? `<span class="badge b-current">Asked</span>` : `<span class="badge">Hidden</span>`}</td>
-            <td class="pl-do"><span class="insp-actions">
-              <button type="button" class="ghost insp-arrow" data-insp-move="${esc(q.id)}:up" aria-label="Move ${esc(q.label)} up"${n === 0 ? " disabled" : ""}>&uarr;</button>
-              <button type="button" class="ghost insp-arrow" data-insp-move="${esc(q.id)}:down" aria-label="Move ${esc(q.label)} down"${n === questions.length - 1 ? " disabled" : ""}>&darr;</button>
+            <td class="pl-do"><span class="cab-actions">
+              <button type="button" class="ghost cab-arrow" data-insp-move="${esc(q.id)}:up" aria-label="Move ${esc(q.label)} up"${n === 0 ? " disabled" : ""}>&uarr;</button>
+              <button type="button" class="ghost cab-arrow" data-insp-move="${esc(q.id)}:down" aria-label="Move ${esc(q.label)} down"${n === questions.length - 1 ? " disabled" : ""}>&darr;</button>
               <button type="button" class="pdf" data-insp-q-edit="${esc(q.id)}" aria-expanded="${inspOpenQuestion === q.id}">${inspOpenQuestion === q.id ? "Close" : "Edit"}</button></span></td>
           </tr>
-          ${inspOpenQuestion === q.id ? `<tr class="insp-editor"><td colspan="${form.has_after_class ? 7 : 6}">${inspQuestionEditorHtml(form, q)}</td></tr>` : ""}`).join("")}
+          ${inspOpenQuestion === q.id ? `<tr class="editor"><td colspan="${form.has_after_class ? 7 : 6}">${inspQuestionEditorHtml(form, q)}</td></tr>` : ""}`).join("")}
         </tbody>
       </table></div>` : `<p class="sx-empty">No questions yet.</p>`}
-      <div class="row insp-add">
+      <div class="row cab-add">
         <button type="button" data-act="insp-add-question">Add a question</button>
         <span class="msg" id="inspQuestionMsg"></span>
       </div>
@@ -462,7 +462,7 @@ function inspRecordEditorHtml(record) {
   const photos = inspPhotoPaths(record).length;
   const used = inspSummary(record).used;
   return `
-    <button type="button" class="insp-back" data-insp-back>${icon("chevronLeft", 16)}All forms and inspections</button>
+    <button type="button" class="cab-back" data-insp-back>${icon("chevronLeft", 16)}All forms and inspections</button>
     <section class="sx-panel" style="${lit(inspToDo(record) ? "amber" : "green")}" data-insp="${esc(record.id)}">
       <header><h3>${esc(inspTitle(record))}</h3><span>${esc(inspFormTitle(record.form_id))}</span></header>
       <p class="insp-meta">${esc([inspWhen(record.submitted_at), record.created_by_name, locations[record.location_id]].filter(Boolean).join(" · "))}
