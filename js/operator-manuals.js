@@ -1,11 +1,12 @@
 // Operator's Manuals (migration 0131)
 //
 // PDFs of machines' operator's manuals, each for one or more locations or for
-// every location. Everyone finds the ones for their location in the Support
-// Center, under Special Tools; an admin also sees the locations they cover,
-// and an owner all of them. Owners add, change and remove them on the admin
-// page's Operator's Manuals tab. The database decides who sees what; this only
-// draws it.
+// every location. Everyone finds them in the Support Center, under Special
+// Tools: it opens on their own location's, and anyone can pick another, or
+// every location, for a day working somewhere else (0166; before then each
+// person saw only their own locations'). Owners add, change and remove them on
+// the admin page's Operator's Manuals tab. The database decides who sees what;
+// this only draws it.
 
 // The most a PDF can be: the free Supabase plan's limit on any one file. On
 // Pro, raise it here and on the bucket (see 0131).
@@ -31,10 +32,9 @@ async function loadManuals() {
   }
 }
 
-// The locations this person can pick between: every active one for an
-// owner, their own and any they cover for an admin, their own for anyone else.
+// The locations to pick between: every active one, for everyone (0166).
 function omPlaces() {
-  return isOwner() ? allLocations.filter(l => l.is_active !== false).map(l => l.id) : myLocations();
+  return allLocations.filter(l => l.is_active !== false).map(l => l.id);
 }
 function omCurrentPlace() {
   const places = omPlaces();
@@ -48,7 +48,7 @@ const omWhere = (m) => m.everywhere ? "Every location" : (m.location_ids || []).
 // ---- the Support Center's list -----------------------------------------------------
 
 function manualsView() {
-  const head = hero("Operator's Manuals", "The operator's manuals for the machines at your location: open one to read, search or print it.");
+  const head = hero("Operator's Manuals", "The operator's manuals for the machines at your location, or pick another: open one to read, search or print it.");
   if (omNotSetUp) return head + `<div class="card"><p class="note" style="margin:0">Operator's manuals aren't switched on yet.</p></div>`;
   if (omError) return head + `<div class="card"><p class="error" style="margin:0">${esc(omError)}</p></div>`;
   const places = omPlaces(), place = omCurrentPlace();
@@ -57,7 +57,7 @@ function manualsView() {
       <input id="omSearch" class="search" type="search" placeholder="Search by machine, make or model" value="${esc(omQuery)}"
         aria-label="Search the manuals">
       ${places.length > 1 ? `<select id="omPlace" aria-label="Location">
-        <option value="all"${place === "all" ? " selected" : ""}>${isOwner() ? "Every location" : "All your locations"}</option>
+        <option value="all"${place === "all" ? " selected" : ""}>Every location</option>
         ${places.map(id => `<option value="${esc(id)}"${place === id ? " selected" : ""}>${esc(locations[id] || id)}</option>`).join("")}
       </select>` : ""}
     </div>
@@ -71,7 +71,7 @@ function omListHtml() {
   const all = omFor(place);
   const shown = all.filter(m => words.every(w => [m.title, m.make, m.model, m.note].join(" ").toLowerCase().includes(w)));
   if (!all.length) {
-    return `<p class="st-empty">No operator's manuals for ${esc(place === "all" ? "these locations" : locations[place] || "your location")} yet.
+    return `<p class="st-empty">No operator's manuals for ${esc(place === "all" ? "any location" : locations[place] || "your location")} yet.
       ${isOwner() ? "Add them on the admin page, under Operator's Manuals." : "The owners add them; ask your location admin if one's missing."}</p>`;
   }
   if (!shown.length) return `<p class="st-empty">Nothing matches “${esc(omQuery)}”.</p>`;
