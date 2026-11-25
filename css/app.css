@@ -3753,6 +3753,37 @@ p.insp-help { margin: -2px 0 8px; font-size: 13px; }
 .insp-field input, .insp-field textarea { margin-bottom: 0; }
 .insp-field .chips { margin-bottom: 0; }
 .insp-field.missing { border-color: var(--red); box-shadow: 0 0 0 1px var(--red); }
+
+/* Admin → Inspections, in the Cab look (inspections.js): the forms and the
+   inspections as lists, a form's questions one line each with the one being
+   edited opened under it, and an inspection on its own. */
+.insp-admin .insp-back { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; margin: 0; padding: 7px 12px;
+  border-radius: 999px; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.06); color: #fff; box-shadow: none;
+  font: 600 13px system-ui, sans-serif; }
+.insp-admin .insp-back:hover { background: rgba(255,255,255,.12); }
+.insp-admin .insp-table td { white-space: normal; min-width: 70px; }
+.insp-admin .insp-table td:first-child b { color: #fff; }
+.insp-admin .insp-table tr.insp-off td { opacity: .55; }
+.insp-admin .insp-table tr.insp-open td { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.insp-admin .insp-table tr.insp-editor td { padding: 14px 16px 16px; background: rgba(0,0,0,.22); }
+.insp-admin .insp-table tr.insp-editor:hover td { background: rgba(0,0,0,.22); }
+.insp-admin .lc-scroll.insp-questions { max-height: none; overflow-y: visible; }
+.insp-admin .insp-actions { display: inline-flex; align-items: center; gap: 4px; }
+.insp-admin .insp-actions button { margin: 0; }
+.insp-admin .insp-table td.insp-when { white-space: nowrap; }
+.insp-admin button.insp-arrow { min-width: 30px; padding: 4px 8px; }
+.insp-admin .insp-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 4px; }
+.insp-admin .insp-filters .chips { margin: 0; }
+.insp-admin .insp-filters select { width: auto; margin: 0; }
+.insp-admin .insp-add { margin-top: 12px; }
+.insp-admin .insp-add input { flex: 1 1 220px; max-width: 320px; margin: 0; }
+.insp-admin .badge.b-todo { background: color-mix(in srgb, var(--lit-amber) 18%, transparent); color: var(--lit-amber); }
+.insp-admin .insp-meta { margin: -4px 0 6px; color: var(--cab-sub); font-size: 13.5px; }
+.insp-admin .insp-part table { width: 100%; margin: 0 0 6px; border-collapse: collapse; }
+.insp-admin .insp-part td { padding: 9px 10px; border-bottom: 1px solid rgba(255,255,255,.07); color: #fff; vertical-align: top; }
+.insp-admin .insp-part td b { color: var(--cab-sub); font-weight: 600; }
+.insp-admin .insp-part .note { color: var(--cab-detail); }
+.insp-admin .insp-photo { color: var(--cab-sub); }
 .insp-thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
 .insp-thumb { position: relative; width: 88px; height: 88px; }
 .insp-thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }

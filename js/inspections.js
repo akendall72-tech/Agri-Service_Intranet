@@ -206,127 +206,305 @@ document.addEventListener("toggle", (event) => {
   if (box.matches && box.matches("details[data-insp]") && box.open) inspLoadPhotos(box);
 }, true);
 
+// ---- Admin → Inspections ---------------------------------------------------
+//
+// In the Cab look, three views on one tab. The list: the forms, each with
+// Edit, and every inspection, each with Open, filtered and searched. A form:
+// its settings, and its questions one line each, with the one being edited
+// opened under its line and arrows to reorder. An inspection: its answers,
+// to correct, its photos, to take out, and its PDFs.
+
+// Which view is showing, the inspection open, the question being edited, and
+// the list's filters (inspFilter, above, is All, After class to do or Complete).
+let inspAdminView = "list", inspOpenRecord = null, inspOpenQuestion = null;
+let inspListForm = "", inspQuery = "", inspShown = 50;
+
+const inspTwoPart = (record) => {
+  const form = inspForms.find(f => f.id === record.form_id);
+  return form ? !!form.has_after_class : !!record.post_fields_snapshot;
+};
+const inspToDo = (record) => inspTwoPart(record) && !record.post_submitted_at;
+const inspFormTitle = (id) => (inspForms.find(f => f.id === id) || {}).title || "A form since deleted";
+
 function renderInspectionsAdmin() {
   const box = $("inspAdmin");
   if (!box) return;
-
   if (inspError) {
     box.innerHTML = `<div class="card"><p class="error">${/does not exist|schema cache/i.test(inspError)
       ? "Run migration 0031_inspections.sql in the SQL editor, then reload this page."
       : esc(inspError)}</p></div>`;
     return;
   }
-
   const form = inspForms.find(f => f.id === inspFormId);
-  const records = inspections.filter(r => r.form_id === inspFormId)
-    .filter(r => inspFilter === "all" || (inspFilter === "todo") === !r.post_submitted_at);
-  const todo = inspections.filter(r => r.form_id === inspFormId && !r.post_submitted_at).length;
-
-  const questionRows = form ? (form.inspection_fields || []).map(q => `
-    <div class="role" style="padding:14px 16px${q.is_active ? "" : ";opacity:.6"}" data-question="${esc(q.id)}">
-      <div class="fields">
-        <div class="wide"><label>Question</label>
-          <input type="text" data-q="label" value="${esc(q.label)}"></div>
-        <div><label>Answer type</label>
-          <select data-q="field_type">${INSP_TYPES.map(([v, l]) =>
-            `<option value="${v}"${q.field_type === v ? " selected" : ""}>${l}</option>`).join("")}</select></div>
-        <div><label>Required</label>
-          <select data-q="is_required">
-            <option value="yes"${q.is_required ? " selected" : ""}>Yes</option>
-            <option value="no"${q.is_required ? "" : " selected"}>No</option></select></div>
-        ${form.has_after_class ? `<div><label>After class</label>
-          <select data-q="after_class">
-            <option value="ask"${q.after_class !== "carry" ? " selected" : ""}>Ask again</option>
-            <option value="carry"${q.after_class === "carry" ? " selected" : ""}>Carry over the before-class answer</option></select></div>` : ""}
-        <div><label>Order</label>
-          <input type="text" data-q="sort_order" value="${esc(q.sort_order)}"></div>
-        <div><label>Showing</label>
-          <select data-q="is_active">
-            <option value="yes"${q.is_active ? " selected" : ""}>Yes</option>
-            <option value="no"${q.is_active ? "" : " selected"}>No</option></select></div>
-        <div class="wide"><label>Hint under the question (optional)</label>
-          <input type="text" data-q="help_text" value="${esc(q.help_text || "")}"></div>
-        <div class="wide"${q.field_type === "choice" ? "" : " hidden"} data-q-options><label>Choices, one per line</label>
-          <textarea rows="4" data-q="options">${esc((q.options || []).join("\n"))}</textarea></div>
-      </div>
-      <div class="row">
-        <button data-act="insp-save-question">Save</button>
-        <button class="ghost" data-act="insp-delete-question">Delete</button>
-        <span class="msg"></span>
-      </div>
-    </div>`).join("") : "";
-
-  box.innerHTML = `
-    <div class="card">
-      <h2>Inspection forms</h2>
-      <div class="row" style="margin-bottom:14px">
-        <select id="inspFormPick" style="max-width:320px;margin:0">
-          ${inspForms.map(f => `<option value="${esc(f.id)}"${f.id === inspFormId ? " selected" : ""}>${esc(f.title)}${f.is_active ? "" : " (not showing)"}</option>`).join("")}
-        </select>
-        <input type="text" id="inspNewForm" placeholder="New form name" style="max-width:240px;margin:0">
-        <button class="pdf" data-act="insp-add-form">Add form</button>
-        <span class="msg"></span>
-      </div>
-      ${form ? `
-      <div class="role" style="padding:16px" data-form="${esc(form.id)}">
-        <div class="fields">
-          <div class="wide"><label>Title</label>
-            <input type="text" data-f="title" value="${esc(form.title)}"></div>
-          <div class="wide"><label>Description</label>
-            <input type="text" data-f="description" value="${esc(form.description || "")}"></div>
-          <div><label>Parts</label>
-            <select data-f="has_after_class">
-              <option value="yes"${form.has_after_class ? " selected" : ""}>Before class and after class</option>
-              <option value="no"${form.has_after_class ? "" : " selected"}>One part only</option></select></div>
-          <div><label>Showing in the app</label>
-            <select data-f="is_active">
-              <option value="yes"${form.is_active ? " selected" : ""}>Yes</option>
-              <option value="no"${form.is_active ? "" : " selected"}>No</option></select></div>
-        </div>
-        <div class="row">
-          <button data-act="insp-save-form">Save form</button>
-          <button class="ghost" data-act="insp-delete-form">Delete form</button>
-          <span class="msg"></span>
-        </div>
-      </div>` : `<p class="note">No forms yet. Add one above.</p>`}
-    </div>
-
-    ${form ? `
-    <div class="card">
-      <h2>Questions</h2>
-      <p class="note">Changes reach phones the next time someone opens the Inspection
-        Center. Past inspections keep the questions they were answered with, so
-        renaming, changing or deleting a question never alters an old record.
-        <b>Showing: No</b> stops asking it and can be undone.</p>
-      ${form.has_after_class ? `<p class="note"><b>After class</b>: "Ask again" repeats the
-        question after class, showing the before-class answer beside it.
-        "Carry over" copies the before-class answer, for things that don't change
-        during a class, like the make and model. Photos are always taken again.</p>` : ""}
-      ${questionRows || `<p class="note">No questions yet.</p>`}
-      <div class="row" style="margin-top:10px">
-        <button data-act="insp-add-question">Add a question</button>
-        <span class="msg" id="inspQuestionMsg"></span>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>Submitted inspections</h2>
-      <div class="chips">
-        <button class="chip${inspFilter === "all" ? " on" : ""}" data-insp-filter="all">All</button>
-        ${form.has_after_class ? `<button class="chip${inspFilter === "todo" ? " on" : ""}" data-insp-filter="todo">After class to do (${todo})</button>
-        <button class="chip${inspFilter === "done" ? " on" : ""}" data-insp-filter="done">Complete</button>` : ""}
-      </div>
-      <p class="note">Open one to see it, correct an answer, or remove a photo.
-        Photos can only be added from the app.</p>
-      ${records.map(r => inspRecordHtml(r, true)).join("") || `<p class="note">None yet.</p>`}
-    </div>` : ""}`;
+  const record = inspections.find(r => r.id === inspOpenRecord);
+  if (inspAdminView === "form" && !form) inspAdminView = "list";
+  if (inspAdminView === "record" && !record) inspAdminView = "list";
+  box.innerHTML = `<div class="sx cab-admin insp-admin" style="${lit("green")}">${
+    inspAdminView === "form" ? inspFormEditorHtml(form)
+    : inspAdminView === "record" ? inspRecordEditorHtml(record)
+    : inspListHtml()}</div>`;
+  if (inspAdminView === "record") inspLoadPhotos(box);
 }
 
+// ---- the list
+
+function inspListHtml() {
+  const showing = inspForms.filter(f => f.is_active).length;
+  const todo = inspections.filter(inspToDo).length;
+  const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+  const thisMonth = inspections.filter(r => (r.submitted_at || "") >= monthStart).length;
+  const twoPartForms = inspForms.some(f => f.has_after_class);
+  return `
+    <section class="sx-hero">
+      <div class="sx-hero-text">
+        <span class="sx-kicker">Records · Inspections</span>
+        <h2>Inspection forms and records</h2>
+        <p>The forms people fill in from the Inspection Center, in the app and here, and every inspection done with them.
+          <b>Edit</b> a form to change its questions: phones pick it up straight away, and past inspections keep the questions
+          they were answered with. <b>Open</b> an inspection to see it, correct an answer, take out a photo, or get its PDFs.</p>
+      </div>
+    </section>
+    <div class="sx-tiles" style="--n:3">
+      ${cabTile("Forms", sxNum(inspForms.length), `${showing} showing in the app`, { colour: "green" })}
+      ${cabTile("Inspections", sxNum(inspections.length), `${sxNum(thisMonth)} this month`, { colour: "slate" })}
+      ${twoPartForms ? cabTile("After class to do", sxNum(todo), todo ? "Started, not finished" : "Every one finished",
+        { colour: todo ? "amber" : "green", data: `data-insp-filter="todo"`, on: inspFilter === "todo", hot: todo > 0 }) : ""}
+    </div>
+
+    <section class="sx-panel" style="${lit("green")}">
+      <header><h3>Forms</h3><span>${inspForms.length}</span></header>
+      ${inspForms.length ? `<div class="lc-scroll"><table class="lc-table insp-table">
+        <thead><tr><th>Form</th><th>Questions</th><th>Parts</th><th>In the app</th><th>Inspections</th><th></th></tr></thead>
+        <tbody>${inspForms.map(f => {
+          const questions = f.inspection_fields || [];
+          const used = inspections.filter(r => r.form_id === f.id).length;
+          return `<tr>
+            <td><b>${esc(f.title)}</b>${f.description ? `<small>${esc(f.description)}</small>` : ""}</td>
+            <td>${questions.filter(q => q.is_active).length}${questions.some(q => !q.is_active)
+              ? `<small>${questions.filter(q => !q.is_active).length} hidden</small>` : ""}</td>
+            <td>${f.has_after_class ? "Before and after class" : "One part"}</td>
+            <td>${f.is_active ? `<span class="badge b-current">Showing</span>` : `<span class="badge">Hidden</span>`}</td>
+            <td>${sxNum(used)}</td>
+            <td class="pl-do"><button type="button" class="pdf" data-insp-edit-form="${esc(f.id)}">Edit</button></td>
+          </tr>`; }).join("")}</tbody>
+      </table></div>` : `<p class="sx-empty">No forms yet. Add the first one below.</p>`}
+      <div class="row insp-add">
+        <input type="text" id="inspNewForm" placeholder="New form's name" maxlength="120" aria-label="New form's name">
+        <button type="button" data-act="insp-add-form">Add a form</button>
+        <span class="msg"></span>
+      </div>
+    </section>
+
+    <section class="sx-panel" style="${lit("slate")}">
+      <header><h3>Inspections</h3><span id="inspCount">${sxNum(inspFiltered().length)}</span>
+        <input type="search" id="inspSearch" class="cab-search" placeholder="Search a machine, person or location"
+          aria-label="Search inspections" value="${esc(inspQuery)}"></header>
+      <div class="insp-filters">
+        ${twoPartForms ? `<div class="chips">
+          <button type="button" class="chip${inspFilter === "all" ? " on" : ""}" data-insp-filter="all">All</button>
+          <button type="button" class="chip${inspFilter === "todo" ? " on" : ""}" data-insp-filter="todo">After class to do · ${todo}</button>
+          <button type="button" class="chip${inspFilter === "done" ? " on" : ""}" data-insp-filter="done">Complete</button>
+        </div>` : ""}
+        ${inspForms.length > 1 ? `<select id="inspListForm" aria-label="Which form">
+          <option value="">Every form</option>
+          ${inspForms.map(f => `<option value="${esc(f.id)}"${inspListForm === f.id ? " selected" : ""}>${esc(f.title)}</option>`).join("")}
+        </select>` : ""}
+      </div>
+      <div id="inspRows">${inspRowsHtml()}</div>
+    </section>`;
+}
+
+// The inspections the filters and search leave, newest first, so many at a time.
+function inspFiltered() {
+  const words = inspQuery.toLowerCase().split(/\s+/).filter(Boolean);
+  return inspections
+    .filter(r => !inspListForm || r.form_id === inspListForm)
+    .filter(r => inspFilter === "all" || (inspFilter === "todo" ? inspToDo(r) : inspTwoPart(r) && !inspToDo(r)))
+    .filter(r => !words.length || words.every(w => [inspTitle(r), inspFormTitle(r.form_id), r.created_by_name,
+      locations[r.location_id]].join(" ").toLowerCase().includes(w)));
+}
+
+function inspRowsHtml() {
+  const all = inspFiltered(), shown = all.slice(0, inspShown);
+  const count = $("inspCount");
+  if (count) count.textContent = sxNum(all.length);
+  if (!all.length) {
+    return `<p class="sx-empty">${inspections.length ? "None match." : "No inspections yet: they're done from the Inspection Center."}</p>`;
+  }
+  return `<div class="lc-scroll"><table class="lc-table insp-table">
+    <thead><tr><th>Machine</th><th>Form</th><th>By</th><th>Started</th><th>Status</th><th></th></tr></thead>
+    <tbody>${shown.map(r => {
+      const photos = inspPhotoPaths(r).length;
+      return `<tr>
+        <td><b>${esc(inspTitle(r))}</b>${photos ? `<small>${photos} photo${photos === 1 ? "" : "s"}</small>` : ""}</td>
+        <td>${esc(inspFormTitle(r.form_id))}</td>
+        <td>${esc(r.created_by_name || "")}<small>${esc(locations[r.location_id] || "")}</small></td>
+        <td class="insp-when">${esc(r.submitted_at ? new Date(r.submitted_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "")}</td>
+        <td>${!inspTwoPart(r) ? `<span class="badge">Done</span>` : inspToDo(r)
+          ? `<span class="badge b-todo">After class to do</span>` : `<span class="badge b-current">Complete</span>`}</td>
+        <td class="pl-do"><button type="button" class="pdf" data-insp-open="${esc(r.id)}">Open</button></td>
+      </tr>`; }).join("")}</tbody>
+  </table></div>
+  ${all.length > shown.length ? `<div class="row"><button type="button" class="pdf" data-insp-more>Show ${Math.min(50, all.length - shown.length)} more</button>
+    <span class="note">${sxNum(shown.length)} of ${sxNum(all.length)}</span></div>` : ""}`;
+}
+
+// ---- a form
+
+function inspFormEditorHtml(form) {
+  const questions = form.inspection_fields || [];
+  const typeName = (t) => (INSP_TYPES.find(([v]) => v === t) || [t, t])[1];
+  return `
+    <button type="button" class="insp-back" data-insp-back>${icon("chevronLeft", 16)}All forms and inspections</button>
+    <section class="sx-panel" style="${lit("green")}" data-form="${esc(form.id)}">
+      <header><h3>${esc(form.title)}</h3><span>${form.is_active ? "Showing in the app" : "Hidden from the app"}</span></header>
+      <div class="fields">
+        <div class="wide"><label for="inspFTitle">Title</label>
+          <input type="text" id="inspFTitle" data-f="title" maxlength="120" value="${esc(form.title)}"></div>
+        <div class="wide"><label for="inspFDescription">Description, under its name in the Inspection Center</label>
+          <input type="text" id="inspFDescription" data-f="description" maxlength="300" value="${esc(form.description || "")}"></div>
+        <div><label for="inspFParts">Parts</label>
+          <select id="inspFParts" data-f="has_after_class">
+            <option value="no"${form.has_after_class ? "" : " selected"}>One part</option>
+            <option value="yes"${form.has_after_class ? " selected" : ""}>Before class and after class</option></select></div>
+        <div><label for="inspFShowing">In the app</label>
+          <select id="inspFShowing" data-f="is_active">
+            <option value="yes"${form.is_active ? " selected" : ""}>Showing</option>
+            <option value="no"${form.is_active ? "" : " selected"}>Hidden</option></select></div>
+      </div>
+      <div class="row">
+        <button type="button" data-act="insp-save-form">Save the form</button>
+        <button type="button" class="ghost" data-act="insp-delete-form">Delete the form</button>
+        <span class="msg"></span>
+      </div>
+    </section>
+
+    <section class="sx-panel" style="${lit("slate")}">
+      <header><h3>Questions</h3><span>${questions.filter(q => q.is_active).length} asked${questions.some(q => !q.is_active)
+        ? `, ${questions.filter(q => !q.is_active).length} hidden` : ""}</span></header>
+      ${questions.length ? `<div class="lc-scroll insp-questions"><table class="lc-table insp-table">
+        <thead><tr><th>#</th><th>Question</th><th>Answer</th><th>Required</th>${form.has_after_class ? "<th>After class</th>" : ""}<th>In the app</th><th></th></tr></thead>
+        <tbody>${questions.map((q, n) => `<tr class="${q.is_active ? "" : "insp-off"}${inspOpenQuestion === q.id ? " insp-open" : ""}">
+            <td>${n + 1}</td>
+            <td><b>${esc(q.label)}</b>${q.help_text ? `<small>${esc(q.help_text)}</small>` : ""}${q.field_type === "choice" && (q.options || []).length
+              ? `<small>${esc((q.options || []).join(" · "))}</small>` : ""}</td>
+            <td>${esc(typeName(q.field_type))}</td>
+            <td>${q.is_required ? "Yes" : "No"}</td>
+            ${form.has_after_class ? `<td>${q.field_type === "photos" ? "Taken again" : q.after_class === "carry" ? "Carried over" : "Asked again"}</td>` : ""}
+            <td>${q.is_active ? `<span class="badge b-current">Asked</span>` : `<span class="badge">Hidden</span>`}</td>
+            <td class="pl-do"><span class="insp-actions">
+              <button type="button" class="ghost insp-arrow" data-insp-move="${esc(q.id)}:up" aria-label="Move ${esc(q.label)} up"${n === 0 ? " disabled" : ""}>&uarr;</button>
+              <button type="button" class="ghost insp-arrow" data-insp-move="${esc(q.id)}:down" aria-label="Move ${esc(q.label)} down"${n === questions.length - 1 ? " disabled" : ""}>&darr;</button>
+              <button type="button" class="pdf" data-insp-q-edit="${esc(q.id)}" aria-expanded="${inspOpenQuestion === q.id}">${inspOpenQuestion === q.id ? "Close" : "Edit"}</button></span></td>
+          </tr>
+          ${inspOpenQuestion === q.id ? `<tr class="insp-editor"><td colspan="${form.has_after_class ? 7 : 6}">${inspQuestionEditorHtml(form, q)}</td></tr>` : ""}`).join("")}
+        </tbody>
+      </table></div>` : `<p class="sx-empty">No questions yet.</p>`}
+      <div class="row insp-add">
+        <button type="button" data-act="insp-add-question">Add a question</button>
+        <span class="msg" id="inspQuestionMsg"></span>
+      </div>
+    </section>
+
+    <section class="sx-panel" style="${lit("steel")}">
+      <header><h3>How it works</h3></header>
+      <dl class="cab-rules">
+        <div><dt>Changes</dt><dd>Reach phones the next time someone opens the Inspection Center. Past inspections keep the
+          questions they were answered with, so a change never alters an old record.</dd></div>
+        <div><dt>Hidden</dt><dd>A hidden question isn't asked, and can be shown again. A hidden form leaves the Inspection Center;
+          its inspections stay here.</dd></div>
+        ${form.has_after_class ? `<div><dt>After class</dt><dd><b>Asked again</b> repeats the question after class, with the
+          before-class answer beside it. <b>Carried over</b> copies the before-class answer, for things a class doesn't change,
+          like the make and model. Photos are always taken again.</dd></div>` : ""}
+        <div><dt>Titles</dt><dd>An inspection is named by its first two short answers, like "Fendt · 724 Vario", so put those
+          questions first.</dd></div>
+      </dl>
+    </section>`;
+}
+
+function inspQuestionEditorHtml(form, q) {
+  return `<div class="insp-q" data-question="${esc(q.id)}">
+    <div class="fields">
+      <div class="wide"><label for="inspQLabel">Question</label>
+        <input type="text" id="inspQLabel" data-q="label" maxlength="200" value="${esc(q.label)}"></div>
+      <div><label for="inspQType">Answer</label>
+        <select id="inspQType" data-q="field_type">${INSP_TYPES.map(([v, l]) =>
+          `<option value="${v}"${q.field_type === v ? " selected" : ""}>${l}</option>`).join("")}</select></div>
+      <div><label for="inspQRequired">Required</label>
+        <select id="inspQRequired" data-q="is_required">
+          <option value="yes"${q.is_required ? " selected" : ""}>Yes</option>
+          <option value="no"${q.is_required ? "" : " selected"}>No</option></select></div>
+      ${form.has_after_class ? `<div><label for="inspQAfter">After class</label>
+        <select id="inspQAfter" data-q="after_class">
+          <option value="ask"${q.after_class !== "carry" ? " selected" : ""}>Ask again</option>
+          <option value="carry"${q.after_class === "carry" ? " selected" : ""}>Carry over the before-class answer</option></select></div>` : ""}
+      <div><label for="inspQShowing">In the app</label>
+        <select id="inspQShowing" data-q="is_active">
+          <option value="yes"${q.is_active ? " selected" : ""}>Asked</option>
+          <option value="no"${q.is_active ? "" : " selected"}>Hidden</option></select></div>
+      <div class="wide"><label for="inspQHelp">Hint under the question (optional)</label>
+        <input type="text" id="inspQHelp" data-q="help_text" maxlength="300" value="${esc(q.help_text || "")}"></div>
+      <div class="wide"${q.field_type === "choice" ? "" : " hidden"} data-q-options><label for="inspQOptions">Choices, one per line</label>
+        <textarea id="inspQOptions" rows="4" data-q="options">${esc((q.options || []).join("\n"))}</textarea></div>
+    </div>
+    <div class="row">
+      <button type="button" data-act="insp-save-question">Save the question</button>
+      <button type="button" class="ghost" data-act="insp-delete-question">Delete it</button>
+      <span class="msg"></span>
+    </div>
+  </div>`;
+}
+
+// ---- an inspection
+
+function inspRecordEditorHtml(record) {
+  const twoPart = inspTwoPart(record), done = !!record.post_submitted_at;
+  const photos = inspPhotoPaths(record).length;
+  const used = inspSummary(record).used;
+  return `
+    <button type="button" class="insp-back" data-insp-back>${icon("chevronLeft", 16)}All forms and inspections</button>
+    <section class="sx-panel" style="${lit(inspToDo(record) ? "amber" : "green")}" data-insp="${esc(record.id)}">
+      <header><h3>${esc(inspTitle(record))}</h3><span>${esc(inspFormTitle(record.form_id))}</span></header>
+      <p class="insp-meta">${esc([inspWhen(record.submitted_at), record.created_by_name, locations[record.location_id]].filter(Boolean).join(" · "))}
+        ${photos ? ` · ${photos} photo${photos === 1 ? "" : "s"}` : ""}
+        ${record.edited_by_name ? ` · edited by ${esc(record.edited_by_name)}` : ""}
+        ${twoPart ? (done ? ` <span class="badge b-current">Complete</span>` : ` <span class="badge b-todo">After class to do</span>`) : ""}</p>
+      <div class="inner">
+        <h4>${twoPart ? "Before class" : "Answers"}</h4>
+        <div class="insp-part">${inspPartHtml(record, "before", true)}</div>
+        ${twoPart ? `<h4>After class</h4>
+          ${done ? `<p class="insp-meta">${esc([inspWhen(record.post_submitted_at), record.post_by_name,
+                     used !== null ? `${inspHoursPhrase(used)} used` : ""].filter(Boolean).join(" · "))}</p>
+                   <div class="insp-part">${inspPartHtml(record, "after", true)}</div>`
+                 : `<p class="note">Not done yet. ${esc(record.created_by_name || "Whoever started it")} finishes it in the app or on this
+                     page, under "After class to do": only the person who started an inspection can finish it.</p>`}` : ""}
+        <p class="note">Correct an answer, or untick <b>Keep</b> under a photo to take it out, then save. Photos are added from the app.</p>
+        <div class="row">
+          <button type="button" data-act="insp-save">Save changes</button>
+          ${done ? `<button type="button" class="pdf" data-insp-summary="${esc(record.id)}">Summary PDF</button>` : ""}
+          <button type="button" class="pdf" data-insp-pdf="${esc(record.id)}">Full PDF, with photos</button>
+          <button type="button" class="ghost" data-act="insp-delete" style="margin-left:auto">Delete the inspection</button>
+          <span class="msg"></span>
+        </div>
+      </div>
+    </section>`;
+}
+
+// ---- what's clicked and changed
+
+$("admin").addEventListener("input", (event) => {
+  if (event.target.id !== "inspSearch") return;
+  inspQuery = event.target.value;
+  inspShown = 50;
+  $("inspRows").innerHTML = inspRowsHtml();
+});
+
 $("admin").addEventListener("change", (event) => {
-  if (event.target.id === "inspFormPick") {
-    inspFormId = event.target.value;
-    inspFilter = "all";
-    return renderInspectionsAdmin();
+  if (event.target.id === "inspListForm") {
+    inspListForm = event.target.value;
+    inspShown = 50;
+    $("inspRows").innerHTML = inspRowsHtml();
+    return;
   }
   if (event.target.matches('[data-q="field_type"]')) {
     const box = event.target.closest("[data-question]");
@@ -334,9 +512,31 @@ $("admin").addEventListener("change", (event) => {
   }
 });
 
+// A new view, from the top of the tab.
+function inspShow(view) {
+  inspAdminView = view;
+  renderInspectionsAdmin();
+  const tab = $("tab-inspections");
+  if (tab) tab.scrollIntoView({ block: "start" });
+}
+
 $("admin").addEventListener("click", async (event) => {
-  const filter = event.target.closest("[data-insp-filter]");
-  if (filter) { inspFilter = filter.dataset.inspFilter; return renderInspectionsAdmin(); }
+  const nav = event.target.closest("[data-insp-filter], [data-insp-edit-form], [data-insp-open], [data-insp-back], [data-insp-more], "
+    + "[data-insp-q-edit], [data-insp-move]");
+  if (nav) {
+    const d = nav.dataset;
+    if (d.inspFilter) {
+      inspFilter = inspFilter === d.inspFilter && d.inspFilter !== "all" ? "all" : d.inspFilter;
+      inspShown = 50;
+      return renderInspectionsAdmin();
+    }
+    if (d.inspEditForm) { inspFormId = d.inspEditForm; inspOpenQuestion = null; return inspShow("form"); }
+    if (d.inspOpen) { inspOpenRecord = d.inspOpen; return inspShow("record"); }
+    if (d.inspBack !== undefined) return inspShow("list");
+    if (d.inspMore !== undefined) { inspShown += 50; $("inspRows").innerHTML = inspRowsHtml(); return; }
+    if (d.inspQEdit) { inspOpenQuestion = inspOpenQuestion === d.inspQEdit ? null : d.inspQEdit; return renderInspectionsAdmin(); }
+    if (d.inspMove) return inspMoveQuestion(nav, ...d.inspMove.split(":"));
+  }
 
   const button = event.target.closest("button[data-act]");
   if (!button || !button.dataset.act.startsWith("insp-")) return;
@@ -358,10 +558,11 @@ $("admin").addEventListener("click", async (event) => {
       id, title, has_after_class: false, is_active: false, sort_order: nextSortOrder(inspForms)
     }).select();
     if (error) return speak(row, refusal(error), true);
-    if (!data || !data.length) return speak(row, "Nothing added — only an owner can add forms.", true);
+    if (!data || !data.length) return speak(row, "Nothing added: only an owner can add forms.", true);
     inspFormId = id;
-    await redraw();
-    return;
+    inspOpenQuestion = null;
+    await loadInspections();
+    return inspShow("form");
   }
 
   const formBox = button.closest("[data-form]");
@@ -374,37 +575,38 @@ $("admin").addEventListener("click", async (event) => {
       has_after_class: get("has_after_class") === "yes", is_active: get("is_active") === "yes"
     }).eq("id", formBox.dataset.form).select();
     if (error) return speak(formBox, refusal(error), true);
-    if (!data || !data.length) return speak(formBox, "Nothing changed — only an owner can edit forms.", true);
+    if (!data || !data.length) return speak(formBox, "Nothing changed: only an owner can edit forms.", true);
     await redraw();
-    return;
+    return speak(document.querySelector("#inspAdmin [data-form]"), "Saved.", false);
   }
 
   if (act === "insp-delete-form") {
     const id = formBox.dataset.form;
     const count = inspections.filter(r => r.form_id === id).length;
     if (count) {
-      return speak(formBox, `${count} inspection${count === 1 ? " uses" : "s use"} this form, so it can't be deleted. Set Showing to No instead.`, true);
+      return speak(formBox, `${count} inspection${count === 1 ? " uses" : "s use"} this form, so it can't be deleted. Hide it instead.`, true);
     }
     if (!confirm("Delete this form and all its questions?")) return;
     const { data, error } = await db.from("inspection_forms").delete().eq("id", id).select();
     if (error) return speak(formBox, refusal(error), true);
-    if (!data || !data.length) return speak(formBox, "Nothing deleted — only an owner can delete forms.", true);
+    if (!data || !data.length) return speak(formBox, "Nothing deleted: only an owner can delete forms.", true);
     inspFormId = null;
-    await redraw();
-    return;
+    await loadInspections();
+    return inspShow("list");
   }
 
   // ---- questions
   if (act === "insp-add-question") {
     const form = inspForms.find(f => f.id === inspFormId);
-    const { error } = await db.from("inspection_fields").insert({
+    const { data, error } = await db.from("inspection_fields").insert({
       form_id: inspFormId, label: "New question", field_type: "text",
       is_active: false, sort_order: nextSortOrder(form.inspection_fields || [])
-    });
+    }).select();
     if (error) { $("inspQuestionMsg").textContent = refusal(error); $("inspQuestionMsg").className = "msg error"; return; }
+    inspOpenQuestion = data && data[0] ? data[0].id : null;
     await redraw();
-    $("inspQuestionMsg").textContent = "Added at the bottom, not showing yet. Fill it in, set Showing to Yes, and save.";
-    $("inspQuestionMsg").className = "msg ok";
+    const editor = document.querySelector("#inspAdmin .insp-q");
+    if (editor) { speak(editor, "Added at the bottom, hidden for now. Word it, set In the app to Asked, and save.", false); editor.scrollIntoView({ block: "center" }); }
     return;
   }
 
@@ -419,30 +621,31 @@ $("admin").addEventListener("click", async (event) => {
     const update = {
       label: get("label"), field_type: get("field_type"), options,
       help_text: get("help_text") || null, is_required: get("is_required") === "yes",
-      sort_order: parseInt(get("sort_order"), 10) || 0, is_active: get("is_active") === "yes"
+      is_active: get("is_active") === "yes"
     };
     if (get("after_class") !== null) update.after_class = get("after_class");
     speak(questionBox, "Saving…", false);
     const { data, error } = await db.from("inspection_fields").update(update)
       .eq("id", questionBox.dataset.question).select();
     if (error) return speak(questionBox, refusal(error), true);
-    if (!data || !data.length) return speak(questionBox, "Nothing changed — only an owner can edit questions.", true);
+    if (!data || !data.length) return speak(questionBox, "Nothing changed: only an owner can edit questions.", true);
+    inspOpenQuestion = null;
     await redraw();
-    return;
+    return speak($("inspQuestionMsg").closest(".row"), `Saved "${update.label}".`, false);
   }
 
   if (act === "insp-delete-question") {
-    if (!confirm("Delete this question? Past inspections keep their answers to it. " +
-                 "Setting Showing to No instead can be undone.")) return;
+    if (!confirm("Delete this question? Past inspections keep their answers to it. Hiding it instead can be undone.")) return;
     const { data, error } = await db.from("inspection_fields").delete()
       .eq("id", questionBox.dataset.question).select();
     if (error) return speak(questionBox, refusal(error), true);
-    if (!data || !data.length) return speak(questionBox, "Nothing deleted — only an owner can delete questions.", true);
+    if (!data || !data.length) return speak(questionBox, "Nothing deleted: only an owner can delete questions.", true);
+    inspOpenQuestion = null;
     await redraw();
     return;
   }
 
-  // ---- submitted inspections
+  // ---- an inspection
   const recordBox = button.closest("[data-insp]");
   if (!recordBox) return;
   const inner = recordBox.querySelector(".inner");
@@ -452,11 +655,11 @@ $("admin").addEventListener("click", async (event) => {
     if (!confirm(`Delete this inspection of ${inspTitle(record)}, photos and all? This can't be undone.`)) return;
     const { data, error } = await db.from("inspections").delete().eq("id", record.id).select();
     if (error) return speak(inner, refusal(error), true);
-    if (!data || !data.length) return speak(inner, "Nothing deleted — only an admin can delete inspections.", true);
+    if (!data || !data.length) return speak(inner, "Nothing deleted: only an admin can delete inspections.", true);
     const paths = inspPhotoPaths(record);
     if (paths.length) await db.storage.from("inspection-photos").remove(paths);
-    await redraw();
-    return;
+    await loadInspections();
+    return inspShow("list");
   }
 
   if (act === "insp-save") {
@@ -500,13 +703,30 @@ $("admin").addEventListener("click", async (event) => {
     speak(inner, "Saving…", false);
     const { data, error } = await db.from("inspections").update(update).eq("id", record.id).select();
     if (error) return speak(inner, refusal(error), true);
-    if (!data || !data.length) return speak(inner, "Nothing changed — only an admin can edit inspections.", true);
+    if (!data || !data.length) return speak(inner, "Nothing changed: only an admin can edit inspections.", true);
     if (removed.length) await db.storage.from("inspection-photos").remove(removed);
     await redraw();
-    const again = document.querySelector(`#inspAdmin details[data-insp="${CSS.escape(record.id)}"]`);
-    if (again) { again.open = true; speak(again.querySelector(".inner"), "Saved.", false); }
+    const again = document.querySelector("#inspAdmin [data-insp] .inner");
+    if (again) speak(again, "Saved.", false);
   }
 });
+
+// Up or down one place: every question spaced out first, so no two share a place.
+async function inspMoveQuestion(button, id, way) {
+  const form = inspForms.find(f => f.id === inspFormId);
+  const questions = form ? form.inspection_fields || [] : [];
+  const at = questions.findIndex(q => q.id === id), other = at + (way === "up" ? -1 : 1);
+  if (at < 0 || other < 0 || other >= questions.length) return;
+  const order = questions.map((q, n) => ({ id: q.id, sort_order: (n + 1) * 10 }));
+  [order[at].sort_order, order[other].sort_order] = [order[other].sort_order, order[at].sort_order];
+  for (const row of order) {
+    if (questions.find(q => q.id === row.id).sort_order === row.sort_order) continue;
+    const { error } = await db.from("inspection_fields").update({ sort_order: row.sort_order }).eq("id", row.id);
+    if (error) return speak(button.closest("td"), /row-level/i.test(error.message) ? "Only an owner can change the forms." : error.message, true);
+  }
+  await loadInspections();
+  renderInspectionsAdmin();
+}
 
 // ---- the Inspection Center, for everyone ----------------------------------
 
