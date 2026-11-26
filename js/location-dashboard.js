@@ -43,7 +43,7 @@ function showLocation() {
   $("admin").classList.remove("hidden");
   setMode("location");
   document.body.dataset.page = "location";
-  safely(renderLocationOverview, renderLocationCerts, renderLocationSlips);
+  safely(renderLocationOverview, renderLocationCerts, renderLocationSlips, renderLocationPrograms);
   document.querySelector('#locationNav [data-tab="locationoverview"]').click();
   window.scrollTo(0, 0);
 }
@@ -76,7 +76,7 @@ document.addEventListener("click", (event) => {
   if (!pick) return;
   lxLocation = pick.dataset.lxLocation;
   setMode("location");
-  safely(renderLocationOverview, renderLocationCerts, renderLocationSlips);
+  safely(renderLocationOverview, renderLocationCerts, renderLocationSlips, renderLocationPrograms);
   $("adminTitle").textContent = `${lxName()} Dashboard`;
   window.scrollTo(0, 0);
 });

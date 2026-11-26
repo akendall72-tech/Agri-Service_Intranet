@@ -40,8 +40,9 @@ function jobKind(job) {
   return set ? set.kind : jobKindGuess(job);
 }
 
+// Owners keep it; admins read it too, so a program's job kinds are the company's own on the Location Dashboard.
 async function loadJobKinds() {
-  if (!me || !isOwner()) return;
+  if (!me || !isAdmin()) return;
   const { data, error } = await db.from("job_kinds").select("*").order("job_key");
   jobKindsError = error ? error.message : null;
   jobKinds = error ? [] : data || [];

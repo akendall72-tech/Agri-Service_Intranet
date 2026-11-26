@@ -12,6 +12,12 @@
 // be measured, and whether it's about people, so a new one is one new entry.
 // Each program opens to its dashboard (below), worked out from the records each
 // source already has (PROG_COLLECT); nothing is copied.
+//
+// The Location Dashboard's Programs tab (stage 4) shows the same programs and
+// dashboards for one location, to its admins and to owners: every figure is
+// that location's, nothing can be changed but its hand-kept numbers. Safety
+// Reports and online courses are read through 0169's functions, which give a
+// program what it may count and keep who sent a report to the Safety Manager.
 
 let progList = [], progError = null, progLoaded = false;
 // "list", "edit" or "dashboard"; the program being made or changed, and where
@@ -282,7 +288,43 @@ function progSentence(p) {
 }
 const progTrackedText = (p) => `${PROG_TRACKED[p.tracked]}, ${p.year_kind === "fiscal" ? "fiscal" : "calendar"} year`;
 
+// Admin → Programs, or the Location Dashboard's Programs tab for one location. Each
+// starts at its list when it's drawn for the other; what's open belongs to the one shown.
+let progWhere = "admin";
+const progBoxId = () => progWhere === "location" ? "locationProgramsBox" : "programsAdmin";
+const progAt = () => progWhere === "location" ? lxCurrent() : null;
+function progEnter(where) {
+  if (progWhere === where) return;
+  progWhere = where;
+  progView = "list"; progOpen = null; progDraft = null; progFrom = "list";
+  // The other one is drawn again when it's next shown; emptied, its ids aren't on the page twice.
+  const other = $(where === "location" ? "programsAdmin" : "locationProgramsBox");
+  if (other) other.innerHTML = "";
+}
+
+function renderLocationPrograms() {
+  progEnter("location");
+  const box = $("locationProgramsBox");
+  if (!box) return;
+  // The list shows every program's figures, so what each reads comes in first, once.
+  if (!progLoaded || !progLocationReady || progLocationLoading) {
+    box.innerHTML = `<div class="card"><p class="note">Loading…</p></div>`;
+    if (progLocationLoading) return;
+    progLocationLoading = true;
+    (progLoaded ? Promise.resolve() : loadPrograms())
+      .then(() => Promise.all((progList || []).filter(p => !p.archived_at).map(pgLoad)))
+      .then(() => { progLocationLoading = false; progLocationReady = true; if (progWhere === "location") renderLocationPrograms(); })
+      .catch(e => { progLocationLoading = false; box.innerHTML = `<div class="card"><p class="error">${esc(e.message)}</p></div>`; });
+    return;
+  }
+  if (progList === null) { box.innerHTML = `<div class="card"><p class="note">Programs aren't set up yet.</p></div>`; return; }
+  const view = progView === "dashboard" && progOpen ? progDashboardHtml() : progLocationListHtml();
+  box.innerHTML = `<div class="sx cab-admin pg" style="${lit("violet")}">${view}</div>`;
+}
+let progLocationLoading = false, progLocationReady = false;
+
 function renderProgramsAdmin() {
+  progEnter("admin");
   const box = $("programsAdmin");
   if (!box) return;
   if (!progLoaded) {
@@ -349,6 +391,47 @@ function progListHtml() {
         <div><dt>Archive</dt><dd>Takes a finished program off the list, dashboard and all, and Bring back puts it back.</dd></div>
       </dl>
     </section>`;
+}
+
+// ---- the Location Dashboard's list: each current program, as it stands at this location
+
+// A program narrowed to other locations isn't this one's.
+const pgForLocation = (p, at) => { const locs = ((p.settings || {}).people || {}).locations || []; return !locs.length || locs.includes(at); };
+
+function progLocationListHtml() {
+  const at = progAt(), name = lxName(at);
+  const mine = progList.filter(p => !p.archived_at && pgForLocation(p, at));
+  const ctx = pgContext(pgEveryone());
+  const rows = mine.map(p => {
+    if (pgHiddenReporters(p)) return { p, hidden: true };
+    try {
+      const f = pgFigures(p, 0, ctx, at);
+      return { p, f, pace: pgPace(f), takes: pgTakes(f), meets: pgMeets(p, f.stands) };
+    } catch (e) { return { p, error: e.message }; }
+  });
+  return `
+    <section class="sx-hero">
+      <div class="sx-hero-text">
+        <span class="sx-kicker">${esc(name)} · Programs</span>
+        <h2>What ${esc(name)} is working toward</h2>
+        <p>${esc(companyName())}'s programs, with every figure ${esc(name)}'s own. Open one for its year, month by month, who's done
+          it and who hasn't.${rows.some(r => r.p.source === "manual" && (r.p.settings || {}).by_location !== false) ? ` Numbers kept by hand are typed in on the program's page.` : ""}</p>
+      </div>
+    </section>
+    ${progLoadError ? `<p class="error">${esc(progLoadError)}</p>` : ""}
+    ${rows.length ? `<div class="pg-cards">${rows.map(r => {
+      const goal = pgGoal(r.p), source = progSource(r.p.source);
+      const tone = r.hidden || r.error || !r.f ? "steel" : r.meets === null ? "violet" : r.meets ? "green" : "amber";
+      return `<button type="button" class="pg-card" data-pg-open="${esc(r.p.id)}" style="${lit(tone)}">
+        <span class="pg-card-kicker">${esc(source ? source.label : r.p.source)} · ${esc(PROG_TRACKED[r.p.tracked])}</span>
+        <b class="pg-card-name">${esc(r.p.name)}</b>
+        ${r.hidden ? `<span class="pg-card-note">On the Safety Manager's screen</span>`
+          : r.error ? `<span class="pg-card-note">Couldn't be worked out: ${esc(r.error)}</span>`
+          : `<span class="pg-card-value">${esc(pgFmt(r.p, r.f.stands))}${goal !== null ? `<small> of ${esc(pgFmt(r.p, goal))}</small>` : ""}</span>
+            <span class="pg-card-note">${r.pace ? `<span class="pg-tone" style="${lit(r.pace.tone)}">${esc(r.pace.title)}</span> ` : ""}${esc(r.takes || (goal === null ? "Just tracking" : ""))}</span>`}
+        <small class="pg-card-sentence">${esc(progSentence(r.p))}</small>
+      </button>`; }).join("")}</div>`
+      : `<p class="sx-empty">No programs for ${esc(name)} yet. Owners make them on Admin → Programs.</p>`}`;
 }
 
 // ---- making or changing one
@@ -456,20 +539,21 @@ function progRead() {
 
 function progRedraw() {
   const y = window.scrollY;
-  renderProgramsAdmin();
+  if (progWhere === "location") renderLocationPrograms(); else renderProgramsAdmin();
   window.scrollTo(0, y);
 }
 
 function progShow(view) {
   progView = view;
-  renderProgramsAdmin();
-  const tab = $("tab-programs");
+  if (progWhere === "location") renderLocationPrograms(); else renderProgramsAdmin();
+  const tab = $(progWhere === "location" ? "tab-locationprograms" : "tab-programs");
   if (tab) tab.scrollIntoView({ block: "start" });
 }
 
 // Said beside Save on the editor, under the list on the list.
 const progSay = (text, bad) => {
-  const msg = document.querySelector("#programsAdmin .pg-save .msg") || document.querySelector("#programsAdmin .msg");
+  const box = `#${progBoxId()}`;
+  const msg = document.querySelector(`${box} .pg-save .msg`) || document.querySelector(`${box} .msg`);
   if (msg) speak(msg.parentElement, text, bad); else if (bad) alert(text);
 };
 
@@ -500,6 +584,8 @@ async function progSave(button) {
   if (error) return progSay(/row-level/i.test(error.message) ? "Only an owner can make or change programs." : error.message, true);
   if (!(data || []).length) return progSay("Not saved: only an owner can make or change programs.", true);
   await loadPrograms();
+  progExtra.delete("online_passes");
+  progLocationReady = false;
   progDraft = null;
   if (progFrom === "dashboard" && p.id) return progOpenDashboard(p.id);
   progShow("list");
@@ -663,15 +749,11 @@ const PROG_COLLECT = {
           location: x ? x.location : storeLocation(r.store), what: c.course, facet: c.course, value: hours.get(key(c.course)) || 0 });
       });
     });
-    // Online courses: each person's first pass of each.
-    const online = new Set(s.online || []), firsts = new Map();
-    ocAttempts.filter(a => online.has(a.course_id) && ["passed", "completed"].includes(a.status) && a.completed_at).forEach(a => {
-      const k = `${a.user_id}|${a.course_id}`, had = firsts.get(k);
-      if (!had || a.completed_at < had.completed_at) firsts.set(k, a);
-    });
-    firsts.forEach(a => {
-      const x = ctx.byProfile(a.user_id), title = (ocCourses.find(c => c.id === a.course_id) || {}).title || "Online course";
-      records.push({ at: pgDay(a.completed_at), person: x, name: x ? x.name : ctx.profileName(a.user_id),
+    // Online courses: each person's first pass of each, as 0169 gives them to whoever's looking.
+    const online = new Set(s.online || []);
+    (progExtra.get("online_passes") || []).filter(a => online.has(a.course_id)).forEach(a => {
+      const x = ctx.byProfile(a.user_id), title = (progOnline.find(c => c.id === a.course_id) || {}).title || "Online course";
+      records.push({ at: pgDay(a.passed_at), person: x, name: x ? x.name : ctx.profileName(a.user_id),
         location: x ? x.location : ctx.profileLocation(a.user_id), what: `${title} (online)`, facet: title, value: 0 });
     });
     return { records, facet: "Course" };
@@ -726,12 +808,10 @@ const PROG_COLLECT = {
 
   safety_reports(p, ctx) {
     const kinds = (p.settings || {}).kinds || [];
-    return { facet: "Kind", records: (progReports || []).filter(r => !kinds.length || kinds.includes((r.answers || {}).kind)).map(r => {
-      const a = r.answers || {}, x = ctx.byProfile(r.created_by) || ctx.find(null, r.reporter_email);
-      const kind = srShortKind(a.kind) || a.kind || "Safety Report";
-      return { at: pgDay(r.created_at), person: x, name: r.reporter_name || (x && x.name) || "Someone",
-        location: a.where && locations[a.where] ? a.where : r.reporter_location || (x && x.location) || null,
-        what: a.title ? `${kind}: ${a.title}` : kind, facet: kind, value: 1 };
+    return { facet: "Kind", records: (progReports || []).filter(r => !kinds.length || kinds.includes(r.kind)).map(r => {
+      const x = r.created_by ? ctx.byProfile(r.created_by) : null, kind = srShortKind(r.kind) || r.kind || "Safety Report";
+      return { at: pgDay(r.created_at), person: x, name: r.reporter_name || (x && x.name) || "",
+        location: r.location_id || null, what: kind, facet: kind, value: 1 };
     }) };
   },
 
@@ -890,9 +970,14 @@ function pgUnit(p, n = 2) {
 }
 
 // Everything the dashboard shows for one year of a program.
-function pgFigures(p, back, ctx) {
+// At one location (the Location Dashboard), only that location's people and records count;
+// a number kept for the whole company stays the company's.
+function pgFigures(p, back, ctx, at = progAt()) {
   const start = pgYearStart(p, back), end = pgAddMonths(start, 12), today = todayISO();
-  const periods = pgPeriods(p, start), whose = pgWhose(p), source = progSource(p.source);
+  const periods = pgPeriods(p, start), source = progSource(p.source), base = pgWhose(p);
+  const whole = p.source === "manual" && (p.settings || {}).by_location === false;
+  const whose = !at || whole ? base : { any: true, test: (x) => base.test(x) && x.location === at,
+    record: (r) => base.record(r) && (r.person ? r.person.location : r.location) === at };
   const got = (PROG_COLLECT[p.source] || (() => ({ records: [] })))(p, ctx);
   const records = (got.records || []).filter(r => r.at && whose.record(r));
   const spans = got.spans ? got.spans.filter(sp => whose.record(sp)) : null;
@@ -1087,17 +1172,27 @@ function pgBarsHtml(rows, { share = false, goal = null } = {}) {
 async function pgLoad(p) {
   progLoadError = null;
   const reads = [];
+  const since = `${+todayISO().slice(0, 4) - PROG_YEARS_BACK - 2}-01-01`, s = p.settings || {};
   if (p.source === "safety_reports" && !progReports) {
-    const since = `${+todayISO().slice(0, 4) - PROG_YEARS_BACK - 2}-01-01`;
-    reads.push(allRows(() => db.from("safety_reports").select("id,created_by,reporter_name,reporter_email,reporter_location,created_at,answers,status")
-      .gte("created_at", since).order("created_at").order("id")).then(({ data, error }) => {
-      if (error) progLoadError = error.message; else progReports = data || [];
+    reads.push(allRows(() => db.rpc("program_safety_reports", { since }).order("created_at").order("id")).then(({ data, error }) => {
+      if (error) progLoadError = /program_safety_reports/.test(error.message) ? "Run migration 0169_program_reads.sql to count Safety Reports here." : error.message;
+      else progReports = data || [];
     }));
   }
-  const since = `${+todayISO().slice(0, 4) - PROG_YEARS_BACK - 2}-01-01`, s = p.settings || {};
   const once = (key, read) => { if (!progExtra.has(key)) reads.push(read().then(({ data, error }) => {
-    if (error) progLoadError = error.message; else progExtra.set(key, data || []);
+    if (error) progLoadError = /program_online_passes/.test(error.message) ? "Run migration 0169_program_reads.sql to count online courses here." : error.message;
+    else progExtra.set(key, data || []);
   })); };
+  // Online courses passed, every course a program here counts, read once.
+  if (p.source === "training" && (s.online || []).length) {
+    const courses = [...new Set((progList || []).flatMap(x => x.source === "training" ? (x.settings || {}).online || [] : []))];
+    once("online_passes", () => allRows(() => db.rpc("program_online_passes", { courses }).order("user_id").order("course_id")));
+  }
+  // Classes coming up and who's on them, to mark who's already booked in Still to do.
+  if (p.source === "training") {
+    once("upcoming_classes", () => allRows(() => db.from("scheduled_classes").select("id,course_id,title,starts_on,status")
+      .eq("status", "scheduled").gte("starts_on", todayISO()).order("starts_on").order("id")));
+  }
   if (p.source === "inspections") once("inspections", () => allRows(() => db.from("inspections")
     .select("id,form_id,location_id,submitted_at,created_by_name,post_submitted_at,post_by_name").gte("submitted_at", since).order("submitted_at").order("id")));
   if (p.source === "fleet" && (s.what || "checks") !== "services") once("fleet_checks", () => allRows(() => db.from("fleet_checks")
@@ -1111,6 +1206,13 @@ async function pgLoad(p) {
   if (p.source === "events") {
     once("events", () => allRows(() => db.from("events").select("id,title,starts_at,category,location_id").gte("starts_at", since).order("starts_at").order("id")));
     once("event_attendees", () => allRows(() => db.from("event_attendees").select("event_id,person_id,person_name").order("event_id").order("person_id")));
+  }
+  await Promise.all(reads.splice(0));
+  if (p.source === "training" && !progExtra.has("upcoming_registrations")) {
+    const ids = (progExtra.get("upcoming_classes") || []).map(c => c.id);
+    if (ids.length) once("upcoming_registrations", () => allRows(() => db.from("class_registrations")
+      .select("id,class_id,person_key,employee_number,email,status").in("class_id", ids).order("listed_at").order("id")));
+    else progExtra.set("upcoming_registrations", []);
   }
   if (p.source === "manual") {
     reads.push(allRows(() => db.from("program_numbers").select("*").eq("program_id", p.id).order("period_start").order("id")).then(({ data, error }) => {
@@ -1132,6 +1234,12 @@ async function progOpenDashboard(id) {
 function progDashboardHtml() {
   const p = progList.find(x => x.id === progOpen);
   if (!p) return `<p class="sx-empty">That program isn't here any more.</p>`;
+  if (pgHiddenReporters(p)) return `
+    <div class="pg-top"><button type="button" class="cab-back" data-pg-back>${icon("chevronLeft", 16)}All programs</button></div>
+    <section class="sx-hero pg-dash-hero"><div class="sx-hero-text"><span class="sx-kicker">Safety Reports</span><h2>${esc(p.name)}</h2>
+      <p>${esc(progSentence(p))}.</p></div></section>
+    <section class="sx-panel" style="${lit("amber")}"><header><h3>On the Safety Manager's screen</h3></header>
+      <p class="note">${esc(PG_HIDDEN_REPORTERS)}</p></section>`;
   const ctx = pgContext(pgEveryone());
   const f = pgFigures(p, progBack, ctx), last = pgFigures(p, progBack + 1, ctx);
   const goal = pgGoal(p), pace = pgPace(f), takes = pgTakes(f), source = f.source;
@@ -1163,12 +1271,12 @@ function progDashboardHtml() {
       <div class="pg-top-do">
         <select id="pgYearPick" aria-label="Year">${years.map(b => `<option value="${b}"${b === progBack ? " selected" : ""}>${
           esc(b === 0 ? `This year: ${pgYearName(pgYearStart(p, 0))}` : pgYearName(pgYearStart(p, b)))}</option>`).join("")}</select>
-        <button type="button" class="cab-back" data-pg-edit="${esc(p.id)}">${icon("pencil", 15)}Change the program</button>
+        ${progAt() || !isOwner() ? "" : `<button type="button" class="cab-back" data-pg-edit="${esc(p.id)}">${icon("pencil", 15)}Change the program</button>`}
       </div>
     </div>
     <section class="sx-hero pg-dash-hero">
       <div class="sx-hero-text">
-        <span class="sx-kicker">${esc(source ? source.label : p.source)} · ${esc(progTrackedText(p))} · ${esc(pgYearName(f.start))}</span>
+        <span class="sx-kicker">${progAt() ? `${esc(lxName(progAt()))} · ` : ""}${esc(source ? source.label : p.source)} · ${esc(progTrackedText(p))} · ${esc(pgYearName(f.start))}</span>
         <h2>${esc(p.name)}</h2>
         <p>${esc(progSentence(p))}.${p.description ? ` <span class="pg-why">${esc(p.description)}</span>` : ""}</p>
       </div>
@@ -1200,6 +1308,15 @@ function progDashboardHtml() {
     ${pgPeriodHtml(f, pd)}
     ${pgBreakdownHtml(f)}
     ${people ? pgToDoHtml(f) : rate ? pgDueNowHtml(f) : ""}`;
+}
+
+// Who sent each Safety Report is kept to the Safety Manager (0082, 0169). A program that
+// needs it, counting people or narrowed by job or department, shows its figures to them only.
+const PG_HIDDEN_REPORTERS = "Who sent each Safety Report is kept to the Safety Manager, and this program counts by who sent them, so its figures are on their screen only.";
+function pgHiddenReporters(p) {
+  if (p.source !== "safety_reports" || isSafetyManager()) return false;
+  const w = (p.settings || {}).people || {};
+  return p.measure === "people" || !!(w.jobs || []).length || !!(w.departments || []).length;
 }
 
 // "up 12 points", "down 3", "the same".
@@ -1286,8 +1403,10 @@ function pgPeriodHtml(f, pd) {
 function pgBreakdownHtml(f) {
   const p = f.p, people = p.measure === "people", goal = pgGoal(p);
   const facetName = p.source === "manual" ? null : f.facet;
-  const tabs = [["location", "By location"], ...(f.source && f.source.people ? [["job", "By job"]] : []), ...(facetName ? [["facet", `By ${facetName.toLowerCase()}`]] : [])];
-  if (!tabs.some(([id]) => id === progBy)) progBy = "location";
+  const tabs = [...(progAt() ? [] : [["location", "By location"]]), ...(f.source && f.source.people ? [["job", "By job"]] : []),
+    ...(facetName ? [["facet", `By ${facetName.toLowerCase()}`]] : [])];
+  if (!tabs.length) return "";
+  if (!tabs.some(([id]) => id === progBy)) progBy = tabs[0][0];
   const locName = (id) => id ? locations[id] || id : "No location";
   const kindName = (k) => k ? (JOB_KINDS.find(j => j.id === k) || { plural: k }).plural : "Not on the People list";
   const group = (list, keyOf) => { const m = new Map(); list.forEach(x => { const k = keyOf(x); m.set(k, (m.get(k) || []).concat([x])); }); return m; };
@@ -1338,10 +1457,10 @@ function pgToDo(f) {
   if (f.p.source === "training") {
     const s = f.p.settings || {}, word = String(s.contains || "").trim().toLowerCase(), picked = new Set(s.courses || []);
     const today = todayISO();
-    const classes = scClasses.filter(c => c.status === "scheduled" && c.starts_on >= today
+    const classes = (progExtra.get("upcoming_classes") || []).filter(c => c.starts_on >= today
       && (picked.has(c.course_id) || (!!word && String(c.title || "").toLowerCase().includes(word))));
     const byId = new Map(classes.map(c => [c.id, c]));
-    crRegs.filter(r => byId.has(r.class_id) && r.status !== "cancelled").forEach(r => {
+    (progExtra.get("upcoming_registrations") || []).filter(r => byId.has(r.class_id) && r.status !== "cancelled").forEach(r => {
       const x = f.people.scope.find(y => (r.employee_number && y.number && pgNum(r.employee_number) === y.number) || (r.email && y.email === pgMail(r.email)) || y.key === r.person_key);
       const c = byId.get(r.class_id);
       if (x) marks.set(x, `${r.status === "waitlisted" ? "Waitlisted" : "Registered"}: ${c.title}, ${pgShort(c.starts_on)}`);
@@ -1387,8 +1506,9 @@ function pgDueNowHtml(f) {
 
 // Numbers kept by hand: a row per period so far, a column per location (or one for the company).
 function pgNumbersHtml(f) {
-  const p = f.p, s = p.settings || {}, byLoc = s.by_location !== false;
-  const places = byLoc ? allLocations.filter(l => l.is_active !== false).map(l => [l.id, l.name]) : [["", "Company"]];
+  const p = f.p, s = p.settings || {}, byLoc = s.by_location !== false, at = progAt();
+  if (at && !byLoc) return "";
+  const places = at ? [[at, lxName(at)]] : byLoc ? allLocations.filter(l => l.is_active !== false).map(l => [l.id, l.name]) : [["", "Company"]];
   const rows = progNumbers.get(p.id) || [];
   const cell = (start, loc) => rows.find(n => n.period_start === start && (n.location_id || "") === loc);
   const periods = f.periods.filter(pd => !pd.future);
@@ -1396,14 +1516,14 @@ function pgNumbersHtml(f) {
     <section class="sx-panel" style="${lit("green")}">
       <header><h3>The numbers</h3><span>${esc(s.unit || "")}, typed in each ${esc(PROG_PERIOD[p.tracked])}${byLoc ? " for each location" : " for the company"}</span></header>
       <div class="lc-scroll"><table class="lc-table pg-numbers">
-        <thead><tr><th>${esc(PROG_TRACKED[p.tracked].replace(/ly$/, ""))}</th>${places.map(([, n]) => `<th class="num">${esc(n)}</th>`).join("")}${byLoc ? `<th class="num">All</th>` : ""}</tr></thead>
+        <thead><tr><th>${esc(PROG_TRACKED[p.tracked].replace(/ly$/, ""))}</th>${places.map(([, n]) => `<th class="num">${esc(n)}</th>`).join("")}${byLoc && !at ? `<th class="num">All</th>` : ""}</tr></thead>
         <tbody>${periods.slice().reverse().map(pd => {
           const vals = places.map(([id]) => cell(pd.start, id));
           const all = vals.reduce((n, c) => n + (c ? Number(c.value) || 0 : 0), 0);
           return `<tr><td class="when">${esc(pd.label)}</td>${places.map(([id], i) => `<td class="num"><input type="number" step="any" inputmode="decimal"
             data-pg-num="${esc(pd.start)}|${esc(id)}" value="${vals[i] ? esc(vals[i].value) : ""}" aria-label="${esc(pd.label)}, ${esc(places[i][1])}"
             title="${vals[i] ? esc(`${vals[i].entered_by_name || ""} ${vals[i].entered_at ? pgShort(pgDay(vals[i].entered_at)) : ""}`.trim()) : ""}"></td>`).join("")}${
-            byLoc ? `<td class="num"><b>${all ? esc(pgFmt(p, all)) : "—"}</b></td>` : ""}</tr>`; }).join("")}</tbody>
+            byLoc && !at ? `<td class="num"><b>${all ? esc(pgFmt(p, all)) : "—"}</b></td>` : ""}</tr>`; }).join("")}</tbody>
       </table></div>
       <p class="note">Saved as you leave each box. Empty a box to take its number away.</p><span class="msg" role="status"></span>
     </section>`;
@@ -1426,7 +1546,7 @@ async function pgSaveNumber(input) {
   if (done.error) return speak(box, /row-level/i.test(done.error.message) ? "Only an owner, or that location's admin, keeps its numbers." : done.error.message, true);
   await pgLoad(p);
   progRedraw();
-  const msg = document.querySelector("#programsAdmin .pg-numbers") && document.querySelector("#programsAdmin .pg-numbers").closest(".sx-panel");
+  const table = document.querySelector(`#${progBoxId()} .pg-numbers`), msg = table && table.closest(".sx-panel");
   if (msg) speak(msg, value === null ? "Taken away." : "Saved.", false);
 }
 
@@ -1457,14 +1577,16 @@ function pgCsv(which) {
 $("admin").addEventListener("click", async (event) => {
   const b = event.target.closest("[data-pg-new], [data-pg-edit], [data-pg-back], [data-pg-archive], [data-pg-archived], [data-pg-save], [data-pg-delete], "
     + "[data-pg-open], [data-pg-period], [data-pg-by], [data-pg-alltodo], [data-pg-csv]");
-  if (!b || !b.closest("#programsAdmin")) return;
+  const inside = b && b.closest("#programsAdmin, #locationProgramsBox");
+  if (!inside) return;
+  progEnter(inside.id === "locationProgramsBox" ? "location" : "admin");
   const d = b.dataset;
   if (d.pgNew !== undefined) { progDraft = progBlank(); progFrom = "list"; return progShow("edit"); }
   if (d.pgOpen) return progOpenDashboard(d.pgOpen);
   if (d.pgPeriod !== undefined) {
     progPick = Number(d.pgPeriod);
     progRedraw();
-    const panel = $("pgPeriodPanel");
+    const panel = document.querySelector(`#${progBoxId()} #pgPeriodPanel`);
     if (panel) panel.scrollIntoView({ block: "nearest", behavior: "smooth" });
     return;
   }
@@ -1509,7 +1631,9 @@ $("admin").addEventListener("click", async (event) => {
 
 // Choices that change what's shown redraw the screen; words just retell the sentence.
 $("admin").addEventListener("change", (event) => {
-  const t = event.target;
+  const t = event.target, inside = t.closest("#programsAdmin, #locationProgramsBox");
+  if (!inside) return;
+  progEnter(inside.id === "locationProgramsBox" ? "location" : "admin");
   if (t.id === "pgYearPick") { progBack = Number(t.value) || 0; progPick = null; progAllToDo = false; return progRedraw(); }
   if (t.id === "pgPeriodPick") { progPick = Number(t.value); return progRedraw(); }
   if (t.dataset.pgNum) return pgSaveNumber(t);

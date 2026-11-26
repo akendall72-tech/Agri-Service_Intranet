@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Which version this is. publish.sh stamps the date and commit here, and
      into version.json beside the page; "dev" is a copy that wasn't published. -->
-<meta name="app-version" content="2026-11-26.40cd087">
+<meta name="app-version" content="2026-11-26.dff6cab">
 <!-- Where this page may load things from and send things to. GitHub Pages
      can't send security headers, so it's here. Scripts come only from this
      site and the two script CDNs (each pinned with an integrity hash), and
@@ -34,7 +34,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
-<link rel="stylesheet" href="css/app.css?v=876bfe5b9b">
+<link rel="stylesheet" href="css/app.css?v=b221a053c7">
 </head>
 <body>
 
@@ -199,6 +199,7 @@
       <div class="nav-group">Dashboard</div>
       <button data-tab="locationoverview" data-title="Location Dashboard"><i data-icon="building"></i><span>Overview</span></button>
       <button data-tab="locationcerts" data-title="Location Dashboard"><i data-icon="safety"></i><span>Certifications</span></button>
+      <button data-tab="locationprograms" data-title="Location Dashboard"><i data-icon="trophy"></i><span>Programs</span></button>
       <button data-tab="locationslips" data-title="Location Dashboard"><i data-icon="key"></i><span>Join slips</span></button>
       <div id="locationPicks"></div>
     </nav>
@@ -925,6 +926,8 @@
 
     <!-- Custom Programs (0168): the list, and the six choices that make one, drawn by programs.js -->
     <section id="tab-programs" class="hidden"><div id="programsAdmin"></div></section>
+    <!-- The Location Dashboard's Programs: each program at one location, drawn by programs.js -->
+    <section id="tab-locationprograms" class="hidden"><div id="locationProgramsBox"></div></section>
 
     <!-- Employee handbook -->
     <!-- The Location Dashboard's Join slips (0141): drawn by renderLocationSlips -->
@@ -1255,8 +1258,8 @@
      js/core.js has the rest. publish.sh adds ?v= to each, so a changed file is
      fetched fresh and an unchanged one comes from the browser's cache. -->
 <script src="js/core.js?v=e35e179212"></script>
-<script src="js/shell.js?v=a4081b4cbf"></script>
-<script src="js/location-dashboard.js?v=91f293e319"></script>
+<script src="js/shell.js?v=6020b93b3d"></script>
+<script src="js/location-dashboard.js?v=9a05d722d7"></script>
 <script src="js/location-certifications.js?v=188701e85c"></script>
 <script src="js/my-certifications.js?v=556796f1db"></script>
 <script src="js/operator-manuals.js?v=7763432dd3"></script>
@@ -1305,10 +1308,10 @@
 <script src="js/imports.js?v=a87bd44fe7"></script>
 <script src="js/company.js?v=790a502a32"></script>
 <script src="js/people-list.js?v=c75c91abf8"></script>
-<script src="js/jobs.js?v=e55a3db18d"></script>
+<script src="js/jobs.js?v=77a96224c5"></script>
 <script src="js/join.js?v=9500ee286f"></script>
 <script src="js/platform.js?v=f8a375373e"></script>
-<script src="js/programs.js?v=4bc72f3340"></script>
+<script src="js/programs.js?v=cbb0d02a0c"></script>
 <script src="js/boot.js?v=a6a254fead"></script>
 </body>
 </html>

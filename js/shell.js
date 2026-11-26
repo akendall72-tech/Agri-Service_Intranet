@@ -618,7 +618,7 @@ document.querySelectorAll(".tabs button[data-tab]").forEach(btn => {
     document.querySelectorAll(".tabs button[data-tab]").forEach(b =>
       b.classList.toggle("active", b === btn));
     ["certs", "plans", "people", "support", "payroll", "tools",
-      "directory", "logins", "reminders", "fleetcheck", "vehiclemap", "events", "fitness", "trivia", "org", "inspections", "programs", "courses", "articles", "skillsadmin", "sds", "news", "handbook", "agco", "mock", "safetydesk", "safetyreportform", "safetyreports", "safetyoverview", "fkwaiting", "trainingoverview", "agcocatalog", "rpagco", "rpclass", "oltadmin", "locationoverview", "locationcerts", "manuals", "cranequals", "fkrequired", "crrequired", "craneinspection", "givecredit", "coursecredits", "classschedule", "trainingsettings", "epa609", "grades", "company", "peoplelist", "jobs", "locationslips"].forEach(name =>
+      "directory", "logins", "reminders", "fleetcheck", "vehiclemap", "events", "fitness", "trivia", "org", "inspections", "programs", "courses", "articles", "skillsadmin", "sds", "news", "handbook", "agco", "mock", "safetydesk", "safetyreportform", "safetyreports", "safetyoverview", "fkwaiting", "trainingoverview", "agcocatalog", "rpagco", "rpclass", "oltadmin", "locationoverview", "locationcerts", "locationprograms", "manuals", "cranequals", "fkrequired", "crrequired", "craneinspection", "givecredit", "coursecredits", "classschedule", "trainingsettings", "epa609", "grades", "company", "peoplelist", "jobs", "locationslips"].forEach(name =>
       $("tab-" + name).classList.toggle("hidden", name !== btn.dataset.tab));
     $("adminTitle").textContent = btn.dataset.title || btn.querySelector("span").textContent.trim();
     if (btn.closest("#safetyNav")) safetyTab = btn.dataset.tab;
