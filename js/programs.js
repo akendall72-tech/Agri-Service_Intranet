@@ -18,8 +18,8 @@ let progList = [], progError = null, progLoaded = false;
 // its editor goes back to; whether archived ones show.
 let progView = "list", progDraft = null, progFrom = "list", progShowArchived = false;
 // What the choices offer: the Course Catalog, online courses, the Safety Report
-// form's kinds, the People list's departments.
-let progCourses = [], progOnline = [], progReportKinds = [], progDepartments = [];
+// form's kinds, the People list's departments, recent and coming events.
+let progCourses = [], progOnline = [], progReportKinds = [], progDepartments = [], progEvents = [];
 
 const PROG_MEASURES = {
   people: "Share of people",
@@ -41,6 +41,13 @@ const progTicks = (list, items, picked, label = (x) => x[1]) => items.length
       (picked || []).includes(x[0]) ? " checked" : ""}> ${esc(label(x))}</label>`).join("")}</div>`
   : `<p class="note">None yet.</p>`;
 const progPicked = (box, list) => [...box.querySelectorAll(`[data-pg-list="${list}"]:checked`)].map(c => c.value);
+// One of several, as a row of choices; a choice that changes what else is offered redraws the screen.
+const progChoose = (setting, items, value, redraw = false) => `<div class="pg-ticks">${items.map(([v, t]) =>
+  `<label class="pg-tick"><input type="radio" name="pgSet-${setting}" data-pg-setting="${setting}" value="${esc(v)}"${
+    String(value) === String(v) ? " checked" : ""}${redraw ? " data-pg-redraw" : ""}> ${esc(t)}</label>`).join("")}</div>`;
+const progChosen = (box, setting, fallback) => (box.querySelector(`[data-pg-setting="${setting}"]:checked`) || {}).value || fallback;
+// A number box: empty is no number; a box not on the screen keeps what was there.
+const progNumberIn = (box, setting, fallback) => { const el = box.querySelector(`[data-pg-setting="${setting}"]`); return !el ? fallback : el.value === "" ? null : Number(el.value); };
 const progAnd = (words) => words.length < 2 ? words.join("") : `${words.slice(0, -1).join(", ")} or ${words[words.length - 1]}`;
 
 const PROGRAM_SOURCES = [
@@ -102,6 +109,99 @@ const PROGRAM_SOURCES = [
     did: (s, m) => m === "count" ? `Safety Reports (${PROGRAM_SOURCES[3].describe(s)})` : `have sent a Safety Report (${PROGRAM_SOURCES[3].describe(s)})`
   },
   {
+    id: "inspections", label: "Inspections", icon: "inspection", places: true,
+    about: "Inspections sent from the Inspection Center, and whether two-part ones were finished after class.",
+    measures: ["count", "rate"],
+    settingsHtml: (s) => `<div class="pg-choice"><label>Which forms (none ticked: every form)</label>
+      ${progTicks("forms", inspForms.map(f => [f.id, `${f.title}${f.has_after_class ? " (before and after class)" : ""}`]), s.forms)}</div>
+      <p class="note">Done out of due counts the forms with an after-class part: done when that part is in. One not finished two weeks after it was started counts as missed.</p>`,
+    readSettings: (box) => ({ forms: progPicked(box, "forms") }),
+    check: (s, p) => p && p.measure === "rate" && !inspForms.some(f => f.has_after_class && (!(s.forms || []).length || s.forms.includes(f.id)))
+      ? "Done out of due needs a form with an after-class part." : "",
+    describe: (s) => { const t = (s.forms || []).map(id => (inspForms.find(f => f.id === id) || {}).title).filter(Boolean); return t.length ? progAnd(t) : "any form"; },
+    did: (s, m) => m === "rate" ? `two-part inspections finished after class (${progSource("inspections").describe(s)})` : `inspections (${progSource("inspections").describe(s)})`,
+    noun: (_s, n) => n === 1 ? "inspection" : "inspections", doneWord: "finished after class"
+  },
+  {
+    id: "fleet", label: "Fleet", icon: "fleet", places: true,
+    about: "The Fleet Center: weekly checks done, services logged, items flagged on a check, miles driven.",
+    measures: ["rate", "count", "total"],
+    measuresFor: (s) => ({ checks: ["rate", "count"], services: ["count", "total"], flagged: ["count"], miles: ["total"] })[s.what || "checks"],
+    totalUnitFor: (s) => s.what === "miles" ? "miles" : "dollars spent",
+    settingsHtml: (s) => `<div class="pg-choice"><label>What it counts</label>${progChoose("what", [["checks", "Weekly checks"], ["services", "Services logged"],
+        ["flagged", "Items flagged on a check"], ["miles", "Miles driven"]], s.what || "checks", true)}</div>
+      <div class="pg-choice"><label>Which vehicles (none ticked: every kind)</label>${progTicks("kinds", Object.entries(FV_KINDS), s.kinds)}</div>`,
+    readSettings: (box, s) => ({ what: progChosen(box, "what", s.what || "checks"), kinds: progPicked(box, "kinds") }),
+    check: () => "",
+    describe: (s) => (s.kinds || []).length ? progAnd(s.kinds.map(k => (FV_KINDS[k] || k).toLowerCase() + "s")) : "every vehicle",
+    did: (s, m) => {
+      const which = (s.kinds || []).length ? ` (${progSource("fleet").describe(s)})` : "";
+      return { checks: m === "rate" ? `weekly vehicle checks done${which}` : `weekly vehicle checks${which}`,
+        services: m === "total" ? `dollars spent on service${which}` : `services logged${which}`,
+        flagged: `items flagged on a weekly check${which}`, miles: `miles driven${which}` }[s.what || "checks"];
+    },
+    noun: (s, n) => ({ checks: n === 1 ? "check" : "checks", services: n === 1 ? "service" : "services", flagged: n === 1 ? "flagged item" : "flagged items" })[s.what || "checks"] || ""
+  },
+  {
+    id: "crane", label: "Crane", icon: "rigging", places: true,
+    about: "Daily crane inspections, due every working day for each crane in service, and lift plans.",
+    measures: ["rate", "count"],
+    measuresFor: (s) => s.what === "lift_plans" ? ["count"] : ["rate", "count"],
+    settingsHtml: (s) => `<div class="pg-choice"><label>What it counts</label>${progChoose("what", [["inspections", "Daily crane inspections"],
+      ["lift_plans", "Lift plans"]], s.what || "inspections", true)}</div>
+      ${(s.what || "inspections") === "inspections" ? `<p class="note">An inspection is due Monday to Friday for each crane in service, as on the crane's own page.</p>` : ""}`,
+    readSettings: (box, s) => ({ what: progChosen(box, "what", s.what || "inspections") }),
+    check: () => "",
+    describe: (s) => s.what === "lift_plans" ? "lift plans" : "daily crane inspections",
+    did: (s, m) => s.what === "lift_plans" ? "lift plans" : m === "rate" ? "daily crane inspections done" : "daily crane inspections",
+    noun: (s, n) => s.what === "lift_plans" ? (n === 1 ? "lift plan" : "lift plans") : (n === 1 ? "inspection" : "inspections")
+  },
+  {
+    id: "skills", label: "Skills", icon: "level", people: true,
+    about: "Skills levels finished, on the service or the parts list.",
+    measures: ["people", "count"],
+    settingsHtml: (s) => `<div class="pg-choice"><label>Which list</label>${progChoose("track", SKILL_TRACKS.map(t => [t.id, t.id === "service" ? "Service (technicians)" : "Parts"]), s.track || "service")}</div>
+      <div class="pg-choice"><label>Finished at least</label>${progChoose("level", SKILL_LEVELS.map(l => [l, `Level ${l}`]), s.level || 1)}</div>`,
+    readSettings: (box, s) => ({ track: progChosen(box, "track", s.track || "service"), level: Number(progChosen(box, "level", s.level || 1)) }),
+    check: (s) => s.level ? "" : "Pick a level.",
+    describe: (s) => `Skills level ${s.level || "?"}${s.track === "parts" ? " on the parts list" : ""}`,
+    did: (s, m) => m === "count" ? `Skills levels finished (level ${s.level || "?"} and up${s.track === "parts" ? ", parts" : ""})`
+      : `have finished ${progSource("skills").describe(s)}`,
+    noun: (_s, n) => n === 1 ? "level finished" : "levels finished"
+  },
+  {
+    id: "support", label: "Support", icon: "support", places: true,
+    about: "Support Center requests: how many came in, and how many were closed within so many days.",
+    measures: ["count", "rate"],
+    settingsHtml: (s) => `<div class="pg-choice"><label>Requests to (none ticked: every group)</label>
+        ${progTicks("groups", workGroups.map(g => [g.id, g.name]), s.groups)}</div>
+      <div class="pg-choice"><label for="pgCloseDays">Closed within (for Done out of due)</label>
+        <div class="pg-inline"><input type="number" id="pgCloseDays" data-pg-setting="close_days" min="1" max="365" value="${esc(s.close_days ?? 3)}"> days</div></div>`,
+    readSettings: (box, s) => ({ groups: progPicked(box, "groups"), close_days: progNumberIn(box, "close_days", s.close_days ?? 3) }),
+    check: (s, p) => p && p.measure === "rate" && !(s.close_days >= 1) ? "Say within how many days a request should be closed." : "",
+    describe: (s) => { const g = (s.groups || []).map(id => (workGroups.find(x => x.id === id) || {}).name).filter(Boolean); return g.length ? progAnd(g) : "any group"; },
+    did: (s, m) => { const to = (s.groups || []).length ? ` to ${progSource("support").describe(s)}` : "";
+      return m === "rate" ? `support requests${to} closed within ${s.close_days || "?"} days` : `support requests${to}`; },
+    noun: (_s, n) => n === 1 ? "request" : "requests", doneWord: "closed in time"
+  },
+  {
+    id: "events", label: "Events", icon: "events", people: true,
+    about: "Who came to company events, from each event's list of who's coming.",
+    measures: ["people", "count"],
+    settingsHtml: (s) => `<div class="pg-choice"><label>Any event of a kind</label>${progChoose("category", [["", "None: the events ticked below"],
+        ...EVENT_CATEGORIES], s.category || "")}</div>
+      <div class="pg-choice"><label>Or these events</label>
+        <input type="text" class="pg-filter" data-pg-filter="events" placeholder="Find an event" aria-label="Find an event">
+        ${progTicks("events", progEvents.map(e => [e.id, `${e.title} · ${pgShort(pgDay(e.starts_at))}`]), s.events)}</div>`,
+    readSettings: (box, s) => ({ category: progChosen(box, "category", s.category || ""), events: progPicked(box, "events") }),
+    check: (s) => (s.events || []).length || s.category ? "" : "Pick a kind of event, or the events.",
+    describe: (s) => { const t = (s.events || []).map(id => (progEvents.find(e => e.id === id) || {}).title).filter(Boolean);
+      const kind = s.category ? `any ${(EVENT_CATEGORIES.find(c => c[0] === s.category) || [0, s.category])[1].toLowerCase()} event` : "";
+      return progAnd([kind, t.length > 2 ? `one of ${t.length} events` : progAnd(t)].filter(Boolean)) || "an event"; },
+    did: (s, m) => m === "count" ? `event attendances (${progSource("events").describe(s)})` : `have been at ${progSource("events").describe(s)}`,
+    noun: (_s, n) => n === 1 ? "attendance" : "attendances"
+  },
+  {
     id: "manual", label: "Numbers by hand", icon: "pencil",
     about: "Anything Agri-Barn doesn't record itself: parts sales, customer visits, hours billed. Each period's number is typed in.",
     measures: ["total", "count"], people: false,
@@ -122,16 +222,20 @@ const PROGRAM_SOURCES = [
   }
 ];
 const progSource = (id) => PROGRAM_SOURCES.find(s => s.id === id) || null;
+const progMeasures = (source, s) => (source.measuresFor ? source.measuresFor(s || {}) : null) || source.measures;
+const progTotalUnit = (source, s) => source.totalUnitFor ? source.totalUnitFor(s || {}) : source.totalUnit || (s || {}).unit || "in total";
 // A goal is a percentage for done-out-of-due, or a share of people given as one.
 const progPercent = (p) => p.measure === "rate" || (p.measure === "people" && p.goal_unit === "percent");
 
 async function loadPrograms() {
-  const [programs, courses, online, form, people] = await Promise.all([
+  const [programs, courses, online, form, people, events] = await Promise.all([
     db.from("programs").select("*").order("sort_order").order("created_at"),
     db.from("courses").select("id,title,record_name,is_active").order("title"),
     db.from("online_courses").select("id,title").order("title"),
     db.from("safety_report_form").select("fields").eq("id", "current").maybeSingle(),
-    allRows(() => db.from("employees").select("department,id").eq("here", true).order("id"))
+    allRows(() => db.from("employees").select("department,id").eq("here", true).order("id")),
+    db.from("events").select("id,title,starts_at,category").gte("starts_at", `${+todayISO().slice(0, 4) - 3}-01-01`)
+      .order("starts_at", { ascending: false }).limit(400)
   ]);
   progError = programs.error && !/does not exist|schema cache/i.test(programs.error.message) ? programs.error.message : null;
   progList = programs.error ? null : programs.data || [];
@@ -140,6 +244,7 @@ async function loadPrograms() {
   const kind = ((form.data && form.data.fields) || []).find(f => f.id === "kind");
   progReportKinds = (kind && kind.options) || [];
   progDepartments = [...new Set((people.data || []).map(p => (p.department || "").trim()).filter(Boolean))].sort();
+  progEvents = events.data || [];
   progLoaded = true;
 }
 
@@ -155,7 +260,8 @@ function progSentence(p) {
     (who.departments || []).length ? `in ${progAnd(who.departments)}` : ""].filter(Boolean).join(" ");
   const year = `this ${p.year_kind === "fiscal" ? "fiscal " : ""}year`;
   const every = `every ${PROG_PERIOD[p.tracked] || "month"}`;
-  const goal = p.goal_direction === "none" ? "" : `${p.goal_direction === "at_most" ? "At most" : "At least"} ${
+  const all = p.goal_direction === "at_least" && progPercent(p) && Number(p.goal_value) >= 100;
+  const goal = p.goal_direction === "none" ? "" : all ? "All" : `${p.goal_direction === "at_most" ? "At most" : "At least"} ${
     progPercent(p) ? `${Number(p.goal_value ?? 0)}%` : Number(p.goal_value ?? 0).toLocaleString()}`;
   if (p.measure === "people") {
     // Within the year and a goal every period: each period starts again ("each month").
@@ -163,13 +269,15 @@ function progSentence(p) {
     const when = source.noWhen ? "" : fresh ? ` each ${PROG_PERIOD[p.tracked] || "month"}` : p.counts_when === "ever" ? " at any time"
       : p.counts_when === "months" ? ` in the last ${p.within_months || "?"} months` : ` ${year}`;
     const span = !goal || fresh ? "" : p.goal_span === "period" ? `, ${every}` : p.counts_when === "year" && !source.noWhen ? "" : `, by the end of the ${p.year_kind === "fiscal" ? "fiscal " : ""}year`;
-    const people = goal && p.goal_unit === "number" ? `${goal} ${whose}` : goal ? `${goal} of ${whose}` : `Share of ${whose} who`;
+    const people = goal && (p.goal_unit === "number" || all) ? `${goal} ${whose}` : goal ? `${goal} of ${whose}` : `Share of ${whose} who`;
     return `${people} ${source.did(s, p.measure)}${when}${span}`;
   }
-  // A count or a total: "At least 10 Safety Reports (near miss) every month", "Dollars of parts sold each month".
+  // A count, a total or a share done: "At least 10 Safety Reports (near miss) every month",
+  // "Dollars of parts sold each month", "At least 95% of weekly vehicle checks done at Pasco every week".
   const thing = source.did(s, p.measure);
-  const by = source.people && whose !== "people" ? `, by ${whose},` : "";
+  const by = source.people && whose !== "people" ? `, by ${whose},` : source.places && places.length ? ` at ${progAnd(places)}` : "";
   const when = !goal ? `each ${PROG_PERIOD[p.tracked] || "month"}` : p.goal_span === "period" ? every : year;
+  if (p.measure === "rate") return `${goal ? `${goal}${all ? "" : " of"} ${thing}` : `Share of ${thing}`}${by} ${when}`;
   return `${goal ? `${goal} ${thing}` : `${thing[0].toUpperCase()}${thing.slice(1)}`}${by} ${when}`;
 }
 const progTrackedText = (p) => `${PROG_TRACKED[p.tracked]}, ${p.year_kind === "fiscal" ? "fiscal" : "calendar"} year`;
@@ -251,7 +359,8 @@ const progBlank = () => ({ id: null, name: "", description: "", source: "trainin
 
 function progEditorHtml() {
   const p = progDraft, source = progSource(p.source) || PROGRAM_SOURCES[0], s = p.settings || {}, who = s.people || {};
-  if (!source.measures.includes(p.measure)) p.measure = source.measures[0];
+  const measures = progMeasures(source, s);
+  if (!measures.includes(p.measure)) { p.measure = measures[0]; p.goal_unit = p.measure === "people" || p.measure === "rate" ? "percent" : "number"; }
   const people = p.measure === "people";
   const fiscal = MONTH_NAMES[(company.fiscal_year_starts || 1) - 1];
   const radios = (name, options, value, attr) => `<div class="pg-ticks">${options.map(([v, t]) =>
@@ -286,12 +395,15 @@ function progEditorHtml() {
         <div class="pg-choice"><label>Locations (none ticked: every location)</label>
           ${progTicks("locations", allLocations.filter(l => l.is_active !== false).map(l => [l.id, l.name]), who.locations)}</div>
         ${progDepartments.length ? `<div class="pg-choice"><label>Departments (none ticked: every department)</label>
-          ${progTicks("departments", progDepartments.map(d => [d, d]), who.departments)}</div>` : ""}` : ""}
+          ${progTicks("departments", progDepartments.map(d => [d, d]), who.departments)}</div>` : ""}`
+        : source.places ? `<h4>Where</h4>
+        <div class="pg-choice"><label>Locations (none ticked: every location)</label>
+          ${progTicks("locations", allLocations.filter(l => l.is_active !== false).map(l => [l.id, l.name]), who.locations)}</div>` : ""}
     </section>
 
     <section class="sx-panel" style="${lit("teal")}">
       <header><h3>Measured as</h3></header>
-      ${radios("pgMeasure", source.measures.map(m => [m, PROG_MEASURES[m] + (m === "total" && source.totalUnit ? ` (${source.totalUnit})` : "")]),
+      ${radios("pgMeasure", measures.map(m => [m, PROG_MEASURES[m] + (m === "total" && progTotalUnit(source, s) !== "in total" ? ` (${progTotalUnit(source, s)})` : "")]),
         p.measure, "data-pg-measure")}
       ${people && !source.noWhen ? `<h4>Counts when</h4>
         ${radios("pgWhen", [["year", p.goal_span === "period" && p.goal_direction !== "none"
@@ -309,7 +421,7 @@ function progEditorHtml() {
         ${people ? `<select data-pg-field="goal_unit" aria-label="Percent or people">
             <option value="percent"${p.goal_unit === "percent" ? " selected" : ""}>% of the people who count</option>
             <option value="number"${p.goal_unit === "number" ? " selected" : ""}>people</option></select>`
-          : p.measure === "rate" ? `<span>% done</span>` : `<span id="pgGoalUnit">${esc(p.measure === "total" ? (source.totalUnit || s.unit || "in total") : "times")}</span>`}
+          : p.measure === "rate" ? `<span>% done</span>` : `<span id="pgGoalUnit">${esc(p.measure === "total" ? progTotalUnit(source, s) : "times")}</span>`}
         <select data-pg-field="goal_span" aria-label="By when">
           <option value="year"${p.goal_span === "year" ? " selected" : ""}>by the end of the year</option>
           <option value="period"${p.goal_span === "period" ? " selected" : ""}>every ${PROG_PERIOD[p.tracked]}</option></select>
@@ -334,7 +446,8 @@ function progRead() {
   if (!form || !progDraft) return;
   const p = progDraft, source = progSource(p.source);
   const people = { jobs: progPicked(form, "jobs"), locations: progPicked(form, "locations"), departments: progPicked(form, "departments") };
-  p.settings = { ...(source ? source.readSettings(form, p.settings || {}) : {}), ...(source && source.people ? { people } : {}) };
+  p.settings = { ...(source ? source.readSettings(form, p.settings || {}) : {}),
+    ...(source && source.people ? { people } : source && source.places ? { people: { locations: people.locations } } : {}) };
   form.querySelectorAll("[data-pg-field]").forEach(el => {
     const key = el.dataset.pgField;
     p[key] = ["goal_value", "within_months"].includes(key) ? (el.value === "" ? null : Number(el.value)) : el.value;
@@ -364,7 +477,8 @@ async function progSave(button) {
   progRead();
   const p = progDraft, source = progSource(p.source);
   const problem = !p.name.trim() ? "The program needs a name."
-    : source.check(p.settings || {})
+    : source.check(p.settings || {}, p)
+    || (!progMeasures(source, p.settings).includes(p.measure) ? "Pick how it's measured." : "")
     || (p.measure === "people" && p.counts_when === "months" && !(p.within_months >= 1) ? "Say within how many months." : "")
     || (p.goal_direction !== "none" && !(p.goal_value >= 0 && p.goal_value !== null) ? "Give the goal a number." : "")
     || (p.goal_direction !== "none" && progPercent(p) && p.goal_value > 100 ? "A percentage goes up to 100." : "");
@@ -387,7 +501,7 @@ async function progSave(button) {
   if (!(data || []).length) return progSay("Not saved: only an owner can make or change programs.", true);
   await loadPrograms();
   progDraft = null;
-  if (progFrom === "dashboard" && p.id) { progOpen = p.id; progPick = null; return progShow("dashboard"); }
+  if (progFrom === "dashboard" && p.id) return progOpenDashboard(p.id);
   progShow("list");
   progSay(`${p.id ? "Saved" : "Made"} “${row.name}”.`, false);
 }
@@ -408,6 +522,9 @@ async function progSave(button) {
 // The program open, how many years back, the period picked, the breakdown shown.
 let progOpen = null, progBack = 0, progPick = null, progBy = "location", progAllToDo = false;
 let progReports = null, progLoadError = null;
+// Rows read when a program opens, kept for the visit: inspections, fleet checks, crane inspections, lift plans,
+// support requests, events and who came.
+const progExtra = new Map();
 const progNumbers = new Map();
 const PROG_YEARS_BACK = 2;
 
@@ -440,12 +557,17 @@ function pgPeriods(p, start) {
   const end = pgAddMonths(start, 12), list = [], today = todayISO();
   const fmt = (iso, o) => dateOnly(iso).toLocaleDateString("en-US", o);
   if (p.tracked === "weekly") {
-    // Weeks of seven days from the year's first; the day or two left over joins the last week.
-    for (let d = start; d < end; d = pgAddDays(d, 7)) {
-      const e = pgAddDays(d, 14) > end ? end : pgAddDays(d, 7);
-      list.push({ start: d, end: e, label: `Week of ${fmt(d, { month: "short", day: "numeric", year: "numeric" })}`,
-        short: fmt(d, { month: "numeric", day: "numeric" }) });
-      if (e === end) break;
+    // Weeks run Monday to Sunday, as the Fleet Center's do. The days before the year's first Monday make a
+    // week of their own if there are four or more, else join the first; the same at the end.
+    const cuts = [start];
+    const first = dateOnly(start); first.setDate(first.getDate() + (8 - first.getDay()) % 7);
+    for (let d = pgIso(first); d < end; d = pgAddDays(d, 7)) if (d > start) cuts.push(d);
+    cuts.push(end);
+    if (cuts.length > 2 && pgDaysBetween(cuts[0], cuts[1]) < 4) cuts.splice(1, 1);
+    if (cuts.length > 2 && pgDaysBetween(cuts[cuts.length - 2], cuts[cuts.length - 1]) < 4) cuts.splice(cuts.length - 2, 1);
+    for (let i = 0; i < cuts.length - 1; i++) {
+      list.push({ start: cuts[i], end: cuts[i + 1], label: `Week of ${fmt(cuts[i], { month: "short", day: "numeric", year: "numeric" })}`,
+        short: fmt(cuts[i], { month: "numeric", day: "numeric" }) });
     }
   } else {
     const step = p.tracked === "quarterly" ? 3 : 1;
@@ -505,11 +627,15 @@ function pgContext(everyone) {
 }
 
 // The program's "whose", as a test of a person.
+// A source about people tests the person; one that isn't (the fleet, cranes, requests), the record's location.
 function pgWhose(p) {
   const w = (p.settings || {}).people || {}, jobs = w.jobs || [], locs = w.locations || [], deps = w.departments || [];
-  return { any: !!(jobs.length || locs.length || deps.length),
-    test: (x) => !!x && (!jobs.length || jobs.includes(x.kind)) && (!locs.length || locs.includes(x.location))
-      && (!deps.length || deps.includes(x.department)) };
+  const source = progSource(p.source);
+  if (source && !source.people) return { any: !!locs.length, test: (x) => !!x, record: (r) => !locs.length || locs.includes(r.location) };
+  const any = !!(jobs.length || locs.length || deps.length);
+  const test = (x) => !!x && (!jobs.length || jobs.includes(x.kind)) && (!locs.length || locs.includes(x.location))
+    && (!deps.length || deps.includes(x.department));
+  return { any, test, record: (r) => !any || test(r.person) };
 }
 const pgHereOn = (x, day) => (!x.joined || x.joined <= day) && (!x.left || x.left > day);
 
@@ -609,6 +735,131 @@ const PROG_COLLECT = {
     }) };
   },
 
+  inspections(p) {
+    const forms = new Map(inspForms.map(f => [f.id, f])), picked = (p.settings || {}).forms || [];
+    const rows = (progExtra.get("inspections") || []).filter(r => !picked.length || picked.includes(r.form_id));
+    const title = (r) => (forms.get(r.form_id) || {}).title || "Inspection";
+    const today = todayISO();
+    return { facet: "Form",
+      records: rows.map(r => ({ at: pgDay(r.submitted_at), person: null, name: r.created_by_name || "", location: r.location_id || null,
+        what: title(r), facet: title(r), value: 1 })),
+      // Two-part forms: done once the after-class part is in; two weeks without it is missed.
+      dues: rows.filter(r => (forms.get(r.form_id) || {}).has_after_class).map(r => {
+        const at = pgDay(r.submitted_at);
+        return { at, status: r.post_submitted_at ? "done" : pgAddDays(at, 14) < today ? "missed" : "pending", person: null,
+          name: r.post_by_name || r.created_by_name || "", location: r.location_id || null, facet: title(r),
+          what: `${title(r)}${r.post_submitted_at ? ` · after class ${pgShort(pgDay(r.post_submitted_at))}` : ""}` };
+      }) };
+  },
+
+  fleet(p) {
+    const s = p.settings || {}, what = s.what || "checks", kinds = s.kinds || [];
+    const vehicles = new Map(fvVehicles.filter(v => !kinds.length || kinds.includes(v.kind)).map(v => [v.id, v]));
+    const name = (v) => `${fvNumber(v)}${v.nickname ? ` (${v.nickname})` : ""}`;
+    const checks = (progExtra.get("fleet_checks") || []).filter(c => vehicles.has(c.vehicle_id));
+    if (what === "services") return { facet: "Service", records: fvServices.filter(x => vehicles.has(x.vehicle_id)).map(x => {
+      const v = vehicles.get(x.vehicle_id), kind = FV_SERVICE[x.kind] || x.kind;
+      return { at: pgDay(x.done_on), person: null, name: x.created_by_name || "", location: v.location_id || null,
+        what: `${kind} · ${name(v)}`, facet: kind, value: Number(x.cost) || 0 };
+    }) };
+    if (what === "flagged") return { facet: "Item", records: checks.flatMap(c => fvFlagged(c).map(i => {
+      const v = vehicles.get(c.vehicle_id);
+      return { at: pgDay(c.checked_on), person: null, name: c.created_by_name || "", location: v.location_id || null,
+        what: `${i.label} · ${name(v)}`, facet: i.label, value: 1 };
+    })) };
+    if (what === "miles") {
+      // Each check's reading less the one before it, on the day of the check.
+      const records = [];
+      vehicles.forEach(v => {
+        if (fvMeter(v) !== "miles") return;
+        const mine = checks.filter(c => c.vehicle_id === v.id && c.odometer != null).sort((a, b) => a.checked_on.localeCompare(b.checked_on));
+        mine.forEach((c, i) => {
+          const driven = i ? Number(c.odometer) - Number(mine[i - 1].odometer) : 0;
+          if (driven > 0 && driven < 20000) records.push({ at: c.checked_on, person: null, name: c.created_by_name || "", location: v.location_id || null,
+            what: name(v), facet: name(v), value: driven });
+        });
+      });
+      return { facet: "Vehicle", records };
+    }
+    // Weekly checks: each vehicle is due one every week (Monday to Sunday) from the week it was added.
+    const monday = (iso) => { const d = dateOnly(iso); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return pgIso(d); };
+    const thisWeek = monday(todayISO()), from = monday(`${+todayISO().slice(0, 4) - PROG_YEARS_BACK - 2}-01-01`);
+    const dues = [];
+    vehicles.forEach(v => {
+      const days = checks.filter(c => c.vehicle_id === v.id).map(c => c.checked_on).sort();
+      const first = monday(pgDay(v.created_at) || from);
+      for (let m = first > from ? first : from; m <= thisWeek; m = pgAddDays(m, 7)) {
+        const end = pgAddDays(m, 7), done = days.find(d => d >= m && d < end);
+        const who = done ? (checks.find(c => c.vehicle_id === v.id && c.checked_on === done) || {}).created_by_name || "" : "";
+        dues.push({ at: m, status: done ? "done" : m === thisWeek ? "pending" : "missed", person: null, name: who,
+          location: v.location_id || null, what: `${name(v)}${done ? ` · checked ${pgShort(done)}` : ""}`, facet: name(v) });
+      }
+    });
+    return { facet: "Vehicle", dues, records: checks.map(c => { const v = vehicles.get(c.vehicle_id);
+      return { at: c.checked_on, person: null, name: c.created_by_name || "", location: v.location_id || null, what: name(v), facet: name(v), value: 1 }; }) };
+  },
+
+  crane(p) {
+    const what = (p.settings || {}).what || "inspections";
+    if (what === "lift_plans") return { facet: "Status", records: (progExtra.get("lift_plans") || []).map(l => ({
+      at: pgDay(l.lift_date || l.submitted_at), person: null, name: l.created_by_name || "", location: l.location_id || null,
+      what: l.job_description || "Lift plan", facet: { submitted: "Waiting for review", changes_requested: "Sent back", approved: "Approved" }[l.status] || l.status, value: 1 })) };
+    const rows = progExtra.get("crane_inspections") || [], today = todayISO();
+    const from = `${+today.slice(0, 4) - PROG_YEARS_BACK - 2}-01-01`;
+    const dues = [];
+    ciCranes.forEach(c => {
+      const days = new Map(rows.filter(r => r.crane_id === c.id).map(r => [r.inspected_on, r]));
+      const start = pgDay(c.created_at) > from ? pgDay(c.created_at) : from, stop = c.retired_at ? pgDay(c.retired_at) : pgAddDays(today, 1);
+      // Due Monday to Friday while it's in service.
+      for (let d = start; d < stop && d <= today; d = pgAddDays(d, 1)) {
+        const wd = dateOnly(d).getDay();
+        if (wd === 0 || wd === 6) continue;
+        const hit = days.get(d);
+        dues.push({ at: d, status: hit ? "done" : d === today ? "pending" : "missed", person: null, name: hit ? hit.created_by_name || "" : "",
+          location: c.location_id, what: `${c.name}${hit && !hit.safe ? " · out of service" : ""}`, facet: c.name });
+      }
+    });
+    return { facet: "Crane", dues, records: rows.map(r => { const c = ciCranes.find(x => x.id === r.crane_id) || {};
+      return { at: r.inspected_on, person: null, name: r.created_by_name || "", location: r.location_id, what: `${c.name || "Crane"}${r.safe ? "" : " · out of service"}`,
+        facet: c.name || "Crane", value: 1 }; }) };
+  },
+
+  skills(p, ctx) {
+    const s = p.settings || {}, track = s.track || "service", level = Number(s.level) || 1;
+    return { facet: "Level", records: levelsDone.filter(x => (x.track || "service") === track && x.level >= level).map(x => {
+      const person = ctx.byProfile(x.technician_id);
+      return { at: pgDay(x.completed_at), person, name: person ? person.name : ctx.profileName(x.technician_id),
+        location: person ? person.location : ctx.profileLocation(x.technician_id), what: `Level ${x.level}${x.placed ? " (placed)" : ""}`,
+        facet: `Level ${x.level}`, value: 1 };
+    }) };
+  },
+
+  support(p) {
+    const s = p.settings || {}, groups = s.groups || [], days = Number(s.close_days) || 3, today = todayISO();
+    const rows = (progExtra.get("support_tickets") || []).filter(t => !groups.length || (t.groups || []).some(g => groups.includes(g)));
+    const groupName = (t) => (t.groups || []).map(g => (workGroups.find(x => x.id === g) || {}).name).filter(Boolean).join(", ") || "No group";
+    const about = (t) => [t.brand, t.model, t.machine_type].filter(Boolean).join(" ") || String(t.description || "").slice(0, 70);
+    return { facet: "Group",
+      records: rows.map(t => ({ at: pgDay(t.created_at), person: null, name: t.created_by_name || "", location: t.location_id || null,
+        what: about(t), facet: groupName(t), value: 1 })),
+      dues: rows.map(t => {
+        const at = pgDay(t.created_at), closed = pgDay(t.closed_at), took = closed ? pgDaysBetween(at, closed) : null;
+        return { at, status: took !== null ? (took <= days ? "done" : "missed") : pgDaysBetween(at, today) > days ? "missed" : "pending",
+          person: null, name: t.created_by_name || "", location: t.location_id || null, facet: groupName(t),
+          what: `${about(t)} · ${took === null ? "still open" : took === 0 ? "closed the same day" : `closed in ${took} day${took === 1 ? "" : "s"}`}` };
+      }) };
+  },
+
+  events(p, ctx) {
+    const s = p.settings || {}, picked = new Set(s.events || []);
+    const events = new Map((progExtra.get("events") || []).filter(e => picked.has(e.id) || (s.category && e.category === s.category)).map(e => [e.id, e]));
+    return { facet: "Event", records: (progExtra.get("event_attendees") || []).filter(a => events.has(a.event_id)).map(a => {
+      const e = events.get(a.event_id), person = ctx.byProfile(a.person_id);
+      return { at: pgDay(e.starts_at), person, name: person ? person.name : a.person_name || ctx.profileName(a.person_id),
+        location: person ? person.location : ctx.profileLocation(a.person_id), what: e.title, facet: e.title, value: 1 };
+    }) };
+  },
+
   manual(p) {
     return { facet: "Location", records: (progNumbers.get(p.id) || []).map(n => ({ at: n.period_start, person: null,
       name: n.entered_by_name || "", location: n.location_id || null, what: n.note || "", facet: n.location_id ? locations[n.location_id] || n.location_id : "Company",
@@ -619,7 +870,7 @@ const PROG_COLLECT = {
 // ---- the figures
 
 // What a value means: a share of people (0 to 1), or a number.
-const pgIsShare = (p) => p.measure === "people" && p.goal_unit !== "number";
+const pgIsShare = (p) => p.measure === "rate" || (p.measure === "people" && p.goal_unit !== "number");
 const pgGoal = (p) => p.goal_direction === "none" || p.goal_value == null ? null : pgIsShare(p) ? Number(p.goal_value) / 100 : Number(p.goal_value);
 const pgMeets = (p, v) => { const g = pgGoal(p); return g === null || v === null ? null : p.goal_direction === "at_most" ? v <= g : v >= g; };
 const pgFmt = (p, v) => v === null || v === undefined ? "—" : pgIsShare(p) ? `${Math.round(v * 100)}%`
@@ -631,8 +882,10 @@ function pgUnit(p, n = 2) {
     const kinds = (w.jobs || []).map(k => (JOB_KINDS.find(j => j.id === k) || { plural: k }).plural.toLowerCase());
     return kinds.length === 1 ? (n === 1 ? JOB_KINDS.find(j => j.id === w.jobs[0]).label.toLowerCase() : kinds[0]) : n === 1 ? "person" : "people";
   }
+  const source = progSource(p.source);
   if (p.source === "manual") return s.unit || "";
-  if (p.measure === "total") return "hours";
+  if (p.measure === "total") return source && (source.totalUnitFor || source.totalUnit) ? progTotalUnit(source, s) : "hours";
+  if (source && source.noun) return source.noun(s, n);
   return { training: n === 1 ? "class" : "classes", safety_reports: n === 1 ? "report" : "reports" }[p.source] || "";
 }
 
@@ -641,8 +894,12 @@ function pgFigures(p, back, ctx) {
   const start = pgYearStart(p, back), end = pgAddMonths(start, 12), today = todayISO();
   const periods = pgPeriods(p, start), whose = pgWhose(p), source = progSource(p.source);
   const got = (PROG_COLLECT[p.source] || (() => ({ records: [] })))(p, ctx);
-  const records = got.records.filter(r => r.at && (!whose.any || whose.test(r.person)));
-  const spans = got.spans ? got.spans.filter(sp => !whose.any || whose.test(sp.person)) : null;
+  const records = (got.records || []).filter(r => r.at && whose.record(r));
+  const spans = got.spans ? got.spans.filter(sp => whose.record(sp)) : null;
+  // Done out of due: each thing that was due, done, missed or not yet (still in time).
+  const dues = (got.dues || []).filter(d => d.at && whose.record(d));
+  const tally = (list) => { const t = { done: 0, missed: 0, pending: 0 }; list.forEach(d => { t[d.status]++; }); return t; };
+  const share = (t) => t.done + t.missed ? t.done / (t.done + t.missed) : null;
   const total = p.measure === "total";
   const sum = (list) => list.reduce((n, r) => n + (total ? r.value : 1), 0);
   const inRange = (from, to) => records.filter(r => r.at >= from && r.at < to);
@@ -667,10 +924,19 @@ function pgFigures(p, back, ctx) {
   };
 
   let running = 0;
+  const sofar = { done: 0, missed: 0, pending: 0 };
   periods.forEach(pd => {
     pd.records = inRange(pd.start, pd.end);
     if (spans) pd.records = spans.filter(sp => sp.from && sp.from >= pd.start && sp.from < pd.end);
+    if (p.measure === "rate") pd.records = dues.filter(d => d.at >= pd.start && d.at < pd.end);
     if (pd.future) { pd.value = null; pd.happened = null; return; }
+    if (p.measure === "rate") {
+      const t = tally(pd.records);
+      ["done", "missed", "pending"].forEach(k => { sofar[k] += t[k]; });
+      Object.assign(pd, t, { value: share(t), happened: t.missed, cumulative: share(sofar) });
+      pd.meets = pgMeets(p, pd.value);
+      return;
+    }
     pd.happened = p.measure === "people" ? new Set(pd.records.filter(r => r.person && scoped.includes(r.person)).map(r => r.person)).size : sum(pd.records);
     if (p.measure === "people") {
       const at = peopleAt(pd);
@@ -687,14 +953,18 @@ function pgFigures(p, back, ctx) {
   const shown = periods.filter(pd => !pd.future);
   const current = shown[shown.length - 1] || periods[0];
   const asOf = current.asOf;
-  let stands, people = null;
+  let stands, people = null, rate = null;
   if (p.measure === "people") {
     people = peopleAt(current);
     stands = people.value;
+  } else if (p.measure === "rate") {
+    rate = p.goal_span === "period" ? { done: current.done || 0, missed: current.missed || 0, pending: current.pending || 0 }
+      : tally(dues.filter(d => d.at >= start && d.at <= asOf));
+    stands = share(rate);
   } else stands = p.goal_span === "period" ? current.happened : sum(inRange(start, pgAddDays(asOf, 1)));
-  const yearRecords = inRange(start, pgAddDays(asOf, 1));
+  const yearRecords = p.measure === "rate" ? dues.filter(d => d.at >= start && d.at <= asOf) : inRange(start, pgAddDays(asOf, 1));
   const frac = Math.min(1, (pgDaysBetween(start, asOf) + 1) / pgDaysBetween(start, end));
-  return { p, source, start, end, asOf, today, periods, current, stands, people, frac, records, spans, yearRecords, scoped, facet: got.facet,
+  return { p, source, start, end, asOf, today, periods, current, stands, people, rate, frac, records, spans, dues, yearRecords, scoped, facet: got.facet,
     over: asOf < today || back > 0 };
 }
 
@@ -716,7 +986,7 @@ function pgPace(f) {
     return { tone: ok ? "green" : "red", title: ok ? "Reached" : "Missed", text: `Finished at ${pgFmt(p, f.stands)} against a goal of ${pgFmt(p, g)}.` };
   }
   // A share kept over time (ever, the last so many months, a certification) isn't paced: it's on goal now or not.
-  if (p.measure === "people" && (p.counts_when !== "year" || f.spans)) {
+  if (p.measure === "rate" || (p.measure === "people" && (p.counts_when !== "year" || f.spans))) {
     const ok = pgMeets(p, f.stands);
     return { tone: ok ? "green" : "amber", title: ok ? "On goal" : "Below goal", text: ok ? "On goal today." : `${pgFmt(p, f.stands)} today; the goal is ${pgFmt(p, g)}.` };
   }
@@ -739,6 +1009,20 @@ function pgTakes(f) {
   const p = f.p, g = pgGoal(p);
   if (g === null || f.over) return "";
   const most = p.goal_direction === "at_most", when = p.goal_span === "period" ? ` this ${PROG_PERIOD[p.tracked]}` : "";
+  if (p.measure === "rate") {
+    if (most || !f.rate) return "";
+    const { done, missed, pending } = f.rate, word = PROG_PERIOD[p.tracked], doneWord = (f.source && f.source.doneWord) || "done";
+    if (p.goal_span === "period") {
+      if (!(done + missed + pending)) return "";
+      const need = Math.ceil(g * (done + missed + pending) - 1e-9) - done;
+      return need <= 0 ? `Goal reached${when}` : need <= pending ? `${need} more ${pgUnit(p, need === 1 ? 1 : 2)} ${doneWord}${when}`
+        : `Out of reach this ${word}: ${missed} missed`;
+    }
+    if (!(done + missed) || done / (done + missed) >= g) return "On goal";
+    if (g >= 1) return "Every one from now on; the year can't get back to 100%";
+    const k = Math.ceil((g * (done + missed) - done) / (1 - g) - 1e-9);
+    return `${k.toLocaleString()} ${doneWord} in a row to get back to ${pgFmt(p, g)}`;
+  }
   if (p.measure === "people") {
     const need = pgIsShare(p) ? Math.ceil(g * f.people.of - 1e-9) - f.people.done.length : g - f.people.done.length;
     return most ? "" : need > 0 ? `${need.toLocaleString()} more ${need === 1 ? pgUnit(p, 1) : pgUnit(p)}` : "Goal reached";
@@ -752,7 +1036,7 @@ function pgTakes(f) {
 
 // A chart of the year's periods: bars, a line, last year's line, the goal and the pace to it.
 // `percent` draws the scale as 0-100%; a bar or dot on the wrong side of the goal is marked short.
-function pgChart(f, { bars, line, last, goal, pace, label, percent = false }) {
+function pgChart(f, { bars, line, last, goal, pace, label, percent = false, missed = false }) {
   const W = 960, H = 250, L = 50, R = 14, T = 18, B = 28, n = f.periods.length, band = (W - L - R) / n;
   const share = percent, most = f.p.goal_direction === "at_most";
   const short = (v) => typeof goal === "number" && v !== null && v !== undefined && (most ? v > goal : v < goal);
@@ -774,7 +1058,7 @@ function pgChart(f, { bars, line, last, goal, pace, label, percent = false }) {
     ${ticks.map(v => `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text class="tick" x="${L - 8}" y="${y(v) + 4}" text-anchor="end">${fmt(v)}</text>`).join("")}
     ${f.periods.map((pd, i) => `<g class="pg-hit${pick === i ? " on" : ""}${pd.future ? " future" : ""}" data-pg-period="${i}">
       <rect class="hit" x="${L + band * i}" y="${T}" width="${band}" height="${H - T - B}"/>
-      ${bars && bars[i] !== null && bars[i] !== undefined ? `<rect class="bar${short(bars[i]) ? " short" : ""}"
+      ${bars && bars[i] !== null && bars[i] !== undefined ? `<rect class="bar${missed ? " missed" : short(bars[i]) ? " short" : ""}"
         x="${(L + band * i + band * .18).toFixed(1)}" y="${y(Math.max(0, bars[i])).toFixed(1)}" width="${(band * .64).toFixed(1)}"
         height="${Math.max(bars[i] > 0 ? 1.5 : 0, y(0) - y(Math.max(0, bars[i]))).toFixed(1)}" rx="2"/>` : ""}
       <title>${esc(pd.label)}${bars && bars[i] !== null && bars[i] !== undefined ? `: ${fmt(bars[i])}` : line && line[i] !== null && line[i] !== undefined ? `: ${fmt(line[i])}` : ""}</title>
@@ -810,6 +1094,24 @@ async function pgLoad(p) {
       if (error) progLoadError = error.message; else progReports = data || [];
     }));
   }
+  const since = `${+todayISO().slice(0, 4) - PROG_YEARS_BACK - 2}-01-01`, s = p.settings || {};
+  const once = (key, read) => { if (!progExtra.has(key)) reads.push(read().then(({ data, error }) => {
+    if (error) progLoadError = error.message; else progExtra.set(key, data || []);
+  })); };
+  if (p.source === "inspections") once("inspections", () => allRows(() => db.from("inspections")
+    .select("id,form_id,location_id,submitted_at,created_by_name,post_submitted_at,post_by_name").gte("submitted_at", since).order("submitted_at").order("id")));
+  if (p.source === "fleet" && (s.what || "checks") !== "services") once("fleet_checks", () => allRows(() => db.from("fleet_checks")
+    .select("id,vehicle_id,checked_on,odometer,created_by_name,answers,items").gte("checked_on", since).order("checked_on").order("id")));
+  if (p.source === "crane" && (s.what || "inspections") === "inspections") once("crane_inspections", () => allRows(() => db.from("crane_inspections")
+    .select("id,crane_id,location_id,inspected_on,safe,created_by_name").gte("inspected_on", since).order("inspected_on").order("id")));
+  if (p.source === "crane" && s.what === "lift_plans") once("lift_plans", () => allRows(() => db.from("lift_plans")
+    .select("id,lift_date,submitted_at,location_id,created_by_name,job_description,status").gte("submitted_at", since).order("submitted_at").order("id")));
+  if (p.source === "support") once("support_tickets", () => allRows(() => db.from("support_tickets")
+    .select("id,created_at,closed_at,status,location_id,groups,created_by_name,machine_type,brand,model,description").gte("created_at", since).order("created_at").order("id")));
+  if (p.source === "events") {
+    once("events", () => allRows(() => db.from("events").select("id,title,starts_at,category,location_id").gte("starts_at", since).order("starts_at").order("id")));
+    once("event_attendees", () => allRows(() => db.from("event_attendees").select("event_id,person_id,person_name").order("event_id").order("person_id")));
+  }
   if (p.source === "manual") {
     reads.push(allRows(() => db.from("program_numbers").select("*").eq("program_id", p.id).order("period_start").order("id")).then(({ data, error }) => {
       if (error) progLoadError = error.message; else progNumbers.set(p.id, data || []);
@@ -838,6 +1140,7 @@ function progDashboardHtml() {
   const people = p.measure === "people", years = Array.from({ length: PROG_YEARS_BACK + 1 }, (_, i) => i);
   const sameDay = last.periods[f.current.i] || null;
   const lastAtThisPoint = sameDay ? (p.measure === "people" || p.goal_span === "period" ? sameDay.value : sameDay.cumulative) : null;
+  const rate = p.measure === "rate";
   const unit = pgUnit(p), meets = pgMeets(p, f.stands);
 
   // The gauge: where it stands across the scale, the goal marked, and where the pace says it should be.
@@ -846,7 +1149,11 @@ function progDashboardHtml() {
   const paceMark = pace && goal !== null && p.goal_span === "year" && !f.over && p.goal_direction === "at_least"
     && !(people && (p.counts_when !== "year" || f.spans)) ? goal * f.frac : null;
 
-  const standsWords = people
+  const doneWord = (f.source && f.source.doneWord) || "done";
+  const standsWords = p.measure === "rate" && f.rate
+    ? `${f.rate.done.toLocaleString()} of ${(f.rate.done + f.rate.missed).toLocaleString()} ${pgUnit(p)} ${doneWord}${f.rate.pending ? `, ${f.rate.pending} still in time` : ""}${
+      p.goal_span === "period" ? ` · ${f.current.label}` : ""}`
+    : people
     ? `${f.people.done.length.toLocaleString()} of ${f.people.of.toLocaleString()} ${f.people.of === 1 ? pgUnit(p, 1) : unit}${pgIsShare(p) ? "" : ` (${f.people.of ? Math.round(f.people.done.length / f.people.of * 100) : 0}%)`}`
     : p.goal_span === "period" ? `${f.current.label}${f.current.now ? ", so far" : ""}` : `${f.over ? "The year" : "The year so far"}, ${unit || "in total"}`;
 
@@ -878,7 +1185,8 @@ function progDashboardHtml() {
           ? `<b class="pg-gauge-pace" style="left:${at(paceMark)}%"><span>Pace</span></b>` : ""}</div>` : ""}
       </div>
       <dl class="pg-facts">
-        <div><dt>Goal</dt><dd>${goal === null ? "None: just tracking" : `${p.goal_direction === "at_most" ? "At most" : "At least"} ${esc(pgFmt(p, goal))}${
+        <div><dt>Goal</dt><dd>${goal === null ? "None: just tracking" : `${pgIsShare(p) && goal >= 1 && p.goal_direction === "at_least" ? "All:"
+          : p.goal_direction === "at_most" ? "At most" : "At least"} ${esc(pgFmt(p, goal))}${
           pgIsShare(p) || !unit ? "" : ` ${esc(unit)}`}${p.goal_span === "period" ? ` every ${word}` : " for the year"}`}</dd></div>
         ${takes ? `<div><dt>What it takes</dt><dd>${esc(takes)}</dd></div>` : ""}
         ${pace ? `<div><dt>${f.over ? "Result" : "On pace?"}</dt><dd><span class="pg-tone" style="${lit(pace.tone)}">${esc(pace.title)}</span> ${esc(pace.text)}</dd></div>` : ""}
@@ -891,7 +1199,7 @@ function progDashboardHtml() {
     ${p.source === "manual" ? pgNumbersHtml(f) : ""}
     ${pgPeriodHtml(f, pd)}
     ${pgBreakdownHtml(f)}
-    ${people ? pgToDoHtml(f) : ""}`;
+    ${people ? pgToDoHtml(f) : rate ? pgDueNowHtml(f) : ""}`;
 }
 
 // "up 12 points", "down 3", "the same".
@@ -904,25 +1212,27 @@ function pgChangeWords(p, now, then) {
 
 function pgChartsHtml(f, last) {
   const p = f.p, goal = pgGoal(p), word = PROG_PERIOD[p.tracked], people = p.measure === "people";
-  const lastSeries = last.periods.map(pd => pd.value === null ? null : people || p.goal_span === "period" ? pd.value : pd.cumulative);
-  const cumulative = !people && p.goal_span !== "period";
-  const lineChart = people || cumulative ? `
+  const rate = p.measure === "rate";
+  const lastSeries = last.periods.map(pd => pd.value === null ? null : people || rate || p.goal_span === "period" ? pd.value : pd.cumulative);
+  const cumulative = !people && !rate && p.goal_span !== "period";
+  const lineChart = people || rate || cumulative ? `
     <section class="sx-panel" style="${lit("violet")}">
-      <header><h3>${people ? `At the end of each ${word}` : "The year, adding up"}</h3><span>${esc(pgYearName(f.start))}</span></header>
-      ${pgChart(f, { line: f.periods.map(pd => pd.future ? null : people ? pd.value : pd.cumulative), last: lastSeries,
-        goal: goal !== null && (people || p.goal_span === "period") ? goal : null,
+      <header><h3>${people ? `At the end of each ${word}` : rate ? `Done, each ${word}` : "The year, adding up"}</h3><span>${esc(pgYearName(f.start))}</span></header>
+      ${pgChart(f, { line: f.periods.map(pd => pd.future ? null : people || rate ? pd.value : pd.cumulative), last: lastSeries,
+        goal: goal !== null && (people || rate || p.goal_span === "period") ? goal : null,
         pace: goal !== null && cumulative && p.goal_span === "year" ? goal : null,
-        percent: people && pgIsShare(p), label: `${p.name}, ${people ? `at the end of each ${word}` : "adding up over the year"}` })}
+        percent: (people || rate) && pgIsShare(p), label: `${p.name}, ${people ? `at the end of each ${word}` : "adding up over the year"}` })}
       ${pgKey([["k-line", pgYearName(f.start)], ["k-last", `Last year (${pgYearName(last.start)})`],
-        goal !== null && (people || p.goal_span === "period") ? ["k-goal", "Goal"] : null,
+        goal !== null && (people || rate || p.goal_span === "period") ? ["k-goal", "Goal"] : null,
         goal !== null && cumulative && p.goal_span === "year" ? ["k-pace", "Pace to the goal"] : null])}
     </section>` : "";
   const bars = f.periods.map(pd => pd.future ? null : pd.happened);
   const barChart = `
     <section class="sx-panel" style="${lit("teal")}">
-      <header><h3>${people ? `Done each ${word}` : `Each ${word}`}</h3><span>${people ? `${pgUnit(p)} who did it in that ${word}` : esc(pgUnit(p) || "in total")}</span></header>
-      ${pgChart(f, { bars,
-        goal: goal !== null && !people && p.goal_span === "period" ? goal : null, label: `${p.name}, each ${word}` })}
+      <header><h3>${people ? `Done each ${word}` : rate ? `Missed, each ${word}` : `Each ${word}`}</h3><span>${people ? `${pgUnit(p)} who did it in that ${word}`
+        : rate ? `${esc(pgUnit(p))} missed` : esc(pgUnit(p) || "in total")}</span></header>
+      ${pgChart(f, { bars, missed: rate,
+        goal: goal !== null && !people && !rate && p.goal_span === "period" ? goal : null, label: `${p.name}, ${rate ? "missed " : ""}each ${word}` })}
       <p class="note pg-chart-note">Pick a ${word} to see what's behind it.</p>
     </section>`;
   return `<div class="pg-charts">${lineChart}${barChart}</div>`;
@@ -933,6 +1243,26 @@ function pgPeriodHtml(f, pd) {
   const p = f.p, word = PROG_PERIOD[p.tracked], options = f.periods.filter(x => !x.future);
   const rows = [...(pd.records || [])].sort((a, b) => String(b.at).localeCompare(String(a.at)) || a.name.localeCompare(b.name));
   const total = p.measure === "total";
+  const rate = p.measure === "rate";
+  if (rate) {
+    const order = { missed: 0, pending: 1, done: 2 }, word2 = { done: "Done", missed: "Missed", pending: "Not yet" };
+    const dues = [...(pd.records || [])].sort((a, b) => order[a.status] - order[b.status] || String(a.at).localeCompare(String(b.at)) || String(a.what).localeCompare(String(b.what)));
+    return `
+    <section class="sx-panel" style="${lit("steel")}" id="pgPeriodPanel">
+      <header><h3>${esc(pd.label)}</h3><span>${pd.value === null || pd.value === undefined ? (pd.pending ? "" : "nothing due") : `${pgFmt(p, pd.value)} ${esc((f.source && f.source.doneWord) || "done")} · ${pd.done} of ${pd.done + pd.missed}`}${
+        pd.pending ? `${pd.value === null || pd.value === undefined ? "" : " · "}${pd.pending} still in time` : ""}</span>
+        <select id="pgPeriodPick" class="cab-search" aria-label="Pick a ${word}">${options.map(x =>
+          `<option value="${x.i}"${x.i === pd.i ? " selected" : ""}>${esc(x.label)}${x.now ? " (now)" : ""}</option>`).join("")}</select></header>
+      ${dues.length ? `<div class="lc-scroll"><table class="lc-table">
+        <thead><tr><th>Due</th><th>What</th><th>Where</th><th>Who</th><th>How it went</th></tr></thead>
+        <tbody>${dues.map(d => `<tr><td class="when">${esc(pgShort(d.at))}</td><td>${esc(d.what || "")}</td>
+          <td>${esc(d.location ? locations[d.location] || d.location : "—")}</td><td>${esc(d.name || "—")}</td>
+          <td><span class="badge ${d.status === "done" ? "b-current" : d.status === "missed" ? "b-expired" : "b-todo"}">${word2[d.status]}</span></td></tr>`).join("")}</tbody>
+      </table></div>
+      <div class="row pg-csv"><button type="button" class="pdf" data-pg-csv="period">${icon("arrowOut", 15)}Download this ${word} (CSV)</button></div>`
+      : `<p class="sx-empty">Nothing was due in ${esc(pd.label)}.</p>`}
+    </section>`;
+  }
   const headline = p.measure === "people"
     ? `${pd.happened || 0} ${pd.happened === 1 ? pgUnit(p, 1) : pgUnit(p)} did it${pd.value !== null && pd.value !== undefined ? ` · ${pgFmt(p, pd.value)} at the end of the ${word}${pd.now ? " so far" : ""}` : ""}`
     : `${pgFmt(p, pd.happened)} ${pgUnit(p, pd.happened === 1 ? 1 : 2)}`;
@@ -970,6 +1300,12 @@ function pgBreakdownHtml(f) {
       return { label: progBy === "job" ? kindName(k) : locName(k), value: pgIsShare(p) ? done / list.length : done, of: list.length,
         text: `${done} of ${list.length}${pgIsShare(p) ? ` · ${Math.round(done / list.length * 100)}%` : ""}` };
     }).sort((a, b) => a.value - b.value || a.label.localeCompare(b.label));
+  } else if (p.measure === "rate") {
+    const list = p.goal_span === "period" ? f.current.records || [] : f.yearRecords;
+    rows = [...group(list, progBy === "facet" ? (d) => d.facet || "Other" : (d) => d.location || "")].map(([k, ds]) => {
+      const done = ds.filter(d => d.status === "done").length, due = ds.filter(d => d.status !== "pending").length;
+      return { label: progBy === "location" ? locName(k) : k, value: due ? done / due : 0, text: due ? `${done} of ${due} · ${Math.round(done / due * 100)}%` : "not due yet" };
+    }).sort((a, b) => a.value - b.value || a.label.localeCompare(b.label));
   } else if (people) {
     const counts = new Map();
     f.people.done.forEach(d => counts.set(d.proof.facet || d.proof.what, (counts.get(d.proof.facet || d.proof.what) || 0) + 1));
@@ -982,13 +1318,14 @@ function pgBreakdownHtml(f) {
       return { label: progBy === "job" ? kindName(k) : progBy === "location" ? locName(k) : k, value: v, text: pgFmt(p, v) };
     }).sort((a, b) => b.value - a.value || a.label.localeCompare(b.label));
   }
+  const shareBars = (people && pgIsShare(p) && progBy !== "facet") || p.measure === "rate";
   const what = people ? (progBy === "facet" ? `what each ${pgUnit(p, 1)} counted for did` : `as of ${pgShort(f.asOf)}`)
     : p.goal_span === "period" ? f.current.label : f.over ? "the year" : "the year so far";
   return `
     <section class="sx-panel" style="${lit("amber")}">
       <header><h3>Breakdown</h3><span>${esc(what)}</span>
         <span class="pg-tabs">${tabs.map(([id, t]) => `<button type="button" class="chip${progBy === id ? " on" : ""}" data-pg-by="${id}">${esc(t)}</button>`).join("")}</span></header>
-      ${pgBarsHtml(rows, { share: people && pgIsShare(p) && progBy !== "facet", goal: people && pgIsShare(p) && progBy !== "facet" ? goal : null })}
+      ${pgBarsHtml(rows, { share: shareBars, goal: shareBars ? goal : null })}
     </section>`;
 }
 
@@ -1028,6 +1365,23 @@ function pgToDoHtml(f) {
         ${list.length > shown.length ? `<button type="button" class="pdf" data-pg-alltodo>Show all ${list.length.toLocaleString()}</button>` : ""}
         <button type="button" class="pdf" data-pg-csv="todo">${icon("arrowOut", 15)}Download the list (CSV)</button></div>`
       : `<p class="sx-empty">Nobody: everyone who counts has done it.</p>`}
+    </section>`;
+}
+
+// Done out of due: what's due now and not done yet, by location.
+function pgDueNowHtml(f) {
+  if (f.over) return "";
+  const list = (f.dues || []).filter(d => d.status === "pending")
+    .sort((a, b) => (locations[a.location] || "~").localeCompare(locations[b.location] || "~") || String(a.what).localeCompare(String(b.what)));
+  const byPlace = new Map();
+  list.forEach(d => { const k = d.location ? locations[d.location] || d.location : "No location"; byPlace.set(k, (byPlace.get(k) || []).concat([d])); });
+  return `
+    <section class="sx-panel" style="${lit("red")}">
+      <header><h3>Still due</h3><span>${list.length.toLocaleString()} ${esc(pgUnit(f.p, list.length === 1 ? 1 : 2))} not done yet, still in time</span></header>
+      ${list.length ? `<div class="pg-todo">${[...byPlace].map(([place, ds]) => `<div class="pg-todo-place"><h4>${esc(place)} <span>${ds.length}</span></h4>
+        <ul>${ds.map(d => `<li><b>${esc(d.what)}</b><small>Due ${esc(pgShort(d.at))}</small></li>`).join("")}</ul></div>`).join("")}</div>
+      <div class="row pg-csv"><button type="button" class="pdf" data-pg-csv="due">${icon("arrowOut", 15)}Download the list (CSV)</button></div>`
+      : `<p class="sx-empty">Nothing waiting: everything due so far is done or past.</p>`}
     </section>`;
 }
 
@@ -1083,11 +1437,19 @@ function pgCsv(which) {
   const f = pgFigures(p, progBack, pgContext(pgEveryone()));
   const slug = p.name.replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "") || "program";
   const where = (id) => id ? locations[id] || id : "";
+  if (which === "due") {
+    return downloadCSV(`${slug}-still-due.csv`, [["Due", "What", "Location"],
+      ...f.dues.filter(d => d.status === "pending").map(d => [d.at, d.what, where(d.location)])]);
+  }
   if (which === "todo") {
     return downloadCSV(`${slug}-still-to-do.csv`, [["Name", "Job", "Location", "Employee number", "Email", "Note"],
       ...pgToDo(f).map(t => [t.x.name, t.x.job, where(t.x.location), t.x.number, t.x.email, t.note])]);
   }
   const pd = f.periods[progPick] || f.current;
+  if (p.measure === "rate") {
+    return downloadCSV(`${slug}-${pd.start}.csv`, [["Due", "What", "Location", "Who", "How it went"],
+      ...(pd.records || []).map(d => [d.at, d.what, where(d.location), d.name, { done: "Done", missed: "Missed", pending: "Not yet" }[d.status]])]);
+  }
   downloadCSV(`${slug}-${pd.start}.csv`, [["Date", "Name", "Job", "What", "Location", p.measure === "total" ? pgUnit(p) || "Amount" : "Count"],
     ...(pd.records || []).map(r => [r.at || "", r.name, r.person ? r.person.job : "", r.what, where(r.location), p.measure === "total" ? r.value : 1])]);
 }
@@ -1158,13 +1520,14 @@ $("admin").addEventListener("change", (event) => {
     const next = progSource(d.pgSource);
     progDraft.source = d.pgSource;
     progDraft.settings = { people: (progDraft.settings || {}).people || {} };
-    if (!next.measures.includes(progDraft.measure)) {
-      progDraft.measure = next.measures[0];
-      progDraft.goal_unit = progDraft.measure === "people" ? "percent" : "number";
+    if (!progMeasures(next, progDraft.settings).includes(progDraft.measure)) {
+      progDraft.measure = progMeasures(next, progDraft.settings)[0];
+      progDraft.goal_unit = ["people", "rate"].includes(progDraft.measure) ? "percent" : "number";
     }
     return progRedraw();
   }
-  if (d.pgMeasure) { progDraft.measure = d.pgMeasure; progDraft.goal_unit = d.pgMeasure === "people" ? "percent" : "number"; return progRedraw(); }
+  if (d.pgMeasure) { progDraft.measure = d.pgMeasure; progDraft.goal_unit = ["people", "rate"].includes(d.pgMeasure) ? "percent" : "number"; return progRedraw(); }
+  if (d.pgRedraw !== undefined) return progRedraw();
   if (d.pgWhen) { progDraft.counts_when = d.pgWhen; return progRedraw(); }
   if (d.pgDirection) { progDraft.goal_direction = d.pgDirection; return progRedraw(); }
   if (d.pgTracked) { progDraft.tracked = d.pgTracked; return progRedraw(); }

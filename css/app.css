@@ -3863,6 +3863,7 @@ p.insp-help { margin: -2px 0 8px; font-size: 13px; }
 .pg-chart .pg-hit.on .tick.x { fill: #fff; font-weight: 700; }
 .pg-chart .bar { fill: var(--accent); }
 .pg-chart .bar.short { fill: var(--lit-amber); }
+.pg-chart .bar.missed { fill: var(--lit-amber); }
 .pg-chart .line { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linejoin: round; }
 .pg-chart .dot { fill: var(--accent); stroke: #1E2429; stroke-width: 2; }
 .pg-chart .dot.short { fill: var(--lit-amber); }
