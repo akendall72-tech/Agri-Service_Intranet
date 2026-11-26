@@ -355,6 +355,7 @@ function renderLocationPrograms() {
   if (progList === null) { box.innerHTML = `<div class="card"><p class="note">Programs aren't set up yet.</p></div>`; return; }
   const view = progView === "dashboard" && progOpen ? progDashboardHtml() : progLocationListHtml();
   box.innerHTML = `<div class="sx cab-admin pg" style="${lit("violet")}">${view}</div>`;
+  pgLanesWire(box);
 }
 let progLocationLoading = false, progLocationReady = false;
 
@@ -373,6 +374,7 @@ function renderProgramsAdmin() {
   }
   const view = progView === "edit" && progDraft ? progEditorHtml() : progView === "dashboard" && progOpen ? progDashboardHtml() : progListHtml();
   box.innerHTML = `<div class="sx cab-admin pg" style="${lit("violet")}">${view}</div>`;
+  pgLanesWire(box);
 }
 
 // ---- the list
@@ -641,7 +643,7 @@ async function progSave(button) {
 // People list counts from the start, since that list says nothing of before.
 
 // The program open, how many years back, the period picked, the breakdown shown.
-let progOpen = null, progBack = 0, progPick = null, progBy = "location", progAllToDo = false;
+let progOpen = null, progBack = 0, progPick = null, progBy = "location";
 let progReports = null, progLoadError = null;
 // Rows read when a program opens, kept for the visit: inspections, fleet checks, crane inspections, lift plans,
 // support requests, events and who came.
@@ -1257,7 +1259,7 @@ async function pgLoad(p) {
 async function progOpenDashboard(id) {
   const p = progList.find(x => x.id === id);
   if (!p) return;
-  progOpen = id; progBack = 0; progPick = null; progBy = "location"; progAllToDo = false;
+  progOpen = id; progBack = 0; progPick = null; progBy = "location";
   progShow("dashboard");
   await pgLoad(p);
   progRedraw();
@@ -1518,19 +1520,64 @@ function pgToDo(f) {
     .sort((a, b) => (locations[a.x.location] || "~").localeCompare(locations[b.x.location] || "~") || a.x.name.localeCompare(b.x.name));
 }
 
+// Still to do and Still due: a lane per location, side by side and scrolling left to right, in the
+// locations' own order with anyone at no location last. Each lane scrolls down on its own; a chip
+// per location jumps to its lane, and the arrows page across.
+function pgLanes(items) {
+  const order = new Map(allLocations.map((l, i) => [l.id, i]));
+  const byPlace = new Map();
+  items.forEach(it => { const k = it.location || ""; byPlace.set(k, (byPlace.get(k) || []).concat([it])); });
+  return [...byPlace].sort(([a], [b]) => (a ? order.get(a) ?? 900 : 999) - (b ? order.get(b) ?? 900 : 999) || String(a).localeCompare(String(b)))
+    .map(([id, list]) => ({ name: id ? locations[id] || id : "No location",
+      // Those still to act on first; anyone already booked after them.
+      items: list.sort((x, y) => (x.booked === y.booked ? 0 : x.booked ? 1 : -1) || x.title.localeCompare(y.title)),
+      booked: list.filter(it => it.booked).length }));
+}
+
+function pgLanesHtml(lanes, word) {
+  // One lane (a single location) needs no way across.
+  return `${lanes.length < 2 ? "" : `
+    <div class="pg-lane-bar">
+      ${lanes.map((l, i) => `<button type="button" class="chip" data-pg-lane="${i}">${esc(l.name)} <b>${l.items.length - l.booked}</b></button>`).join("")}
+      <span class="pg-lane-arrows">
+        <button type="button" class="pdf" data-pg-lanes="-1" aria-label="Scroll left">${icon("chevronLeft", 16)}</button>
+        <button type="button" class="pdf pg-flip" data-pg-lanes="1" aria-label="Scroll right">${icon("chevronLeft", 16)}</button></span>
+    </div>`}
+    <div class="pg-lanes" tabindex="0" aria-label="By location, scrolling sideways">
+      ${lanes.map(l => `<div class="pg-lane">
+        <div class="pg-lane-head"><b>${esc(l.name)}</b><span>${(l.items.length - l.booked).toLocaleString()} ${word}${l.booked ? ` · ${l.booked} booked` : ""}</span></div>
+        <ul>${l.items.map((it, i) => `${it.booked && (i === 0 || !l.items[i - 1].booked) ? `<li class="pg-lane-split">Booked on a class</li>` : ""}
+          <li${it.booked ? ` class="booked"` : ""}><b>${esc(it.title)}</b>${it.sub ? `<small>${esc(it.sub)}</small>` : ""}${it.note ? `<em>${esc(it.note)}</em>` : ""}</li>`).join("")}</ul>
+      </div>`).join("")}
+    </div>`;
+}
+
+// Greys out an arrow with nowhere to go, and hides both when everything fits.
+function pgLanesArrows(row) {
+  const bar = row.previousElementSibling;
+  if (!bar || !bar.classList.contains("pg-lane-bar")) return;
+  const fits = row.scrollWidth <= row.clientWidth + 2;
+  bar.classList.toggle("fits", fits);
+  const [left, right] = bar.querySelectorAll("[data-pg-lanes]");
+  if (left) left.disabled = row.scrollLeft <= 2;
+  if (right) right.disabled = row.scrollLeft + row.clientWidth >= row.scrollWidth - 2;
+}
+function pgLanesWire(box) {
+  box.querySelectorAll(".pg-lanes").forEach(row => {
+    row.addEventListener("scroll", () => pgLanesArrows(row), { passive: true });
+    pgLanesArrows(row);
+  });
+}
+
 function pgToDoHtml(f) {
   if (f.over) return "";
-  const list = pgToDo(f), shown = progAllToDo ? list : list.slice(0, 40), registered = list.filter(t => t.note).length;
-  const byPlace = new Map();
-  shown.forEach(t => { const k = t.x.location ? locations[t.x.location] || t.x.location : "No location"; byPlace.set(k, (byPlace.get(k) || []).concat([t])); });
+  const list = pgToDo(f), booked = list.filter(t => t.note).length;
+  const lanes = pgLanes(list.map(t => ({ location: t.x.location, title: t.x.name, sub: t.x.job, note: t.note, booked: !!t.note })));
   return `
     <section class="sx-panel" style="${lit("red")}">
-      <header><h3>Still to do</h3><span>${list.length.toLocaleString()} ${list.length === 1 ? pgUnit(f.p, 1) : pgUnit(f.p)}${registered ? ` · ${registered} registered for a class` : ""}</span></header>
-      ${list.length ? `<div class="pg-todo">${[...byPlace].map(([place, ts]) => `<div class="pg-todo-place"><h4>${esc(place)} <span>${ts.length}</span></h4>
-        <ul>${ts.map(t => `<li${t.note ? ` class="booked"` : ""}><b>${esc(t.x.name)}</b>${t.x.job ? `<small>${esc(t.x.job)}</small>` : ""}${t.note ? `<em>${esc(t.note)}</em>` : ""}</li>`).join("")}</ul></div>`).join("")}</div>
-      <div class="row pg-csv">
-        ${list.length > shown.length ? `<button type="button" class="pdf" data-pg-alltodo>Show all ${list.length.toLocaleString()}</button>` : ""}
-        <button type="button" class="pdf" data-pg-csv="todo">${icon("arrowOut", 15)}Download the list (CSV)</button></div>`
+      <header><h3>Still to do</h3><span>${list.length.toLocaleString()} ${list.length === 1 ? pgUnit(f.p, 1) : pgUnit(f.p)}${booked ? ` · ${booked} booked on a class` : ""}</span></header>
+      ${list.length ? `${pgLanesHtml(lanes, "to do")}
+      <div class="row pg-csv"><button type="button" class="pdf" data-pg-csv="todo">${icon("arrowOut", 15)}Download the list (CSV)</button></div>`
       : `<p class="sx-empty">Nobody: everyone who counts has done it.</p>`}
     </section>`;
 }
@@ -1538,15 +1585,12 @@ function pgToDoHtml(f) {
 // Done out of due: what's due now and not done yet, by location.
 function pgDueNowHtml(f) {
   if (f.over) return "";
-  const list = (f.dues || []).filter(d => d.status === "pending")
-    .sort((a, b) => (locations[a.location] || "~").localeCompare(locations[b.location] || "~") || String(a.what).localeCompare(String(b.what)));
-  const byPlace = new Map();
-  list.forEach(d => { const k = d.location ? locations[d.location] || d.location : "No location"; byPlace.set(k, (byPlace.get(k) || []).concat([d])); });
+  const list = (f.dues || []).filter(d => d.status === "pending");
+  const lanes = pgLanes(list.map(d => ({ location: d.location, title: d.what, sub: `Due ${pgShort(d.at)}`, booked: false })));
   return `
     <section class="sx-panel" style="${lit("red")}">
       <header><h3>Still due</h3><span>${list.length.toLocaleString()} ${esc(pgUnit(f.p, list.length === 1 ? 1 : 2))} not done yet, still in time</span></header>
-      ${list.length ? `<div class="pg-todo">${[...byPlace].map(([place, ds]) => `<div class="pg-todo-place"><h4>${esc(place)} <span>${ds.length}</span></h4>
-        <ul>${ds.map(d => `<li><b>${esc(d.what)}</b><small>Due ${esc(pgShort(d.at))}</small></li>`).join("")}</ul></div>`).join("")}</div>
+      ${list.length ? `${pgLanesHtml(lanes, "due")}
       <div class="row pg-csv"><button type="button" class="pdf" data-pg-csv="due">${icon("arrowOut", 15)}Download the list (CSV)</button></div>`
       : `<p class="sx-empty">Nothing waiting: everything due so far is done or past.</p>`}
     </section>`;
@@ -1624,7 +1668,7 @@ function pgCsv(which) {
 
 $("admin").addEventListener("click", async (event) => {
   const b = event.target.closest("[data-pg-new], [data-pg-edit], [data-pg-back], [data-pg-archive], [data-pg-archived], [data-pg-save], [data-pg-delete], "
-    + "[data-pg-open], [data-pg-period], [data-pg-by], [data-pg-alltodo], [data-pg-csv]");
+    + "[data-pg-open], [data-pg-period], [data-pg-by], [data-pg-lane], [data-pg-lanes], [data-pg-csv]");
   const inside = b && b.closest("#programsAdmin, #locationProgramsBox");
   if (!inside) return;
   progEnter(inside.id === "locationProgramsBox" ? "location" : "admin");
@@ -1639,7 +1683,17 @@ $("admin").addEventListener("click", async (event) => {
     return;
   }
   if (d.pgBy) { progBy = d.pgBy; return progRedraw(); }
-  if (d.pgAlltodo !== undefined) { progAllToDo = true; return progRedraw(); }
+  if (d.pgLane !== undefined) {
+    const row = b.closest(".sx-panel").querySelector(".pg-lanes"), lane = row && row.children[Number(d.pgLane)];
+    // The row is the lanes' offset parent (position: relative), so a lane's offsetLeft is from the row's start.
+    if (lane) row.scrollTo({ left: lane.offsetLeft, behavior: "smooth" });
+    return;
+  }
+  if (d.pgLanes) {
+    const row = b.closest(".sx-panel").querySelector(".pg-lanes");
+    if (row) row.scrollBy({ left: Number(d.pgLanes) * Math.max(260, row.clientWidth * 0.8), behavior: "smooth" });
+    return;
+  }
   if (d.pgCsv) return pgCsv(d.pgCsv);
   if (d.pgEdit) {
     const p = progList.find(x => x.id === d.pgEdit);
@@ -1682,7 +1736,7 @@ $("admin").addEventListener("change", (event) => {
   const t = event.target, inside = t.closest("#programsAdmin, #locationProgramsBox");
   if (!inside) return;
   progEnter(inside.id === "locationProgramsBox" ? "location" : "admin");
-  if (t.id === "pgYearPick") { progBack = Number(t.value) || 0; progPick = null; progAllToDo = false; return progRedraw(); }
+  if (t.id === "pgYearPick") { progBack = Number(t.value) || 0; progPick = null; return progRedraw(); }
   if (t.id === "pgPeriodPick") { progPick = Number(t.value); return progRedraw(); }
   if (t.dataset.pgNum) return pgSaveNumber(t);
   if (!t.closest("#pgForm") || !progDraft) return;
