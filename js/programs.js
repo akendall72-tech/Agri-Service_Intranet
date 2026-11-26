@@ -56,26 +56,61 @@ const progChosen = (box, setting, fallback) => (box.querySelector(`[data-pg-sett
 const progNumberIn = (box, setting, fallback) => { const el = box.querySelector(`[data-pg-setting="${setting}"]`); return !el ? fallback : el.value === "" ? null : Number(el.value); };
 const progAnd = (words) => words.length < 2 ? words.join("") : `${words.slice(0, -1).join(", ")} or ${words[words.length - 1]}`;
 
+// Every class on someone's training record, by its name as compared everywhere (lower case,
+// single spaces): the spelling most people have, and how many people have it.
+function progRecordClasses() {
+  const seen = new Map();
+  (typeof tsPeople !== "undefined" ? tsPeople : []).forEach(r => new Set((r.classes || []).map(c => c.course).filter(Boolean)).forEach(name => {
+    const k = craneCourseKey(name), had = seen.get(k) || { name, people: 0, spellings: new Map() };
+    had.people++;
+    had.spellings.set(name, (had.spellings.get(name) || 0) + 1);
+    seen.set(k, had);
+  }));
+  seen.forEach(c => { c.name = [...c.spellings].sort((a, b) => b[1] - a[1])[0][0]; });
+  return seen;
+}
+// The class names a training program counts: those picked, and any catalog course picked before names were.
+function progTrainingKeys(s) {
+  const keys = new Set((s.names || []).map(n => craneCourseKey(n)));
+  (s.courses || []).forEach(id => {
+    const c = (typeof allCourses !== "undefined" ? allCourses : []).find(x => x.id === id) || progCourses.find(x => x.id === id);
+    if (c) [c.record_name || c.title, c.title].forEach(n => keys.add(craneCourseKey(n)));
+  });
+  return keys;
+}
+
 const PROGRAM_SOURCES = [
   {
     id: "training", label: "Training", icon: "training",
     about: "Classes completed, from everyone's training record, and online courses passed.",
     measures: ["people", "count", "total"], people: true, totalUnit: "training hours",
-    settingsHtml: (s) => `
-      <div class="pg-choice"><label>Courses that count</label>
-        <input type="text" class="pg-filter" data-pg-filter="courses" placeholder="Find a course" aria-label="Find a course">
-        ${progTicks("courses", progCourses.map(c => [c.id, c.title]), s.courses)}</div>
+    // The classes as they're named on people's training records, as the Class Report lists them, each with how
+    // many people have it; then catalog courses nobody has yet. Picked by name, so a class counts whatever the catalog calls it.
+    settingsHtml: (s) => {
+      const on = progRecordClasses(), picked = progTrainingKeys(s);
+      const options = [...on.values()].sort((a, b) => a.name.localeCompare(b.name))
+        .map(c => [c.name, `${c.name} · ${c.people} ${c.people === 1 ? "person" : "people"}`]);
+      const extra = progCourses.map(c => c.record_name || c.title).filter(n => n && !on.has(craneCourseKey(n)))
+        .sort((a, b) => a.localeCompare(b)).map(n => [n, `${n} · in the catalog, nobody yet`]);
+      const ticked = [...options, ...extra].filter(([n]) => picked.has(craneCourseKey(n))).map(([n]) => n);
+      return `
+      <div class="pg-choice"><label>Classes that count</label>
+        <input type="text" class="pg-filter" data-pg-filter="names" placeholder="Find a class" aria-label="Find a class">
+        ${progTicks("names", [...options, ...extra], ticked)}
+        <small>As they're named on training records, the same list as the Class Report; the number is how many people have each.</small></div>
       <div class="pg-choice"><label for="pgContains">And any course whose name contains</label>
         <input type="text" id="pgContains" data-pg-setting="contains" maxlength="60" placeholder="PTx" value="${esc(s.contains || "")}">
         <small>So a new course counts by itself: “PTx” takes in every class with PTx in its name.</small></div>
       ${progOnline.length ? `<div class="pg-choice"><label>Online courses that count</label>
-        ${progTicks("online", progOnline.map(c => [c.id, c.title]), s.online)}</div>` : ""}`,
-    readSettings: (box, s) => ({ courses: progPicked(box, "courses"), online: progPicked(box, "online"),
+        ${progTicks("online", progOnline.map(c => [c.id, c.title]), s.online)}</div>` : ""}`;
+    },
+    // Picked classes are kept by name; a program made before names kept catalog courses, which still count until it's saved again.
+    readSettings: (box, s) => ({ names: progPicked(box, "names"), courses: [], online: progPicked(box, "online"),
       contains: (box.querySelector('[data-pg-setting="contains"]') || {}).value?.trim() || s.contains || "" }),
-    check: (s) => (s.courses || []).length || (s.online || []).length || (s.contains || "").trim()
-      ? "" : "Pick the courses that count, or a word their names contain.",
+    check: (s) => progTrainingKeys(s).size || (s.online || []).length || (s.contains || "").trim()
+      ? "" : "Pick the classes that count, or a word their names contain.",
     describe: (s) => {
-      const names = (s.courses || []).map(id => (progCourses.find(c => c.id === id) || {}).title).filter(Boolean)
+      const names = [...new Set([...(s.names || []), ...(s.courses || []).map(id => (progCourses.find(c => c.id === id) || {}).title).filter(Boolean)])]
         .concat((s.online || []).map(id => (progOnline.find(c => c.id === id) || {}).title).filter(Boolean));
       const bits = [];
       if (s.contains) bits.push(`a course containing “${s.contains}”`);
@@ -733,10 +768,7 @@ const pgHereOn = (x, day) => (!x.joined || x.joined <= day) && (!x.left || x.lef
 const PROG_COLLECT = {
   training(p, ctx) {
     const s = p.settings || {}, key = craneCourseKey, word = String(s.contains || "").trim().toLowerCase();
-    const picked = new Set((s.courses || []).flatMap(id => {
-      const c = allCourses.find(x => x.id === id);
-      return c ? [key(c.record_name || c.title), key(c.title)] : [];
-    }));
+    const picked = progTrainingKeys(s);
     const hours = new Map();
     allCourses.forEach(c => [c.record_name || c.title, c.title].forEach(n => { if (!hours.has(key(n))) hours.set(key(n), Number(c.training_hours) || 0); }));
     const counts = (name) => picked.has(key(name)) || (!!word && String(name || "").toLowerCase().includes(word));
@@ -1282,6 +1314,7 @@ function progDashboardHtml() {
       </div>
     </section>
     ${progLoadError ? `<p class="error">${esc(progLoadError)}</p>` : ""}
+    ${pgUnmatchedHtml(p)}
 
     <section class="sx-panel pg-stands" style="${lit(meets === null ? "violet" : meets ? "green" : "amber")}">
       <div class="pg-stands-main">
@@ -1317,6 +1350,21 @@ function pgHiddenReporters(p) {
   if (p.source !== "safety_reports" || isSafetyManager()) return false;
   const w = (p.settings || {}).people || {};
   return p.measure === "people" || !!(w.jobs || []).length || !!(w.departments || []).length;
+}
+
+// A class picked that isn't on anyone's training record under that name counts nobody: say so,
+// rather than let a program show 0% when the people did take it under another name.
+function pgUnmatchedHtml(p) {
+  if (p.source !== "training") return "";
+  const s = p.settings || {}, on = progRecordClasses();
+  const picked = [...new Set([...(s.names || []), ...(s.courses || []).map(id => {
+    const c = allCourses.find(x => x.id === id); return c ? c.record_name || c.title : null; }).filter(Boolean)])];
+  const missing = picked.filter(n => !on.has(craneCourseKey(n)) && !((s.courses || []).some(id => {
+    const c = allCourses.find(x => x.id === id); return c && on.has(craneCourseKey(c.title)) && craneCourseKey(c.record_name || c.title) === craneCourseKey(n); })));
+  if (!missing.length) return "";
+  return `<section class="sx-panel" style="${lit("amber")}"><header><h3>Not on anyone's training record</h3></header>
+    <p class="note">${esc(progAnd(missing.map(n => `“${n}”`)))} ${missing.length === 1 ? "isn't" : "aren't"} on anyone's record under that name, so ${
+      missing.length === 1 ? "it counts" : "they count"} nobody.${isOwner() && !progAt() ? " Change the program and pick the class as it's named on the records: the list shows how many people have each." : ""}</p></section>`;
 }
 
 // "up 12 points", "down 3", "the same".
@@ -1455,10 +1503,10 @@ function pgToDo(f) {
   const left = f.people.scope.filter(x => !done.has(x));
   const marks = new Map();
   if (f.p.source === "training") {
-    const s = f.p.settings || {}, word = String(s.contains || "").trim().toLowerCase(), picked = new Set(s.courses || []);
-    const today = todayISO();
+    const s = f.p.settings || {}, word = String(s.contains || "").trim().toLowerCase(), keys = progTrainingKeys(s);
+    const today = todayISO(), named = (id) => { const c = allCourses.find(x => x.id === id); return c ? [c.record_name || c.title, c.title] : []; };
     const classes = (progExtra.get("upcoming_classes") || []).filter(c => c.starts_on >= today
-      && (picked.has(c.course_id) || (!!word && String(c.title || "").toLowerCase().includes(word))));
+      && ([c.title, ...named(c.course_id)].some(n => keys.has(craneCourseKey(n || ""))) || (!!word && String(c.title || "").toLowerCase().includes(word))));
     const byId = new Map(classes.map(c => [c.id, c]));
     (progExtra.get("upcoming_registrations") || []).filter(r => byId.has(r.class_id) && r.status !== "cancelled").forEach(r => {
       const x = f.people.scope.find(y => (r.employee_number && y.number && pgNum(r.employee_number) === y.number) || (r.email && y.email === pgMail(r.email)) || y.key === r.person_key);
