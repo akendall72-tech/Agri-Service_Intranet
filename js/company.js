@@ -62,6 +62,7 @@ function renderCompanyAdmin() {
       <div class="co-logos">${COMPANY_LOGOS.map(coLogoSlot).join("")}</div>
     </div>
     ${coItCard()}
+    ${coFiscalCard()}
     ${coSwitchesCard()}
     ${coMicrosoftCard()}
     ${coMotiveCard()}
@@ -161,6 +162,28 @@ async function coItSave() {
   coItMessage = address ? `IT tickets go to ${address}. The app picks it up the next time its home page opens.`
     : "No IT mailbox: the Submit an IT Ticket card is hidden.";
   renderCompanyAdmin();
+}
+
+// The month the fiscal year starts (0168), for Custom Programs that follow it.
+let coFiscalMessage = "", coFiscalError = "";
+const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
+  "November", "December"];
+function coFiscalCard() {
+  if (company.fiscal_year_starts === undefined) return "";
+  const start = company.fiscal_year_starts || 1;
+  const end = MONTH_NAMES[(start + 10) % 12];
+  return `<div class="card">
+      <h2>Fiscal year</h2>
+      <p class="note">For programs that follow ${esc(company.name)}'s fiscal year rather than the calendar year. Starting in
+        January, it's the calendar year.</p>
+      <div class="co-fields co-fields-one">
+        <div><label for="coFiscal">Starts in</label>
+          <select id="coFiscal">${MONTH_NAMES.map((m, i) => `<option value="${i + 1}"${i + 1 === start ? " selected" : ""}>${m}</option>`).join("")}</select></div>
+      </div>
+      <p class="note">${start === 1 ? "January to December." : `${MONTH_NAMES[start - 1]} to ${end}.`}</p>
+      ${coFiscalMessage ? `<p class="co-ok">${esc(coFiscalMessage)}</p>` : ""}
+      ${coFiscalError ? `<p class="error">${esc(coFiscalError)}</p>` : ""}
+    </div>`;
 }
 
 // Microsoft 365 (0142): connecting it, and Microsoft sign-in on or off.
@@ -351,6 +374,14 @@ document.addEventListener("click", async (e) => {
   if (remove) coRemoveLogo(remove.dataset.coRemove);
 });
 document.addEventListener("change", async (e) => {
+  if (e.target.id === "coFiscal") {
+    coFiscalMessage = ""; coFiscalError = "";
+    const month = Number(e.target.value);
+    const { error } = await db.from("companies").update({ fiscal_year_starts: month }).eq("id", company.id);
+    if (error) coFiscalError = error.message;
+    else { await coReload(); coFiscalMessage = `The fiscal year starts in ${MONTH_NAMES[month - 1]}.`; }
+    return renderCompanyAdmin();
+  }
   if (e.target.id === "coMsOn") {
     coMsMessage = ""; coMsError = "";
     const { error } = await db.rpc("set_microsoft_sign_in", { turn_on: e.target.checked, disconnect: false });

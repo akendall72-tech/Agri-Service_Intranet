@@ -3756,10 +3756,11 @@ p.insp-help { margin: -2px 0 8px; font-size: 13px; }
 
 /* A Cab admin list (Inspections, Fleet Check): one line per row, the row
    being edited opened under it, arrows to reorder, and a way back. */
-.cab-admin .cab-back { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; margin: 0; padding: 7px 12px;
-  border-radius: 999px; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.06); color: #fff; box-shadow: none;
+/* The way back sits on the page itself, above the dark panels, so it's drawn for the page. */
+.cab-admin .cab-back { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; justify-self: start; width: auto; margin: 0; padding: 7px 12px;
+  border-radius: 999px; border: 1px solid var(--line-strong); background: var(--card); color: var(--ink); box-shadow: none;
   font: 600 13px system-ui, sans-serif; }
-.cab-admin .cab-back:hover { background: rgba(255,255,255,.12); }
+.cab-admin .cab-back:hover { background: var(--paper); border-color: var(--ink); }
 .cab-admin .cab-list td { white-space: normal; min-width: 70px; }
 .cab-admin .cab-list td:first-child b, .cab-admin .cab-list td:nth-child(2) b { color: #fff; }
 .cab-admin .cab-list td.when { white-space: nowrap; }
@@ -3773,6 +3774,51 @@ p.insp-help { margin: -2px 0 8px; font-size: 13px; }
 .cab-admin .cab-add { margin-top: 12px; }
 .cab-admin .cab-add input { flex: 1 1 220px; max-width: 320px; margin: 0; }
 .cab-admin .badge.b-todo { background: color-mix(in srgb, var(--lit-amber) 18%, transparent); color: var(--lit-amber); }
+
+/* Admin → Programs (programs.js): the list, and the six choices that make one. */
+.pg .pg-new { display: inline-flex; align-items: center; gap: 7px; margin: 0; padding: 10px 16px; border-radius: 999px;
+  background: var(--accent); color: #1B1430; border: 0; font: 700 14px system-ui, sans-serif; box-shadow: none; }
+.pg .pg-new:hover { filter: brightness(1.08); }
+.pg .pg-archived { margin: 0 0 0 auto; }
+.pg .cab-list td:first-child { min-width: 240px; }
+.pg-form { display: flex; flex-direction: column; gap: 16px; }
+.pg-form .sx-panel h4 { margin: 22px 0 10px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.1); color: #fff;
+  font: 700 15px var(--font-cab); letter-spacing: .05em; text-transform: uppercase; }
+.pg-form .fields { margin: 0; }
+.pg-sentence { margin: 14px 0 0; padding: 12px 14px; border-radius: 10px; background: rgba(0,0,0,.22); color: #fff;
+  font-size: 15px; line-height: 1.45; }
+.pg-sentence:empty { display: none; }
+.pg-sources { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px; }
+.pg-source { display: grid; grid-template-columns: auto 1fr; gap: 2px 9px; align-items: center; margin: 0; padding: 12px 14px;
+  border-radius: 12px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.04); color: var(--cab-sub); cursor: pointer; }
+.pg-source:hover { border-color: rgba(255,255,255,.3); }
+.pg-source.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.pg-source input { position: absolute; opacity: 0; pointer-events: none; }
+.pg-source:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pg-source svg { color: var(--accent); }
+.pg-source b { color: #fff; font-size: 14.5px; }
+.pg-source small { grid-column: 1 / -1; font-size: 12.5px; line-height: 1.4; }
+.pg-choice { margin: 0 0 14px; }
+.pg-choice:last-child { margin-bottom: 0; }
+.pg-choice > label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 13px; }
+.pg-choice > small { display: block; margin-top: 4px; color: var(--cab-detail); font-size: 12.5px; }
+.pg-choice input[type=text] { max-width: 360px; margin: 0 0 8px; }
+.pg-ticks { display: flex; flex-wrap: wrap; gap: 6px; }
+.pg-tick { display: inline-flex; align-items: center; gap: 7px; margin: 0; padding: 6px 11px; border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.04); color: #fff; font-size: 13.5px; font-weight: 400; cursor: pointer; }
+.pg-tick:hover { border-color: rgba(255,255,255,.36); }
+.pg-tick:has(input:checked) { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 18%, transparent); }
+.pg-tick input { width: 15px; height: 15px; margin: 0; accent-color: var(--accent); }
+.pg-inline { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; color: var(--cab-sub); }
+.pg-inline input[type=number] { width: 110px; margin: 0; }
+.pg-inline select { width: auto; margin: 0; }
+.pg-save { align-items: center; gap: 10px; }
+.pg-save button { margin: 0; }
+/* The Save row sits on the page, under the dark panels. */
+.cab-admin .pg-save button.ghost { background: var(--card); color: var(--red-dark); border: 1px solid var(--line-strong); }
+.cab-admin .pg-save button.ghost:hover { background: var(--red-soft); color: var(--red-dark); border-color: var(--red); }
+.pg-save .msg.ok { color: var(--green); }
+.pg-save .msg.error { color: var(--red-dark); }
 
 /* Admin → Inspections (inspections.js) */
 .insp-admin .insp-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 4px; }
