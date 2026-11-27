@@ -157,7 +157,9 @@ function tileCount(id) {
   if (id === "social") return cmUnseenCount();
   // For a Safety Manager, the reports waiting for their approval.
   if (id === "safety") return isSafetyManager() ? srReports.filter(srPending).length : 0;
-  if (id === "forklift") return isTrainingManager() ? pendingTests().length : 0;
+  // Driving tests waiting on the Training Manager, and the forklifts at your
+  // location still to be inspected today (0171).
+  if (id === "forklift") return (isTrainingManager() ? pendingTests().length : 0) + fiDueHere().length;
   // The vehicles you drive that need a check, a service or new tires.
   if (id === "fleet") return fvAttentionCount();
   // Lift plans waiting on you, and the cranes at your location still to be
@@ -179,6 +181,8 @@ const SOCIAL_PAGES = ["events", "event", "community", "communitypost", "fitness"
 const FLEET_PAGES = ["fleetvehicle", "fleetform"];
 // The Crane Center's: a lift plan and its form, a crane, its inspection, and its form.
 const CRANE_PAGES = ["liftplan", "liftplanform", "crane", "craneinspect", "craneform"];
+// The Forklift Center's: the driving test pages, and a forklift, its inspection, and its form (0171).
+const FORKLIFT_PAGES = ["certreport", "evaltest", "approvals", "fktruck", "fkinspect", "fkform"];
 
 function showView(name) {
   viewShown = name; screenTouched = false;
@@ -187,7 +191,7 @@ function showView(name) {
   const host = $("view");
   host.classList.remove("hidden");
   setMode("app", ["openseat", "myclasses", "catalog", "olt", "article", "skills", "trainingstatus", "coursereport", "agcomap"].includes(name) ? "training"
-    : name === "newspost" ? "news" : ["payroll", "inventory", "mycerts"].includes(name) ? "hr" : ["certreport", "evaltest", "approvals"].includes(name) ? "forklift" : name === "inspform" ? "inspection"
+    : name === "newspost" ? "news" : ["payroll", "inventory", "mycerts"].includes(name) ? "hr" : FORKLIFT_PAGES.includes(name) ? "forklift" : name === "inspform" ? "inspection"
     : CRANE_PAGES.includes(name) ? "rigging" : FLEET_PAGES.includes(name) ? "fleet" : SUPPORT_PAGES.includes(name) ? "support" : SOCIAL_PAGES.includes(name) ? "social" : SAFETY_PAGES.includes(name) ? "safety" : name);
   if (name !== "safetybrief" && briefTimer) { clearInterval(briefTimer); briefTimer = null; }
   document.body.dataset.page = "view";
@@ -204,7 +208,7 @@ function showView(name) {
   host.innerHTML = `<nav class="crumbs"><button data-home>Home</button><span>/</span>
     ${name === "newspost" ? `<button data-view="news">News</button><span>/</span>` : ""}
     ${["payroll", "inventory", "mycerts"].includes(name) ? `<button data-view="hr">HR</button><span>/</span>` : ""}
-    ${["certreport", "evaltest", "approvals"].includes(name) ? `<button data-view="forklift">Forklift Center</button><span>/</span>` : ""}
+    ${FORKLIFT_PAGES.includes(name) ? `<button data-view="forklift">Forklift Center</button><span>/</span>` : ""}
     ${name === "inspform" ? `<button data-view="inspection">Inspection Center</button><span>/</span>` : ""}
     ${CRANE_PAGES.includes(name) ? `<button data-view="rigging">Crane Center</button><span>/</span>` : ""}
     ${FLEET_PAGES.includes(name) ? `<button data-view="fleet">Fleet Center</button><span>/</span>` : ""}
@@ -296,7 +300,7 @@ function showSafety(tab) {
   evalAgreed = null; evalNotice = "";
   safely(renderCerts, renderEvalForm, renderPlans, renderSafetyAdmin, renderSdsAdmin, renderSdsPending,
     renderSafetyReportAdmin, renderSafetyReportsAdmin, renderSafetyOverview, renderFkWaiting,
-    renderRequired.bind(null, "forklift"), renderRequired.bind(null, "crane"), renderCraneInspectionAdmin, renderCraneQuals);
+    renderRequired.bind(null, "forklift"), renderRequired.bind(null, "crane"), renderCraneInspectionAdmin, renderForkliftInspectionAdmin, renderCraneQuals);
   (document.querySelector(`#safetyNav [data-tab="${tab || safetyTab}"]`) || document.querySelector("#safetyNav [data-tab]")).click();
   window.scrollTo(0, 0);
 }
@@ -340,7 +344,7 @@ const VIEWS = {
 
   forklift: () =>
     hero("Forklift Center",
-         `Your operator card, ${fkRoute().startsIt} that starts it, and the driving test.`,
+         `Today's forklift inspections, your operator card, ${fkRoute().startsIt} that starts it, and the driving test.`,
          true)
     + forkliftCourseCard()
     + certificationCard()
@@ -349,7 +353,9 @@ const VIEWS = {
         tint: "amber", icon: "safety" }) : "")
       // The report is a location admin's or an owner's (0095); anyone else
       // would only find themselves, and their card is above.
-      + FORKLIFT_LINKS.filter(l => !l.adminOnly || isAdmin()).map(linkCard).join("")),
+      + FORKLIFT_LINKS.filter(l => !l.adminOnly || isAdmin()).map(linkCard).join(""))
+    // The daily inspections, as the Crane Center's (0171).
+    + fiSectionHtml(),
 
   approvals: () => approvalsView(),
 
@@ -411,6 +417,9 @@ const VIEWS = {
   crane: () => craneView(),
   craneinspect: () => craneInspectView(),
   craneform: () => craneFormView(),
+  fktruck: () => forkliftTruckView(),
+  fkinspect: () => forkliftInspectView(),
+  fkform: () => forkliftFormView(),
   agcomap: () => agcoMapView()
 };
 
@@ -446,6 +455,9 @@ const pageTitle = (id) => (FEATURES.find(f => f.id === id) || COMPANY_PAGES.find
        crane: { title: (ciCrane(openCraneId) || {}).name || "Crane" },
        craneinspect: { title: "Daily Crane Inspection" },
        craneform: { title: ciDraft && ciDraft.id ? "Edit Crane" : "Add a Crane" },
+       fktruck: { title: (fiForklift(openForkliftId) || {}).name || "Forklift" },
+       fkinspect: { title: "Daily Forklift Inspection" },
+       fkform: { title: fiDraft && fiDraft.id ? "Edit Forklift" : "Add a Forklift" },
        fleetvehicle: { title: (v => v ? fvName(v) : "Vehicle")(fvVehicle(openFleetId)) },
        fleetform: { title: fvDraft && fvDraft.id ? "Edit Vehicle" : "Add a Vehicle" },
        liftplanform: { title: lpDraft && lpDraft.editing ? "Edit Lift Plan" : "New Lift Plan" },
@@ -586,13 +598,16 @@ function homeStats() {
 
   const afterClass = inspections.filter(r => !r.post_submitted_at &&
     (inspForms.find(f => f.id === r.form_id) || {}).has_after_class).length;
-  const cranesDue = ciDueHere().length;
+  const cranesDue = ciDueHere().length, forkliftsDue = fiDueHere().length;
   if (isAdmin() && planCount()) {
     cards.push({ view: "rigging", icon: "rigging", label: "Lift plans", value: `${planCount()} waiting`,
       sub: "Waiting on your approval" });
   } else if (cranesDue) {
     cards.push({ view: "rigging", icon: "rigging", label: "Crane inspections", value: `${cranesDue} due today`,
       sub: "Before each crane's first use" });
+  } else if (forkliftsDue) {
+    cards.push({ view: "forklift", icon: "forklift", label: "Forklift inspections", value: `${forkliftsDue} due today`,
+      sub: "Before each forklift's first use" });
   } else if (afterClass) {
     cards.push({ view: "inspection", icon: "inspection", label: "Inspections", value: `${afterClass} to finish`,
       sub: "After-class part still to do" });
@@ -618,7 +633,7 @@ document.querySelectorAll(".tabs button[data-tab]").forEach(btn => {
     document.querySelectorAll(".tabs button[data-tab]").forEach(b =>
       b.classList.toggle("active", b === btn));
     ["certs", "plans", "people", "support", "payroll", "tools",
-      "directory", "logins", "reminders", "fleetcheck", "vehiclemap", "events", "fitness", "trivia", "org", "inspections", "programs", "courses", "articles", "skillsadmin", "sds", "news", "handbook", "agco", "mock", "safetydesk", "safetyreportform", "safetyreports", "safetyoverview", "fkwaiting", "trainingoverview", "agcocatalog", "rpagco", "rpclass", "oltadmin", "locationoverview", "locationcerts", "locationprograms", "manuals", "cranequals", "fkrequired", "crrequired", "craneinspection", "givecredit", "coursecredits", "classschedule", "trainingsettings", "epa609", "grades", "company", "peoplelist", "jobs", "locationslips"].forEach(name =>
+      "directory", "logins", "reminders", "fleetcheck", "vehiclemap", "events", "fitness", "trivia", "org", "inspections", "programs", "courses", "articles", "skillsadmin", "sds", "news", "handbook", "agco", "mock", "safetydesk", "safetyreportform", "safetyreports", "safetyoverview", "fkwaiting", "trainingoverview", "agcocatalog", "rpagco", "rpclass", "oltadmin", "locationoverview", "locationcerts", "locationprograms", "manuals", "cranequals", "fkrequired", "crrequired", "craneinspection", "forkliftinspection", "givecredit", "coursecredits", "classschedule", "trainingsettings", "epa609", "grades", "company", "peoplelist", "jobs", "locationslips"].forEach(name =>
       $("tab-" + name).classList.toggle("hidden", name !== btn.dataset.tab));
     $("adminTitle").textContent = btn.dataset.title || btn.querySelector("span").textContent.trim();
     if (btn.closest("#safetyNav")) safetyTab = btn.dataset.tab;

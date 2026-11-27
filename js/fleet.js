@@ -1,6 +1,6 @@
 // The Fleet Center
 //
-// Company pickups, service trucks and forklifts, the equipment on them, their
+// Company pickups and service trucks, the equipment on them, their
 // maintenance log and the weekly check (the meter, the tires and a checklist),
 // as in the app's Fleet Center (FleetView.swift).
 
@@ -15,8 +15,10 @@
 // equipment), whichever comes first, counted from the last routine service in
 // the log. The numbers here are worked out the same way as the app's.
 //
-// A pickup or service truck has its mileage. A forklift (0118) has an hour
-// meter, serviced by hours or months, or no meter, serviced by the calendar.
+// A pickup or service truck has its mileage. Forklifts were vehicles here from
+// 0118 to 0171, with an hour meter or none; they're in the Forklift Center now,
+// inspected daily (forklift-inspections.js), and the meter code for them is
+// left in place but no vehicle reaches it.
 // The weekly checklist (fleet_check_items) is kept by owners on the Admin
 // dashboard's Fleet Check tab; each check keeps the items as worded that day.
 //
@@ -33,7 +35,8 @@ let fvPanel = null;
 // The add or edit form.
 let fvDraft = null;
 
-const FV_KINDS = { pickup: "Pickup", service_truck: "Service Truck", forklift: "Forklift" };
+// Forklifts aren't vehicles here since 0171: they're in the Forklift Center, inspected daily.
+const FV_KINDS = { pickup: "Pickup", service_truck: "Service Truck" };
 // A forklift's meter; a pickup or service truck always reads miles.
 const FV_METERS = { hours: "Hour meter", none: "No meter" };
 const FV_TIRES = {
@@ -265,7 +268,7 @@ function fvPageHtml() {
     </div>
     <h2 class="group-title">Your vehicles</h2>
     ${mine.length ? mine.map(v => fvCardHtml(v, false)).join("") : `<button type="button" class="cm-card fv-empty" data-fv-add>
-        <b>Add your vehicle</b><span>The pickup, service truck or forklift you look after: its fleet number, when it was last
+        <b>Add your vehicle</b><span>The pickup or service truck you look after: its fleet number, when it was last
           serviced, its tires, and any equipment on it.</span><span class="cm-go">Add a vehicle &rarr;</span></button>`}
     ${fmFleetHtml()}
     ${others.length ? `<div class="cm-kind fv-tabs" role="group" aria-label="Which vehicles">
@@ -905,8 +908,8 @@ async function fvSaveVehicle(button) {
 // ---- admin: the weekly checklist (0118) ------------------------------------------------
 //
 // The items every weekly check asks, each answered OK or Needs attention. Owners
-// keep them here; an item can be for pickups, service trucks, forklifts, or
-// all of them (none ticked). Taking one off the list or rewording it never
+// keep them here; an item can be for pickups, service trucks, or both (none
+// ticked). Taking one off the list or rewording it never
 // changes a check already done: each check keeps the items as worded that day.
 
 // The item whose editor is open, if any.
@@ -962,8 +965,8 @@ function renderFleetCheckAdmin() {
     <section class="sx-panel" style="${lit("steel")}">
       <header><h3>How it works</h3></header>
       <dl class="cab-rules">
-        <div><dt>For</dt><dd>Tick the kinds of vehicle an item is for, or none for every vehicle. A forklift isn't asked about
-          washer fluid.</dd></div>
+        <div><dt>For</dt><dd>Tick the kinds of vehicle an item is for, or none for every vehicle. Forklifts have their own daily
+          inspection in the Forklift Center.</dd></div>
         <div><dt>Hidden</dt><dd>Takes an item off the check, and it can be asked again. Deleting it can't be undone.</dd></div>
         <div><dt>Checks already done</dt><dd>Keep the items as they were worded that day, so rewording or deleting one never
           changes them.</dd></div>

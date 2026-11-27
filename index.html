@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Which version this is. publish.sh stamps the date and commit here, and
      into version.json beside the page; "dev" is a copy that wasn't published. -->
-<meta name="app-version" content="2026-11-26.3464c33">
+<meta name="app-version" content="2026-11-26.f34b011">
 <!-- Where this page may load things from and send things to. GitHub Pages
      can't send security headers, so it's here. Scripts come only from this
      site and the two script CDNs (each pinned with an integrity hash), and
@@ -186,6 +186,7 @@
       <button data-tab="crrequired" data-title="Required Crane Operators"><i data-icon="rigging"></i><span>Required Crane Operators</span><b class="nav-count" data-sx-count="crrequired"></b></button>
       <button data-tab="cranequals" data-title="Crane Qualifications"><i data-icon="rigging"></i><span>Crane Qualifications</span></button>
       <button data-tab="craneinspection" data-title="Daily Crane Inspection"><i data-icon="checkCircle"></i><span>Crane Inspection</span></button>
+      <button data-tab="forkliftinspection" data-title="Daily Forklift Inspection"><i data-icon="checkCircle"></i><span>Forklift Inspection</span></button>
 
       <div class="nav-group">Reference</div>
       <button data-tab="sds"><i data-icon="safety"></i><span>Safety Data Sheets</span></button>
@@ -332,6 +333,8 @@
     <section id="tab-crrequired" class="hidden"><div class="card" id="crRequired" data-req-kind="crane"></div></section>
     <section id="tab-cranequals" class="hidden"><div id="craneQuals"></div></section>
     <section id="tab-craneinspection" class="hidden"><div id="craneInspectionAdmin"></div></section>
+    <!-- The daily forklift inspection's checklist (0171), drawn by forklift-inspections.js -->
+    <section id="tab-forkliftinspection" class="hidden"><div id="forkliftInspectionAdmin"></div></section>
 
     <!-- Lift plans -->
     <section id="tab-plans" class="hidden">
@@ -1257,8 +1260,8 @@
      only names from an earlier file; boot.js starts the page and stays last.
      js/core.js has the rest. publish.sh adds ?v= to each, so a changed file is
      fetched fresh and an unchanged one comes from the browser's cache. -->
-<script src="js/core.js?v=e35e179212"></script>
-<script src="js/shell.js?v=6020b93b3d"></script>
+<script src="js/core.js?v=ebe8747bbb"></script>
+<script src="js/shell.js?v=69378fec17"></script>
 <script src="js/location-dashboard.js?v=9a05d722d7"></script>
 <script src="js/location-certifications.js?v=188701e85c"></script>
 <script src="js/my-certifications.js?v=556796f1db"></script>
@@ -1269,6 +1272,7 @@
 <script src="js/crane.js?v=88d6301304"></script>
 <script src="js/lift-plans.js?v=923f07f016"></script>
 <script src="js/crane-inspections.js?v=e5177a4340"></script>
+<script src="js/forklift-inspections.js?v=babd273e55"></script>
 <script src="js/support.js?v=f2dc4e83f3"></script>
 <script src="js/special-tools.js?v=fbaac4f097"></script>
 <script src="js/reminders.js?v=360d96f67d"></script>
@@ -1277,7 +1281,7 @@
 <script src="js/community.js?v=1ecd0aaa6e"></script>
 <script src="js/fitness.js?v=1fa39ea073"></script>
 <script src="js/trivia.js?v=eb409c41ff"></script>
-<script src="js/fleet.js?v=ea7ca5c85c"></script>
+<script src="js/fleet.js?v=6c03b542c7"></script>
 <script src="js/fleet-map.js?v=32dba9aef7"></script>
 <script src="js/safety-reports.js?v=6b5af13f7a"></script>
 <script src="js/training-dashboard.js?v=67b678b891"></script>
