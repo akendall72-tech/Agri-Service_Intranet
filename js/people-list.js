@@ -41,7 +41,16 @@ const plPlace = (e) => locations[e.location_id] || e.store || "";
 
 // What an upload (or Microsoft) would do to the list, for its preview: the
 // same counting and the same guard as sync_employees().
-function plPreview(list, feed = "upload") {
+// Someone an owner has left off the list (0170), matched as sync_employees()
+// matches them: by key, employee number or work email.
+function plLeftOff(p) {
+  const number = p.employee_number ? tsEmployeeNumber(p.employee_number) : "", mail = String(p.email || "").trim().toLowerCase();
+  return plRows.some(e => e.left_off_at && (e.person_key === p.person_key
+    || (number && e.employee_number === number) || (mail && e.email === mail)));
+}
+
+function plPreview(all, feed = "upload") {
+  const list = all.filter(p => !plLeftOff(p)), skipped = all.length - list.length;
   const mine = plRows.filter(e => e.source === feed);
   const byKey = new Map(plRows.map(e => [e.person_key, e]));
   const keys = new Set(list.map(p => p.person_key));
@@ -55,7 +64,7 @@ function plPreview(list, feed = "upload") {
   const emptied = [...new Set(mine.filter(e => e.here && e.location_id && !placesNext.has(e.location_id)).map(e => e.location_id))]
     .map(id => locations[id] || id);
   const tooMany = leaving.length > Math.max(3, Math.ceil(hereNow * 0.1)) || emptied.length > 0;
-  return { joined, back, moved, leaving, hereNow, emptied, tooMany };
+  return { joined, back, moved, leaving, hereNow, emptied, tooMany, skipped };
 }
 
 function renderPeopleList() {
@@ -65,17 +74,18 @@ function renderPeopleList() {
     box.innerHTML = `<div class="card"><p class="error">Run migration 0140_people_list.sql in the SQL editor, then reload this page.</p></div>`;
     return;
   }
-  const here = plRows.filter(e => e.here), gone = plRows.filter(e => !e.here);
+  const leftOff = plRows.filter(e => e.left_off_at);
+  const here = plRows.filter(e => e.here && !e.left_off_at), gone = plRows.filter(e => !e.here && !e.left_off_at);
   const noAccount = here.filter(e => !plAccount(e));
-  const byHand = plRows.filter(e => e.source === "by hand");
+  const byHand = plRows.filter(e => e.source === "by hand" && !e.left_off_at);
   const q = plQuery.trim().toLowerCase();
-  const shown = (plFilter === "left" ? gone : plFilter === "noaccount" ? noAccount : plFilter === "byhand" ? byHand : here)
+  const shown = (plFilter === "left" ? gone : plFilter === "leftoff" ? leftOff : plFilter === "noaccount" ? noAccount : plFilter === "byhand" ? byHand : here)
     .filter(e => !q || [plName(e), e.email, e.employee_number, e.job, plPlace(e)].some(v => String(v || "").toLowerCase().includes(q)));
   const last = plRuns[0];
   const feed = company.microsoft_tenant && company.microsoft_sync ? "Microsoft 365, every night" : "the All employees upload";
   const tile = (id, label, n, sub, colour, hot) =>
     cabTile(label, sxNum(n), sub, { colour, data: `data-pl-filter="${id}"`, on: plFilter === id, hot });
-  const titles = { here: "Here now", noaccount: "No account yet", byhand: "Added by hand", left: "Left" };
+  const titles = { here: "Here now", noaccount: "No account yet", byhand: "Added by hand", left: "Left", leftoff: "Left off the list" };
 
   // The slips sheet is printed, so it stays a plain white card, above the rest.
   box.innerHTML = plSlipSheet() + `<div class="sx cab-admin pl" style="${lit("teal")}">
@@ -92,11 +102,12 @@ function renderPeopleList() {
     ${plError && !plMissing ? `<p class="error">${esc(plError)}</p>` : ""}
     ${plMessage ? `<p class="pf-ok">${esc(plMessage)}</p>` : ""}
     ${plProblem ? `<p class="error">${esc(plProblem)}</p>` : ""}
-    <div class="sx-tiles" style="--n:4">
+    <div class="sx-tiles" style="--n:5">
       ${tile("here", "Here", here.length, "On the list now", "teal")}
       ${tile("noaccount", "No account yet", noAccount.length, noAccount.length ? "Give them a join slip" : "Everyone has one", noAccount.length ? "amber" : "green", noAccount.length > 0)}
       ${tile("byhand", "Added by hand", byHand.length, "No feed takes them off", "steel")}
       ${tile("left", "Left", gone.length, "Kept, marked as left", "muted")}
+      ${tile("leftoff", "Left off", leftOff.length, "Not people: every update skips them", "slate")}
     </div>
 
     <section class="sx-panel" style="${lit("teal")}">
@@ -110,15 +121,23 @@ function renderPeopleList() {
       </div>` : ""}
       ${plFilter === "noaccount" && noAccount.length ? `<div class="pl-actions"><button type="button"
         data-pl-slips-all ${plSlipBusy ? "disabled" : ""}>Join slips for all ${noAccount.length} with no account</button></div>` : ""}
-      ${!shown.length ? `<p class="sx-empty">Nobody${q ? " matches" : " here"}.</p>` : `
+      ${plFilter === "leftoff" ? `<p class="note pl-leftoff-note">Accounts a feed brings that aren't people, like a test account or a
+        shared mailbox. They aren't counted anywhere, can't get a join slip or sign in with Microsoft for a new account, and every
+        upload and Microsoft sync skips them. <b>Put back</b> returns someone to the list.</p>` : ""}
+      ${!shown.length ? `<p class="sx-empty">Nobody${q ? " matches" : plFilter === "leftoff" ? " left off" : " here"}.</p>` : `
       <div class="lc-scroll"><table class="lc-table pl-table">
         <thead><tr><th>Name</th><th>Number</th><th>Email</th><th>Job</th><th>Location</th><th>From</th><th>Account</th><th></th></tr></thead>
         <tbody>${shown.map(e => { const a = plAccount(e); return `<tr class="${e.here ? "" : "pl-gone"}">
-          <td><b>${esc(plName(e))}</b>${e.here ? "" : `<small>Left ${esc(new Date(e.left_at).toLocaleDateString())}</small>`}</td>
+          <td><b>${esc(plName(e))}</b>${e.left_off_at ? `<small>Left off ${esc(new Date(e.left_off_at).toLocaleDateString())}${
+            e.left_off_by_name ? ` by ${esc(e.left_off_by_name)}` : ""}${e.left_off_reason ? `: ${esc(e.left_off_reason)}` : ""}</small>`
+            : e.here ? "" : `<small>Left ${esc(new Date(e.left_at).toLocaleDateString())}</small>`}</td>
           <td>${esc(e.employee_number || "")}</td><td>${esc(e.email || "")}</td><td>${esc(e.job || "")}</td><td>${esc(plPlace(e))}</td>
           <td>${e.source === "by hand" ? "By hand" : e.source === "upload" ? "Upload" : e.source === "microsoft" ? "Microsoft" : esc(e.source)}</td>
           <td>${!a ? `<span class="note">None yet</span>` : a.deactivated_at ? `<span class="badge b-none">Switched off</span>` : `<span class="badge b-current">Has one</span>`}</td>
-          <td class="pl-do">${plSlipButton(e)}${e.source === "by hand" ? `<button type="button" class="pdf" data-pl-remove="${esc(e.id)}">Remove</button>` : ""}</td>
+          <td class="pl-do">${e.left_off_at ? (isOwner() ? `<button type="button" class="pdf" data-pl-putback="${esc(e.id)}">Put back</button>` : "")
+            : `${plSlipButton(e)}${e.source === "by hand" ? `<button type="button" class="pdf" data-pl-remove="${esc(e.id)}">Remove</button>`
+              : e.here && isOwner() ? `<button type="button" class="pdf" data-pl-leaveoff="${esc(e.id)}"
+                title="Not a person: a test account or a shared mailbox. Every update skips them">Leave off</button>` : ""}`}</td>
         </tr>`; }).join("")}</tbody>
       </table></div>`}
     </section>
@@ -352,7 +371,8 @@ function plMsPreviewHtml() {
   const takeOff = pv.leaving.slice(0, 12).map(plName);
   return `<div class="pl-ms-preview">
       <p><b>Microsoft has ${list.length} ${list.length === 1 ? "person" : "people"} for the list.</b>
-        ${pv.joined} would join, ${pv.back} come back, ${pv.moved} move location and ${pv.leaving.length} leave.</p>
+        ${pv.joined} would join, ${pv.back} come back, ${pv.moved} move location and ${pv.leaving.length} leave${
+          pv.skipped ? `; ${plCount(pv.skipped, "person")} left off the list ${pv.skipped === 1 ? "is" : "are"} skipped` : ""}.</p>
       ${pv.leaving.length ? `<p class="note">Leaving: ${esc(takeOff.join(", "))}${pv.leaving.length > takeOff.length ? `, and ${pv.leaving.length - takeOff.length} more` : ""}.</p>` : ""}
       ${Object.keys(unplaced).length ? `<p class="error">These locations from Microsoft don't match one here:
         ${esc(Object.entries(unplaced).map(([k, n]) => `${k} (${n})`).join(", "))}. Add them to a location's other names on
@@ -417,6 +437,28 @@ document.addEventListener("click", async (e) => {
     const { error } = await db.from("employees").delete().eq("id", row.id);
     if (error) { plProblem = error.message; return renderPeopleList(); }
     return plReload(`${plName(row)} is off the list.`);
+  }
+  const leaveOff = e.target.closest("[data-pl-leaveoff]");
+  if (leaveOff) {
+    const row = plRows.find(r => r.id === leaveOff.dataset.plLeaveoff);
+    if (!row) return;
+    const reason = prompt(`Leave ${plName(row)} off the People list?\n\nFor an account that isn't a person, like a test account or a shared `
+      + "mailbox. They won't be counted anywhere, can't get a join slip or sign in with Microsoft for a new account, and every upload "
+      + "and Microsoft sync skips them. An account they already have isn't touched. Put back undoes it.\n\nWhy? (optional)",
+      row.job && /test|shared|dummy|demo/i.test(row.job) ? row.job : "Test account");
+    if (reason === null) return;
+    const { error } = await db.rpc("leave_off_people_list", { employee: row.id, leave: true, reason });
+    if (error) { plProblem = /leave_off_people_list/.test(error.message) ? "Run migration 0170_left_off_the_list.sql first." : error.message; return renderPeopleList(); }
+    return plReload(`${plName(row)} is left off the list. Every update skips them; Left off has them.`);
+  }
+  const putBack = e.target.closest("[data-pl-putback]");
+  if (putBack) {
+    const row = plRows.find(r => r.id === putBack.dataset.plPutback);
+    if (!row || !confirm(`Put ${plName(row)} back on the People list? They'll count as a person again, and the next update keeps or `
+      + "takes them off as it would anyone.")) return;
+    const { error } = await db.rpc("leave_off_people_list", { employee: row.id, leave: false });
+    if (error) { plProblem = error.message; return renderPeopleList(); }
+    return plReload(`${plName(row)} is back on the list.`);
   }
   const slip = e.target.closest("[data-pl-slip]");
   if (slip) {

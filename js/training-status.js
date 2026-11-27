@@ -787,7 +787,7 @@ function renderTsImport(problems = []) {
         Groups &amp; Locations to match.</p>` : ""}
       ${pv ? `<p class="note" style="margin:0 0 6px"><b>People list:</b> ${pv.joined} join, ${pv.moved} move location,
         ${pv.leaving.length} leave${pv.back ? `, ${pv.back} come back` : ""}${pv.leaving.length && pv.leaving.length <= 8
-          ? ` (${pv.leaving.map(e => esc(plName(e))).join(", ")})` : ""}.</p>
+          ? ` (${pv.leaving.map(e => esc(plName(e))).join(", ")})` : ""}${pv.skipped ? `; ${pv.skipped} left off the list, skipped` : ""}.</p>
       ${pv.tooMany ? `<label class="pl-confirm"><input type="checkbox" id="tsEveryone">
         <span>That takes ${pv.leaving.length} of ${pv.hereNow} people off the People list${pv.emptied.length
           ? `, and everyone at ${esc(pv.emptied.join(", "))}` : ""}. If this file is one location's rather than everyone's, don't

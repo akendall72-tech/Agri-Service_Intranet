@@ -59,7 +59,7 @@ function jobsTitles() {
     t[field]++;
     titles.set(key, t);
   };
-  plRows.filter(e => e.here).forEach(e => add(e.job, "list"));
+  plRows.filter(e => e.here && !e.left_off_at).forEach(e => add(e.job, "list"));
   tsRows().forEach(r => add(r.job, "status"));
   jobKinds.forEach(k => { if (!titles.has(k.job_key)) titles.set(k.job_key, { key: k.job_key, job: k.job || k.job_key, list: 0, status: 0 }); });
   return [...titles.values()].map(t => {

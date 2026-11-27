@@ -713,9 +713,11 @@ const pgMail = (v) => String(v || "").trim().toLowerCase();
 
 // Everyone who works here or has: the People list, else the training records.
 function pgEveryone() {
-  if (plRows.length) {
-    const first = plRows.map(e => String(e.first_seen || "").slice(0, 10)).filter(Boolean).sort()[0];
-    return plRows.map(e => ({ key: e.person_key, number: pgNum(e.employee_number), email: pgMail(e.email),
+  // Anyone an owner has left off the People list (0170) isn't a person here.
+  const listed = plRows.filter(e => !e.left_off_at);
+  if (listed.length) {
+    const first = listed.map(e => String(e.first_seen || "").slice(0, 10)).filter(Boolean).sort()[0];
+    return listed.map(e => ({ key: e.person_key, number: pgNum(e.employee_number), email: pgMail(e.email),
       name: `${e.first_name || ""} ${e.last_name || ""}`.trim() || e.email || "Someone",
       job: String(e.job || "").replace(/^\d+\s*-\s*/, ""), kind: jobKind(e.job), location: e.location_id || storeLocation(e.store),
       department: String(e.department || "").trim(),
