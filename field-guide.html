@@ -69,7 +69,7 @@
       <dd>Has the <strong>Safety dashboard</strong>: approves and publishes Safety Reports and is the only one
         who sees who sent them, writes the Safety Report form and each month's Safety Brief, keeps the
         required forklift and crane operator lists, the daily crane and forklift inspection checklists, the forklift
-        certification import and the Safety Data Sheets. Gets every Safety Report the moment it's sent.</dd>
+        driving test's questions, the forklift certification import and the Safety Data Sheets. Gets every Safety Report the moment it's sent.</dd>
     </dl>
   </div>
   <p>Only an owner can hold a designation; an owner made an admin or an employee loses theirs at once.
@@ -866,21 +866,35 @@
       Your acceptance is saved with the test and printed on its PDF beside your name.</li>
     <li>Pick the operator. Only people who passed the online course in the last 30 days and
       haven't had their test are listed, soonest deadline first, each with the days they have
-      left (<em>Dana Price · 3 days left</em>). Their email comes with them from their account,
-      so neither can be misspelled. You can't evaluate yourself. Someone who isn't listed
+      left (<em>Dana Price · 3 days left</em>). Nothing is typed: their work email, when they passed
+      the forklift course and the day their test is due by come with them and are shown under the
+      name, so none of it can be misspelled. You can't evaluate yourself. Someone who isn't listed
       needs to pass the course first, or again.</li>
-    <li>Pick the truck classes they were actually tested on.</li>
-    <li>Tick the four parts of the test: inspection, use of controls, manoeuvring, and
-      driving with a load. All four have to be met for a card; anything less is
-      recorded as not passed.</li>
+    <li>Set the day of the test (today, or earlier; never later). The card's expiry, three years on, is shown beside it.</li>
+    <li>Pick the truck classes they were actually tested on, each shown with what it is
+      (<em>Class V · Engine, pneumatic tires</em>).</li>
+    <li>The driving test appears: the questions for those classes, part by part (<em>Before driving</em>,
+      <em>Controls</em>, <em>Traveling</em>, <em>Handling a load</em>, <em>Parking and shutting down</em>), each with what
+      to look for under it. Mark each one <strong>Met</strong> or <strong>Not met</strong>; for one not met, say what
+      they need to work on. A count shows how many are marked, and each part has its own. Add anything else
+      under <em>Anything else?</em> if you like.</li>
+    <li>Once every question is marked, the form says what it comes to: <strong>Passed</strong> with every one met,
+      which issues a card, or <strong>Not passed</strong> with how many weren't. The database works this out again
+      from the answers, so a test is never passed with a question not met.</li>
     <li>Record it. The card lasts three years, which is the most OSHA allows. Your name
-      goes on it as the evaluator, and the date they passed the online course is added.</li>
+      goes on it as the evaluator, and the date they passed the online course is added. The test keeps its
+      questions as they were worded that day, so changing them later never changes a test already recorded.</li>
     <li>It's sent to the Training Manager for approval, and doesn't count until they
       approve it.</li>
   </ol>
   <p>The database applies the same rule, not just the list: a test for anyone outside their 30 days is
     refused. A test that's turned down, or not passed, leaves them on the list for the rest of their 30 days.
     On the web page it's the same form, in the Forklift Center under <strong>Forklift Driving Test</strong>, for anyone.</p>
+  <p>The questions are the Safety Manager's, kept on the Safety dashboard's <em>Driving Test</em> tab: each
+    under a part of the test, with what to look for, for some classes of truck or all of them. A pallet jack
+    (Class III) isn't asked about the seat belt, and only a telehandler (Class VII) is asked about the boom.
+    Tests recorded before the questions came in have four parts (inspection, use of controls, manoeuvring,
+    driving with a load) and keep them.</p>
 
   <h3>Approving driving tests</h3>
   <p>A recorded driving test is <em>Awaiting approval</em> until the <strong>Training
@@ -888,7 +902,9 @@
   <ul class="plain">
     <li>The Training Manager gets a notification when a test is recorded, and a count on
       the Forklift Center, where <strong>Driving Tests to Approve</strong> lists each one:
-      who, when, by whom, the truck classes and the four parts of the test.</li>
+      who, when, by whom, the truck classes, how many questions were met, each one not met with what
+      to work on, anything else the evaluator wrote, and every question behind <em>Every question</em>.
+      The test's PDF has every question and answer too.</li>
     <li>Each test also shows the <strong>online course behind it</strong>: when the person passed
       it and how many minutes after starting, both timed by the database, and the course's own
       clock. A pass under 10 minutes is flagged in amber, since a course reports its own pass:
@@ -2351,6 +2367,7 @@
         <tr><td>Required Crane Operators</td><td>The same list for the Crane &amp; Rigging Qualification: the people who must hold it — anyone who runs a crane or rigs a lift. The crane reports start from the course, so someone doing the work without ever taking it shows up only here. <b>Only the Safety Manager</b> changes it, the same way: <b>Every technician</b> and <b>Every parts person</b> under <b>Required by job</b>, kept up to date by themselves, and anyone else by name, with a note on which crane or what they lift. Each person shows their status from the course on their training history: qualified (and until when, if it expires), running out in the next 60 days, expired, removed, or not qualified because they haven't taken it. Requiring someone doesn't qualify them; only the course does. <b>Not qualified</b> lists the ones who can't do the work yet; <b>Email all</b> writes to them in BCC. The menu shows how many aren't qualified, the Overview flags them under Lift plans, and their location's admin sees them first on the Location Dashboard, on the web page and in the app. <b>Remove</b> takes someone off the list; their qualification stays as it is</td></tr>
         <tr><td>Crane Qualifications</td><td>Everyone on All employees and where they stand on the Crane &amp; Rigging Qualification: qualified, expiring in the next 60 days, expired, removed, or not taken, with the date they completed it, when it runs out, and whether they're on the required list. Counts across the top. Click any column to sort by it, again to reverse it; search by name, location or job; narrow it to one location or to technicians; and pick a status (<b>Has taken it</b> to start, or <b>Required, not qualified</b>, <b>Not taken</b>, <b>Everyone</b> and so on). Each person's location is the one their location on the People list answers to, with that name beside it when it differs. <b>Remove</b> and <b>Restore</b> are the Crane Center's. <b>Download spreadsheet</b> saves what's showing as a CSV</td></tr>
         <tr><td>Forklift Inspection</td><td>The daily forklift inspection: add, reword, reorder, hide or delete items, each with how to check it shown under it, and tick the classes of forklift it's for (I to VII; none ticked for all), with how many items each class is asked. Each is answered OK or Problem, and a Problem tags the forklift out of service. Rewording or deleting one never changes an inspection already signed off</td></tr>
+        <tr><td>Driving Test</td><td>The forklift driving test's questions: add, reword, reorder, hide or delete them, each under a part of the test (Before driving, Controls, Traveling…; type a new one to start a part), with what to look for shown under it, and tick the classes of truck it's for (I to VII; none ticked for all), with how many questions each class is asked. Whoever gives the test marks each Met or Not met, and a test is passed only with every one met. Rewording or deleting one never changes a test already recorded</td></tr>
         <tr><td>Crane Inspection</td><td>The daily crane inspection: add, reword, reorder, hide or delete items, each with how to check it shown under it, and tick the kinds of crane it's for (bridge, service truck; none ticked for both). Each is answered OK or Problem, and a Problem tags the crane out of service. Keep it short: it's done every day. Rewording or deleting one never changes an inspection already signed off</td></tr>
         <tr><td>Safety Data Sheets</td><td>Drop in any number of SDS PDFs at once, check the product names, and upload. A name already in the library replaces that sheet, so new revisions go in the same way. Rename, open, replace or delete sheets in the library</td></tr>
       </tbody>

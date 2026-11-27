@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Which version this is. publish.sh stamps the date and commit here, and
      into version.json beside the page; "dev" is a copy that wasn't published. -->
-<meta name="app-version" content="2026-11-26.f34b011">
+<meta name="app-version" content="2026-11-26.1b3c2cb">
 <!-- Where this page may load things from and send things to. GitHub Pages
      can't send security headers, so it's here. Scripts come only from this
      site and the two script CDNs (each pinned with an integrity hash), and
@@ -34,7 +34,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
-<link rel="stylesheet" href="css/app.css?v=0bc19c5526">
+<link rel="stylesheet" href="css/app.css?v=575415a9c4">
 </head>
 <body>
 
@@ -187,6 +187,7 @@
       <button data-tab="cranequals" data-title="Crane Qualifications"><i data-icon="rigging"></i><span>Crane Qualifications</span></button>
       <button data-tab="craneinspection" data-title="Daily Crane Inspection"><i data-icon="checkCircle"></i><span>Crane Inspection</span></button>
       <button data-tab="forkliftinspection" data-title="Daily Forklift Inspection"><i data-icon="checkCircle"></i><span>Forklift Inspection</span></button>
+      <button data-tab="drivingtest" data-title="Forklift Driving Test"><i data-icon="forklift"></i><span>Driving Test</span></button>
 
       <div class="nav-group">Reference</div>
       <button data-tab="sds"><i data-icon="safety"></i><span>Safety Data Sheets</span></button>
@@ -335,6 +336,8 @@
     <section id="tab-craneinspection" class="hidden"><div id="craneInspectionAdmin"></div></section>
     <!-- The daily forklift inspection's checklist (0171), drawn by forklift-inspections.js -->
     <section id="tab-forkliftinspection" class="hidden"><div id="forkliftInspectionAdmin"></div></section>
+    <!-- The forklift driving test's questions (0172), drawn by driving-test.js -->
+    <section id="tab-drivingtest" class="hidden"><div id="drivingTestAdmin"></div></section>
 
     <!-- Lift plans -->
     <section id="tab-plans" class="hidden">
@@ -1260,19 +1263,20 @@
      only names from an earlier file; boot.js starts the page and stays last.
      js/core.js has the rest. publish.sh adds ?v= to each, so a changed file is
      fetched fresh and an unchanged one comes from the browser's cache. -->
-<script src="js/core.js?v=ebe8747bbb"></script>
-<script src="js/shell.js?v=69378fec17"></script>
+<script src="js/core.js?v=897a6ec7b3"></script>
+<script src="js/shell.js?v=9bd32c47db"></script>
 <script src="js/location-dashboard.js?v=9a05d722d7"></script>
 <script src="js/location-certifications.js?v=188701e85c"></script>
 <script src="js/my-certifications.js?v=556796f1db"></script>
 <script src="js/operator-manuals.js?v=7763432dd3"></script>
 <script src="js/crane-qualifications.js?v=43a7e30c8e"></script>
 <script src="js/training-status.js?v=3fa53931b9"></script>
-<script src="js/forklift.js?v=94362d24f2"></script>
+<script src="js/forklift.js?v=59400c84e6"></script>
 <script src="js/crane.js?v=88d6301304"></script>
 <script src="js/lift-plans.js?v=923f07f016"></script>
 <script src="js/crane-inspections.js?v=e5177a4340"></script>
 <script src="js/forklift-inspections.js?v=babd273e55"></script>
+<script src="js/driving-test.js?v=7d892a1384"></script>
 <script src="js/support.js?v=f2dc4e83f3"></script>
 <script src="js/special-tools.js?v=fbaac4f097"></script>
 <script src="js/reminders.js?v=360d96f67d"></script>
