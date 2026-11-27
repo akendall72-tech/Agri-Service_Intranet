@@ -4146,7 +4146,9 @@ body.no-company .crumbs { display: none; }
 
 /* Join slips (0141): to hand out, and to print, cut along the dashed line. */
 .pl-do { white-space: nowrap; }
-.pl-do .pdf + .pdf { margin-left: 6px; }
+/* A row's buttons one above the other, the same width, so they line up down the list and the table fits. */
+.pl-do .cab-actions { display: inline-grid; grid-auto-rows: auto; gap: 6px; min-width: 112px; }
+.pl-do .cab-actions button { justify-content: center; width: 100%; }
 .pl-print { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; margin-top: 14px; }
 .pl-slip { border: 1.5px dashed #A8A29E; border-radius: 6px; padding: 14px 16px; background: #fff; color: #1C1917; break-inside: avoid; }
 .pl-slip-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; border-bottom: 2px solid #CC0033; padding-bottom: 6px; }

@@ -134,10 +134,10 @@ function renderPeopleList() {
           <td>${esc(e.employee_number || "")}</td><td>${esc(e.email || "")}</td><td>${esc(e.job || "")}</td><td>${esc(plPlace(e))}</td>
           <td>${e.source === "by hand" ? "By hand" : e.source === "upload" ? "Upload" : e.source === "microsoft" ? "Microsoft" : esc(e.source)}</td>
           <td>${!a ? `<span class="note">None yet</span>` : a.deactivated_at ? `<span class="badge b-none">Switched off</span>` : `<span class="badge b-current">Has one</span>`}</td>
-          <td class="pl-do">${e.left_off_at ? (isOwner() ? `<button type="button" class="pdf" data-pl-putback="${esc(e.id)}">Put back</button>` : "")
+          <td class="pl-do"><span class="cab-actions">${e.left_off_at ? (isOwner() ? `<button type="button" class="pdf" data-pl-putback="${esc(e.id)}">Put back</button>` : "")
             : `${plSlipButton(e)}${e.source === "by hand" ? `<button type="button" class="pdf" data-pl-remove="${esc(e.id)}">Remove</button>`
               : e.here && isOwner() ? `<button type="button" class="pdf" data-pl-leaveoff="${esc(e.id)}"
-                title="Not a person: a test account or a shared mailbox. Every update skips them">Leave off</button>` : ""}`}</td>
+                title="Not a person: a test account or a shared mailbox. Every update skips them">Leave off</button>` : ""}`}</span></td>
         </tr>`; }).join("")}</tbody>
       </table></div>`}
     </section>
